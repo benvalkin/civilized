@@ -7,16 +7,12 @@ import org.slf4j.Logger;
 
 import com.google.common.collect.Lists;
 import com.mojang.logging.LogUtils;
-import com.uncreated.civilized.core.building.Building;
-import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.logistics.LogisticsManager;
 import com.uncreated.civilized.core.building.logistics.orders.StorehouseOrder;
 import com.uncreated.civilized.core.building.logistics.orders.imports.ImportUpTo;
 import com.uncreated.civilized.core.building.logistics.orders.task.TaskConsumableItemRequirement;
 import com.uncreated.civilized.core.building.logistics.orders.task.TaskItemRequirement;
 import com.uncreated.civilized.core.building.state.CropFarmState;
-import com.uncreated.civilized.core.settlement.entity.LoadedSettlement;
-import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
@@ -41,10 +37,9 @@ public class PlantCrops extends WorkTaskBehaviour {
    private long lastWorkTime;
    private final List<BlockPos> emptyFarmland = Lists.newArrayList();
    private MediumDistanceTravelTask travelHelper;
-   private Building workSite;
 
    public PlantCrops() {
-      super(WorkStates.PLANTING_CROPS, 120 * 20, 30 * 20);
+      super(WorkStates.PLANTING_CROPS, true, true, 120 * 20, 30 * 20);
    }
 
    @Override
@@ -52,22 +47,13 @@ public class PlantCrops extends WorkTaskBehaviour {
       if (!super.checkExtraStartConditions(level, villager))
          return false;
 
-      workSite = ServerBuildingsStore.INSTANCE.get(villager.getInfo().getPrimaryWorksiteId());
-
       findFarmland(level);
 
       if (emptyFarmland.isEmpty())
          return false;
 
-      // import new seeds only if there is empty farmland
-      Building home = ServerBuildingsStore.INSTANCE.get(villager.getInfo().getHomeBuildingId());
-
-      Optional<LoadedSettlement> loadedSettlement = LoadedSettlements.checkLoaded(home.getSettlementId());
-      if (loadedSettlement.isEmpty())
-         return false;
-
-      LogisticsManager logisticsManager = loadedSettlement.get().getBehaviour().getLogisticsManager();
-      CropFarmState behaviour = (CropFarmState) workSite.getState();
+      LogisticsManager logisticsManager =getSettlement().getBehaviour().getLogisticsManager();
+      CropFarmState behaviour = (CropFarmState) getWorksite().getBuilding().getState();
       TaskItemRequirement taskItemRequirement =
             new TaskConsumableItemRequirement(
                   level,
@@ -76,7 +62,7 @@ public class PlantCrops extends WorkTaskBehaviour {
                   StorehouseOrder.Origin.AUTOMATIC,
                   16);
       taskItemRequirement.setExpiry(12000);
-      logisticsManager.registerOrder(home, taskItemRequirement);
+      logisticsManager.registerOrder(getHome().getBuilding(), taskItemRequirement);
       ImportUpTo importOrder =
             new ImportUpTo(
                   level,
@@ -87,7 +73,7 @@ public class PlantCrops extends WorkTaskBehaviour {
                   16,
                   32);
       importOrder.setExpiry(12000);
-      logisticsManager.registerOrder(home, importOrder);
+      logisticsManager.registerOrder(getHome().getBuilding(), importOrder);
 
       if (!(hasSeedsInInventory(villager.getWorkInputInventory())
             || hasSeedsInInventory(villager.getWorkOutputInventory())))
@@ -99,7 +85,7 @@ public class PlantCrops extends WorkTaskBehaviour {
    @Override
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.start(level, villager, gameTime);
-      travelHelper = new MediumDistanceTravelTask(villager, workSite.getBlockPos(), 5);
+      travelHelper = new MediumDistanceTravelTask(villager, getWorksite().getBuilding().getBlockPos(), 5);
    }
 
    @Override
@@ -194,7 +180,7 @@ public class PlantCrops extends WorkTaskBehaviour {
    private void findFarmland(ServerLevel serverLevel) {
       emptyFarmland.clear();
 
-      workSite.getBounds().traverseBlocksWithin(traversal -> {
+      getWorksite().getBuilding().getBounds().traverseBlocksWithin(traversal -> {
          BlockPos b = traversal.getCurrentBlockPos();
          if (isEmptyFarmland(b.below(), serverLevel)) {
             emptyFarmland.add(b);

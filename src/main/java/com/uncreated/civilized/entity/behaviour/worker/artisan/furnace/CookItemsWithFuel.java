@@ -6,16 +6,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import javax.annotation.Nullable;
-
 import org.slf4j.Logger;
 
 import com.mojang.datafixers.util.Pair;
 import com.mojang.logging.LogUtils;
 import com.uncreated.civilized.core.building.Building;
-import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
-import com.uncreated.civilized.core.building.entity.LoadedBuildings;
 import com.uncreated.civilized.core.building.entity.behaviour.ArtisanHouseBehaviour;
 import com.uncreated.civilized.core.building.logistics.LogisticsManager;
 import com.uncreated.civilized.core.building.logistics.orders.LogisticsOrder;
@@ -25,8 +21,6 @@ import com.uncreated.civilized.core.building.production.RecipeProductionSystem;
 import com.uncreated.civilized.core.building.production.lines.singleitem.SingleItemRecipeOrder;
 import com.uncreated.civilized.core.building.production.lines.singleitem.cooking.CookingMachine;
 import com.uncreated.civilized.core.building.production.orders.ProductionOrder;
-import com.uncreated.civilized.core.settlement.entity.LoadedSettlement;
-import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.BehaviourState;
 import com.uncreated.civilized.entity.behaviour.Cooldowns;
@@ -48,9 +42,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 
 public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
    public static final Logger LOGGER = LogUtils.getLogger();
-   private LoadedBuilding home;
-   @Nullable
-   Building storehouse;
    private AbstractFurnaceBlockEntity furnaceBlockEntity;
    private MediumDistanceTravelTask travelHelper;
 
@@ -59,7 +50,7 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
    private List<Container> stockChests = new ArrayList<>();
 
    public CookItemsWithFuel(BehaviourState state) {
-      super(state, 60 * 20, 20);
+      super(state, true, false, 60 * 20, 20);
    }
 
    @Override
@@ -68,21 +59,10 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
       if (getBehaviourCooldowns().hasCooldown(Cooldowns.START, level.getGameTime()))
          return false;
 
-      Optional<LoadedBuilding> loadedHome = LoadedBuildings.checkLoaded(villager.getInfo().getHomeBuildingId());
-      if (loadedHome.isEmpty())
-         return false;
+      Optional<LoadedBuilding> storehouse = findStorehouse(getSettlement());
 
-      home = loadedHome.get();
-
-      Optional<LoadedSettlement> loadedSettlement = LoadedSettlements.checkLoaded(home.getBuilding().getSettlementId());
-      if (loadedSettlement.isEmpty())
-         return false;
-
-      storehouse =
-            ServerBuildingsStore.INSTANCE.findStorehouse(loadedSettlement.get().getSettlement().getSettlementId())
-                  .orElse(null);
-
-      home.getBuilding().getBounds().traverseBlocksWithin(traversal -> {
+      Building worksite = getWorksite().getBuilding();
+      worksite.getBounds().traverseBlocksWithin(traversal -> {
          BlockEntity blockEntity = level.getBlockEntity(traversal.getCurrentBlockPos());
 
          if (!(blockEntity instanceof AbstractFurnaceBlockEntity furnaceBlockEntity))
@@ -100,19 +80,20 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
       if (furnaceBlockEntity == null)
          return false;
 
-      LogisticsManager logisticsManager = loadedSettlement.get().getBehaviour().getLogisticsManager();
+      LogisticsManager logisticsManager = getSettlement().getBehaviour().getLogisticsManager();
 
-      ArtisanHouseBehaviour behaviour = (ArtisanHouseBehaviour) loadedHome.get().getBehaviour();
+      ArtisanHouseBehaviour behaviour = (ArtisanHouseBehaviour) getHome().getBehaviour();
 
       cookingMachine = getProductionMachine(behaviour.getRecipeProductionSystem());
 
-      ingredientsChests = LogisticsOrder.findChests(level, home.getBuilding());
+      ingredientsChests = LogisticsOrder.findChests(level, worksite);
       stockChests =
-            storehouse != null ? LogisticsOrder.findChests(level, home.getBuilding(), storehouse) : ingredientsChests;
+            storehouse.map(loadedBuilding -> LogisticsOrder.findChests(level, worksite, loadedBuilding.getBuilding()))
+                  .orElseGet(() -> ingredientsChests);
 
       for (SingleItemRecipeOrder productionOrder : cookingMachine.getOrders()) {
          List<ImportOrder> importOrders = productionOrder.createImportOrdersForIngredients(stockChests);
-         importOrders.forEach(i -> logisticsManager.registerOrder(home.getBuilding(), i));
+         importOrders.forEach(i -> logisticsManager.registerOrder(worksite, i));
       }
 
       if (cookingMachine.tryGetNextOrder(ingredientsChests, stockChests).isEmpty()) {

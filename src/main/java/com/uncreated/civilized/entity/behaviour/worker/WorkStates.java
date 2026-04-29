@@ -15,6 +15,7 @@ public class WorkStates {
    public static final BehaviourState REPLANT_SAPLINGS = new BehaviourState("replant_saplings");
    public static final BehaviourState CHECK_LOGISTICS_OPPORTUNITIES =
          new BehaviourState("check_logistics_opportunities");
+   public static final BehaviourState FISHING = new BehaviourState("fishing");
    public static BehaviourState DROPPING_OFF_IMPORTS_AT_HOME = new BehaviourState("dropping_off_imports_at_home");
    public static final BehaviourState FETCHING_EXPORTS_FROM_HOME = new BehaviourState("fetching_exports_from_home");
    public static final BehaviourState FETCHING_IMPORTS_FROM_STOREHOUSE =

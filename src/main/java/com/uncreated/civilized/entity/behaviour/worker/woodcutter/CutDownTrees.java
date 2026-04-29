@@ -8,13 +8,10 @@ import org.slf4j.Logger;
 import com.google.common.collect.Lists;
 import com.mojang.logging.LogUtils;
 import com.uncreated.civilized.core.building.Building;
-import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.logistics.LogisticsManager;
 import com.uncreated.civilized.core.building.logistics.orders.StorehouseOrder;
 import com.uncreated.civilized.core.building.logistics.orders.imports.ImportUpTo;
 import com.uncreated.civilized.core.building.logistics.orders.task.ToolRequirement;
-import com.uncreated.civilized.core.settlement.entity.LoadedSettlement;
-import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
@@ -40,43 +37,35 @@ public class CutDownTrees extends WorkTaskBehaviour {
    private long lastWorkTime;
    private final List<BlockPos> logsToHarvest = Lists.newArrayList();
    private final List<BlockPos> leavesToHarvest = Lists.newArrayList();
-   private Building workSite;
    private MediumDistanceTravelTask travelHelper;
 
    int workSpeedMultiplier = 2;
    private ItemStack handHeld;
 
    public CutDownTrees() {
-      super(WorkStates.CUTTING_DOWN_TREES, 120 * 20, 30 * 20);
+      super(WorkStates.CUTTING_DOWN_TREES, true, true, 120 * 20, 30 * 20);
    }
 
    @Override
    protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
 
-      workSite = ServerBuildingsStore.INSTANCE.get(villager.getInfo().getPrimaryWorksiteId());
-
-      Building home = ServerBuildingsStore.INSTANCE.get(villager.getInfo().getHomeBuildingId());
-
-      Optional<LoadedSettlement> loadedSettlement = LoadedSettlements.checkLoaded(home.getSettlementId());
-      if (loadedSettlement.isEmpty())
-         return false;
-
-      LogisticsManager logisticsManager = loadedSettlement.get().getBehaviour().getLogisticsManager();
+      LogisticsManager logisticsManager = getSettlement().getBehaviour().getLogisticsManager();
 
       ToolRequirement toolRequirement =
             new ToolRequirement(level, "cut_down_trees", AxeItem.class, StorehouseOrder.Origin.AUTOMATIC);
       toolRequirement.setExpiry(12000);
-      logisticsManager.registerOrder(home, toolRequirement);
+      logisticsManager.registerOrder(getWorksite().getBuilding(), toolRequirement);
       ImportUpTo importOrder =
             new ImportUpTo(level, "axe", toolRequirement.getItemSearch(), StorehouseOrder.Origin.AUTOMATIC, 1, 1, 1);
       importOrder.setExpiry(12000);
-      logisticsManager.registerOrder(home, importOrder);
+      logisticsManager.registerOrder(getHome().getBuilding(), importOrder);
 
       Optional<ContainerHelper.ItemSearchResult> tool =
             ContainerHelper.findItem(villager.getWorkInputInventory(), toolRequirement.getItemSearch());
       if (tool.isEmpty()) {
          // todo: send notification that the villager is missing tool
          getStateMachine().queueActionOnce(WorkStates.FETCHING_WORK_INPUT_FROM_HOME);
+         getStateMachine().queueActionOnce(this.getState());
          return false;
       }
       this.handHeld = tool.get().itemStack();
@@ -88,7 +77,7 @@ public class CutDownTrees extends WorkTaskBehaviour {
    @Override
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.start(level, villager, gameTime);
-      travelHelper = new MediumDistanceTravelTask(villager, workSite.getBlockPos(), 8);
+      travelHelper = new MediumDistanceTravelTask(villager, getWorksite().getBuilding().getBlockPos(), 8);
       villager.setItemSlot(EquipmentSlot.MAINHAND, handHeld);
       hasWood = false;
    }
@@ -166,14 +155,15 @@ public class CutDownTrees extends WorkTaskBehaviour {
    }
 
    private void findBlocksToHarvest(ServerLevel serverLevel) {
-      BlockPos.MutableBlockPos current = workSite.getBlockPos().mutable();
+      Building worksite = getWorksite().getBuilding();
+      BlockPos.MutableBlockPos current = worksite.getBlockPos().mutable();
       logsToHarvest.clear();
       leavesToHarvest.clear();
 
-      BlockPos lowerCorner = workSite.getBounds().getLowerCorner();
-      BlockPos upperCorner = workSite.getBounds().getUpperCorner();
-      int yStart = workSite.getBounds().getCenter().getY() - 2;
-      int yEnd = workSite.getBounds().getCenter().getY() + 40;
+      BlockPos lowerCorner = worksite.getBounds().getLowerCorner();
+      BlockPos upperCorner = worksite.getBounds().getUpperCorner();
+      int yStart = worksite.getBounds().getCenter().getY() - 2;
+      int yEnd = worksite.getBounds().getCenter().getY() + 40;
 
       for (int x = lowerCorner.getX(); x <= upperCorner.getX(); x++) {
          for (int z = lowerCorner.getZ(); z <= upperCorner.getZ(); z++) {

@@ -6,15 +6,11 @@ import java.util.Optional;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
-import com.uncreated.civilized.core.building.Building;
-import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.logistics.LogisticsManager;
 import com.uncreated.civilized.core.building.logistics.orders.StorehouseOrder;
 import com.uncreated.civilized.core.building.logistics.orders.imports.ImportUpTo;
 import com.uncreated.civilized.core.building.logistics.orders.task.TaskConsumableItemRequirement;
 import com.uncreated.civilized.core.building.state.animalfarm.AnimalFarmState;
-import com.uncreated.civilized.core.settlement.entity.LoadedSettlement;
-import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
@@ -32,36 +28,28 @@ import net.minecraft.world.phys.AABB;
 public class BreedAnimals<T extends Animal> extends WorkTaskBehaviour {
    public static final Logger LOGGER = LogUtils.getLogger();
    private long lastWorkTime;
-   private Building workSite;
    private MediumDistanceTravelTask travelHelper;
 
-   private final Class<T> animalMobType;
    private ItemStack handHeld;
 
-   public BreedAnimals(Class<T> animalMobType) {
-      super(WorkStates.BREEDING_ANIMALS, 120 * 20, 30 * 20);
-      this.animalMobType = animalMobType;
+   public BreedAnimals() {
+      super(WorkStates.BREEDING_ANIMALS, true, true, 120 * 20, 30 * 20);
    }
 
    @Override
    protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
 
-      workSite = ServerBuildingsStore.INSTANCE.get(villager.getInfo().getPrimaryWorksiteId());
-
       List<Animal> breedableAnimals = getBreedableAnimals(level);
-      if (breedableAnimals.size() < 2) {
-         return false;
-      }
-
-      Building home = ServerBuildingsStore.INSTANCE.get(villager.getInfo().getHomeBuildingId());
-
-      Optional<LoadedSettlement> loadedSettlement = LoadedSettlements.checkLoaded(home.getSettlementId());
-      if (loadedSettlement.isEmpty())
+      if (breedableAnimals.size() < 2)
          return false;
 
-      LogisticsManager logisticsManager = loadedSettlement.get().getBehaviour().getLogisticsManager();
+      List<Animal> totalAnimals = getTotalAnimals(level);
+      if (totalAnimals.size() > 8)
+         return false;
 
-      AnimalFarmState behaviour = (AnimalFarmState) workSite.getState();
+      LogisticsManager logisticsManager = getSettlement().getBehaviour().getLogisticsManager();
+
+      AnimalFarmState behaviour = (AnimalFarmState) getWorksite().getBuilding().getState();
       TaskConsumableItemRequirement taskItemRequirement =
             new TaskConsumableItemRequirement(
                   level,
@@ -71,7 +59,7 @@ public class BreedAnimals<T extends Animal> extends WorkTaskBehaviour {
                   2,
                   8);
       taskItemRequirement.setExpiry(12000);
-      logisticsManager.registerOrder(home, taskItemRequirement);
+      logisticsManager.registerOrder(getHome().getBuilding(), taskItemRequirement);
       ImportUpTo importOrder =
             new ImportUpTo(
                   level,
@@ -82,7 +70,7 @@ public class BreedAnimals<T extends Animal> extends WorkTaskBehaviour {
                   8,
                   8);
       importOrder.setExpiry(12000);
-      logisticsManager.registerOrder(home, importOrder);
+      logisticsManager.registerOrder(getHome().getBuilding(), importOrder);
 
       List<ItemStack> animalFoodItemsInventory = getAnimalFoodItemsInventory(villager, breedableAnimals.getFirst());
       if (animalFoodItemsInventory.stream().mapToInt(ItemStack::getCount).sum() < 2) {
@@ -98,13 +86,13 @@ public class BreedAnimals<T extends Animal> extends WorkTaskBehaviour {
    @Override
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.start(level, villager, gameTime);
-      AABB tooCloseBounds = workSite.getBounds().getEncapsulatingAABB();
+      AABB tooCloseBounds = getWorksite().getBuilding().getBounds().getEncapsulatingAABB();
       AABB closeEnoughBounds = tooCloseBounds.inflate(4);
 
       travelHelper =
             new MediumDistanceTravelTask(
                   villager,
-                  workSite.getBlockPos(),
+                  getWorksite().getBuilding().getBlockPos(),
                   (v, d, closEnough) -> closeEnoughBounds.contains(v.position()),
                   Math.max((int) closeEnoughBounds.getXsize() / 2, (int) closeEnoughBounds.getZsize() / 2));
 
@@ -157,8 +145,12 @@ public class BreedAnimals<T extends Animal> extends WorkTaskBehaviour {
    protected List<Animal> getBreedableAnimals(ServerLevel level) {
       return level.getEntitiesOfClass(
             Animal.class,
-            workSite.getBounds().getEncapsulatingAABB(),
+            getWorksite().getBuilding().getBounds().getEncapsulatingAABB(),
             a -> !a.isBaby() && !a.isInLove() && a.canFallInLove() && a.getAge() == 0);
+   }
+
+   protected List<Animal> getTotalAnimals(ServerLevel level) {
+      return level.getEntitiesOfClass(Animal.class, getWorksite().getBuilding().getBounds().getEncapsulatingAABB());
    }
 
    private List<ItemStack> getAnimalFoodItemsInventory(CivilizedVillager villager, Animal animal) {

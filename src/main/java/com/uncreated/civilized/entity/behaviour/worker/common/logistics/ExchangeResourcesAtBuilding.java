@@ -6,9 +6,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import org.slf4j.Logger;
-
-import com.mojang.logging.LogUtils;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.BehaviourState;
@@ -24,14 +21,12 @@ import net.minecraft.world.level.block.entity.ChestBlockEntity;
 
 public abstract class ExchangeResourcesAtBuilding extends WorkTaskBehaviour {
 
-   private static final Logger LOGGER = LogUtils.getLogger();
-
    protected Building targetbuilding;
    private List<ChestBlockEntity> chestsAtTarget;
    private MediumDistanceTravelTask travelHelper;
 
    public ExchangeResourcesAtBuilding(BehaviourState workState, int duration, int cooldownDuration) {
-      super(workState, duration, cooldownDuration);
+      super(workState, false, false, duration, cooldownDuration);
    }
 
    protected abstract Optional<Building> findTargetBuilding(ServerLevel level, CivilizedVillager villager);

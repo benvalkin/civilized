@@ -5,13 +5,13 @@ import java.util.List;
 import java.util.Optional;
 
 import com.uncreated.civilized.core.building.Building;
-import com.uncreated.civilized.core.building.ServerBuildingsStore;
+import com.uncreated.civilized.core.building.entity.LoadedBuilding;
+import com.uncreated.civilized.core.building.entity.LoadedBuildings;
 import com.uncreated.civilized.core.building.logistics.LogisticsManager;
 import com.uncreated.civilized.core.building.logistics.PendingShipment;
 import com.uncreated.civilized.core.building.logistics.orders.LogisticsOrder;
 import com.uncreated.civilized.core.building.logistics.orders.imports.ImportOrder;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlement;
-import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
 import com.uncreated.civilized.util.ContainerHelper;
@@ -23,8 +23,7 @@ import net.minecraft.world.level.Level;
 
 public class FetchExportsFromHome extends ExchangeResourcesAtBuilding {
 
-   private Building storehouse;
-   private LoadedSettlement settlement;
+   private LoadedBuilding storehouse;
 
    public FetchExportsFromHome() {
       super(WorkStates.FETCHING_EXPORTS_FROM_HOME, 120 * 20, 30 * 20);
@@ -32,7 +31,7 @@ public class FetchExportsFromHome extends ExchangeResourcesAtBuilding {
 
    @Override
    protected Optional<Building> findTargetBuilding(ServerLevel level, CivilizedVillager villager) {
-      return ServerBuildingsStore.INSTANCE.find(villager.getInfo().getHomeBuildingId());
+      return LoadedBuildings.checkLoaded(villager.getInfo().getHomeBuildingId()).map(LoadedBuilding::getBuilding);
    }
 
    @Override
@@ -41,17 +40,13 @@ public class FetchExportsFromHome extends ExchangeResourcesAtBuilding {
       if (!super.checkExtraStartConditions(level, villager))
          return false;
 
-      Optional<LoadedSettlement> loadedSettlement = LoadedSettlements.checkLoaded(villager.getInfo().getSettlementId());
-      if (loadedSettlement.isEmpty())
+      Optional<LoadedBuilding> storehouse = findStorehouse(getSettlement());
+      if (storehouse.isEmpty())
          return false;
 
-      storehouse = ServerBuildingsStore.INSTANCE.findStorehouse(villager.getInfo().getSettlementId()).orElse(null);
-      if (storehouse == null)
-         return false;
+      this.storehouse = storehouse.get();
 
-      settlement = loadedSettlement.get();
-
-      if (!areThereItemsToExport(settlement, targetbuilding, storehouse))
+      if (!areThereItemsToExport(getSettlement(), targetbuilding, this.storehouse.getBuilding()))
          return false;
 
       return true;
@@ -70,10 +65,10 @@ public class FetchExportsFromHome extends ExchangeResourcesAtBuilding {
 
    public boolean takeEverythingButLeaveImportOrders(CivilizedVillager villager, Level level) {
 
-      LogisticsManager logisticsManager = settlement.getBehaviour().getLogisticsManager();
+      LogisticsManager logisticsManager = getSettlement().getBehaviour().getLogisticsManager();
 
       List<Container> buildingContainers = LogisticsOrder.findChests(level, targetbuilding);
-      List<Container> storehouseContainers = LogisticsOrder.findChests(level, storehouse);
+      List<Container> storehouseContainers = LogisticsOrder.findChests(level, storehouse.getBuilding());
 
       Collection<ImportOrder> importOrders = logisticsManager.getImportOrders(targetbuilding).orders();
 
@@ -130,7 +125,10 @@ public class FetchExportsFromHome extends ExchangeResourcesAtBuilding {
          return item.getCount();
    }
 
-   public static boolean areThereItemsToExport(LoadedSettlement settlement, Building targetbuilding, Building storehouse) {
+   public static boolean areThereItemsToExport(
+         LoadedSettlement settlement,
+         Building targetbuilding,
+         Building storehouse) {
 
       List<Container> buildingContainers = LogisticsOrder.findChests(settlement.getLevel(), targetbuilding);
       List<Container> storehouseContainers = LogisticsOrder.findChests(settlement.getLevel(), storehouse);
@@ -146,7 +144,8 @@ public class FetchExportsFromHome extends ExchangeResourcesAtBuilding {
             if (item.isEmpty())
                continue;
 
-            int toTake = adjustTakeSizeIfMandatedByImportOrder(item, buildingContainers, storehouseContainers, importOrders);
+            int toTake =
+                  adjustTakeSizeIfMandatedByImportOrder(item, buildingContainers, storehouseContainers, importOrders);
 
             if (toTake > 0)
                return true;

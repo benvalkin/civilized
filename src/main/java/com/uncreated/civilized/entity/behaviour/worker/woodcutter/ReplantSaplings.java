@@ -2,21 +2,19 @@ package com.uncreated.civilized.entity.behaviour.worker.woodcutter;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import org.slf4j.Logger;
 
 import com.google.common.collect.Lists;
 import com.mojang.logging.LogUtils;
 import com.uncreated.civilized.core.building.Building;
-import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.logistics.LogisticsManager;
 import com.uncreated.civilized.core.building.logistics.orders.StorehouseOrder;
 import com.uncreated.civilized.core.building.logistics.orders.imports.ImportUpTo;
 import com.uncreated.civilized.core.building.logistics.orders.task.TaskConsumableItemRequirement;
 import com.uncreated.civilized.core.building.logistics.orders.task.TaskItemRequirement;
 import com.uncreated.civilized.core.building.state.GroveState;
-import com.uncreated.civilized.core.settlement.entity.LoadedSettlement;
-import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
@@ -27,7 +25,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.ItemTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.ai.behavior.BlockPosTracker;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
@@ -41,27 +38,19 @@ public class ReplantSaplings extends WorkTaskBehaviour {
    public static final Logger LOGGER = LogUtils.getLogger();
    private long lastWorkTime;
    private final List<BlockPos> validPlantingBlocks = Lists.newArrayList();
-   private Building workSite;
    private MediumDistanceTravelTask travelHelper;
+   private Predicate<ItemStack> saplingFilter;
 
    public ReplantSaplings() {
-      super(WorkStates.REPLANT_SAPLINGS, 60 * 20, 30 * 20);
+      super(WorkStates.REPLANT_SAPLINGS, true, true, 60 * 20, 30 * 20);
    }
 
    @Override
    protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
 
-      workSite = ServerBuildingsStore.INSTANCE.get(villager.getInfo().getPrimaryWorksiteId());
+      LogisticsManager logisticsManager = getSettlement().getBehaviour().getLogisticsManager();
 
-      Building home = ServerBuildingsStore.INSTANCE.get(villager.getInfo().getHomeBuildingId());
-
-      Optional<LoadedSettlement> loadedSettlement = LoadedSettlements.checkLoaded(home.getSettlementId());
-      if (loadedSettlement.isEmpty())
-         return false;
-
-      LogisticsManager logisticsManager = loadedSettlement.get().getBehaviour().getLogisticsManager();
-
-      GroveState behaviour = (GroveState) workSite.getState();
+      GroveState behaviour = (GroveState) getWorksite().getBuilding().getState();
       TaskItemRequirement taskItemRequirement =
             new TaskConsumableItemRequirement(
                   level,
@@ -70,7 +59,7 @@ public class ReplantSaplings extends WorkTaskBehaviour {
                   StorehouseOrder.Origin.AUTOMATIC,
                   16);
       taskItemRequirement.setExpiry(12000);
-      logisticsManager.registerOrder(home, taskItemRequirement);
+      logisticsManager.registerOrder(getHome().getBuilding(), taskItemRequirement);
       ImportUpTo importOrder =
             new ImportUpTo(
                   level,
@@ -81,7 +70,16 @@ public class ReplantSaplings extends WorkTaskBehaviour {
                   8,
                   32);
       importOrder.setExpiry(12000);
-      logisticsManager.registerOrder(home, importOrder);
+      logisticsManager.registerOrder(getHome().getBuilding(), importOrder);
+
+      saplingFilter = taskItemRequirement.getItemSearch();
+
+      if (getSaplingsInInventory(villager).isEmpty()) {
+         // todo: send notification that the villager is missing tool
+         getStateMachine().queueActionOnce(WorkStates.FETCHING_WORK_INPUT_FROM_HOME);
+         getStateMachine().queueActionOnce(this.getState());
+         return false;
+      }
 
       findValidPlantingBlocks(level);
       return !validPlantingBlocks.isEmpty(); // only start when it is possible to replant saplings
@@ -90,7 +88,7 @@ public class ReplantSaplings extends WorkTaskBehaviour {
    @Override
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.start(level, villager, gameTime);
-      travelHelper = new MediumDistanceTravelTask(villager, workSite.getBlockPos(), 8);
+      travelHelper = new MediumDistanceTravelTask(villager, getWorksite().getBuilding().getBlockPos(), 8);
    }
 
    @Override
@@ -147,11 +145,12 @@ public class ReplantSaplings extends WorkTaskBehaviour {
 
    private void findValidPlantingBlocks(ServerLevel serverLevel) {
 
-      BlockPos.MutableBlockPos current = workSite.getBlockPos().mutable();
+      Building worksite = getWorksite().getBuilding();
+      BlockPos.MutableBlockPos current = worksite.getBlockPos().mutable();
       validPlantingBlocks.clear();
 
-      BlockPos lowerCorner = workSite.getBounds().getLowerCorner();
-      BlockPos upperCorner = workSite.getBounds().getUpperCorner();
+      BlockPos lowerCorner = worksite.getBounds().getLowerCorner();
+      BlockPos upperCorner = worksite.getBounds().getUpperCorner();
 
       int plantingXZMargin = 3;
       for (int x = lowerCorner.getX() + plantingXZMargin; x <= upperCorner.getX() - plantingXZMargin; x++) {
@@ -179,6 +178,6 @@ public class ReplantSaplings extends WorkTaskBehaviour {
    }
 
    private Optional<ItemStack> getSaplingsInInventory(CivilizedVillager villager) {
-      return villager.getWorkInputInventory().getItems().stream().filter(f -> f.is(ItemTags.SAPLINGS)).findFirst();
+      return villager.getWorkInputInventory().getItems().stream().filter(saplingFilter).findFirst();
    }
 }

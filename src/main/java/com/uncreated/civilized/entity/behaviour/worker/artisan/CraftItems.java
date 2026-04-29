@@ -4,16 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import javax.annotation.Nullable;
-
 import org.slf4j.Logger;
 
 import com.mojang.datafixers.util.Pair;
 import com.mojang.logging.LogUtils;
 import com.uncreated.civilized.core.building.Building;
-import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
-import com.uncreated.civilized.core.building.entity.LoadedBuildings;
 import com.uncreated.civilized.core.building.entity.behaviour.ArtisanHouseBehaviour;
 import com.uncreated.civilized.core.building.logistics.LogisticsManager;
 import com.uncreated.civilized.core.building.logistics.orders.LogisticsOrder;
@@ -22,8 +18,6 @@ import com.uncreated.civilized.core.building.production.PendingProductionOutput;
 import com.uncreated.civilized.core.building.production.lines.crafting.CraftingMachine;
 import com.uncreated.civilized.core.building.production.lines.crafting.CraftingOrder;
 import com.uncreated.civilized.core.building.production.orders.ProductionOrder;
-import com.uncreated.civilized.core.settlement.entity.LoadedSettlement;
-import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
@@ -44,9 +38,6 @@ import net.minecraft.world.level.block.state.BlockState;
 public class CraftItems extends WorkTaskBehaviour {
    public static final Logger LOGGER = LogUtils.getLogger();
    private long lastWorkTime;
-   private LoadedBuilding home;
-   @Nullable
-   Building storehouse;
    private BlockPos workBlock;
    private MediumDistanceTravelTask travelHelper;
 
@@ -56,27 +47,16 @@ public class CraftItems extends WorkTaskBehaviour {
    private List<Container> stockChests = new ArrayList<>();
 
    public CraftItems() {
-      super(WorkStates.CRAFTING_ITEMS, 90 * 20, 10 * 20);
+      super(WorkStates.CRAFTING_ITEMS, true, false, 90 * 20, 10 * 20);
    }
 
    @Override
    protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
 
-      Optional<LoadedBuilding> loadedHome = LoadedBuildings.checkLoaded(villager.getInfo().getHomeBuildingId());
-      if (loadedHome.isEmpty())
-         return false;
+      Optional<LoadedBuilding> storehouse = findStorehouse(getSettlement());
 
-      home = loadedHome.get();
-
-      Optional<LoadedSettlement> loadedSettlement = LoadedSettlements.checkLoaded(home.getBuilding().getSettlementId());
-      if (loadedSettlement.isEmpty())
-         return false;
-
-      storehouse =
-            ServerBuildingsStore.INSTANCE.findStorehouse(loadedSettlement.get().getSettlement().getSettlementId())
-                  .orElse(null);
-
-      home.getBuilding().getBounds().traverseBlocksWithin(traversal -> {
+      Building worksite = getWorksite().getBuilding();
+      worksite.getBounds().traverseBlocksWithin(traversal -> {
          BlockState blockState = level.getBlockState(traversal.getCurrentBlockPos());
 
          if (blockState.getBlock() instanceof CraftingTableBlock) {
@@ -91,19 +71,20 @@ public class CraftItems extends WorkTaskBehaviour {
       if (workBlock == null)
          return false;
 
-      LogisticsManager logisticsManager = loadedSettlement.get().getBehaviour().getLogisticsManager();
+      LogisticsManager logisticsManager = getSettlement().getBehaviour().getLogisticsManager();
 
-      ArtisanHouseBehaviour behaviour = (ArtisanHouseBehaviour) loadedHome.get().getBehaviour();
+      ArtisanHouseBehaviour behaviour = (ArtisanHouseBehaviour) getWorksite().getBehaviour();
 
       craftingMachine = behaviour.getRecipeProductionSystem().getMachine(CraftingMachine.class);
 
-      ingredientsChests = LogisticsOrder.findChests(level, home.getBuilding());
+      ingredientsChests = LogisticsOrder.findChests(level, worksite);
       stockChests =
-            storehouse != null ? LogisticsOrder.findChests(level, home.getBuilding(), storehouse) : ingredientsChests;
+            storehouse.map(loadedBuilding -> LogisticsOrder.findChests(level, worksite, loadedBuilding.getBuilding()))
+                  .orElseGet(() -> ingredientsChests);
 
       for (CraftingOrder productionOrder : craftingMachine.getOrders()) {
          List<ImportOrder> importOrders = productionOrder.createImportOrdersForIngredients(stockChests);
-         importOrders.forEach(i -> logisticsManager.registerOrder(home.getBuilding(), i));
+         importOrders.forEach(i -> logisticsManager.registerOrder(worksite, i));
       }
 
       if (craftingMachine.tryGetNextOrder(ingredientsChests, stockChests).isEmpty()) {

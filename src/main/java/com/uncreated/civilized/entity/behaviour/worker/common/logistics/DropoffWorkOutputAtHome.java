@@ -3,7 +3,8 @@ package com.uncreated.civilized.entity.behaviour.worker.common.logistics;
 import java.util.Optional;
 
 import com.uncreated.civilized.core.building.Building;
-import com.uncreated.civilized.core.building.ServerBuildingsStore;
+import com.uncreated.civilized.core.building.entity.LoadedBuilding;
+import com.uncreated.civilized.core.building.entity.LoadedBuildings;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
 
@@ -17,7 +18,7 @@ public class DropoffWorkOutputAtHome extends ExchangeResourcesAtBuilding {
 
    @Override
    protected Optional<Building> findTargetBuilding(ServerLevel level, CivilizedVillager villager) {
-      return ServerBuildingsStore.INSTANCE.find(villager.getInfo().getHomeBuildingId());
+      return LoadedBuildings.checkLoaded(villager.getInfo().getHomeBuildingId()).map(LoadedBuilding::getBuilding);
    }
 
    @Override

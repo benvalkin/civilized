@@ -124,7 +124,7 @@ public class WorkActivities {
                   1,
                   new WorkBehaviourControl(
                         ImmutableList.of(
-                              new BreedAnimals<>(Cow.class),
+                              new BreedAnimals<>(),
                               new SlaughterAnimals<>(Cow.class),
                               new CheckLogisticsOpportunities(),
                               new DropoffWorkOutputAtHome(),

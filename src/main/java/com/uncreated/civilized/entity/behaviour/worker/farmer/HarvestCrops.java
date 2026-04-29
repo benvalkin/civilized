@@ -8,14 +8,10 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
-import com.uncreated.civilized.core.building.Building;
-import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.logistics.LogisticsManager;
 import com.uncreated.civilized.core.building.logistics.orders.StorehouseOrder;
 import com.uncreated.civilized.core.building.logistics.orders.imports.ImportUpTo;
 import com.uncreated.civilized.core.building.logistics.orders.task.ToolRequirement;
-import com.uncreated.civilized.core.settlement.entity.LoadedSettlement;
-import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
@@ -45,11 +41,10 @@ public class HarvestCrops extends WorkTaskBehaviour {
    private @Nullable BlockPos nextFarmland = null;
    private @Nullable BlockPos nextMaturesCropToHarvest = null;
    private MediumDistanceTravelTask travelHelper;
-   private Building workSite;
    private ItemStack handHeld;
 
    public HarvestCrops() {
-      super(WorkStates.HARVESTING_CROPS, 120 * 20, 30 * 20);
+      super(WorkStates.HARVESTING_CROPS, true, true, 120 * 20, 30 * 20);
    }
 
    @Override
@@ -57,30 +52,16 @@ public class HarvestCrops extends WorkTaskBehaviour {
       if (!super.checkExtraStartConditions(level, villager))
          return false;
 
-      Optional<Building> worksite = ServerBuildingsStore.INSTANCE.find(villager.getInfo().getPrimaryWorksiteId());
-      if (worksite.isEmpty())
-         return false;
-
-      this.workSite = worksite.get();
-
-      Optional<Building> home = ServerBuildingsStore.INSTANCE.find(villager.getInfo().getHomeBuildingId());
-      if (home.isEmpty())
-         return false;
-
-      Optional<LoadedSettlement> loadedSettlement = LoadedSettlements.checkLoaded(home.get().getSettlementId());
-      if (loadedSettlement.isEmpty())
-         return false;
-
-      LogisticsManager logisticsManager = loadedSettlement.get().getBehaviour().getLogisticsManager();
+      LogisticsManager logisticsManager = getSettlement().getBehaviour().getLogisticsManager();
 
       ToolRequirement toolRequirement =
             new ToolRequirement(level, "harvest_crops", HoeItem.class, StorehouseOrder.Origin.AUTOMATIC);
       toolRequirement.setExpiry(12000);
-      logisticsManager.registerOrder(home.get(), toolRequirement);
+      logisticsManager.registerOrder(getHome().getBuilding(), toolRequirement);
       ImportUpTo importOrder =
             new ImportUpTo(level, "hoe", toolRequirement.getItemSearch(), StorehouseOrder.Origin.AUTOMATIC, 1, 1, 1);
       importOrder.setExpiry(12000);
-      logisticsManager.registerOrder(home.get(), importOrder);
+      logisticsManager.registerOrder(getHome().getBuilding(), importOrder);
 
       Optional<ContainerHelper.ItemSearchResult> tool =
             ContainerHelper.findItem(villager.getWorkInputInventory(), toolRequirement.getItemSearch());
@@ -100,8 +81,7 @@ public class HarvestCrops extends WorkTaskBehaviour {
    @Override
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.start(level, villager, gameTime);
-      workSite = ServerBuildingsStore.INSTANCE.get(villager.getInfo().getPrimaryWorksiteId());
-      travelHelper = new MediumDistanceTravelTask(villager, workSite.getBlockPos(), 5);
+      travelHelper = new MediumDistanceTravelTask(villager, getWorksite().getBuilding().getBlockPos(), 5);
       hasWorkOutputItems = false;
       villager.setItemSlot(EquipmentSlot.MAINHAND, handHeld);
    }
@@ -197,7 +177,7 @@ public class HarvestCrops extends WorkTaskBehaviour {
       nextFarmland = null;
       nextMaturesCropToHarvest = null;
 
-      workSite.getBounds().traverseBlocksWithinTerminateYChecksIfCanSeeSky(b -> {
+      getWorksite().getBuilding().getBounds().traverseBlocksWithinTerminateYChecksIfCanSeeSky(b -> {
 
          if (isFarmland(b, serverLevel)) {
             nextFarmland = b.immutable();

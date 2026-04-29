@@ -8,14 +8,10 @@ import java.util.Optional;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
-import com.uncreated.civilized.core.building.Building;
-import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.logistics.LogisticsManager;
 import com.uncreated.civilized.core.building.logistics.orders.StorehouseOrder;
 import com.uncreated.civilized.core.building.logistics.orders.imports.ImportUpTo;
 import com.uncreated.civilized.core.building.logistics.orders.task.ToolRequirement;
-import com.uncreated.civilized.core.settlement.entity.LoadedSettlement;
-import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
@@ -40,7 +36,6 @@ import net.minecraft.world.phys.AABB;
 public class MineOres extends WorkTaskBehaviour {
    public static final Logger LOGGER = LogUtils.getLogger();
    private long lastWorkTime;
-   private Building workSite;
    private MediumDistanceTravelTask travelHelper;
 
    private int workSpeedMultiplier = 2;
@@ -52,26 +47,19 @@ public class MineOres extends WorkTaskBehaviour {
    private ItemStack handHeld;
 
    public MineOres() {
-      super(WorkStates.MINING_ORES, 90 * 20, 30 * 20);
+      super(WorkStates.MINING_ORES, true, true, 90 * 20, 30 * 20);
       recentlyMinedBlocks = new HashMap<>();
    }
 
    @Override
    protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
 
-      workSite = ServerBuildingsStore.INSTANCE.get(villager.getInfo().getPrimaryWorksiteId());
-
-      Building home = ServerBuildingsStore.INSTANCE.get(villager.getInfo().getHomeBuildingId());
-      Optional<LoadedSettlement> loadedSettlement = LoadedSettlements.checkLoaded(home.getSettlementId());
-      if (loadedSettlement.isEmpty())
-         return false;
-
-      LogisticsManager logisticsManager = loadedSettlement.get().getBehaviour().getLogisticsManager();
+      LogisticsManager logisticsManager = getSettlement().getBehaviour().getLogisticsManager();
 
       ToolRequirement toolRequirement =
             new ToolRequirement(level, "mine_ores", PickaxeItem.class, StorehouseOrder.Origin.AUTOMATIC);
       toolRequirement.setExpiry(12000);
-      logisticsManager.registerOrder(home, toolRequirement);
+      logisticsManager.registerOrder(getHome().getBuilding(), toolRequirement);
       ImportUpTo importOrder =
             new ImportUpTo(
                   level,
@@ -82,7 +70,7 @@ public class MineOres extends WorkTaskBehaviour {
                   1,
                   1);
       importOrder.setExpiry(12000);
-      logisticsManager.registerOrder(home, importOrder);
+      logisticsManager.registerOrder(getHome().getBuilding(), importOrder);
 
       Optional<ContainerHelper.ItemSearchResult> tool =
             ContainerHelper.findItem(villager.getWorkInputInventory(), toolRequirement.getItemSearch());
@@ -101,7 +89,7 @@ public class MineOres extends WorkTaskBehaviour {
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.start(level, villager, gameTime);
       foundOres = false;
-      travelHelper = new MediumDistanceTravelTask(villager, workSite.getBlockPos(), 2);
+      travelHelper = new MediumDistanceTravelTask(villager, getWorksite().getBuilding().getBlockPos(), 2);
       villager.setItemSlot(EquipmentSlot.MAINHAND, handHeld);
    }
 
@@ -145,13 +133,13 @@ public class MineOres extends WorkTaskBehaviour {
    private void mineOreVein(ServerLevel level, CivilizedVillager villager, long gameTime) {
       int miningDepth = 0;
 
-      LevelChunk chunk = level.getChunkAt(workSite.getBlockPos());
+      LevelChunk chunk = level.getChunkAt(getWorksite().getBuilding().getBlockPos());
       int minX = chunk.getPos().getMinBlockX();
       int minZ = chunk.getPos().getMinBlockZ();
       int maxX = chunk.getPos().getMaxBlockX();
       int maxZ = chunk.getPos().getMaxBlockZ();
       int minY = Math.max(miningDepth, chunk.getMinY());
-      int maxY = workSite.getBlockPos().getY();
+      int maxY = getWorksite().getBuilding().getBlockPos().getY();
 
       int mineX = villager.getRandom().nextInt(minX, maxX + 1);
       int mineY = villager.getRandom().nextInt(minY, maxY + 1);

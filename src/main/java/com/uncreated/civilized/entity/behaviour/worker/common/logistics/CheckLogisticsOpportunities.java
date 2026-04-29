@@ -5,15 +5,12 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
-import com.uncreated.civilized.core.building.Building;
-import com.uncreated.civilized.core.building.ServerBuildingsStore;
+import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.logistics.LogisticsManager;
 import com.uncreated.civilized.core.building.logistics.PendingShipment;
 import com.uncreated.civilized.core.building.logistics.orders.LogisticsOrder;
 import com.uncreated.civilized.core.building.logistics.orders.LogisticsOrders;
 import com.uncreated.civilized.core.building.logistics.orders.imports.ImportOrder;
-import com.uncreated.civilized.core.settlement.entity.LoadedSettlement;
-import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.Cooldowns;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
@@ -24,12 +21,10 @@ import net.minecraft.world.Container;
 
 public class CheckLogisticsOpportunities extends WorkTaskBehaviour {
 
-   private LoadedSettlement settlement;
-   private Building home;
-   private Building storehouse;
+   private LoadedBuilding storehouse;
 
    public CheckLogisticsOpportunities() {
-      super(WorkStates.CHECK_LOGISTICS_OPPORTUNITIES, 0, 5 * 20);
+      super(WorkStates.CHECK_LOGISTICS_OPPORTUNITIES, true, true, 0, 5 * 20);
    }
 
    @Override
@@ -47,22 +42,14 @@ public class CheckLogisticsOpportunities extends WorkTaskBehaviour {
 
       getBehaviourCooldowns().startCooldown(Cooldowns.START, Duration.of(15, ChronoUnit.SECONDS), level.getGameTime());
 
-      Optional<LoadedSettlement> loadedSettlement = LoadedSettlements.checkLoaded(villager.getInfo().getSettlementId());
-      if (loadedSettlement.isEmpty())
+      Optional<LoadedBuilding> storehouse = findStorehouse(getSettlement());
+      if (storehouse.isEmpty())
          return;
 
-      settlement = loadedSettlement.get();
+      this.storehouse = storehouse.get();
 
-      home = ServerBuildingsStore.INSTANCE.find(villager.getInfo().getHomeBuildingId()).orElse(null);
-      if (home == null)
-         return;
-
-      storehouse = ServerBuildingsStore.INSTANCE.findStorehouse(villager.getInfo().getSettlementId()).orElse(null);
-      if (storehouse == null)
-         return;
-
-      List<Container> homeChests = LogisticsOrder.findChests(level, home);
-      List<Container> storehouseChests = LogisticsOrder.findChests(level, storehouse);
+      List<Container> homeChests = LogisticsOrder.findChests(level, getHome().getBuilding());
+      List<Container> storehouseChests = LogisticsOrder.findChests(level, this.storehouse.getBuilding());
 
       if (!getSharedCooldowns().hasCooldown(Cooldowns.EXPORT_RUN, level.getGameTime()) && checkForExportOrders()) {
          getStateMachine().queueActionOnce(WorkStates.FETCHING_EXPORTS_FROM_HOME);
@@ -73,13 +60,14 @@ public class CheckLogisticsOpportunities extends WorkTaskBehaviour {
    }
 
    private boolean checkForExportOrders() {
-      return FetchExportsFromHome.areThereItemsToExport(settlement, home, storehouse);
+      return FetchExportsFromHome
+            .areThereItemsToExport(getSettlement(), getHome().getBuilding(), storehouse.getBuilding());
    }
 
    private boolean checkForImportOrders(List<Container> source, List<Container> destination) {
 
-      LogisticsManager logisticsManager = settlement.getBehaviour().getLogisticsManager();
-      LogisticsOrders<ImportOrder> importOrders = logisticsManager.getImportOrders(home);
+      LogisticsManager logisticsManager = getSettlement().getBehaviour().getLogisticsManager();
+      LogisticsOrders<ImportOrder> importOrders = logisticsManager.getImportOrders(getHome().getBuilding());
 
       for (ImportOrder order : importOrders.orders()) {
 

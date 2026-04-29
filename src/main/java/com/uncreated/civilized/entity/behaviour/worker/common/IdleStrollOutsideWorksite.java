@@ -1,12 +1,9 @@
 package com.uncreated.civilized.entity.behaviour.worker.common;
 
-import java.util.Optional;
-
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
-import com.uncreated.civilized.core.building.Building;
-import com.uncreated.civilized.core.building.ServerBuildingsStore;
+import com.uncreated.civilized.core.building.bounds.BuildingBounds;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
@@ -25,37 +22,26 @@ public class IdleStrollOutsideWorksite extends WorkTaskBehaviour {
    private final int maxVerticalDist;
    private final float speedModifier;
    private long nextWorkTime;
-   private Building workSite;
    private MediumDistanceTravelTask travelHelper;
 
    public IdleStrollOutsideWorksite(int maxHorizontalDist, int maxVerticalDist, float strollSpeedModifier) {
-      super(WorkStates.STROLL_OUTSIDE_WORKSITE, 120 * 15, 0);
+      super(WorkStates.STROLL_OUTSIDE_WORKSITE, true, false, 120 * 15, 0);
       this.maxHorizontalDist = maxHorizontalDist;
       this.maxVerticalDist = maxVerticalDist;
       this.speedModifier = strollSpeedModifier;
    }
 
    @Override
-   protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
-      Optional<Building> worksite = ServerBuildingsStore.INSTANCE.find(villager.getInfo().getPrimaryWorksiteId());
-      if (worksite.isEmpty())
-         return false;
-
-      workSite = worksite.get();
-      return true;
-   }
-
-   @Override
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
       nextWorkTime = gameTime;
 
-      AABB tooCloseBounds = workSite.getBounds().getEncapsulatingAABB();
+      AABB tooCloseBounds = getWorksite().getBuilding().getBounds().getEncapsulatingAABB();
       AABB closeEnoughBounds = tooCloseBounds.inflate(4);
 
       travelHelper =
             new MediumDistanceTravelTask(
                   villager,
-                  workSite.getBlockPos(),
+                  getWorksite().getBuilding().getBlockPos(),
                   (v, d, closEnough) -> closeEnoughBounds.contains(v.position()),
                   Math.max((int) closeEnoughBounds.getXsize() / 2, (int) closeEnoughBounds.getZsize() / 2));
    }
@@ -73,8 +59,9 @@ public class IdleStrollOutsideWorksite extends WorkTaskBehaviour {
          return;
       }
 
-      AABB innerBounds = workSite.getBounds().getEncapsulatingAABB().inflate(1);
-      AABB outerBounds = workSite.getBounds().getEncapsulatingAABB().inflate(1 + maxHorizontalDist);
+      BuildingBounds worksiteBounds = getWorksite().getBuilding().getBounds();
+      AABB innerBounds = worksiteBounds.getEncapsulatingAABB().inflate(1);
+      AABB outerBounds = worksiteBounds.getEncapsulatingAABB().inflate(1 + maxHorizontalDist);
 
       if (tickTime >= nextWorkTime) {
          nextWorkTime += villager.getRandom().nextInt(5 * 20, 15 * 20);
