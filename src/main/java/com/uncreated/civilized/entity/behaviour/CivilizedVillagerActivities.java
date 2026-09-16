@@ -39,8 +39,7 @@ public class CivilizedVillagerActivities {
                               // Pair.of(InsideBrownianWalk.create(speedModifier), 4),
                               // Pair.of(GoToClosestVillage.create(speedModifier, 4), 2),
                               Pair.of(new DoNothing(20, 40), 2)))),
-            getMinimalLookBehavior(),
-            Pair.of(99, UpdateActivityFromSchedule.create()));
+            getMinimalLookBehavior());
    }
 
    public static ImmutableList<Pair<Integer, ? extends BehaviorControl<? super CivilizedVillager>>> getCorePackage(
@@ -103,8 +102,7 @@ public class CivilizedVillagerActivities {
             // GateBehavior.OrderPolicy.ORDERED,
             // GateBehavior.RunningPolicy.RUN_ONE,
             // ImmutableList.of(Pair.of(new VillagerMakeLove(), 1)))),
-            getFullLookBehavior(),
-            Pair.of(99, UpdateActivityFromSchedule.create()));
+            getFullLookBehavior());
    }
 
    public static ImmutableList<Pair<Integer, ? extends BehaviorControl<? super CivilizedVillager>>> getSpeakToPlayerPackage() {

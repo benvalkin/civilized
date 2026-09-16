@@ -72,6 +72,15 @@ public class BuildingRequirements {
                      .add(new SignsPresentRequirement(1, false))
                      .create());
 
+         registerRequirements(
+               registry,
+               BuildingRequirementList.forBuilding(BuildingTypes.GUARD_POST, 1)
+                     .add(new EnclosedRoomRequirement())
+                     .add(new SpaceRequirement(4))
+                     .add(new ChestsPresentRequirement(1, false))
+                     .add(new SignsPresentRequirement(1, false))
+                     .create());
+
          registerStandardHouse(BuildingTypes.BAKER_HOUSE, registry, b -> {
             b.add(new CraftingTablesPresentRequirement(1, false));
             b.add(new FurnacesPresentRequirement(1, false));

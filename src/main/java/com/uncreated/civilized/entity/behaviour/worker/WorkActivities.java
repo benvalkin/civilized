@@ -8,7 +8,6 @@ import com.uncreated.civilized.core.villagerinfo.VillagerOccupation;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.BehaviourStates;
 import com.uncreated.civilized.entity.behaviour.IdleStrollAroundSettlement;
-import com.uncreated.civilized.entity.behaviour.UpdateActivityFromSchedule;
 import com.uncreated.civilized.entity.behaviour.worker.artisan.CraftItems;
 import com.uncreated.civilized.entity.behaviour.worker.artisan.furnace.SmeltItems;
 import com.uncreated.civilized.entity.behaviour.worker.common.IdleStrollAroundWorksite;
@@ -63,8 +62,7 @@ public class WorkActivities {
                               new IdleStrollAroundSettlement(5, 3, 0.25f)),
                         ImmutableList.of(WorkStates.HARVESTING_CROPS, WorkStates.PLANTING_CROPS),
                         ImmutableList
-                              .of(WorkStates.STROLL_AROUND_WORKSITE, BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT))),
-            Pair.of(99, UpdateActivityFromSchedule.create()));
+                              .of(WorkStates.STROLL_AROUND_WORKSITE, BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT))));
    }
 
    public static ImmutableList<Pair<Integer, ? extends BehaviorControl<CivilizedVillager>>> getWoodcutterWorkPackage() {
@@ -90,8 +88,7 @@ public class WorkActivities {
                               WorkStates.CUTTING_DOWN_TREES,
                               WorkStates.REPLANT_SAPLINGS),
                         ImmutableList
-                              .of(WorkStates.STROLL_AROUND_WORKSITE, BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT))),
-            Pair.of(99, UpdateActivityFromSchedule.create()));
+                              .of(WorkStates.STROLL_AROUND_WORKSITE, BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT))));
    }
 
    public static ImmutableList<Pair<Integer, ? extends BehaviorControl<CivilizedVillager>>> getMinerWorkPackage() {
@@ -113,8 +110,7 @@ public class WorkActivities {
                               new IdleStrollAroundSettlement(5, 3, 0.25f)),
                         ImmutableList.of(WorkStates.MINING_ORES, WorkStates.CHECK_LOGISTICS_OPPORTUNITIES),
                         ImmutableList
-                              .of(WorkStates.STROLL_AROUND_WORKSITE, BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT))),
-            Pair.of(99, UpdateActivityFromSchedule.create()));
+                              .of(WorkStates.STROLL_AROUND_WORKSITE, BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT))));
    }
 
    public static ImmutableList<Pair<Integer, ? extends BehaviorControl<CivilizedVillager>>> getRancherWorkPackage() {
@@ -140,8 +136,7 @@ public class WorkActivities {
                               WorkStates.BREEDING_ANIMALS,
                               WorkStates.SLAUGHTERING_ANIMALS),
                         ImmutableList
-                              .of(WorkStates.STROLL_OUTSIDE_WORKSITE, BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT))),
-            Pair.of(99, UpdateActivityFromSchedule.create()));
+                              .of(WorkStates.STROLL_OUTSIDE_WORKSITE, BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT))));
    }
 
    public static ImmutableList<Pair<Integer, ? extends BehaviorControl<CivilizedVillager>>> getArtisanWorkPackage() {
@@ -162,12 +157,30 @@ public class WorkActivities {
                               new IdleStrollAroundWorksite(4, 3, 0.25f),
                               new IdleStrollAroundSettlement(5, 3, 0.25f)),
                         ImmutableList.of(
-
                               WorkStates.CHECK_LOGISTICS_OPPORTUNITIES,
                               WorkStates.SMELTING_ITEMS,
                               WorkStates.CRAFTING_ITEMS),
                         ImmutableList
-                              .of(WorkStates.STROLL_AROUND_WORKSITE, BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT))),
-            Pair.of(99, UpdateActivityFromSchedule.create()));
+                              .of(WorkStates.STROLL_AROUND_WORKSITE, BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT))));
+   }
+
+   public static ImmutableList<Pair<Integer, ? extends BehaviorControl<CivilizedVillager>>> getGuardWorkPackage() {
+      return ImmutableList.of(
+            getMinimalLookBehavior(),
+            Pair.of(
+                  1,
+                  new WorkBehaviourControl(
+                        ImmutableList.of(
+                              new CheckLogisticsOpportunities(),
+                              new DropoffWorkOutputAtHome(),
+                              new FetchExportsFromHome(),
+                              new DropOffExportsAtStorehouse(),
+                              new FetchImportsFromStorehouse(),
+                              new DropOffImportsAtHome(),
+                              new IdleStrollOutsideWorksite(4, 3, 0.25f),
+                              new IdleStrollAroundSettlement(5, 3, 0.25f)),
+                        ImmutableList.of(WorkStates.CHECK_LOGISTICS_OPPORTUNITIES),
+                        ImmutableList
+                              .of(WorkStates.STROLL_OUTSIDE_WORKSITE, BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT))));
    }
 }

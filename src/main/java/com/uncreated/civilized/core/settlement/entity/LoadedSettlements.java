@@ -6,6 +6,8 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Predicate;
 
+import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
+import com.uncreated.civilized.entity.CivilizedVillager;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;

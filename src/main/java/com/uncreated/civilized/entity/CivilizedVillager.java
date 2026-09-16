@@ -1,6 +1,7 @@
 package com.uncreated.civilized.entity;
 
 import static com.uncreated.civilized.entity.behaviour.CivilizedVillagerActivities.*;
+import static com.uncreated.civilized.entity.behaviour.worker.CombatActivities.getCombatPackage;
 import static com.uncreated.civilized.entity.behaviour.worker.WorkActivities.getWorkPackage;
 
 import java.util.List;
@@ -22,6 +23,12 @@ import com.uncreated.civilized.core.dialogue.context.DialogueContext;
 import com.uncreated.civilized.core.dialogue.controller.DialogueController;
 import com.uncreated.civilized.core.dialogue.controller.DialogueFlow;
 import com.uncreated.civilized.core.dialogue.specialized.ItemDepotDialogue;
+import com.uncreated.civilized.core.settlement.defense.CombatTarget;
+import com.uncreated.civilized.core.settlement.defense.ICombatCommand;
+import com.uncreated.civilized.core.settlement.defense.SettlementDefenseHighCommand;
+import com.uncreated.civilized.core.settlement.defense.TargetRequestResult;
+import com.uncreated.civilized.core.settlement.entity.LoadedSettlement;
+import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
 import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
@@ -38,6 +45,7 @@ import com.uncreated.civilized.ui.menu.dialogue.VillagerDialogueScreen;
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -54,6 +62,7 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.HumanoidArm;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.Brain;
 import net.minecraft.world.entity.ai.behavior.BehaviorControl;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
@@ -65,6 +74,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.schedule.Activity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
 
 public class CivilizedVillager extends AgeableMob implements InventoryCarrier, IEntityWithComplexSpawn {
@@ -85,6 +95,7 @@ public class CivilizedVillager extends AgeableMob implements InventoryCarrier, I
    private final SimpleContainer workInputInventory = new SimpleContainer(8);
    private final SimpleContainer workOutputInventory = new SimpleContainer(8);
    private final SimpleContainer logisticsInventory = new SimpleContainer(8);
+   private final SimpleContainer weaponInventory = new SimpleContainer(8);
 
    private long lifetimeSeed;
 
@@ -165,6 +176,9 @@ public class CivilizedVillager extends AgeableMob implements InventoryCarrier, I
       if (tag.contains("Logistics", 9)) {
          logisticsInventory.fromTag(tag.getList("Logistics", 10), levelRegistry);
       }
+      if (tag.contains("Weapons", 9)) {
+         weaponInventory.fromTag(tag.getList("Weapons", 10), levelRegistry);
+      }
 
    }
 
@@ -172,6 +186,7 @@ public class CivilizedVillager extends AgeableMob implements InventoryCarrier, I
       tag.put("Inventory", workOutputInventory.createTag(levelRegistry));
       tag.put("WorkInput", workInputInventory.createTag(levelRegistry));
       tag.put("Logistics", logisticsInventory.createTag(levelRegistry));
+      tag.put("Weapons", weaponInventory.createTag(levelRegistry));
    }
 
    @Getter
@@ -223,6 +238,10 @@ public class CivilizedVillager extends AgeableMob implements InventoryCarrier, I
 
    public @NotNull SimpleContainer getLogisticsInventory() {
       return logisticsInventory;
+   }
+
+   public @NotNull SimpleContainer getWeaponInventory() {
+      return weaponInventory;
    }
 
    @Override
@@ -291,6 +310,7 @@ public class CivilizedVillager extends AgeableMob implements InventoryCarrier, I
                   AIRegistry.MM_CROP_FIELD_CENTER.get(),
                   AIRegistry.MM_VILLAGER_WORKTIME_OCCUPATION.get(),
                   AIRegistry.MM_DIALOGUE_TARGET.get(),
+                  AIRegistry.MM_DRAFTED.get(),
                   MemoryModuleType.JOB_SITE,
                   MemoryModuleType.HOME,
                   MemoryModuleType.PATH,
@@ -304,10 +324,12 @@ public class CivilizedVillager extends AgeableMob implements InventoryCarrier, I
                   MemoryModuleType.DOORS_TO_CLOSE,
                   MemoryModuleType.INTERACTION_TARGET),
             List.of(
-                  AIRegistry.S_CROP_BLOCK.get(),
                   SensorType.NEAREST_LIVING_ENTITIES,
                   SensorType.NEAREST_PLAYERS,
-                  SensorType.NEAREST_ITEMS));
+                  SensorType.NEAREST_ITEMS,
+                  SensorType.NEAREST_BED,
+                  SensorType.HURT_BY,
+                  AIRegistry.CIVILIZED_VILLAGER_SENSOR.get()));
    }
 
    // TECHDEBT: since this is called in constructor, registerBrainGoals cannot be called here because it depends on
@@ -318,14 +340,16 @@ public class CivilizedVillager extends AgeableMob implements InventoryCarrier, I
    }
 
    private void registerBrainGoals(Brain<CivilizedVillager> brain) {
-      brain.setSchedule(AIRegistry.SCHED_CIVILIZED_VILLAGER_DEFAULT.get());
       brain.addActivity(Activity.CORE, getCorePackage(0.33f));
-      brain.addActivity(Activity.IDLE, getIdlePackage(0.25f));
       if (!info.getOccupation().is(VillagerOccupations.UNEMPLOYED)) {
          brain.addActivityWithConditions(
                Activity.WORK,
                getWorkPackage(info.getOccupation()),
                Set.of(Pair.of(AIRegistry.MM_VILLAGER_WORKTIME_OCCUPATION.get(), MemoryStatus.VALUE_PRESENT)));
+
+         if (info.getOccupation().is(VillagerOccupations.SOLDIER)) {
+            brain.addActivity(AIRegistry.A_DRAFTED.get(), getCombatPackage());
+         }
       }
       brain.addActivityWithConditions(
             Activity.REST,
@@ -336,10 +360,10 @@ public class CivilizedVillager extends AgeableMob implements InventoryCarrier, I
             getSpeakToPlayerPackage(),
             Set.of(Pair.of(AIRegistry.MM_DIALOGUE_TARGET.get(), MemoryStatus.VALUE_PRESENT)),
             Set.of(AIRegistry.MM_DIALOGUE_TARGET.get()));
+      brain.addActivity(Activity.IDLE, getIdlePackage(0.25f));
       brain.setCoreActivities(ImmutableSet.of(Activity.CORE));
       brain.setDefaultActivity(Activity.IDLE);
       brain.setActiveActivityIfPossible(Activity.IDLE);
-      brain.updateActivityFromSchedule(this.level().getDayTime(), this.level().getGameTime());
    }
 
    public void refreshBrain(ServerLevel serverLevel) {
@@ -357,27 +381,70 @@ public class CivilizedVillager extends AgeableMob implements InventoryCarrier, I
 
    @Override
    protected void customServerAiStep(ServerLevel serverLevel) {
+
+      updateActivityFromSchedule(serverLevel.getDayTime(), serverLevel.getDayTime());
+      reportNearbyHostiles();
+
       ProfilerFiller profilerFiller = Profiler.get();
       profilerFiller.push("civilizedVillagerBrain");
       this.getBrain().tick(serverLevel, this);
       profilerFiller.pop();
 
       if (CivilizedVillagerRenderer.DEBUG) {
-         var runningBehaviours = this.getBrain().getRunningBehaviors();
-         // var behavioursList = String.join(" | ",
-         // runningBehaviours.stream().map(BehaviorControl::debugString).toList());
+         List<BehaviorControl<? super CivilizedVillager>> runningBehaviours = getBrain().getRunningBehaviors();
+         String activityName = getBrain().getActiveNonCoreActivity().map(a -> a.getName()).orElse("none").toUpperCase();
+         String behaviourName =
+               runningBehaviours.stream()
+                     .filter(b -> b instanceof StatefulBehaviourControl)
+                     .map(BehaviorControl::debugString)
+                     .findFirst()
+                     .orElse("none");
 
-         Optional<BehaviorControl<? super CivilizedVillager>> workBehaviour =
-               runningBehaviours.stream().filter(b -> b instanceof StatefulBehaviourControl).findFirst();
-         if (workBehaviour.isPresent()) {
-            this.getEntityData().set(CURRENT_WORK_BEHAVIOUR, workBehaviour.get().debugString());
-         } else {
-            this.getEntityData().set(CURRENT_WORK_BEHAVIOUR, "not working");
-         }
-
+         getEntityData().set(CURRENT_WORK_BEHAVIOUR, activityName + ": " + behaviourName);
       }
 
       super.customServerAiStep(serverLevel);
+   }
+
+   private void reportNearbyHostiles() {
+      Optional<LivingEntity> nearestHostile = getBrain().getMemory(MemoryModuleType.NEAREST_HOSTILE);
+      if (nearestHostile.isEmpty())
+         return;
+
+      if (!nearestHostile.get().isAlive())
+         return;
+
+      Optional<LoadedSettlement> loadedSettlement = LoadedSettlements.checkLoaded(info.getSettlementId());
+      if (loadedSettlement.isEmpty())
+         return;
+
+      boolean isVillagerInsideSettlement = loadedSettlement.get().getSettlement().getBounds().contains(position());
+      if (!isVillagerInsideSettlement)
+         return;
+
+      SettlementDefenseHighCommand defenseHighCommand = loadedSettlement.get().getBehaviour().getDefenseHighCommand();
+      defenseHighCommand.reportHostile(this, nearestHostile.get());
+   }
+
+   private long lastScheduleUpdate = 0;
+
+   public void updateActivityFromSchedule(long dayTime, long gameTime) {
+      if (gameTime - this.lastScheduleUpdate <= 20L)
+         return;
+
+      this.lastScheduleUpdate = gameTime;
+      int todayTime = (int) (dayTime % 24000L);
+
+      if (getBrain().isActive(AIRegistry.A_DRAFTED.get()) || getBrain().isActive(AIRegistry.A_SPEAK_TO_PLAYER.get()))
+         return;
+
+      if (todayTime >= 1000 && todayTime < 9000) { // 7am-3pm
+         getBrain().setActiveActivityIfPossible(Activity.WORK);
+      } else if (todayTime >= 9000 && todayTime < 16000) { // 3pm-10pm
+         getBrain().setActiveActivityIfPossible(Activity.IDLE);
+      } else { // after 10pm
+         getBrain().setActiveActivityIfPossible(Activity.REST);
+      }
    }
 
    public void goSpeakToPlayer(Player player) {
@@ -403,5 +470,79 @@ public class CivilizedVillager extends AgeableMob implements InventoryCarrier, I
       super.defineSynchedData(builder);
       // Our default value is zero.
       builder.define(CURRENT_WORK_BEHAVIOUR, "");
+   }
+
+   @Nullable
+   private ICombatCommand combatCommand;
+
+   public void draft(ICombatCommand combatCommand) {
+
+      if (this.combatCommand == combatCommand) {
+         // event maybe
+      }
+
+      this.combatCommand = combatCommand;
+      getBrain().setActiveActivityIfPossible(AIRegistry.A_DRAFTED.get());
+   }
+
+   public void undraft() {
+      if (combatCommand == null) {
+         // event maybe
+      }
+
+      combatCommand = null;
+      getBrain().setActiveActivityIfPossible(Activity.IDLE);
+   }
+
+   public boolean isDrafted() {
+      return combatCommand != null;
+   }
+
+   public @Nullable ICombatCommand getCombatCommand() {
+      return combatCommand;
+   }
+
+   private int combatTargetPriority = Integer.MAX_VALUE;
+
+   public TargetRequestResult requestTargetFromCommand() {
+      if (combatCommand == null) {
+         if (getTarget() != null)
+            setTarget(null);
+         combatTargetPriority = Integer.MAX_VALUE;
+         return TargetRequestResult.NO_TARGET;
+      }
+
+      Optional<CombatTarget> combatTarget = combatCommand.requestTargetForCombatant(this);
+      if (combatTarget.isPresent()) {
+         LivingEntity oldTarget = getTarget();
+         if (combatTarget.get().priority() < combatTargetPriority) {
+            combatTargetPriority = combatTarget.get().priority();
+            setTarget(combatTarget.get().entity());
+         }
+
+         if (oldTarget != getTarget())
+            return TargetRequestResult.ACQUIRED_NEW_TARGET;
+
+         return TargetRequestResult.REACQUIRED_SAME_TARGET;
+      }
+
+      if (getTarget() != null)
+         setTarget(null);
+      combatTargetPriority = Integer.MAX_VALUE;
+      return TargetRequestResult.NO_TARGET;
+   }
+
+   public ItemStack findMeleeWeapon() {
+      return weaponInventory.getItems()
+            .stream()
+            .filter(i -> i.has(DataComponents.TOOL))
+            .findFirst()
+            .orElse(ItemStack.EMPTY);
+   }
+
+   @Override
+   protected AABB getAttackBoundingBox() {
+      AABB aabb = super.getAttackBoundingBox();
+      return aabb.inflate(0.5F, (double) 0.0F, 0.5F);
    }
 }

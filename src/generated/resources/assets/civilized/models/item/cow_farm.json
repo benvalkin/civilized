@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "civilized:item/fancy_house"
+    "layer0": "civilized:item/cow_farm"
   }
 }

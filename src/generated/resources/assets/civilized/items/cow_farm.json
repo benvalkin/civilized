@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "civilized:item/cattle_farm"
+    "model": "civilized:item/cow_farm"
   }
 }

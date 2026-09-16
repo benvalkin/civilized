@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import com.google.common.collect.ImmutableList;
 import com.mojang.logging.LogUtils;
 
-import net.minecraft.world.level.Level;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.saveddata.SavedData;
 
 public abstract class SettlementsStore extends SavedData {
@@ -25,11 +25,12 @@ public abstract class SettlementsStore extends SavedData {
       return ImmutableList.copyOf(settlements.all());
    }
 
-   public Settlement createNew(UUID ownerUUID) {
+   public Settlement createNew(UUID ownerUUID, BlockPos origin) {
       Settlement settlement =
             new Settlement.SettlementBuilder().settlementId(UUID.randomUUID())
                   .ownerId(ownerUUID)
                   .displayName(Settlement.generateRandomName())
+                  .bounds(new SettlementBounds(origin))
                   .build();
 
       settlements.add(settlement);

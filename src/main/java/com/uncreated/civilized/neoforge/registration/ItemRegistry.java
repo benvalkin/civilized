@@ -16,7 +16,6 @@ import com.uncreated.civilized.neoforge.registration.entity.EntityRegistry;
 
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.SpawnEggItem;
-import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -28,9 +27,8 @@ public class ItemRegistry {
 
    private static Map<BuildingType, DeferredItem<Item>> registerBuildingDeeds() {
       Map<BuildingType, DeferredItem<Item>> result = new HashMap<>();
-      for (DeferredHolder<BuildingType, ? extends BuildingType> buildingTypeEntry : BuildingTypes.BUILDING_TYPES
-            .getEntries()) {
-         result.put(buildingTypeEntry.get(), registerBuildingDeedItem(buildingTypeEntry.get()));
+      for (BuildingType buildingType : BuildingTypes.all()) {
+         result.put(buildingType, registerBuildingDeedItem(buildingType));
       }
       return result;
    }

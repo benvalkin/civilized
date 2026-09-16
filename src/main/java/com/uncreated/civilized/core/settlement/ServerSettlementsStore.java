@@ -9,6 +9,7 @@ import org.apache.commons.compress.utils.Lists;
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.settlement.events.SettlementUpdatedEvent;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -50,6 +51,9 @@ public class ServerSettlementsStore extends SettlementsStore {
          item.putUUID(Settlement.FIELD_OWNER_ID, settlement.getOwnerId());
          item.putString(Settlement.FIELD_DISPLAY_NAME, settlement.getDisplayName());
          item.putInt(Settlement.FIELD_SETTLEMENT_LEVEL, settlement.settlementLevel.getLevel());
+         item.putLong(Settlement.FIELD_ORIGIN_POS, settlement.getBounds().getOrigin().asLong());
+         item.putLong(Settlement.FIELD_LOWER_CORNER_POS, settlement.getBounds().getLowerCorner().asLong());
+         item.putLong(Settlement.FIELD_UPPER_CORNER_POS, settlement.getBounds().getUpperCorner().asLong());
          ListTag citizenIds = new ListTag();
          for (UUID citizenId : settlement.getCitizenIds()) {
             CompoundTag citizenTag = new CompoundTag();
@@ -77,7 +81,12 @@ public class ServerSettlementsStore extends SettlementsStore {
                new Settlement.SettlementBuilder().settlementId(itemTag.getUUID(Settlement.FIELD_SETTLEMENT_ID))
                      .ownerId(itemTag.getUUID(Settlement.FIELD_OWNER_ID))
                      .displayName(itemTag.getString(Settlement.FIELD_DISPLAY_NAME))
-                     .settlementLevel(SettlementLevel.valueOf(itemTag.getInt(Settlement.FIELD_SETTLEMENT_LEVEL)));
+                     .settlementLevel(SettlementLevel.valueOf(itemTag.getInt(Settlement.FIELD_SETTLEMENT_LEVEL)))
+                     .bounds(
+                           new SettlementBounds(
+                                 BlockPos.of(itemTag.getLong(Settlement.FIELD_ORIGIN_POS)),
+                                 BlockPos.of(itemTag.getLong(Settlement.FIELD_LOWER_CORNER_POS)),
+                                 BlockPos.of(itemTag.getLong(Settlement.FIELD_UPPER_CORNER_POS))));
 
          ListTag citizenIdsTag = itemTag.getList(Settlement.FIELD_LIST_CITIZENS, Tag.TAG_COMPOUND);
          List<UUID> citizenIds = Lists.newArrayList();

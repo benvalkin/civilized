@@ -6,7 +6,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import com.uncreated.civilized.core.villagerinfo.VillagerOccupation;
-import com.uncreated.civilized.entity.goals.NearbyBlockSensor;
+import com.uncreated.civilized.entity.sensor.CivilizedVillagerEnemySensor;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -26,6 +26,8 @@ public class AIRegistry {
 
    public static final Supplier<Activity> A_SPEAK_TO_PLAYER =
          ACTIVITIES.register("speak_to_player", () -> new Activity("speak_to_player"));
+
+   public static final Supplier<Activity> A_DRAFTED = ACTIVITIES.register("drafted", () -> new Activity("drafted"));
 
    public static DeferredRegister<MemoryModuleType<?>> MEMORY_MODULES =
          DeferredRegister.create(BuiltInRegistries.MEMORY_MODULE_TYPE, CIVILIZED_MOD_ID);
@@ -54,12 +56,14 @@ public class AIRegistry {
    // MEMORY_MODULES.register("import_desired", () -> new MemoryModuleType<>(Optional.empty()));
    public static final Supplier<MemoryModuleType<Player>> MM_DIALOGUE_TARGET =
          MEMORY_MODULES.register("dialogue_target_memory_module", () -> new MemoryModuleType<>(Optional.empty()));
+   public static final Supplier<MemoryModuleType<Boolean>> MM_DRAFTED =
+         MEMORY_MODULES.register("drafted", () -> new MemoryModuleType<>(Optional.empty()));
 
    public static DeferredRegister<SensorType<?>> SENSORS =
          DeferredRegister.create(BuiltInRegistries.SENSOR_TYPE, CIVILIZED_MOD_ID);
 
-   public static final Supplier<SensorType<NearbyBlockSensor>> S_CROP_BLOCK =
-         SENSORS.register("crop_sensor", () -> new SensorType<>(NearbyBlockSensor::new));
+   public static final Supplier<SensorType<CivilizedVillagerEnemySensor>> CIVILIZED_VILLAGER_SENSOR =
+         SENSORS.register("civilized_villager_sensor", () -> new SensorType<>(CivilizedVillagerEnemySensor::new));
 
    public static DeferredRegister<Schedule> SCHEDULES =
          DeferredRegister.create(BuiltInRegistries.SCHEDULE, CIVILIZED_MOD_ID);

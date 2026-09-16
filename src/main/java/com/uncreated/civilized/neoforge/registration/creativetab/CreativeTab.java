@@ -2,7 +2,6 @@ package com.uncreated.civilized.neoforge.registration.creativetab;
 
 import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
-import com.uncreated.civilized.core.building.BuildingTypes;
 import com.uncreated.civilized.neoforge.registration.ItemRegistry;
 
 import net.minecraft.core.registries.Registries;
@@ -29,7 +28,7 @@ public class CreativeTab {
                      .title(Component.translatable("itemGroup.civilized")) // The language key for the title of your
                                                                            // CreativeModeTab
                      .withTabsBefore(CreativeModeTabs.COMBAT)
-                     .icon(() -> ItemRegistry.BUILDING_DEEDS.get(BuildingTypes.FARMER_HOUSE).get().getDefaultInstance())
+                     .icon(() -> ItemRegistry.SETTLEMENT_MANDATE.get().getDefaultInstance())
                      .displayItems((parameters, output) -> {
                         output.accept(ItemRegistry.SETTLEMENT_MANDATE.get());
                         output.accept(ItemRegistry.COIN.get());

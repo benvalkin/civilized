@@ -53,7 +53,7 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
                .setMemory(MemoryModuleType.HOME, new GlobalPos(level.dimension(), home.get().getBlockPos()));
 
          if (!villagerInfo.getOccupation().is(VillagerOccupations.UNEMPLOYED)) // take care not to make villagers think
-                                                                            // they can work if they are unemployed
+            // they can work if they are unemployed
             villager.getBrain()
                   .setMemory(AIRegistry.MM_VILLAGER_WORKTIME_OCCUPATION.get(), villagerInfo.getOccupation());
       } else {
@@ -124,6 +124,9 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
    }
 
    private Optional<Building> invalidateWorksite(VillagerInfo villagerInfo, ServerLevel level) {
+
+      if (villagerInfo.getOccupation().is(VillagerOccupations.UNEMPLOYED))
+         return Optional.empty();
 
       Optional<Building> currentWorksite = ServerBuildingsStore.INSTANCE.find(villagerInfo.getPrimaryWorksiteId());
       if (currentWorksite.isPresent())

@@ -1,4 +1,4 @@
-// 1.21.4	2026-04-27T20:14:51.079737	Model Definitions - civilized
+// 1.21.4	2026-09-13T23:19:12.730818	Model Definitions - civilized
 064fb41a1bcbf63c16aa52318b3d7c558ebd9e60 assets/civilized/items/armorer_house.json
 6ce3060289fb5bad6138c447bc3853d25f1931c9 assets/civilized/items/artist_house.json
 95fea70e2da1925b8200a128c3b7b695a7e12911 assets/civilized/items/baker_house.json
@@ -9,13 +9,12 @@ de19294222a6bd026b3f0bb08e00fc543bbb83c1 assets/civilized/items/beekeeper_house.
 032c9569692ca43f080474c809c09b485ed66b30 assets/civilized/items/butcher_house.json
 98e058a46e1e69606eaf0702e908d9281d784d43 assets/civilized/items/carpenter_house.json
 640936c181e39c034da3c55292d251982679ff10 assets/civilized/items/cartographer_house.json
-6554f87b2cf43f27bf1f4a62fae0a16d8cdad0ef assets/civilized/items/cattle_farm.json
 6c0ae37f0d714b627191559bbeb998e166c404f7 assets/civilized/items/chicken_farm.json
 0a68863626de42bad932b38fd79946412ea09e1f assets/civilized/items/church.json
 79c0d58df106806a062d472e1e1c9ed464dfb0ba assets/civilized/items/coin.json
 cc4dac8aabaac645ba46750c4b09ad12cb30ac66 assets/civilized/items/coin_stack.json
+bc6493c32b27edc5322437b5fd10c4b6f4ef6049 assets/civilized/items/cow_farm.json
 0f20f84787afb698a79a6b70dac6724ece141926 assets/civilized/items/crop_farm.json
-d34a247c3a70ff0bc72856b7244df6db75416946 assets/civilized/items/fancy_house.json
 f259ba8c99738927563d02dd022ca23f444ae1d1 assets/civilized/items/farmer_house.json
 32b5ffe5898c68a2d3d22ac4bb76a17397558f02 assets/civilized/items/fisherman_house.json
 ee298d20f26a40be7d51171e3696cd935dce3ad6 assets/civilized/items/fishing_spot.json
@@ -51,13 +50,12 @@ e106b97ac6bc7a3108bd8f9e3d75997f07476835 assets/civilized/models/item/beekeeper_
 22847f66b9ecb108428ba2374023afd79bdef04c assets/civilized/models/item/butcher_house.json
 c427417049b54c2a1d4d605ec8d5b23bffe4de4b assets/civilized/models/item/carpenter_house.json
 1c863109e034c463cb39b6086511db842bb00791 assets/civilized/models/item/cartographer_house.json
-b2c8af8abb9559cdea4b603834f8395f99a32e97 assets/civilized/models/item/cattle_farm.json
 bd4eb3f6da6b1da61949c9179f9d58442504f85d assets/civilized/models/item/chicken_farm.json
 c661add3eedf3d13cf14ca21a82d0c6236686a51 assets/civilized/models/item/church.json
 149fae3c8d9d778ab6cf3aeedf94dc510bbc1546 assets/civilized/models/item/coin.json
 2e34ce34676a1ce6411d0052e0aa3291faa55348 assets/civilized/models/item/coin_stack.json
+de144e5b9707b0080b17d01004296a7269a48228 assets/civilized/models/item/cow_farm.json
 a31608f8fc6b55c8803c22e133bb952eb6709b5d assets/civilized/models/item/crop_farm.json
-0e8d4b69112d05bd0529b9600679251c6626969e assets/civilized/models/item/fancy_house.json
 a762bfa5941140f8ba732cac86c8c38ee92fa588 assets/civilized/models/item/farmer_house.json
 a6f31a03819617daaae655acc3a10f37f90fbb2b assets/civilized/models/item/fisherman_house.json
 4d769803092c2c5ee035919c2c02ee3897333c23 assets/civilized/models/item/fishing_spot.json

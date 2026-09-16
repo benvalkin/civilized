@@ -34,6 +34,9 @@ public class CheckLogisticsOpportunities extends WorkTaskBehaviour {
 
    @Override
    protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
+      if (!super.checkExtraStartConditions(level, villager))
+         return false;
+
       return !getBehaviourCooldowns().hasCooldown(Cooldowns.START, level.getGameTime());
    }
 

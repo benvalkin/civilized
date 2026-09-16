@@ -2,6 +2,8 @@ package com.uncreated.civilized.core.building;
 
 import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.uncreated.civilized.CivilizedMod;
@@ -27,6 +29,7 @@ import com.uncreated.civilized.core.building.state.artisan.MasonHouseState;
 import com.uncreated.civilized.core.building.state.artisan.ToolsmithHouseState;
 import com.uncreated.civilized.core.building.state.artisan.WeaponsmithHouseState;
 import com.uncreated.civilized.core.building.state.artisan.WeaverHouseState;
+import com.uncreated.civilized.core.villagerinfo.VillagerOccupations;
 import com.uncreated.civilized.ui.menu.building.inn.InnBuildingScreen;
 import com.uncreated.civilized.ui.menu.building.residence.artisan.BakeryBuildingScreen;
 import com.uncreated.civilized.ui.menu.building.residence.artisan.BlacksmithBuildingScreen;
@@ -59,6 +62,17 @@ public class BuildingTypes {
    public static final DeferredRegister<BuildingType> BUILDING_TYPES =
          DeferredRegister.create(BUILDING_TYPES_INTERNAL, CIVILIZED_MOD_ID);
 
+   private static final List<BuildingType> ALL = new ArrayList<>();
+
+   private static BuildingType declare(BuildingType buildingType) {
+      ALL.add(buildingType);
+      return buildingType;
+   }
+
+   public static List<BuildingType> all() {
+      return Collections.unmodifiableList(ALL);
+   }
+
    public static ResourceLocation createResourceKey(String buildingTypeName) {
       return ResourceLocation.fromNamespaceAndPath(CIVILIZED_MOD_ID, buildingTypeName);
    }
@@ -80,259 +94,282 @@ public class BuildingTypes {
 
    @SubscribeEvent
    private static void registerTypes(RegisterEvent event) {
-      event.register(BUILDING_TYPES_KEY, registry -> {
-         registerBuildingType(registry, TOWN_HALL);
-         registerBuildingType(registry, INN);
-         registerBuildingType(registry, TOWN_SQUARE);
-         registerBuildingType(registry, CHURCH);
-         registerBuildingType(registry, BARRACKS);
-         registerBuildingType(registry, GUARD_POST);
-         registerBuildingType(registry, TAVERN);
-         registerBuildingType(registry, FARMER_HOUSE);
-         registerBuildingType(registry, WOODCUTTER_HOUSE);
-         registerBuildingType(registry, MINER_HOUSE);
-         registerBuildingType(registry, STONECUTTER_HOUSE);
-         registerBuildingType(registry, RANCHER_HOUSE);
-         registerBuildingType(registry, FISHERMAN_HOUSE);
-         registerBuildingType(registry, BEEKEEPER_HOUSE);
-         registerBuildingType(registry, BAKER_HOUSE);
-         registerBuildingType(registry, BUTCHER_HOUSE);
-         registerBuildingType(registry, BLACKSMITH_HOUSE);
-         registerBuildingType(registry, MASON_HOUSE);
-         registerBuildingType(registry, CARPENTER_HOUSE);
-         registerBuildingType(registry, TOOLSMITH_HOUSE);
-         registerBuildingType(registry, WEAPONSMITH_HOUSE);
-         registerBuildingType(registry, ARMORER_HOUSE);
-         registerBuildingType(registry, FLETCHER_HOUSE);
-         registerBuildingType(registry, LEATHERWORKER_HOUSE);
-         registerBuildingType(registry, WEAVER_HOUSE);
-         registerBuildingType(registry, CARTOGRAPHER_HOUSE);
-         registerBuildingType(registry, ARTIST_HOUSE);
-         registerBuildingType(registry, CROP_FARM);
-         registerBuildingType(registry, MINE);
-         registerBuildingType(registry, GROVE);
-         registerBuildingType(registry, QUARRY);
-         registerBuildingType(registry, COW_FARM);
-         registerBuildingType(registry, PIG_FARM);
-         registerBuildingType(registry, SHEEP_FARM);
-         registerBuildingType(registry, CHICKEN_FARM);
-         registerBuildingType(registry, BEE_FARM);
-         registerBuildingType(registry, FISHING_SPOT);
-      });
+      event.register(
+            BUILDING_TYPES_KEY,
+            registry -> ALL.forEach(buildingType -> registerBuildingType(registry, buildingType)));
    }
 
-   public static BuildingType TOWN_HALL = BuildingType.builder(createResourceKey("town_hall")).build();
+   public static BuildingType TOWN_HALL = declare(BuildingType.builder(createResourceKey("town_hall")).build());
    public static BuildingType INN =
-         BuildingType.builder(createResourceKey("inn"))
+         declare(BuildingType.builder(createResourceKey("inn"))
                .isResidence(true)
                .buildingScreenSupplier(InnBuildingScreen::new)
-               .build();
-   public static BuildingType TOWN_SQUARE = BuildingType.builder(createResourceKey("town_square")).build();
-   public static BuildingType STOREHOUSE = BuildingType.builder(createResourceKey("storehouse")).build();
-   public static BuildingType CHURCH = BuildingType.builder(createResourceKey("church")).isResidence(true).build();
-   public static BuildingType BARRACKS = BuildingType.builder(createResourceKey("barracks")).isResidence(true).build();
+               .build());
+   public static BuildingType TOWN_SQUARE = declare(BuildingType.builder(createResourceKey("town_square")).build());
+   public static BuildingType STOREHOUSE = declare(BuildingType.builder(createResourceKey("storehouse")).build());
+   public static BuildingType CHURCH =
+         declare(BuildingType.builder(createResourceKey("church"))
+               .isResidence(true)
+               .occupation(() -> VillagerOccupations.PRIEST)
+               .build());
+   public static BuildingType BARRACKS =
+         declare(BuildingType.builder(createResourceKey("barracks"))
+               .isResidence(true)
+               .occupation(() -> VillagerOccupations.SOLDIER)
+               .build());
    public static BuildingType GUARD_POST =
-         BuildingType.builder(createResourceKey("guard_post")).isResidence(true).build();
-   public static BuildingType TAVERN = BuildingType.builder(createResourceKey("tavern")).isResidence(true).build();
+         declare(BuildingType.builder(createResourceKey("guard_post"))
+               .isResidence(true)
+               .occupation(() -> VillagerOccupations.SOLDIER)
+               .build());
+   public static BuildingType TAVERN =
+         declare(BuildingType.builder(createResourceKey("tavern"))
+               .isResidence(true)
+               .occupation(() -> VillagerOccupations.TAVERN_KEEPER)
+               .build());
    public static BuildingType FARMER_HOUSE =
-         BuildingType.builder(createResourceKey("farmer_house")).isResidence(true).build();
+         declare(BuildingType.builder(createResourceKey("farmer_house"))
+               .isResidence(true)
+               .occupation(() -> VillagerOccupations.FARMER)
+               .build());
    public static BuildingType WOODCUTTER_HOUSE =
-         BuildingType.builder(createResourceKey("woodcutter_house")).isResidence(true).build();
+         declare(BuildingType.builder(createResourceKey("woodcutter_house"))
+               .isResidence(true)
+               .occupation(() -> VillagerOccupations.WOODCUTTER)
+               .build());
    public static BuildingType MINER_HOUSE =
-         BuildingType.builder(createResourceKey("miner_house")).isResidence(true).build();
+         declare(BuildingType.builder(createResourceKey("miner_house"))
+               .isResidence(true)
+               .occupation(() -> VillagerOccupations.MINER)
+               .build());
 
    public static BuildingType STONECUTTER_HOUSE =
-         BuildingType.builder(createResourceKey("stonecutter_house")).isResidence(true).build();
+         declare(BuildingType.builder(createResourceKey("stonecutter_house"))
+               .isResidence(true)
+               .occupation(() -> VillagerOccupations.STONECUTTER)
+               .build());
 
    public static BuildingType RANCHER_HOUSE =
-         BuildingType.builder(createResourceKey("rancher_house")).isResidence(true).build();
+         declare(BuildingType.builder(createResourceKey("rancher_house"))
+               .isResidence(true)
+               .occupation(() -> VillagerOccupations.RANCHER)
+               .build());
 
    public static BuildingType FISHERMAN_HOUSE =
-         BuildingType.builder(createResourceKey("fisherman_house")).isResidence(true).build();
+         declare(BuildingType.builder(createResourceKey("fisherman_house"))
+               .isResidence(true)
+               .occupation(() -> VillagerOccupations.FISHERMAN)
+               .build());
    public static BuildingType BEEKEEPER_HOUSE =
-         BuildingType.builder(createResourceKey("beekeeper_house")).isResidence(true).build();
+         declare(BuildingType.builder(createResourceKey("beekeeper_house"))
+               .isResidence(true)
+               .occupation(() -> VillagerOccupations.BEEKEEPER)
+               .build());
 
    public static BuildingType BAKER_HOUSE =
-         BuildingType.builder(createResourceKey("baker_house"))
+         declare(BuildingType.builder(createResourceKey("baker_house"))
                .isResidence(true)
                .supportedProductionTypes(List.of(ProductionTypes.CRAFTING, ProductionTypes.SMELTING))
                .createState(BakeryState::new)
                .createBehaviour(ArtisanHouseBehaviour::new)
                .buildingScreenSupplier(BakeryBuildingScreen::new)
-               .build();
+               .occupation(() -> VillagerOccupations.BAKER)
+               .build());
 
    public static BuildingType BUTCHER_HOUSE =
-         BuildingType.builder(createResourceKey("butcher_house"))
+         declare(BuildingType.builder(createResourceKey("butcher_house"))
                .isResidence(true)
                .supportedProductionTypes(List.of(ProductionTypes.CRAFTING, ProductionTypes.SMOKING))
                .createState(ButcheryState::new)
                .createBehaviour(ArtisanHouseBehaviour::new)
                .buildingScreenSupplier(ButcheryBuildingScreen::new)
-               .build();
+               .occupation(() -> VillagerOccupations.BUTCHER)
+               .build());
 
    public static BuildingType BLACKSMITH_HOUSE =
-         BuildingType.builder(createResourceKey("blacksmith_house"))
+         declare(BuildingType.builder(createResourceKey("blacksmith_house"))
                .isResidence(true)
                .supportedProductionTypes(List.of(ProductionTypes.CRAFTING, ProductionTypes.BLASTING))
                .createState(BlacksmithHouseState::new)
                .createBehaviour(ArtisanHouseBehaviour::new)
                .buildingScreenSupplier(BlacksmithBuildingScreen::new)
-               .build();
+               .occupation(() -> VillagerOccupations.BLACKSMITH)
+               .build());
 
    public static BuildingType MASON_HOUSE =
-         BuildingType.builder(createResourceKey("mason_house"))
+         declare(BuildingType.builder(createResourceKey("mason_house"))
                .isResidence(true)
                .supportedProductionTypes(List.of(ProductionTypes.CRAFTING, ProductionTypes.SMELTING))
                .createState(MasonHouseState::new)
                .createBehaviour(ArtisanHouseBehaviour::new)
                .buildingScreenSupplier(MasonBuildingScreen::new)
-               .build();
+               .occupation(() -> VillagerOccupations.MASON)
+               .build());
 
    public static BuildingType CARPENTER_HOUSE =
-         BuildingType.builder(createResourceKey("carpenter_house"))
+         declare(BuildingType.builder(createResourceKey("carpenter_house"))
                .isResidence(true)
                .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                .createState(CarpenterHouseState::new)
                .createBehaviour(ArtisanHouseBehaviour::new)
                .buildingScreenSupplier(CraftsmanHouseBuildingScreen::new)
-               .build();
+               .occupation(() -> VillagerOccupations.CARPENTER)
+               .build());
 
    public static BuildingType TOOLSMITH_HOUSE =
-         BuildingType.builder(createResourceKey("toolsmith_house"))
+         declare(BuildingType.builder(createResourceKey("toolsmith_house"))
                .isResidence(true)
                .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                .createState(ToolsmithHouseState::new)
                .createBehaviour(ArtisanHouseBehaviour::new)
                .buildingScreenSupplier(CraftsmanHouseBuildingScreen::new)
-               .build();
+               .occupation(() -> VillagerOccupations.TOOLSMITH)
+               .build());
 
    public static BuildingType WEAPONSMITH_HOUSE =
-         BuildingType.builder(createResourceKey("weaponsmith_house"))
+         declare(BuildingType.builder(createResourceKey("weaponsmith_house"))
                .isResidence(true)
                .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                .createState(WeaponsmithHouseState::new)
                .createBehaviour(ArtisanHouseBehaviour::new)
                .buildingScreenSupplier(CraftsmanHouseBuildingScreen::new)
-               .build();
+               .occupation(() -> VillagerOccupations.WEAPONSMITH)
+               .build());
 
    public static BuildingType ARMORER_HOUSE =
-         BuildingType.builder(createResourceKey("armorer_house"))
+         declare(BuildingType.builder(createResourceKey("armorer_house"))
                .isResidence(true)
                .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                .createState(ArmorerHouseState::new)
                .createBehaviour(ArtisanHouseBehaviour::new)
                .buildingScreenSupplier(CraftsmanHouseBuildingScreen::new)
-               .build();
+               .occupation(() -> VillagerOccupations.ARMORER)
+               .build());
 
    public static BuildingType LEATHERWORKER_HOUSE =
-         BuildingType.builder(createResourceKey("leatherworker_house"))
+         declare(BuildingType.builder(createResourceKey("leatherworker_house"))
                .isResidence(true)
                .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                .createState(LeatherworkerHouseState::new)
                .createBehaviour(ArtisanHouseBehaviour::new)
                .buildingScreenSupplier(CraftsmanHouseBuildingScreen::new)
-               .build();
+               .occupation(() -> VillagerOccupations.LEATHERWORKER)
+               .build());
    public static BuildingType WEAVER_HOUSE =
-         BuildingType.builder(createResourceKey("weaver_house"))
+         declare(BuildingType.builder(createResourceKey("weaver_house"))
                .isResidence(true)
                .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                .createState(WeaverHouseState::new)
                .createBehaviour(ArtisanHouseBehaviour::new)
                .buildingScreenSupplier(CraftsmanHouseBuildingScreen::new)
-               .build();
+               .occupation(() -> VillagerOccupations.WEAVER)
+               .build());
 
    public static BuildingType FLETCHER_HOUSE =
-         BuildingType.builder(createResourceKey("fletcher_house"))
+         declare(BuildingType.builder(createResourceKey("fletcher_house"))
                .isResidence(true)
                .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                .createState(FletcherHouseState::new)
                .createBehaviour(ArtisanHouseBehaviour::new)
                .buildingScreenSupplier(CraftsmanHouseBuildingScreen::new)
-               .build();
+               .occupation(() -> VillagerOccupations.FLETCHER)
+               .build());
 
    public static BuildingType CARTOGRAPHER_HOUSE =
-         BuildingType.builder(createResourceKey("cartographer_house"))
+         declare(BuildingType.builder(createResourceKey("cartographer_house"))
                .isResidence(true)
                .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                .createState(CartographerHouseState::new)
                .createBehaviour(ArtisanHouseBehaviour::new)
                .buildingScreenSupplier(CraftsmanHouseBuildingScreen::new)
-               .build();
+               .occupation(() -> VillagerOccupations.CARTOGRAPHER)
+               .build());
 
    public static BuildingType ARTIST_HOUSE =
-         BuildingType.builder(createResourceKey("artist_house"))
+         declare(BuildingType.builder(createResourceKey("artist_house"))
                .isResidence(true)
                .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                .createState(ArtistHouseState::new)
                .createBehaviour(ArtisanHouseBehaviour::new)
                .buildingScreenSupplier(CraftsmanHouseBuildingScreen::new)
-               .build();
+               .occupation(() -> VillagerOccupations.ARTIST)
+               .build());
 
    public static BuildingType CROP_FARM =
-         BuildingType.builder(createResourceKey("crop_farm"))
+         declare(BuildingType.builder(createResourceKey("crop_farm"))
                .isWorksite(true)
                .createState(CropFarmState::new)
                .buildingScreenSupplier(CropFarmBuildingScreen::new)
-               .build();
+               .occupation(() -> VillagerOccupations.FARMER)
+               .build());
 
    public static BuildingType COW_FARM =
-         BuildingType.builder(createResourceKey("cow_farm"))
+         declare(BuildingType.builder(createResourceKey("cow_farm"))
                .isWorksite(true)
                .isAnimalFarm(true)
                .createState(CowFarmState::new)
                .buildingScreenSupplier(AnimalFarmBuildingScreen::new)
-               .build();
+               .occupation(() -> VillagerOccupations.RANCHER)
+               .build());
 
    public static BuildingType SHEEP_FARM =
-         BuildingType.builder(createResourceKey("sheep_farm"))
+         declare(BuildingType.builder(createResourceKey("sheep_farm"))
                .isWorksite(true)
                .isAnimalFarm(true)
                .createState(SheepFarmState::new)
                .buildingScreenSupplier(AnimalFarmBuildingScreen::new)
-               .build();
+               .occupation(() -> VillagerOccupations.RANCHER)
+               .build());
 
    public static BuildingType PIG_FARM =
-         BuildingType.builder(createResourceKey("pig_farm"))
+         declare(BuildingType.builder(createResourceKey("pig_farm"))
                .isWorksite(true)
                .isAnimalFarm(true)
                .createState(PigFarmState::new)
                .buildingScreenSupplier(AnimalFarmBuildingScreen::new)
-               .build();
+               .occupation(() -> VillagerOccupations.RANCHER)
+               .build());
 
    public static BuildingType CHICKEN_FARM =
-         BuildingType.builder(createResourceKey("chicken_farm"))
+         declare(BuildingType.builder(createResourceKey("chicken_farm"))
                .isWorksite(true)
                .isAnimalFarm(true)
                .createState(ChickenFarmState::new)
                .buildingScreenSupplier(AnimalFarmBuildingScreen::new)
-               .build();
+               .occupation(() -> VillagerOccupations.RANCHER)
+               .build());
 
    public static BuildingType BEE_FARM =
-         BuildingType.builder(createResourceKey("bee_farm"))
+         declare(BuildingType.builder(createResourceKey("bee_farm"))
                .isWorksite(true)
                .isAnimalFarm(true)
                .createState(BeeFarmState::new)
                .buildingScreenSupplier(AnimalFarmBuildingScreen::new)
-               .build();
+               .occupation(() -> VillagerOccupations.BEEKEEPER)
+               .build());
    public static BuildingType FISHING_SPOT =
-         BuildingType.builder(createResourceKey("fishing_spot"))
+         declare(BuildingType.builder(createResourceKey("fishing_spot"))
                .isWorksite(true)
                .buildingScreenSupplier(WorksiteBuildingScreen::new)
-               .build();
+               .occupation(() -> VillagerOccupations.FISHERMAN)
+               .build());
    public static BuildingType MINE =
-         BuildingType.builder(createResourceKey("mine"))
+         declare(BuildingType.builder(createResourceKey("mine"))
                .isWorksite(true)
                .buildingScreenSupplier(WorksiteBuildingScreen::new)
-               .build();
+               .occupation(() -> VillagerOccupations.MINER)
+               .build());
    public static BuildingType QUARRY =
-         BuildingType.builder(createResourceKey("quarry"))
+         declare(BuildingType.builder(createResourceKey("quarry"))
                .isWorksite(true)
                .buildingScreenSupplier(WorksiteBuildingScreen::new)
-               .build();
+               .occupation(() -> VillagerOccupations.STONECUTTER)
+               .build());
    public static BuildingType GROVE =
-         BuildingType.builder(createResourceKey("grove"))
+         declare(BuildingType.builder(createResourceKey("grove"))
                .isWorksite(true)
                .createState(GroveState::new)
                .buildingScreenSupplier(GroveBuildingScreen::new)
-               .build();
+               .occupation(() -> VillagerOccupations.WOODCUTTER)
+               .build());
 }

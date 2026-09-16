@@ -3,6 +3,7 @@ package com.uncreated.civilized.networking.packets;
 import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
 import java.util.Optional;
+import java.util.Set;
 
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.Building;
@@ -13,9 +14,11 @@ import com.uncreated.civilized.core.building.bounds.BuildingBounds;
 import com.uncreated.civilized.core.building.entity.LoadedBuildings;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
+import com.uncreated.civilized.core.settlement.SettlementBounds;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
 import com.uncreated.civilized.ui.style.Colors;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
@@ -59,11 +62,12 @@ public record CreateNewBuilding(BuildingType buildingType,
       ServerLevel serverLevel = placer.serverLevel();
 
       Optional<Settlement> settlement = ServerSettlementsStore.INSTANCE.findFromOwner(placer.getUUID());
+      BlockPos settlementOrigin;
       if (settlement.isEmpty()) {
-         settlement = Optional.of(ServerSettlementsStore.INSTANCE.createNew(placer.getUUID()));
-         ServerSettlementsStore.INSTANCE.setDirty();
-         ServerSettlementsStore.INSTANCE.replicateChange(settlement.get(), StoreOperation.ADD_OR_OVERWRITE);
-      }
+         settlementOrigin = createNewBuilding.buildingBounds.getCenter();
+         settlement = Optional.of(ServerSettlementsStore.INSTANCE.createNew(placer.getUUID(), settlementOrigin));
+      } else
+         settlementOrigin = settlement.get().getBounds().getOrigin();
 
       Building building =
             ServerBuildingsStore.INSTANCE.createNew(
@@ -78,6 +82,13 @@ public record CreateNewBuilding(BuildingType buildingType,
          LoadedBuildings.load(building, serverLevel);
          LoadedSettlements.onBuildingLoaded(settlement.get(), serverLevel);
       }
+
+      Set<Building> settlementBuildings =
+            ServerBuildingsStore.INSTANCE.findForSettlement(settlement.get().getSettlementId());
+      settlement.get().recalculateSettlementBounds(settlementOrigin, settlementBuildings);
+
+      ServerSettlementsStore.INSTANCE.setDirty();
+      ServerSettlementsStore.INSTANCE.replicateChange(settlement.get(), StoreOperation.ADD_OR_OVERWRITE);
 
       ServerBuildingsStore.INSTANCE.setDirty();
       ServerBuildingsStore.INSTANCE.replicateChange(building, StoreOperation.ADD_OR_OVERWRITE);

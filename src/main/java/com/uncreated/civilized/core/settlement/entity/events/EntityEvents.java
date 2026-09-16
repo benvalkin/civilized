@@ -8,15 +8,21 @@ import com.uncreated.civilized.core.building.entity.LoadedBuildings;
 import com.uncreated.civilized.core.building.events.model.BuildingDeletedEvent;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
+import com.uncreated.civilized.core.settlement.entity.LoadedVillagers;
+import com.uncreated.civilized.entity.CivilizedVillager;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
+import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.level.ChunkEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
-public class SettlementEntityEvents {
+@EventBusSubscriber
+public class EntityEvents {
 
    @SubscribeEvent
    public static void serverPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
@@ -69,5 +75,29 @@ public class SettlementEntityEvents {
          LoadedBuildings.unload(building.getBuildingId());
          LoadedSettlements.onBuildingUnloaded(building);
       });
+   }
+
+   @SubscribeEvent
+   public static void onEntityJoinLevel(EntityJoinLevelEvent event) {
+
+      if (!(event.getEntity() instanceof CivilizedVillager civilizedVillager))
+         return;
+
+      if (event.getLevel().isClientSide())
+         return;
+
+      LoadedVillagers.onVillagerJoinLevel(civilizedVillager);
+   }
+
+   @SubscribeEvent
+   public static void onEntityLeaveLevel(EntityLeaveLevelEvent event) {
+
+      if (!(event.getEntity() instanceof CivilizedVillager civilizedVillager))
+         return;
+
+      if (event.getLevel().isClientSide())
+         return;
+
+      LoadedVillagers.onVillagerLeaveLevel(civilizedVillager);
    }
 }

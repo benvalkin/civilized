@@ -44,12 +44,20 @@ public abstract class StatefulBehaviour extends Behavior<CivilizedVillager> {
 
    @Override
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
-      villager.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
-      villager.getBrain().eraseMemory(MemoryModuleType.LOOK_TARGET);
    }
 
    @Override
    protected void stop(ServerLevel level, CivilizedVillager villager, long gameTime) {
+   }
+
+   /**
+    * Due to limitations in how Minecraft's AI Behaviors start and stop, {@code StatefulBehaviourControl} does not
+    * guarantee that a currently running behavior stops before another one starts. This can lead to state management
+    * problems when one activity's {code stop} method alters the same state as the {@code start} method of the behavior
+    * is queued next. This method is guaranteed to run after the previously running behavior's {@code stop} method is
+    * called.
+    */
+   protected void lateStart(ServerLevel level, CivilizedVillager villager, long gameTime) {
       villager.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
       villager.getBrain().eraseMemory(MemoryModuleType.LOOK_TARGET);
    }

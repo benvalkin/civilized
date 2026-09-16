@@ -81,6 +81,7 @@ public abstract class StatefulBehaviourControl<StateMachine extends BehaviourSta
 
             StatefulBehaviour task = getTask(nextState.get());
             if (task.tryStart(serverLevel, civilizedVillager, currentTicks)) {
+               task.lateStart(serverLevel, civilizedVillager, currentTicks);
                stateMachine.currentState(nextState.get());
                currentBehaviour = task;
                stateMachine.isIdle(false);
@@ -113,7 +114,7 @@ public abstract class StatefulBehaviourControl<StateMachine extends BehaviourSta
             if (currentBehaviour != null && currentBehaviour != task
                   && currentBehaviour.getStatus() != Behavior.Status.STOPPED)
                currentBehaviour.doStop(serverLevel, civilizedVillager, currentTicks);
-
+            task.lateStart(serverLevel, civilizedVillager, currentTicks);
             stateMachine.currentState(task.getState());
             currentBehaviour = task;
             stateMachine.isIdle(false);
@@ -131,7 +132,7 @@ public abstract class StatefulBehaviourControl<StateMachine extends BehaviourSta
             if (currentBehaviour != null && currentBehaviour != task
                   && currentBehaviour.getStatus() != Behavior.Status.STOPPED)
                currentBehaviour.doStop(serverLevel, civilizedVillager, currentTicks);
-
+            task.lateStart(serverLevel, civilizedVillager, currentTicks);
             stateMachine.currentState(task.getState());
             currentBehaviour = task;
             stateMachine.isIdle(true);

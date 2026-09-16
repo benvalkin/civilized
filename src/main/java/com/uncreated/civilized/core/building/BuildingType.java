@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.entity.behaviour.BuildingBehaviour;
@@ -16,6 +17,7 @@ import com.uncreated.civilized.ui.menu.building.ABuildingScreen;
 import com.uncreated.civilized.ui.menu.building.residence.ResidenceBuildingScreen;
 import com.uncreated.civilized.ui.style.Colors;
 
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -37,14 +39,19 @@ public class BuildingType {
    private final Function<LoadedBuilding, BuildingBehaviour> createBehaviour = BuildingBehaviour::new;
    @Builder.Default
    private final List<ProductionType> supportedProductionTypes = List.of();
+   @Getter(AccessLevel.NONE)
    @Builder.Default
-   private final VillagerOccupation occupation = VillagerOccupations.UNEMPLOYED;
+   private final Supplier<VillagerOccupation> occupation = () -> VillagerOccupations.UNEMPLOYED;
    @Builder.Default
    private final BiFunction<BuildingScreenContext, Component, ABuildingScreen> buildingScreenSupplier =
          ResidenceBuildingScreen::new;
 
    public static BuildingTypeBuilder builder(ResourceLocation key) {
       return internalBuilder().resourceLocation(key);
+   }
+
+   public VillagerOccupation occupation() {
+      return occupation.get();
    }
 
    public String name() {

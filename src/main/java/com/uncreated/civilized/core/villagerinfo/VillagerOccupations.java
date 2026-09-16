@@ -215,5 +215,6 @@ public class VillagerOccupations {
          VillagerOccupation.builder(createResourceKey("soldier"))
                .homeType(BuildingTypes.BARRACKS)
                .validWorksite(b -> b.is(BuildingTypes.BARRACKS) || b.is(BuildingTypes.GUARD_POST))
+               .workBehaviourPackage(WorkActivities::getGuardWorkPackage)
                .build();
 }

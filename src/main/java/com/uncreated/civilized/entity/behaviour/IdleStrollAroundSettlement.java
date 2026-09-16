@@ -8,6 +8,8 @@ import org.slf4j.Logger;
 import com.mojang.logging.LogUtils;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
+import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
+import com.uncreated.civilized.core.settlement.Settlement;
 import com.uncreated.civilized.entity.CivilizedVillager;
 
 import net.minecraft.server.level.ServerLevel;
@@ -63,40 +65,21 @@ public class IdleStrollAroundSettlement extends StatefulBehaviour {
 
          Vec3 wanderPos;
          if (villager.getInfo().getSettlementId() == null) {
-            // if villager has no settlement, try to make them stay near their home (usually an Inn)
-            if (home != null)
+            wanderPos = LandRandomPos.getPos(villager, maxHorizontalDist, maxVerticalDist);
+         } else {
+
+            Optional<Settlement> settlement =
+                  ServerSettlementsStore.INSTANCE.find(villager.getInfo().getSettlementId());
+            if (settlement.isPresent() && !settlement.get().getBounds().contains(villager.blockPosition())) {
                wanderPos =
                      DefaultRandomPos.getPosTowards(
                            villager,
                            maxHorizontalDist,
                            maxVerticalDist,
-                           home.getBlockPos().getBottomCenter(),
+                           settlement.get().getBounds().getOrigin().getCenter(),
                            (float) Math.PI / 2F);
-            else // if no home available, wander without boundaries
-               wanderPos = LandRandomPos.getPos(villager, maxHorizontalDist, maxVerticalDist);
-         } else {
-            Optional<Building> nearbyBuilding =
-                  settlementBuildings.stream()
-                        .filter(b -> b.getBlockPos().closerThan(villager.blockPosition(), maxHorizontalDist))
-                        .findFirst();
-
-            if (nearbyBuilding.isPresent()) {
-               // if the villager is already nearby a building, let them wander normally
-               wanderPos = LandRandomPos.getPos(villager, maxHorizontalDist, maxVerticalDist);
             } else {
-               // otherwise, try to wander back to this villager's settlement if possible
-               Optional<Building> someBuildingInSettlement = settlementBuildings.stream().findFirst();
-
-               if (someBuildingInSettlement.isPresent())
-                  wanderPos =
-                        DefaultRandomPos.getPosTowards(
-                              villager,
-                              maxHorizontalDist,
-                              maxVerticalDist,
-                              someBuildingInSettlement.get().getBlockPos().getBottomCenter(),
-                              (double) ((float) Math.PI / 2F));
-               else // if no home available, wander without boundaries
-                  wanderPos = LandRandomPos.getPos(villager, maxHorizontalDist, maxVerticalDist);
+               wanderPos = LandRandomPos.getPos(villager, maxHorizontalDist, maxVerticalDist);
             }
          }
 

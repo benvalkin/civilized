@@ -10,7 +10,7 @@ import net.minecraft.world.entity.ai.memory.MemoryStatus;
 
 public abstract class RecurringIntervalBehaviour<T extends LivingEntity> extends Behavior<T> {
 
-   private long timeStart = Integer.MIN_VALUE;
+   private long timeStart = -1;
 
    public RecurringIntervalBehaviour(Map<MemoryModuleType<?>, MemoryStatus> entryCondition) {
       super(entryCondition);

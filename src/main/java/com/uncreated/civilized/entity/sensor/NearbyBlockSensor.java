@@ -1,4 +1,4 @@
-package com.uncreated.civilized.entity.goals;
+package com.uncreated.civilized.entity.sensor;
 
 import java.util.Optional;
 import java.util.Set;

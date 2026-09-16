@@ -5,16 +5,18 @@ import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.compress.utils.Lists;
 
 import com.uncreated.civilized.core.StoreOperation;
-import com.uncreated.civilized.core.building.logistics.LogisticsManager;
+import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.ui.style.Colors;
 
 import lombok.Builder;
 import lombok.Getter;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -34,6 +36,7 @@ public class Settlement {
             .displayName(buffer.readUtf())
             .citizenIds(buffer.readCollection(ArrayList::new, b -> b.readUUID()))
             .settlementLevel(SettlementLevel.valueOf(buffer.readInt()))
+            .bounds(SettlementBounds.decode(buffer))
             .build();
    }
 
@@ -44,6 +47,7 @@ public class Settlement {
       buffer.writeUtf(displayName);
       buffer.writeCollection(citizenIds, (b, i) -> b.writeUUID(i));
       buffer.writeInt(settlementLevel.getLevel());
+      bounds.encode(buffer);
    }
 
    public static final String FIELD_SETTLEMENT_ID = "settlement_id";
@@ -52,6 +56,9 @@ public class Settlement {
    public static final String FIELD_LIST_CITIZENS = "list_citizens";
    public static final String FIELD_LIST_ITEM_CITIZEN_ID = "list_item_citizen_id";
    public static final String FIELD_SETTLEMENT_LEVEL = "settlement_level";
+   public static final String FIELD_ORIGIN_POS = "origin_pos";
+   public static final String FIELD_LOWER_CORNER_POS = "lower_corner_pos";
+   public static final String FIELD_UPPER_CORNER_POS = "upper_corner_pos";
 
    private UUID settlementId;
    private UUID ownerId;
@@ -60,6 +67,7 @@ public class Settlement {
    private List<UUID> citizenIds = Lists.newArrayList();
    @Builder.Default
    public SettlementLevel settlementLevel = SettlementLevel.OUTPOST;
+   private SettlementBounds bounds;
 
    public Settlement.Packet toPacket() {
       return new Settlement.Packet(this, StoreOperation.UPDATE);
@@ -75,6 +83,7 @@ public class Settlement {
       displayName = other.displayName;
       citizenIds = other.citizenIds; // TECHDEBT: this is sus if we are saving the list reference anywhere
       settlementLevel = other.settlementLevel;
+      bounds = other.bounds;
    }
 
    public String toStringLite() {
@@ -128,5 +137,28 @@ public class Settlement {
       case 11 -> "Millmeadow";
       default -> "Newhaven";
       };
+   }
+
+   public void recalculateSettlementBounds(BlockPos settlementOrigin, Set<Building> buildings) {
+
+      if (buildings.isEmpty()) {
+         bounds = new SettlementBounds(settlementOrigin);
+         return;
+      }
+
+      BlockPos minBuildingCorner = null;
+      BlockPos maxBuildingCorner = null;
+      for (Building other : buildings) {
+         BlockPos lowerCorner = other.getBounds().getLowerCorner();
+         BlockPos upperCorner = other.getBounds().getUpperCorner();
+         if (minBuildingCorner == null || lowerCorner.getX() < minBuildingCorner.getX()
+               || lowerCorner.getZ() < minBuildingCorner.getZ())
+            minBuildingCorner = lowerCorner;
+         if (maxBuildingCorner == null || upperCorner.getX() > maxBuildingCorner.getX()
+               || upperCorner.getZ() > maxBuildingCorner.getZ())
+            maxBuildingCorner = upperCorner;
+      }
+
+      bounds = SettlementBounds.fromBuildingCorners(settlementOrigin, minBuildingCorner, maxBuildingCorner);
    }
 }
