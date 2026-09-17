@@ -14,7 +14,6 @@ import net.minecraft.world.entity.ai.behavior.EntityTracker;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.WalkTarget;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 
 public class MeleeAttackTarget extends StatefulBehaviour {
 
@@ -37,8 +36,7 @@ public class MeleeAttackTarget extends StatefulBehaviour {
       villager.getBrain().setMemory(MemoryModuleType.LOOK_TARGET, new EntityTracker(villager.getTarget(), true));
       nextAttack = 0;
       nextRerequestTarget = 0;
-      // villager.setItemInHand(InteractionHand.MAIN_HAND, villager.findMeleeWeapon());
-      villager.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.IRON_SWORD));
+      villager.setItemInHand(InteractionHand.MAIN_HAND, villager.findMeleeWeapon());
    }
 
    @Override

@@ -17,7 +17,7 @@ import net.minecraft.world.phys.Vec3;
 
 public class MediumDistanceTravelTask {
 
-   private static final int CHECK_INTERVAL_SECONDS = 5;
+   private static final int DEFAULT_CHECK_INTERVAL_TICKS = 5 * 20;
 
    private CivilizedVillager villager;
    private GlobalPos finalDestination;
@@ -26,6 +26,7 @@ public class MediumDistanceTravelTask {
    private int closeEnoughDistance;
    private long tooFarDistance;
    private long tooLongUnreachableTicks;
+   private int checkIntervalTicks = DEFAULT_CHECK_INTERVAL_TICKS;
 
    private long lastCheckTime;
    @Getter
@@ -46,6 +47,16 @@ public class MediumDistanceTravelTask {
       this.closeEnoughDistance = closeEnoughDistance;
       this.tooFarDistance = tooFarDistance;
       this.tooLongUnreachableTicks = tooLongUnreachableTicks;
+   }
+
+   /**
+    * How often the walk target is checked and set again. Journeys that need to react quickly, e.g. running away, should
+    * use a shorter interval than the default, since a walk target that the villager fails to path to is erased for it
+    * by {@code MoveToTargetSink}, leaving it standing still until the next check.
+    */
+   public MediumDistanceTravelTask checkInterval(int checkIntervalTicks) {
+      this.checkIntervalTicks = checkIntervalTicks;
+      return this;
    }
 
    public MediumDistanceTravelTask(CivilizedVillager villager, BlockPos finalDestination) {
@@ -86,7 +97,7 @@ public class MediumDistanceTravelTask {
          journeySuccessful = true;
       }
 
-      if (gameTicks - lastCheckTime < 20 * CHECK_INTERVAL_SECONDS)
+      if (gameTicks - lastCheckTime < checkIntervalTicks)
          return;
 
       lastCheckTime = gameTicks;

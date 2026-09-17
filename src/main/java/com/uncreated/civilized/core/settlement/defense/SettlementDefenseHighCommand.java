@@ -21,6 +21,10 @@ import net.minecraft.world.entity.monster.Enemy;
 public class SettlementDefenseHighCommand implements ICombatCommand {
 
    public static final int DETECTION_INTERVAL_TICKS = 20;
+   /** Combatants rout once their health drops to this fraction of their max health. */
+   public static final float ROUT_HEALTH_FRACTION = 0.4f;
+   /** Routed combatants only return to the fight once their health recovers to this fraction of their max health. */
+   public static final float RALLY_HEALTH_FRACTION = 0.8f;
 
    private final LoadedSettlement loadedSettlement;
 
@@ -105,14 +109,24 @@ public class SettlementDefenseHighCommand implements ICombatCommand {
       return hostiles.containsKey(enemy);
    }
 
-
    @Override
    public boolean shouldAvoidHitting(CivilizedVillager combatant, LivingEntity entity) {
-      // Only enemies are acceptable to hit by accident. Everything else, including players, villagers, livestock and pets, should be avoided.
+      // Only enemies are acceptable to hit by accident. Everything else, including players, villagers, livestock and
+      // pets, should be avoided.
       if (hostiles.containsKey(entity))
          return false;
 
       return !(entity instanceof Enemy);
+   }
+
+   @Override
+   public boolean shouldRout(CivilizedVillager combatant) {
+      return combatant.getHealth() <= combatant.getMaxHealth() * ROUT_HEALTH_FRACTION;
+   }
+
+   @Override
+   public boolean shouldUnrout(CivilizedVillager combatant) {
+      return combatant.getHealth() >= combatant.getMaxHealth() * RALLY_HEALTH_FRACTION;
    }
 
    @Override

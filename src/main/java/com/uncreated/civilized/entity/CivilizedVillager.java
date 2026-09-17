@@ -46,7 +46,6 @@ import com.uncreated.civilized.ui.menu.dialogue.VillagerDialogueScreen;
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -61,6 +60,7 @@ import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.HumanoidArm;
@@ -80,6 +80,7 @@ import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.entity.schedule.Activity;
 import net.minecraft.world.item.BowItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ProjectileWeaponItem;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
@@ -92,6 +93,8 @@ public class CivilizedVillager extends AgeableMob
    private static final Logger LOGGER = LogUtils.getLogger();
    public static final String FIELD_VILLAGER_ID = "villager_id";
    public static final String FIELD_LIFETIME_SEED = "lifetime_seed";
+   public static final String FIELD_ROUTED = "routed";
+   private static final float DEFAULT_RALLY_HEALTH_FRACTION = 0.8F;
 
    @Getter
    private UUID villagerId;
@@ -137,6 +140,11 @@ public class CivilizedVillager extends AgeableMob
    public void serverFinalizeSpawn() {
       refreshBrain((ServerLevel) level());
 
+      if (routedOnLoad) {
+         routedOnLoad = false;
+         rout();
+      }
+
       dialogueController = DialogueController.selectDialogueController(this);
    }
 
@@ -155,6 +163,7 @@ public class CivilizedVillager extends AgeableMob
 
       compound.putUUID(FIELD_VILLAGER_ID, villagerId);
       compound.putLong(FIELD_LIFETIME_SEED, lifetimeSeed);
+      compound.putBoolean(FIELD_ROUTED, isRouted());
       this.writeInventoryToTag(compound, this.registryAccess());
    }
 
@@ -166,6 +175,8 @@ public class CivilizedVillager extends AgeableMob
       if (compound.hasUUID(FIELD_VILLAGER_ID))
          villagerId = compound.getUUID(FIELD_VILLAGER_ID);
       setLifetimeRandom(compound.getLong(FIELD_LIFETIME_SEED));
+      // the brain's activities aren't set up yet, so routing is restored once it is (see serverFinalizeSpawn)
+      routedOnLoad = compound.getBoolean(FIELD_ROUTED);
 
       this.readInventoryFromTag(compound, this.registryAccess());
    }
@@ -332,6 +343,8 @@ public class CivilizedVillager extends AgeableMob
                   MemoryModuleType.NEAREST_PLAYERS,
                   MemoryModuleType.NEAREST_VISIBLE_PLAYER,
                   MemoryModuleType.DOORS_TO_CLOSE,
+                  MemoryModuleType.HURT_BY,
+                  MemoryModuleType.HURT_BY_ENTITY,
                   MemoryModuleType.INTERACTION_TARGET),
             List.of(
                   SensorType.NEAREST_LIVING_ENTITIES,
@@ -370,6 +383,7 @@ public class CivilizedVillager extends AgeableMob
             getSpeakToPlayerPackage(),
             Set.of(Pair.of(AIRegistry.MM_DIALOGUE_TARGET.get(), MemoryStatus.VALUE_PRESENT)),
             Set.of(AIRegistry.MM_DIALOGUE_TARGET.get()));
+      brain.addActivity(Activity.PANIC, getPanicPackage(0.7f));
       brain.addActivity(Activity.IDLE, getIdlePackage(0.25f));
       brain.setCoreActivities(ImmutableSet.of(Activity.CORE));
       brain.setDefaultActivity(Activity.IDLE);
@@ -377,10 +391,16 @@ public class CivilizedVillager extends AgeableMob
    }
 
    public void refreshBrain(ServerLevel serverLevel) {
+      boolean wasRouted = isRouted();
+
       Brain<CivilizedVillager> brain = this.getBrain();
       brain.stopAll(serverLevel, this);
       this.brain = brain.copyWithoutBehaviors();
       this.registerBrainGoals(this.getBrain());
+
+      // registering the goals resets the brain to its default activity, so routing has to be restored
+      if (wasRouted)
+         rout();
    }
 
    @Override
@@ -394,6 +414,7 @@ public class CivilizedVillager extends AgeableMob
 
       updateActivityFromSchedule(serverLevel.getDayTime(), serverLevel.getDayTime());
       reportNearbyHostiles();
+      regenerateHealth(serverLevel.getGameTime());
 
       ProfilerFiller profilerFiller = Profiler.get();
       profilerFiller.push("civilizedVillagerBrain");
@@ -414,6 +435,36 @@ public class CivilizedVillager extends AgeableMob
       }
 
       super.customServerAiStep(serverLevel);
+   }
+
+   /** Health regenerated every {@link #REGEN_INTERVAL_TICKS}. */
+   private static final float REGEN_AMOUNT = 1.0F;
+   private static final int REGEN_INTERVAL_TICKS = 5 * 20;
+   /** Regeneration only happens once the villager hasn't taken damage for this long. */
+   private static final int REGEN_DELAY_AFTER_DAMAGE_TICKS = 10 * 20;
+
+   private long lastDamageTime;
+
+   @Override
+   public boolean hurtServer(ServerLevel level, DamageSource source, float amount) {
+      boolean hurt = super.hurtServer(level, source, amount);
+      if (hurt) {
+         lastDamageTime = level.getGameTime();
+         if (!isRouted() && shouldRout())
+            rout();
+      }
+      return hurt;
+   }
+
+   private void regenerateHealth(long gameTime) {
+      if (!isAlive() || getHealth() >= getMaxHealth())
+         return;
+
+      if (gameTime - lastDamageTime < REGEN_DELAY_AFTER_DAMAGE_TICKS)
+         return;
+
+      if (tickCount % REGEN_INTERVAL_TICKS == 0)
+         heal(REGEN_AMOUNT);
    }
 
    private void reportNearbyHostiles() {
@@ -439,13 +490,14 @@ public class CivilizedVillager extends AgeableMob
    private long lastScheduleUpdate = 0;
 
    public void updateActivityFromSchedule(long dayTime, long gameTime) {
-      if (gameTime - this.lastScheduleUpdate <= 20L)
+      if (gameTime - this.lastScheduleUpdate >= 20L)
          return;
 
       this.lastScheduleUpdate = gameTime;
       int todayTime = (int) (dayTime % 24000L);
 
-      if (getBrain().isActive(AIRegistry.A_DRAFTED.get()) || getBrain().isActive(AIRegistry.A_SPEAK_TO_PLAYER.get()))
+      if (getBrain().isActive(AIRegistry.A_DRAFTED.get()) || getBrain().isActive(AIRegistry.A_SPEAK_TO_PLAYER.get())
+            || isRouted())
          return;
 
       if (todayTime >= 1000 && todayTime < 9000) { // 7am-3pm
@@ -458,13 +510,17 @@ public class CivilizedVillager extends AgeableMob
    }
 
    public void goSpeakToPlayer(Player player) {
+      if (isRouted())
+         return;
+
       getBrain().setMemory(AIRegistry.MM_DIALOGUE_TARGET.get(), player);
       getBrain().setActiveActivityIfPossible(AIRegistry.A_SPEAK_TO_PLAYER.get());
    }
 
    public void stopSpeakingToPlayer() {
       getBrain().eraseMemory(AIRegistry.MM_DIALOGUE_TARGET.get());
-      brain.setActiveActivityIfPossible(Activity.IDLE);
+      if (!isRouted())
+         brain.setActiveActivityIfPossible(Activity.IDLE);
    }
 
    // The generic type must match the one of the second parameter below.
@@ -492,7 +548,9 @@ public class CivilizedVillager extends AgeableMob
       }
 
       this.combatCommand = combatCommand;
-      getBrain().setActiveActivityIfPossible(AIRegistry.A_DRAFTED.get());
+      // routed villagers stay in the panic activity until they unrout, which switches them to the drafted activity
+      if (!isRouted())
+         getBrain().setActiveActivityIfPossible(AIRegistry.A_DRAFTED.get());
    }
 
    public void undraft() {
@@ -501,7 +559,8 @@ public class CivilizedVillager extends AgeableMob
       }
 
       combatCommand = null;
-      getBrain().setActiveActivityIfPossible(Activity.IDLE);
+      if (!isRouted())
+         getBrain().setActiveActivityIfPossible(Activity.IDLE);
    }
 
    public boolean isDrafted() {
@@ -510,6 +569,56 @@ public class CivilizedVillager extends AgeableMob
 
    public @Nullable ICombatCommand getCombatCommand() {
       return combatCommand;
+   }
+
+   private boolean routedOnLoad;
+
+   public boolean isRouted() {
+      return getBrain().isActive(Activity.PANIC);
+   }
+
+   public void rout() {
+      getBrain().setActiveActivityIfPossible(Activity.PANIC);
+   }
+
+   /**
+    * Leaves the panic activity. Drafted villagers go back to fighting, while others go idle until their schedule picks
+    * their next activity.
+    */
+   public void unrout() {
+      if (isDrafted())
+         getBrain().setActiveActivityIfPossible(AIRegistry.A_DRAFTED.get());
+      else
+         getBrain().setActiveActivityIfPossible(Activity.IDLE);
+   }
+
+   public boolean shouldRout() {
+      if (!isDrafted()) {
+         // undrafted villagers rout as soon as they are attacked
+         LivingEntity attacker = getLastHurtByMob();
+         return attacker != null && attacker.isAlive();
+      }
+
+      // drafted villagers ask their command if they should rout
+      return combatCommand.shouldRout(this);
+   }
+
+   public boolean shouldUnrout() {
+      if (!isDrafted()) {
+
+         // undrafted villagers stay routed until they have regenerated enough
+         // health
+         if (getHealth() < getMaxHealth() * DEFAULT_RALLY_HEALTH_FRACTION)
+            return false;
+
+         // Optional<LivingEntity> attacker = getBrain().getMemory(MemoryModuleType.HURT_BY_ENTITY);
+         // return attacker.isEmpty() || !attacker.get().isAlive();
+
+         return true;
+      }
+
+      // drafted villagers ask their command if they should unrout
+      return combatCommand.shouldUnrout(this);
    }
 
    private int combatTargetPriority = Integer.MAX_VALUE;
@@ -525,7 +634,7 @@ public class CivilizedVillager extends AgeableMob
       Optional<CombatTarget> combatTarget = combatCommand.requestTargetForCombatant(this);
       if (combatTarget.isPresent()) {
          LivingEntity oldTarget = getTarget();
-         if (combatTarget.get().priority() < combatTargetPriority) {
+         if (combatTarget.get().priority() < combatTargetPriority || oldTarget == null || !oldTarget.isAlive()) {
             combatTargetPriority = combatTarget.get().priority();
             setTarget(combatTarget.get().entity());
          }
@@ -536,26 +645,28 @@ public class CivilizedVillager extends AgeableMob
          return TargetRequestResult.REACQUIRED_SAME_TARGET;
       }
 
-      if (getTarget() != null)
+      if ((getTarget() != null && getTarget().isAlive()) || getTarget() != null)
          setTarget(null);
       combatTargetPriority = Integer.MAX_VALUE;
       return TargetRequestResult.NO_TARGET;
    }
 
    public ItemStack findMeleeWeapon() {
-      return weaponInventory.getItems()
-            .stream()
-            .filter(i -> i.has(DataComponents.TOOL))
-            .findFirst()
-            .orElse(ItemStack.EMPTY);
+      return new ItemStack(Items.IRON_SWORD);
+      // return weaponInventory.getItems()
+      // .stream()
+      // .filter(i -> i.has(DataComponents.TOOL))
+      // .findFirst()
+      // .orElse(ItemStack.EMPTY);
    }
 
    public ItemStack findBow() {
-      return weaponInventory.getItems()
-            .stream()
-            .filter(i -> i.getItem() instanceof BowItem)
-            .findFirst()
-            .orElse(ItemStack.EMPTY);
+      return new ItemStack(Items.BOW);
+      // return weaponInventory.getItems()
+      // .stream()
+      // .filter(i -> i.getItem() instanceof BowItem)
+      // .findFirst()
+      // .orElse(ItemStack.EMPTY);
    }
 
    public static final float ARROW_VELOCITY = 1.6F;

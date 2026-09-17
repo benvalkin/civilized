@@ -23,7 +23,7 @@ import net.minecraft.world.phys.Vec3;
 /**
  * Ranged combat using a regular bow. Based on the timing of vanilla's {@code RangedBowAttackGoal}, but without the
  * strafing: the villager walks towards its target until it is within range and has had line of sight for a while, then
- * stands still, draws the bow and fires.
+ * stands still, draws the bow and fires. Targets that get too close are backed away from, while still being shot at.
  * <p>
  * Shots are held back while something that shouldn't be hit (see {@link ICombatCommand#shouldAvoidHitting}) is in the
  * arrow's path. If the path stays blocked, the villager steps to the side to find a clear shot.
@@ -41,21 +41,38 @@ public class BowAttackTarget extends StatefulBehaviour {
    private static final int REPOSITION_DISTANCE = 3;
    /** Maximum ticks spent walking to a new firing position before going back to normal movement. */
    private static final int REPOSITION_TIMEOUT = 60;
+   /** How far ahead of itself the villager aims while backing away, in blocks. */
+   private static final double RETREAT_LEAD_DISTANCE = 8;
+   private static final int RETREAT_Y_RANGE = 7;
 
    private final float moveSpeed;
    private final float attackRange;
+   private final float minimumDistanceToRetreat;
+   private final float distanceToRetreatTo;
    private final int attackCooldown;
 
    /**
     * @param attackRange
     *           maximum distance in blocks at which the villager will fire
+    * @param minimumDistanceToRetreat
+    *           distance in blocks within which the villager backs away from its target, to keep it out of melee range
+    * @param distanceToRetreatTo
+    *           distance in blocks to which the villager will run away to when a retreat is started
     * @param attackCooldown
     *           ticks to wait after firing before drawing the bow again
     */
-   public BowAttackTarget(BehaviourState state, float moveSpeed, float attackRange, int attackCooldown) {
+   public BowAttackTarget(
+         BehaviourState state,
+         float moveSpeed,
+         float attackRange,
+         float minimumDistanceToRetreat,
+         float distanceToRetreatTo,
+         int attackCooldown) {
       super(state, Integer.MAX_VALUE, Integer.MAX_VALUE);
       this.moveSpeed = moveSpeed;
       this.attackRange = attackRange;
+      this.minimumDistanceToRetreat = minimumDistanceToRetreat;
+      this.distanceToRetreatTo = distanceToRetreatTo;
       this.attackCooldown = attackCooldown;
    }
 
@@ -72,6 +89,7 @@ public class BowAttackTarget extends StatefulBehaviour {
       nextDraw = 0;
       nextRerequestTarget = 0;
       seeTime = 0;
+      retreating = false;
       blockedTicks = 0;
       repositionUntil = 0;
       villager.setItemInHand(InteractionHand.MAIN_HAND, villager.findBow());
@@ -98,6 +116,7 @@ public class BowAttackTarget extends StatefulBehaviour {
    int seeTime;
    int blockedTicks;
    long repositionUntil;
+   boolean retreating;
 
    @Override
    protected void tick(ServerLevel level, CivilizedVillager villager, long currentTicks) {
@@ -111,6 +130,7 @@ public class BowAttackTarget extends StatefulBehaviour {
 
          if (result == TargetRequestResult.ACQUIRED_NEW_TARGET) {
             seeTime = 0;
+            retreating = false;
             blockedTicks = 0;
             repositionUntil = 0;
             villager.getBrain().setMemory(MemoryModuleType.LOOK_TARGET, new EntityTracker(villager.getTarget(), true));
@@ -131,8 +151,16 @@ public class BowAttackTarget extends StatefulBehaviour {
       boolean repositioning =
             currentTicks < repositionUntil && villager.getBrain().hasMemoryValue(MemoryModuleType.WALK_TARGET);
 
+      // a retreat continues until the villager is a good distance away, not just out of the distance that started it
+      if (retreating)
+         retreating = villager.closerThan(target, distanceToRetreatTo);
+      else
+         retreating = villager.closerThan(target, minimumDistanceToRetreat);
+
       if (repositioning) {
          // let the villager finish walking to its new firing position
+      } else if (retreating) {
+         retreatFrom(villager, target);
       } else if (inRange && seeTime >= SEE_TIME_BEFORE_STOPPING) {
          villager.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
       } else if (!villager.getBrain().hasMemoryValue(MemoryModuleType.WALK_TARGET)) {
@@ -165,6 +193,33 @@ public class BowAttackTarget extends StatefulBehaviour {
       } else if (currentTicks >= nextDraw && seeTime >= -LOST_SIGHT_TIMEOUT) {
          villager.startUsingItem(ProjectileUtil.getWeaponHoldingHand(villager, item -> item instanceof BowItem));
       }
+   }
+
+   /**
+    * Backs away from a target that has come too close, while staying able to shoot at it. The walk target is kept a
+    * fixed distance ahead of the villager and moved every tick, so that it keeps running instead of stopping at every
+    * spot it picks.
+    */
+   private void retreatFrom(CivilizedVillager villager, LivingEntity target) {
+
+      if (villager.getBrain().hasMemoryValue(MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE)) {
+         // backing straight away is blocked, e.g. by a wall, so take any nearby position away from the target instead
+         Vec3 randomPos =
+               LandRandomPos.getPosAway(villager, (int) RETREAT_LEAD_DISTANCE, RETREAT_Y_RANGE, target.position());
+         if (randomPos == null)
+            return;
+
+         villager.getBrain().eraseMemory(MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE);
+         villager.getBrain().setMemory(MemoryModuleType.WALK_TARGET, new WalkTarget(randomPos, moveSpeed * 1.25f, 1));
+         return;
+      }
+
+      Vec3 awayFromTarget = villager.position().subtract(target.position());
+      if (awayFromTarget.horizontalDistanceSqr() < 1.0E-4)
+         return; // standing on top of each other, so there is no direction to back away in
+
+      Vec3 retreatPos = villager.position().add(awayFromTarget.normalize().scale(RETREAT_LEAD_DISTANCE));
+      villager.getBrain().setMemory(MemoryModuleType.WALK_TARGET, new WalkTarget(retreatPos, moveSpeed * 1.5f, 1));
    }
 
    private boolean isLineOfFireBlocked(CivilizedVillager villager, LivingEntity target) {

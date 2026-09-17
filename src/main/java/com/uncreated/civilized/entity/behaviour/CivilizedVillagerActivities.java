@@ -105,6 +105,13 @@ public class CivilizedVillagerActivities {
             getFullLookBehavior());
    }
 
+   public static ImmutableList<Pair<Integer, ? extends BehaviorControl<? super CivilizedVillager>>> getPanicPackage(
+         float speedModifier) {
+      // priority 2, so that Routed ticks after the previous activity's behaviours (priority 1) have stopped. Otherwise
+      // their stop methods would erase the walk target Routed sets on its first tick
+      return ImmutableList.of(Pair.of(2, new Routed(speedModifier)));
+   }
+
    public static ImmutableList<Pair<Integer, ? extends BehaviorControl<? super CivilizedVillager>>> getSpeakToPlayerPackage() {
       return ImmutableList.of(Pair.of(0, new SpeakToPlayer()));
    }

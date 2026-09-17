@@ -23,4 +23,19 @@ public interface ICombatCommand {
     * through it on the way to the actual target.
     */
    boolean shouldAvoidHitting(CivilizedVillager combatant, LivingEntity entity);
+
+   /**
+    * Checked whenever the combatant takes damage.
+    *
+    * @return true if the combatant should run away from the combat engagement to avoid further damage whilst still
+    *         remaining drafted.
+    */
+   boolean shouldRout(CivilizedVillager combatant);
+
+   /**
+    * Checked continuously while the combatant is routed.
+    *
+    * @return true if the routed combatant has recovered enough to return to the combat engagement.
+    */
+   boolean shouldUnrout(CivilizedVillager combatant);
 }
