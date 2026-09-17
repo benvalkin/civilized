@@ -34,6 +34,7 @@ import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.core.villagerinfo.VillagerOccupations;
 import com.uncreated.civilized.entity.behaviour.StatefulBehaviourControl;
+import com.uncreated.civilized.entity.behaviour.worker.soldier.ArrowLineOfFire;
 import com.uncreated.civilized.entity.pathfinding.VillagerGroundPathNavigation;
 import com.uncreated.civilized.entity.renderer.CivilizedVillagerRenderer;
 import com.uncreated.civilized.entity.stats.ClothingTextureRegistry;
@@ -53,6 +54,7 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.profiling.Profiler;
 import net.minecraft.util.profiling.ProfilerFiller;
@@ -69,15 +71,23 @@ import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.MemoryStatus;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.ai.sensing.SensorType;
+import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.npc.InventoryCarrier;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.entity.schedule.Activity;
+import net.minecraft.world.item.BowItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ProjectileWeaponItem;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
 
-public class CivilizedVillager extends AgeableMob implements InventoryCarrier, IEntityWithComplexSpawn {
+public class CivilizedVillager extends AgeableMob
+      implements InventoryCarrier, IEntityWithComplexSpawn, RangedAttackMob {
 
    private static final Logger LOGGER = LogUtils.getLogger();
    public static final String FIELD_VILLAGER_ID = "villager_id";
@@ -538,6 +548,45 @@ public class CivilizedVillager extends AgeableMob implements InventoryCarrier, I
             .filter(i -> i.has(DataComponents.TOOL))
             .findFirst()
             .orElse(ItemStack.EMPTY);
+   }
+
+   public ItemStack findBow() {
+      return weaponInventory.getItems()
+            .stream()
+            .filter(i -> i.getItem() instanceof BowItem)
+            .findFirst()
+            .orElse(ItemStack.EMPTY);
+   }
+
+   public static final float ARROW_VELOCITY = 1.6F;
+   private static final float ARROW_INACCURACY = 6.0F;
+
+   /**
+    * Fires an arrow from the bow in hand at the target, the same way skeletons do. Arrows are not consumed, and cannot
+    * be picked up.
+    */
+   @Override
+   public void performRangedAttack(LivingEntity target, float velocity) {
+      if (!(level() instanceof ServerLevel serverLevel))
+         return;
+
+      ItemStack weapon = getItemInHand(ProjectileUtil.getWeaponHoldingHand(this, item -> item instanceof BowItem));
+      ItemStack projectile = getProjectile(weapon);
+      AbstractArrow arrow = ProjectileUtil.getMobArrow(this, projectile, velocity, weapon);
+      if (weapon.getItem() instanceof ProjectileWeaponItem weaponItem)
+         arrow = weaponItem.customArrow(arrow, projectile, weapon);
+
+      Vec3 aim = ArrowLineOfFire.aimAt(arrow.position(), target);
+      Projectile.spawnProjectileUsingShoot(
+            arrow,
+            serverLevel,
+            projectile,
+            aim.x,
+            aim.y,
+            aim.z,
+            ARROW_VELOCITY,
+            ARROW_INACCURACY);
+      playSound(SoundEvents.ARROW_SHOOT, 1.0F, 1.0F / (getRandom().nextFloat() * 0.4F + 0.8F));
    }
 
    @Override

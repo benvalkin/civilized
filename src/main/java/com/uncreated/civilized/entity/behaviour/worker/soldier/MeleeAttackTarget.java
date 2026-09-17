@@ -60,18 +60,20 @@ public class MeleeAttackTarget extends StatefulBehaviour {
    @Override
    protected void tick(ServerLevel level, CivilizedVillager villager, long currentTicks) {
 
-      LivingEntity target = villager.getTarget();
-      Objects.requireNonNull(target);
-
       if (currentTicks > nextRerequestTarget) {
          nextRerequestTarget = currentTicks + 20;
 
          TargetRequestResult result = villager.requestTargetFromCommand();
          if (result.targetFound()) {
-            villager.getBrain().setMemory(MemoryModuleType.WALK_TARGET, new WalkTarget(target, moveSpeed, 1));
-            villager.getBrain().setMemory(MemoryModuleType.LOOK_TARGET, new EntityTracker(target, true));
+            Objects.requireNonNull(villager.getTarget());
+            villager.getBrain()
+                  .setMemory(MemoryModuleType.WALK_TARGET, new WalkTarget(villager.getTarget(), moveSpeed, 1));
+            villager.getBrain().setMemory(MemoryModuleType.LOOK_TARGET, new EntityTracker(villager.getTarget(), true));
          }
       }
+
+      LivingEntity target = villager.getTarget();
+      Objects.requireNonNull(target);
 
       if (!villager.isWithinMeleeAttackRange(target))
          return;

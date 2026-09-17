@@ -18,6 +18,9 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.HumanoidArm;
+import net.minecraft.world.item.BowItem;
 import net.minecraft.world.phys.Vec3;
 
 public class CivilizedVillagerRenderer extends
@@ -54,6 +57,15 @@ public class CivilizedVillagerRenderer extends
       if (DEBUG) {
          state.debugBehavioursList = villager.getEntityData().get(CivilizedVillager.CURRENT_WORK_BEHAVIOUR);
       }
+   }
+
+   @Override
+   protected HumanoidModel.ArmPose getArmPose(CivilizedVillager villager, HumanoidArm arm) {
+      InteractionHand hand = arm == villager.getMainArm() ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
+      if (villager.isAggressive() && villager.getItemInHand(hand).getItem() instanceof BowItem)
+         return HumanoidModel.ArmPose.BOW_AND_ARROW;
+
+      return super.getArmPose(villager, arm);
    }
 
    @Override

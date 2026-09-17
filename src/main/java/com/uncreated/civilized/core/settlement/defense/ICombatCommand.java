@@ -17,4 +17,10 @@ public interface ICombatCommand {
    Optional<CombatTarget> requestTargetForCombatant(CivilizedVillager combatant);
    boolean shouldContinueToBeDrafted(CivilizedVillager villager);
    boolean shouldContinueToEngageTarget(CivilizedVillager villager, LivingEntity enemy);
+
+   /**
+    * Whether a combatant should hold back an attack that might hit {@code entity} by accident, e.g. an arrow passing
+    * through it on the way to the actual target.
+    */
+   boolean shouldAvoidHitting(CivilizedVillager combatant, LivingEntity entity);
 }

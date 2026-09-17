@@ -15,6 +15,7 @@ import com.uncreated.civilized.entity.CivilizedVillager;
 import lombok.Getter;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.monster.Enemy;
 
 @Getter
 public class SettlementDefenseHighCommand implements ICombatCommand {
@@ -102,6 +103,16 @@ public class SettlementDefenseHighCommand implements ICombatCommand {
    @Override
    public boolean shouldContinueToEngageTarget(CivilizedVillager villager, LivingEntity enemy) {
       return hostiles.containsKey(enemy);
+   }
+
+
+   @Override
+   public boolean shouldAvoidHitting(CivilizedVillager combatant, LivingEntity entity) {
+      // Only enemies are acceptable to hit by accident. Everything else, including players, villagers, livestock and pets, should be avoided.
+      if (hostiles.containsKey(entity))
+         return false;
+
+      return !(entity instanceof Enemy);
    }
 
    @Override
