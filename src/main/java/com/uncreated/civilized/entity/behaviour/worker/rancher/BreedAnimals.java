@@ -38,6 +38,8 @@ public class BreedAnimals<T extends Animal> extends WorkTaskBehaviour {
 
    @Override
    protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
+      if (!super.checkExtraStartConditions(level, villager))
+         return false;
 
       List<Animal> breedableAnimals = getBreedableAnimals(level);
       if (breedableAnimals.size() < 2)

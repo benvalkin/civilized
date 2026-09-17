@@ -412,7 +412,7 @@ public class CivilizedVillager extends AgeableMob
    @Override
    protected void customServerAiStep(ServerLevel serverLevel) {
 
-      updateActivityFromSchedule(serverLevel.getDayTime(), serverLevel.getDayTime());
+      updateActivityFromSchedule(serverLevel.getDayTime(), serverLevel.getGameTime());
       reportNearbyHostiles();
       regenerateHealth(serverLevel.getGameTime());
 
@@ -490,10 +490,10 @@ public class CivilizedVillager extends AgeableMob
    private long lastScheduleUpdate = 0;
 
    public void updateActivityFromSchedule(long dayTime, long gameTime) {
-      if (gameTime - this.lastScheduleUpdate >= 20L)
+      if (gameTime < this.lastScheduleUpdate)
          return;
 
-      this.lastScheduleUpdate = gameTime;
+      this.lastScheduleUpdate = gameTime + 20;
       int todayTime = (int) (dayTime % 24000L);
 
       if (getBrain().isActive(AIRegistry.A_DRAFTED.get()) || getBrain().isActive(AIRegistry.A_SPEAK_TO_PLAYER.get())

@@ -26,13 +26,16 @@ public abstract class ExchangeResourcesAtBuilding extends WorkTaskBehaviour {
    private MediumDistanceTravelTask travelHelper;
 
    public ExchangeResourcesAtBuilding(BehaviourState workState, int duration, int cooldownDuration) {
-      super(workState, false, false, duration, cooldownDuration);
+      super(workState, true, true, duration, cooldownDuration);
    }
 
    protected abstract Optional<Building> findTargetBuilding(ServerLevel level, CivilizedVillager villager);
 
    @Override
    protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
+
+      if (!super.checkExtraStartConditions(level, villager))
+         return false;
 
       Optional<Building> targetBuilding = findTargetBuilding(level, villager);
       if (targetBuilding.isEmpty())

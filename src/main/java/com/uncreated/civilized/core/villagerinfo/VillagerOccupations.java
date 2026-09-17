@@ -114,6 +114,7 @@ public class VillagerOccupations {
          VillagerOccupation.builder(createResourceKey("beekeeper"))
                .homeType(BuildingTypes.BEEKEEPER_HOUSE)
                .validWorksite(b -> b.is(BuildingTypes.BEE_FARM))
+               .workBehaviourPackage(WorkActivities::getBeekeeperWorkPackage)
                .build();
    public static final VillagerOccupation FISHERMAN =
          VillagerOccupation.builder(createResourceKey("fisherman"))

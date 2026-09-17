@@ -14,6 +14,7 @@ import com.uncreated.civilized.core.building.requirement.SurfaceAreaRequirement;
 import com.uncreated.civilized.core.building.requirement.blockcount.BlockTypeRequirement;
 import com.uncreated.civilized.core.building.requirement.blockcount.BuildingBlockTypes;
 import com.uncreated.civilized.core.building.requirement.blockcount.specific.BedsPresentRequirement;
+import com.uncreated.civilized.core.building.requirement.blockcount.specific.BeehivesPresentRequirement;
 import com.uncreated.civilized.core.building.requirement.blockcount.specific.BlastFurnacesPresentRequirement;
 import com.uncreated.civilized.core.building.requirement.blockcount.specific.ChestsPresentRequirement;
 import com.uncreated.civilized.core.building.requirement.blockcount.specific.CraftingTablesPresentRequirement;
@@ -117,6 +118,16 @@ public class BuildingRequirements {
                      .add(new SignsPresentRequirement(1, false))
                      .create());
 
+         registerStandardHouse(BuildingTypes.BEEKEEPER_HOUSE, registry, b -> {
+         });
+
+         registerRequirements(
+               registry,
+               BuildingRequirementList.forBuilding(BuildingTypes.BEE_FARM, 1)
+                     .add(new BeehivesPresentRequirement(1, 4, false))
+                     .add(new SignsPresentRequirement(1, false))
+                     .create());
+
          registerRequirements(
                registry,
                BuildingRequirementList.forBuilding(BuildingTypes.MINE, 1)
@@ -130,7 +141,7 @@ public class BuildingRequirements {
       return BuildingRequirementList.forBuilding(buildingType, 1)
             .add(new EnclosedRoomRequirement())
             .add(new SpaceRequirement(15))
-            .add(new BlockTypeRequirement(BuildingBlockTypes.WOOD, 160))
+            .add(new BlockTypeRequirement(BuildingBlockTypes.WOOD, 120))
             .add(new ChestsPresentRequirement(1, false))
             .add(new SignsPresentRequirement(1, false));
    }
