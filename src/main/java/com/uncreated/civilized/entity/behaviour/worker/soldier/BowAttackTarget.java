@@ -141,6 +141,11 @@ public class BowAttackTarget extends StatefulBehaviour {
       LivingEntity target = villager.getTarget();
       Objects.requireNonNull(target);
 
+      // LookAtTargetSink erases the look target whenever it loses sight of the target, e.g. while backing away from it,
+      // so it has to be set again for the villager to keep facing the target
+      if (!villager.getBrain().hasMemoryValue(MemoryModuleType.LOOK_TARGET))
+         villager.getBrain().setMemory(MemoryModuleType.LOOK_TARGET, new EntityTracker(target, true));
+
       boolean canSee = villager.getSensing().hasLineOfSight(target);
       if (canSee != seeTime > 0)
          seeTime = 0;
@@ -219,7 +224,7 @@ public class BowAttackTarget extends StatefulBehaviour {
          return; // standing on top of each other, so there is no direction to back away in
 
       Vec3 retreatPos = villager.position().add(awayFromTarget.normalize().scale(RETREAT_LEAD_DISTANCE));
-      villager.getBrain().setMemory(MemoryModuleType.WALK_TARGET, new WalkTarget(retreatPos, moveSpeed * 1.5f, 1));
+      villager.getBrain().setMemory(MemoryModuleType.WALK_TARGET, new WalkTarget(retreatPos, moveSpeed * 1.25f, 1));
    }
 
    private boolean isLineOfFireBlocked(CivilizedVillager villager, LivingEntity target) {
