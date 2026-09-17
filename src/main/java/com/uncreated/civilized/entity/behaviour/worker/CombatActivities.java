@@ -22,7 +22,7 @@ public class CombatActivities {
                   1,
                   new CombatBehaviourControl(
                         ImmutableList.of(
-                              new BowAttackTarget(CombatStates.BOW_ATTACK_TARGET, 0.5f, 24f, 6f, 16f, 30),
+                              new BowAttackTarget(CombatStates.BOW_ATTACK_TARGET, 0.5f, 26f, 6f, 20f, 30),
                               new MeleeAttackTarget(CombatStates.MELEE_ATTACK_TARGET, 0.5f),
                               new IdleStrollAroundSettlement(5, 3, 0.25f)),
                         ImmutableList.of(CombatStates.BOW_ATTACK_TARGET, CombatStates.MELEE_ATTACK_TARGET),
