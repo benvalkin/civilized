@@ -16,10 +16,12 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.HumanoidArm;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.item.BowItem;
 import net.minecraft.world.phys.Vec3;
 
@@ -43,6 +45,18 @@ public class CivilizedVillagerRenderer extends
    @Override
    public void extractRenderState(CivilizedVillager villager, CivilizedVillagerRenderState state, float partialTick) {
       super.extractRenderState(villager, state, partialTick);
+
+      // floor sleepers are laid out as if they were in a bed facing their sleeping direction, so they fill exactly the
+      // two blocks that were checked to be clear for them
+      state.sleepingOnFloor = villager.isSleepingOnFloor();
+      if (state.sleepingOnFloor)
+         state.bedOrientation = villager.getFloorSleepingDirection();
+
+      // vanilla moves a sleeper back from the centre of its head block by (eyeHeight - 0.1). That suits players, but our
+      // villager has a lower eye height while using the full size player model, which pokes its head out past the end
+      // of its bed. Setting it from the model's length instead fits the model exactly into its two blocks.
+      if (state.hasPose(Pose.SLEEPING))
+         state.eyeHeight = SLEEPING_MODEL_LENGTH - 0.5F + 0.1F;
       state.villagerName = villager.getInfo().getFullNameComponent();
       state.occupation = villager.getInfo().getOccupation();
       state.skin = villager.getSkin();
@@ -57,6 +71,27 @@ public class CivilizedVillagerRenderer extends
       if (DEBUG) {
          state.debugBehavioursList = villager.getEntityData().get(CivilizedVillager.CURRENT_WORK_BEHAVIOUR);
       }
+   }
+
+   /** The player model villagers are drawn with is 32 pixels long, i.e. 2 blocks, the same as a bed. */
+   private static final float SLEEPING_MODEL_LENGTH = 2.0F;
+
+   /**
+    * How far a villager sleeping without a bed is drawn above the floor, in blocks. This was added because floor
+    * sleepers look a little weird being halfway into the floor.
+    */
+   private static final float FLOOR_SLEEPING_RENDER_OFFSET = 3 / 16F;
+
+   @Override
+   protected void setupRotations(
+         CivilizedVillagerRenderState renderState,
+         PoseStack poseStack,
+         float bodyRot,
+         float scale) {
+      if (renderState.hasPose(Pose.SLEEPING) && renderState.sleepingOnFloor)
+         poseStack.translate(0.0F, FLOOR_SLEEPING_RENDER_OFFSET, 0.0F);
+
+      super.setupRotations(renderState, poseStack, bodyRot, scale);
    }
 
    @Override

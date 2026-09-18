@@ -19,6 +19,7 @@ import net.minecraft.world.entity.ai.behavior.SetEntityLookTarget;
 import net.minecraft.world.entity.ai.behavior.SetLookAndInteract;
 import net.minecraft.world.entity.ai.behavior.SetWalkTargetFromLookTarget;
 import net.minecraft.world.entity.ai.behavior.Swim;
+import net.minecraft.world.entity.ai.behavior.WakeUp;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.MemoryStatus;
 
@@ -27,9 +28,8 @@ public class CivilizedVillagerActivities {
    public static ImmutableList<Pair<Integer, ? extends BehaviorControl<? super CivilizedVillager>>> getRestPackage(
          float speedModifier) {
       return ImmutableList.of(
-            Pair.of(2, MediumDistanceTravelOnceOff.create(MemoryModuleType.HOME, speedModifier, 1, 300, 1500)),
+            Pair.of(2, new SleepInBed(speedModifier)),
             // Pair.of(3, ValidateNearbyPoi.create((p_217495_) -> p_217495_.is(PoiTypes.HOME), MemoryModuleType.HOME)),
-            // Pair.of(3, new SleepInBed()),
             Pair.of(
                   5,
                   new RunOne( // for now, do nothing at home
@@ -49,7 +49,9 @@ public class CivilizedVillagerActivities {
             Pair.of(0, new Swim(0.8F)),
             Pair.of(0, InteractWithDoorAndGate.create()),
             Pair.of(0, new LookAtTargetSink(45, 90)),
-            Pair.of(0, new InvalidateImportantLocations()));
+            Pair.of(0, new InvalidateImportantLocations()),
+            // wakes up villagers that are still asleep outside of rest time, e.g. after being loaded in asleep
+            Pair.of(0, WakeUp.create()));
    }
 
    public static ImmutableList<Pair<Integer, ? extends BehaviorControl<? super CivilizedVillager>>> getIdlePackage(

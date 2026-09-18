@@ -3,12 +3,10 @@ package com.uncreated.civilized.entity.renderer;
 import javax.annotation.Nullable;
 
 import com.uncreated.civilized.core.villagerinfo.VillagerOccupation;
-import com.uncreated.civilized.entity.CivilizedVillager;
 
 import net.minecraft.client.renderer.entity.state.HumanoidRenderState;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.ai.Brain;
 
 public class CivilizedVillagerRenderState extends HumanoidRenderState {
 
@@ -20,6 +18,7 @@ public class CivilizedVillagerRenderState extends HumanoidRenderState {
    public ResourceLocation hair;
    public ResourceLocation clothing;
    public String debugBehavioursList;
+   public boolean sleepingOnFloor;
 
    public CivilizedVillagerRenderState() {
 

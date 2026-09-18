@@ -35,6 +35,7 @@ import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.core.villagerinfo.VillagerOccupations;
 import com.uncreated.civilized.entity.behaviour.StatefulBehaviourControl;
 import com.uncreated.civilized.entity.behaviour.worker.soldier.ArrowLineOfFire;
+import com.uncreated.civilized.entity.control.CivilizedVillagerLookControl;
 import com.uncreated.civilized.entity.pathfinding.VillagerGroundPathNavigation;
 import com.uncreated.civilized.entity.renderer.CivilizedVillagerRenderer;
 import com.uncreated.civilized.entity.stats.ClothingTextureRegistry;
@@ -45,6 +46,8 @@ import com.uncreated.civilized.ui.menu.dialogue.VillagerDialogueScreen;
 
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -117,6 +120,7 @@ public class CivilizedVillager extends AgeableMob
 
    public CivilizedVillager(EntityType<? extends AgeableMob> entityType, Level level) {
       super(entityType, level);
+      this.lookControl = new CivilizedVillagerLookControl(this);
       ((VillagerGroundPathNavigation) this.getNavigation()).setCanOpenDoors(true);
       this.getNavigation().setCanFloat(true);
       this.getNavigation().setRequiredPathLength(48.0F);
@@ -390,6 +394,39 @@ public class CivilizedVillager extends AgeableMob
       brain.setActiveActivityIfPossible(Activity.IDLE);
    }
 
+   public static final EntityDataAccessor<Byte> FLOOR_SLEEPING_DIRECTION =
+         SynchedEntityData.defineId(CivilizedVillager.class, EntityDataSerializers.BYTE);
+   private static final byte NOT_SLEEPING_ON_FLOOR = -1;
+
+   public boolean isSleepingOnFloor() {
+      return getFloorSleepingDirection() != null;
+   }
+
+   public @Nullable Direction getFloorSleepingDirection() {
+      byte direction = getEntityData().get(FLOOR_SLEEPING_DIRECTION);
+      return direction == NOT_SLEEPING_ON_FLOOR ? null : Direction.from2DDataValue(direction);
+   }
+
+   /**
+    * @param pos
+    *           where the villager's head lies
+    * @param headDirection
+    *           the direction from the villager's feet to its head, so its body takes up {@code pos} and the block
+    *           behind it, just like a bed
+    */
+   public void sleepOnFloor(BlockPos pos, Direction headDirection) {
+      getEntityData().set(FLOOR_SLEEPING_DIRECTION, (byte) headDirection.get2DDataValue());
+      startSleeping(pos);
+      // startSleeping raises the villager up to where a mattress would be
+      setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+   }
+
+   @Override
+   public void stopSleeping() {
+      super.stopSleeping();
+      getEntityData().set(FLOOR_SLEEPING_DIRECTION, NOT_SLEEPING_ON_FLOOR);
+   }
+
    public void refreshBrain(ServerLevel serverLevel) {
       boolean wasRouted = isRouted();
 
@@ -536,6 +573,7 @@ public class CivilizedVillager extends AgeableMob
       super.defineSynchedData(builder);
       // Our default value is zero.
       builder.define(CURRENT_WORK_BEHAVIOUR, "");
+      builder.define(FLOOR_SLEEPING_DIRECTION, NOT_SLEEPING_ON_FLOOR);
    }
 
    @Nullable

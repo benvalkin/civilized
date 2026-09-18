@@ -17,6 +17,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
+import net.neoforged.neoforge.event.entity.player.CanContinueSleepingEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.level.ChunkEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
@@ -28,6 +29,13 @@ public class EntityEvents {
    public static void serverPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
       if (!event.getEntity().level().isClientSide && event.getEntity() instanceof ServerPlayer serverPlayer)
          ServerBuildingsStore.INSTANCE.replicateFullToNewClient(serverPlayer);
+   }
+
+   @SubscribeEvent
+   public static void civilizedVillagerKeepSleeping(CanContinueSleepingEvent event) {
+      // villagers without a free bed sleep on the floor, which vanilla would otherwise wake them up from straight away
+      if (event.getEntity() instanceof CivilizedVillager villager && villager.isSleepingOnFloor())
+         event.setContinueSleeping(true);
    }
 
    @SubscribeEvent
