@@ -28,7 +28,6 @@ public class FetchWorkInputFromHome extends ExchangeResourcesAtBuilding {
    @Override
    protected void exchangeResources(ServerLevel level, CivilizedVillager villager, long tickTime) {
 
-      dumpInventoryToChests(villager.getWorkInputInventory());
       dumpInventoryToChests(villager.getWorkOutputInventory());
 
       LogisticsManager logisticsManager = getSettlement().getBehaviour().getLogisticsManager();

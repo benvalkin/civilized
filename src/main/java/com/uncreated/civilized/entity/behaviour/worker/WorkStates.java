@@ -23,6 +23,7 @@ public class WorkStates {
    public static BehaviourState FETCHING_WORK_INPUT_FROM_HOME = new BehaviourState("fetching_work_input_from_home");
    public static final BehaviourState BREEDING_ANIMALS = new BehaviourState("breeding_animals");
    public static final BehaviourState SLAUGHTERING_ANIMALS = new BehaviourState("slaughtering_animals");
+   public static final BehaviourState SHEARING_SHEEP = new BehaviourState("shearing_sheep");
    public static final BehaviourState HARVESTING_HONEY = new BehaviourState("harvesting_honey");
    public static final BehaviourState CUTTING_DOWN_TREES = new BehaviourState("cutting_down_trees");
    public static final BehaviourState MINING_ORES = new BehaviourState("mining_ores");

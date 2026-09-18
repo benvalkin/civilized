@@ -31,6 +31,8 @@ public class SlaughterAnimals<T extends Animal> extends WorkTaskBehaviour {
 
    @Override
    protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
+      if (!super.checkExtraStartConditions(level, villager))
+         return false;
 
       killableAnimals = getKillableAdultAnimals(level);
       if (killableAnimals.size() <= 4)

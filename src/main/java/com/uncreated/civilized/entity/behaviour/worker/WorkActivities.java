@@ -25,6 +25,7 @@ import com.uncreated.civilized.entity.behaviour.worker.farmer.HarvestCrops;
 import com.uncreated.civilized.entity.behaviour.worker.farmer.PlantCrops;
 import com.uncreated.civilized.entity.behaviour.worker.miner.MineOres;
 import com.uncreated.civilized.entity.behaviour.worker.rancher.BreedAnimals;
+import com.uncreated.civilized.entity.behaviour.worker.rancher.ShearSheep;
 import com.uncreated.civilized.entity.behaviour.worker.rancher.SlaughterAnimals;
 import com.uncreated.civilized.entity.behaviour.worker.woodcutter.CutDownTrees;
 import com.uncreated.civilized.entity.behaviour.worker.woodcutter.ReplantSaplings;
@@ -123,6 +124,7 @@ public class WorkActivities {
                   new WorkBehaviourControl(
                         ImmutableList.of(
                               new BreedAnimals<>(),
+                              new ShearSheep(),
                               new SlaughterAnimals<>(Cow.class),
                               new CheckLogisticsOpportunities(),
                               new DropoffWorkOutputAtHome(),
@@ -136,6 +138,7 @@ public class WorkActivities {
                         ImmutableList.of(
                               WorkStates.CHECK_LOGISTICS_OPPORTUNITIES,
                               WorkStates.BREEDING_ANIMALS,
+                              WorkStates.SHEARING_SHEEP,
                               WorkStates.SLAUGHTERING_ANIMALS),
                         ImmutableList
                               .of(WorkStates.STROLL_OUTSIDE_WORKSITE, BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT))));
