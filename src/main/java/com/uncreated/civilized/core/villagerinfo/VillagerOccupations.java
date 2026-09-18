@@ -120,6 +120,7 @@ public class VillagerOccupations {
          VillagerOccupation.builder(createResourceKey("fisherman"))
                .homeType(BuildingTypes.FISHERMAN_HOUSE)
                .validWorksite(b -> b.is(BuildingTypes.FISHING_SPOT))
+               .workBehaviourPackage(WorkActivities::getFishermanWorkPackage)
                .build();
    // artisan
    public static final VillagerOccupation BAKER =

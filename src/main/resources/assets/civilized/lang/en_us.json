@@ -104,6 +104,8 @@
   "menu.building.management.requirements.count.description.furnaces": "Furnace",
   "menu.building.management.requirements.count.description.signs": "Signs",
   "menu.building.management.requirements.count.tooltip": "This building level needs at least %s %s.",
+  "menu.building.management.requirements.fishing_site_water.description": "Body of Water",
+  "menu.building.management.requirements.fishing_site_water.tooltip": "This building level needs at least a %sx%s body of water that is at least %s blocks deep",
   "menu.building.management.requirements.beehives_with_campfire.tooltip": "This building level needs between %s and %s Beehives with Campfires underneath",
   "menu.building.management.requirements.count.range.description": "%s: %s (%s-%s)",
   "menu.building.management.requirements.count.range.tooltip": "This building level needs between %s and %s %s",

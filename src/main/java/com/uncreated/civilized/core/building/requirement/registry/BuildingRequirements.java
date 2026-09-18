@@ -9,6 +9,7 @@ import com.uncreated.civilized.CivilizedMod;
 import com.uncreated.civilized.core.building.BuildingType;
 import com.uncreated.civilized.core.building.BuildingTypes;
 import com.uncreated.civilized.core.building.requirement.EnclosedRoomRequirement;
+import com.uncreated.civilized.core.building.requirement.FishingSiteWaterRequirement;
 import com.uncreated.civilized.core.building.requirement.SpaceRequirement;
 import com.uncreated.civilized.core.building.requirement.SurfaceAreaRequirement;
 import com.uncreated.civilized.core.building.requirement.blockcount.BlockTypeRequirement;
@@ -120,6 +121,16 @@ public class BuildingRequirements {
 
          registerStandardHouse(BuildingTypes.BEEKEEPER_HOUSE, registry, b -> {
          });
+
+         registerStandardHouse(BuildingTypes.FISHERMAN_HOUSE, registry, b -> {
+         });
+
+         registerRequirements(
+               registry,
+               BuildingRequirementList.forBuilding(BuildingTypes.FISHING_SPOT, 1)
+                     .add(new FishingSiteWaterRequirement(5, 5, 4))
+                     .add(new SignsPresentRequirement(1, false))
+                     .create());
 
          registerRequirements(
                registry,

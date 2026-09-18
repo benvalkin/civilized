@@ -13,6 +13,7 @@ import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.BuildingType;
 import com.uncreated.civilized.core.building.ClientBuildingStore;
 import com.uncreated.civilized.core.building.requirement.EnclosedRoomRequirement;
+import com.uncreated.civilized.core.building.requirement.FishingSiteWaterRequirement;
 import com.uncreated.civilized.core.building.requirement.IBuildingRequirement;
 import com.uncreated.civilized.core.building.requirement.IBuildingRequirementResult;
 import com.uncreated.civilized.core.building.requirement.SpaceRequirement;
@@ -101,6 +102,8 @@ public class BuildingDeedItem extends Item {
                   requirementResults.add(bt.getResult(level, boundsResult.bounds()));
                if (requirement instanceof SurfaceAreaRequirement sa)
                   requirementResults.add(sa.getResult(boundsResult.bounds()));
+               if (requirement instanceof FishingSiteWaterRequirement fw)
+                  requirementResults.add(fw.getResult(level, boundsResult.bounds()));
             }
 
             Minecraft.getInstance()

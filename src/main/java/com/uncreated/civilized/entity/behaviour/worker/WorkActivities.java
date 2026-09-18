@@ -11,6 +11,7 @@ import com.uncreated.civilized.entity.behaviour.IdleStrollAroundSettlement;
 import com.uncreated.civilized.entity.behaviour.worker.artisan.CraftItems;
 import com.uncreated.civilized.entity.behaviour.worker.artisan.furnace.SmeltItems;
 import com.uncreated.civilized.entity.behaviour.worker.beekeeper.HarvestHoneyAndHoneyComb;
+import com.uncreated.civilized.entity.behaviour.worker.fisherman.Fish;
 import com.uncreated.civilized.entity.behaviour.worker.common.IdleStrollAroundWorksite;
 import com.uncreated.civilized.entity.behaviour.worker.common.IdleStrollOutsideWorksite;
 import com.uncreated.civilized.entity.behaviour.worker.common.logistics.CheckLogisticsOpportunities;
@@ -162,6 +163,28 @@ public class WorkActivities {
                               WorkStates.CHECK_LOGISTICS_OPPORTUNITIES,
                               WorkStates.BREEDING_ANIMALS,
                               WorkStates.HARVESTING_HONEY),
+                        ImmutableList
+                              .of(WorkStates.STROLL_OUTSIDE_WORKSITE, BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT))));
+   }
+
+   public static ImmutableList<Pair<Integer, ? extends BehaviorControl<CivilizedVillager>>> getFishermanWorkPackage() {
+      return ImmutableList.of(
+            getMinimalLookBehavior(),
+            Pair.of(
+                  1,
+                  new WorkBehaviourControl(
+                        ImmutableList.of(
+                              new Fish(10 * 20, 30 * 20),
+                              new CheckLogisticsOpportunities(),
+                              new DropoffWorkOutputAtHome(),
+                              new FetchExportsFromHome(),
+                              new DropOffExportsAtStorehouse(),
+                              new FetchImportsFromStorehouse(),
+                              new DropOffImportsAtHome(),
+                              new FetchWorkInputFromHome(),
+                              new IdleStrollOutsideWorksite(4, 3, 0.25f),
+                              new IdleStrollAroundSettlement(5, 3, 0.25f)),
+                        ImmutableList.of(WorkStates.CHECK_LOGISTICS_OPPORTUNITIES, WorkStates.FISHING),
                         ImmutableList
                               .of(WorkStates.STROLL_OUTSIDE_WORKSITE, BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT))));
    }
