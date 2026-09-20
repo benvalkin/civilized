@@ -22,7 +22,11 @@ public class IdleStrollOutsideWorksite extends WorkTaskBehaviour {
    private final int maxVerticalDist;
    private final float speedModifier;
    private long nextWorkTime;
+   private long nextPickupTime;
    private MediumDistanceTravelTask travelHelper;
+
+   /** How often the villager looks around the worksite for dropped items. */
+   private static final int PICKUP_INTERVAL_TICKS = 5 * 20;
 
    public IdleStrollOutsideWorksite(int maxHorizontalDist, int maxVerticalDist, float strollSpeedModifier) {
       super(WorkStates.STROLL_OUTSIDE_WORKSITE, true, false, 120 * 15, 0);
@@ -34,6 +38,7 @@ public class IdleStrollOutsideWorksite extends WorkTaskBehaviour {
    @Override
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
       nextWorkTime = gameTime;
+      nextPickupTime = gameTime;
 
       AABB tooCloseBounds = getWorksite().getBuilding().getBounds().getEncapsulatingAABB();
       AABB closeEnoughBounds = tooCloseBounds.inflate(4);
@@ -62,6 +67,14 @@ public class IdleStrollOutsideWorksite extends WorkTaskBehaviour {
       BuildingBounds worksiteBounds = getWorksite().getBuilding().getBounds();
       AABB innerBounds = worksiteBounds.getEncapsulatingAABB().inflate(1);
       AABB outerBounds = worksiteBounds.getEncapsulatingAABB().inflate(1 + maxHorizontalDist);
+
+
+      if (tickTime >= nextPickupTime) {
+         nextPickupTime = tickTime + PICKUP_INTERVAL_TICKS;
+
+         if (pickUpDroppedItemsAtWorksite(level, villager))
+            goDropOffWorkOutputAtHome(villager);
+      }
 
       if (tickTime >= nextWorkTime) {
          nextWorkTime += villager.getRandom().nextInt(5 * 20, 15 * 20);

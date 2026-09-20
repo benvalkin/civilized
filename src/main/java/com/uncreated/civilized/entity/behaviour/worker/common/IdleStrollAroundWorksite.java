@@ -20,7 +20,11 @@ public class IdleStrollAroundWorksite extends WorkTaskBehaviour {
    private final int maxVerticalDist;
    private final float speedModifier;
    private long nextWorkTime;
+   private long nextPickupTime;
    private MediumDistanceTravelTask travelHelper;
+
+   /** How often the villager looks around the worksite for dropped items. */
+   private static final int PICKUP_INTERVAL_TICKS = 10 * 20;
 
    public IdleStrollAroundWorksite(int maxHorizontalDist, int maxVerticalDist, float strollSpeedModifier) {
       super(WorkStates.STROLL_AROUND_WORKSITE, true, false, 120 * 15, 0);
@@ -32,6 +36,7 @@ public class IdleStrollAroundWorksite extends WorkTaskBehaviour {
    @Override
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
       nextWorkTime = gameTime;
+      nextPickupTime = gameTime;
       travelHelper =
             new MediumDistanceTravelTask(villager, getWorksite().getBuilding().getBlockPos(), maxHorizontalDist + 1);
    }
@@ -47,6 +52,13 @@ public class IdleStrollAroundWorksite extends WorkTaskBehaviour {
       if (!travelHelper.isJourneySuccessful()) {
          travelHelper.walkToPoi(tickTime);
          return;
+      }
+
+      if (tickTime >= nextPickupTime) {
+         nextPickupTime = tickTime + PICKUP_INTERVAL_TICKS;
+
+         if (pickUpDroppedItemsAtWorksite(level, villager))
+            goDropOffWorkOutputAtHome(villager);
       }
 
       if (tickTime >= nextWorkTime) {

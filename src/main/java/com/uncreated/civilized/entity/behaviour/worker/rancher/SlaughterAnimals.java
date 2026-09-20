@@ -61,6 +61,9 @@ public class SlaughterAnimals<T extends Animal> extends WorkTaskBehaviour {
    protected void stop(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.stop(level, villager, gameTime);
 
+      if (travelHelper.isJourneySuccessful())
+         pickUpDroppedItemsAtWorksite(level, villager);
+
       if (killedAnimals)
          goDropOffWorkOutputAtHome(villager);
    }

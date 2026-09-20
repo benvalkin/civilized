@@ -22,6 +22,10 @@ import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 
 import lombok.Getter;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
 
 public abstract class WorkTaskBehaviour extends StatefulBehaviour {
 
@@ -114,9 +118,52 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
    }
 
    protected void goDropOffWorkOutputAtHome(CivilizedVillager villager) {
+      // the home is looked up rather than taken from getHome(), so that behaviours which don't require a home can drop
+      // off what they picked up too
+      Optional<LoadedBuilding> homeBuilding = LoadedBuildings.checkLoaded(villager.getInfo().getHomeBuildingId());
+      if (homeBuilding.isEmpty())
+         return;
+
       DropOffItemsInstruction dropOffItemsInstruction =
-            new DropOffItemsInstruction(getHome(), List.of(VillagerInventoryType.WORK_OUTPUT));
+            new DropOffItemsInstruction(homeBuilding.get(), List.of(VillagerInventoryType.WORK_OUTPUT));
       villager.getBrain().setMemory(AIRegistry.MM_DROP_OFF_ITEMS_INSTRUCTION.get(), dropOffItemsInstruction);
       getStateMachine().queueActionOnce(WorkStates.DROPPING_OFF_ITEMS_AT_BUILDING);
+   }
+
+   /**
+    * Collects items lying on the ground anywhere in the worksite into the villager's work output inventory, e.g. eggs
+    * laid by chickens or drops that nobody picked up.
+    *
+    * @return whether anything was picked up
+    */
+   protected boolean pickUpDroppedItemsAtWorksite(ServerLevel level, CivilizedVillager villager) {
+
+      List<ItemEntity> droppedItems =
+            level.getEntitiesOfClass(
+                  ItemEntity.class,
+                  getWorksite().getBuilding().getBounds().getEncapsulatingAABB(),
+                  i -> i.isAlive() && !i.hasPickUpDelay());
+
+      boolean pickedUpAnything = false;
+      for (ItemEntity droppedItem : droppedItems) {
+         ItemStack remainder = villager.getWorkOutputInventory().addItem(droppedItem.getItem());
+
+         if (remainder.getCount() == droppedItem.getItem().getCount())
+            continue; // no room left in the villager's inventory
+
+         pickedUpAnything = true;
+
+         if (remainder.isEmpty())
+            droppedItem.discard();
+         else
+            droppedItem.setItem(remainder);
+      }
+
+      if (pickedUpAnything) {
+         villager.playSound(SoundEvents.ITEM_PICKUP, 0.2F, 1.0F);
+         villager.swing(InteractionHand.MAIN_HAND);
+      }
+
+      return pickedUpAnything;
    }
 }

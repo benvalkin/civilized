@@ -85,6 +85,9 @@ public class CutDownTrees extends WorkTaskBehaviour {
       super.stop(level, villager, gameTime);
       villager.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
 
+      if (travelHelper.isJourneySuccessful())
+         pickUpDroppedItemsAtWorksite(level, villager);
+
       if (hasWood)
          goDropOffWorkOutputAtHome(villager);
    }

@@ -49,12 +49,12 @@ public class BreedAnimals<T extends Animal> extends WorkTaskBehaviour {
 
       AnimalFarmState animalFarmState = (AnimalFarmState) getWorksite().getBuilding().getState();
 
-      InventoryStockRequirement.StockResult carrying =
-            animalFarmState.getAnimalFoodRequirement().evaluate(villager);
+      InventoryStockRequirement.StockResult carrying = animalFarmState.getAnimalFoodRequirement().evaluate(villager);
       if (!carrying.satisfied()) {
          Optional<TakeToInventoryInstruction> instruction =
-               TakeToInventoryInstruction
-                     .createIfMetFromSourceBuildings(animalFarmState.getAnimalFoodRequirement(), homeAndStorehouseIfPresent());
+               TakeToInventoryInstruction.createIfMetFromSourceBuildings(
+                     animalFarmState.getAnimalFoodRequirement(),
+                     homeAndStorehouseIfPresent());
          if (instruction.isPresent()) {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
@@ -89,6 +89,9 @@ public class BreedAnimals<T extends Animal> extends WorkTaskBehaviour {
    protected void stop(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.stop(level, villager, gameTime);
       villager.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+
+      if (travelHelper.isJourneySuccessful())
+         pickUpDroppedItemsAtWorksite(level, villager);
    }
 
    @Override

@@ -107,6 +107,9 @@ public class ShearSheep extends WorkTaskBehaviour {
       super.stop(level, villager, gameTime);
       villager.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
 
+      if (travelHelper.isJourneySuccessful())
+         pickUpDroppedItemsAtWorksite(level, villager);
+
       if (hasShearedSheep)
          goDropOffWorkOutputAtHome(villager);
    }

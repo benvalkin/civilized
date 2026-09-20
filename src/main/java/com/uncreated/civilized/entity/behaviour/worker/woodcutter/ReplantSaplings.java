@@ -76,6 +76,13 @@ public class ReplantSaplings extends WorkTaskBehaviour {
    }
 
    @Override
+   protected void stop(ServerLevel level, CivilizedVillager villager, long gameTime) {
+      super.stop(level, villager, gameTime);
+      if (travelHelper.isJourneySuccessful())
+         pickUpDroppedItemsAtWorksite(level, villager);
+   }
+
+   @Override
    protected boolean canStillUse(ServerLevel level, CivilizedVillager entity, long gameTime) {
 
       if (entity.getBrain().getMemory(MemoryModuleType.JOB_SITE).isEmpty()) {
