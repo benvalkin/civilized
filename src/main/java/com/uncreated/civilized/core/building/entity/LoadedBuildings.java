@@ -10,6 +10,8 @@ import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
 import com.uncreated.civilized.core.building.Building;
+import com.uncreated.civilized.core.building.ClientBuildingStore;
+import com.uncreated.civilized.core.building.ServerBuildingsStore;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -48,23 +50,23 @@ public class LoadedBuildings {
       return checkLoaded(building).orElseThrow();
    }
 
-   /**
-    * Hands the chest to the loaded building it stands in, if any. Called when a chest block entity comes to life, i.e.
-    * when it is placed or when its chunk loads.
-    */
    public static void onChestLoaded(ChestBlockEntity chest, Level level) {
       findBuildingAt(chest.getBlockPos(), level).ifPresent(b -> b.onChestLoaded(chest));
    }
 
-   /**
-    * Called when a chest block entity is broken or its chunk unloads.
-    */
    public static void onChestUnloaded(ChestBlockEntity chest, Level level) {
       findBuildingAt(chest.getBlockPos(), level).ifPresent(b -> b.onChestUnloaded(chest));
    }
 
    private static Optional<LoadedBuilding> findBuildingAt(BlockPos blockPos, Level level) {
-      return checkLoaded(b -> b.getLevel() == level && b.getBuilding().getBounds().contains(blockPos));
+
+      Optional<Building> enclosingBuilding;
+      if (level.isClientSide)
+         enclosingBuilding = ClientBuildingStore.INSTANCE.findEnclosingBuilding(blockPos, level);
+      else
+         enclosingBuilding = ServerBuildingsStore.INSTANCE.findEnclosingBuilding(blockPos, level);
+
+      return enclosingBuilding.flatMap(LoadedBuildings::checkLoaded);
    }
 
    public static void tickLoadedBuildings() {

@@ -1,7 +1,6 @@
 {
   "package": "com.uncreated.civilized.mixins",
   "mixins": [
-    "BlockEntityMixin",
     "SignBlockEntityMixin",
     "SignBlockMixin"
   ]

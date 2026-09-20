@@ -38,25 +38,6 @@ public class LoadedBuilding {
       findChestsInsideBounds();
    }
 
-   /**
-    * Only intended to be called once when this building is loaded.
-    */
-   private void findChestsInsideBounds() {
-      building.getBounds()
-            .getBlockEntitiesInsideBuilding(level)
-            .stream()
-            .filter(e -> e instanceof ChestBlockEntity)
-            .forEach(e -> chests.add((ChestBlockEntity) e));
-   }
-
-   public void onChestLoaded(ChestBlockEntity chest) {
-      chests.add(chest);
-   }
-
-   public void onChestUnloaded(ChestBlockEntity chest) {
-      chests.remove(chest);
-   }
-
    public void reserveItems(CivilizedVillager villager, String key, Predicate<ItemStack> matching, int amount) {
       itemReservations.put(villager, new ItemReservation(key, matching, amount));
    }
@@ -66,6 +47,8 @@ public class LoadedBuilding {
    }
 
    public List<Container> chests() {
+      // NOTE: the loaded events do not account for if a chest destroyed by an explosion, pushed by a piston, placed by a dispenser or another mod etc.
+      // So we should clean out stale entities
       chests.removeIf(BlockEntity::isRemoved);
       return chests.stream().map(c -> ((Container) c)).toList();
    }
@@ -73,6 +56,24 @@ public class LoadedBuilding {
    public Optional<ChestBlockEntity> anyChest() {
       chests.removeIf(BlockEntity::isRemoved);
       return chests.stream().findFirst();
+   }
+
+   // Only intended to be called once when this building is loaded.
+   private void findChestsInsideBounds() {
+      building.getBounds()
+              .getBlockEntitiesInsideBuilding(level)
+              .stream()
+              .filter(e -> e instanceof ChestBlockEntity)
+              .forEach(e -> chests.add((ChestBlockEntity) e));
+   }
+
+   public void onChestLoaded(ChestBlockEntity chest) {
+      // NOTE: this method can still run after findChestsInsideBounds() - we use a Set to avoid double counting
+      chests.add(chest);
+   }
+
+   public void onChestUnloaded(ChestBlockEntity chest) {
+      chests.remove(chest);
    }
 
    @Override
