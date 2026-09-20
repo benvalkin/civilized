@@ -8,15 +8,14 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
-import com.uncreated.civilized.core.building.logistics.LogisticsManager;
-import com.uncreated.civilized.core.building.logistics.orders.StorehouseOrder;
-import com.uncreated.civilized.core.building.logistics.orders.imports.ImportUpTo;
-import com.uncreated.civilized.core.building.logistics.orders.task.ToolRequirement;
+import com.uncreated.civilized.core.building.logistics.hauling.instruction.TakeToInventoryInstruction;
+import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
+import com.uncreated.civilized.core.building.logistics.hauling.requirement.ToolRequirement;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
 import com.uncreated.civilized.entity.behaviour.worker.WorkTaskBehaviour;
-import com.uncreated.civilized.util.ContainerHelper;
+import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
@@ -43,6 +42,9 @@ public class HarvestCrops extends WorkTaskBehaviour {
    private MediumDistanceTravelTask travelHelper;
    private ItemStack handHeld;
 
+   private static final ToolRequirement HOE_REQUIREMENT =
+         new ToolRequirement("hoe", i -> i.getItem() instanceof HoeItem);
+
    public HarvestCrops() {
       super(WorkStates.HARVESTING_CROPS, true, true, 120 * 20, 30 * 20);
    }
@@ -52,27 +54,20 @@ public class HarvestCrops extends WorkTaskBehaviour {
       if (!super.checkExtraStartConditions(level, villager))
          return false;
 
-      LogisticsManager logisticsManager = getSettlement().getBehaviour().getLogisticsManager();
-
-      ToolRequirement toolRequirement =
-            new ToolRequirement(level, "harvest_crops", HoeItem.class, StorehouseOrder.Origin.AUTOMATIC);
-      toolRequirement.setExpiry(12000);
-      logisticsManager.registerOrder(getHome().getBuilding(), toolRequirement);
-      ImportUpTo importOrder =
-            new ImportUpTo(level, "hoe", toolRequirement.getItemSearch(), StorehouseOrder.Origin.AUTOMATIC, 1, 1, 1);
-      importOrder.setExpiry(12000);
-      logisticsManager.registerOrder(getHome().getBuilding(), importOrder);
-
-      Optional<ContainerHelper.ItemSearchResult> tool =
-            ContainerHelper.findItem(villager.getWorkInputInventory(), toolRequirement.getItemSearch());
-
-      if (tool.isEmpty()) {
-         // todo: send notification that the villager is missing tool
-         getStateMachine().queueActionOnce(WorkStates.FETCHING_WORK_INPUT_FROM_HOME);
-         getStateMachine().queueActionOnce(this.getState());
+      InventoryStockRequirement.StockResult carrying = HOE_REQUIREMENT.evaluate(villager);
+      if (!carrying.satisfied()) {
+         Optional<TakeToInventoryInstruction> instruction =
+               TakeToInventoryInstruction.tryCreate(HOE_REQUIREMENT, homeAndStorehouseIfPresent());
+         if (instruction.isPresent()) {
+            villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
+            getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
+            getStateMachine().queueActionOnce(this.getState());
+            // todo: send notification that the villager is missing a tool
+         }
          return false;
       }
-      this.handHeld = tool.get().itemStack();
+
+      this.handHeld = carrying.stock().getItemStacks().getFirst();
 
       findFarmBlocks(level);
       return nextMaturesCropToHarvest != null;
@@ -93,7 +88,7 @@ public class HarvestCrops extends WorkTaskBehaviour {
       villager.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
 
       if (hasWorkOutputItems)
-         getStateMachine().queueActionOnce(WorkStates.DROPPING_OFF_WORK_OUTPUT_AT_HOME);
+         goDropOffWorkOutputAtHome(villager);
 
    }
 

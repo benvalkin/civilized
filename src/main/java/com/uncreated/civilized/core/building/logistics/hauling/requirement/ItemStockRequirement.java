@@ -71,9 +71,7 @@ public abstract class ItemStockRequirement {
       return new BuildingStockRequirement.StockResult(satisfied, grossStock, satisfiedBuildings);
    }
 
-   public AggregateItemStack calculateBuildingStock(
-         List<Container> chests,
-         Collection<ItemReservation> reservations) {
+   public AggregateItemStack calculateBuildingStock(List<Container> chests, Collection<ItemReservation> reservations) {
       AggregateItemStack buildingStock = new AggregateItemStack();
       for (Container chest : chests) {
          AggregateItemStack chestStock = ContainerHelper.countItems(chest, filter);

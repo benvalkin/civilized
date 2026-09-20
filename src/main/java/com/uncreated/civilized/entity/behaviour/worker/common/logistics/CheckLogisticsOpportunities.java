@@ -71,7 +71,8 @@ public class CheckLogisticsOpportunities extends WorkTaskBehaviour {
          }
       } else if (!getSharedCooldowns().hasCooldown(Cooldowns.IMPORT_RUN, level.getGameTime())
             && checkForImportOrders(storehouseChests, homeChests)) {
-         getStateMachine().queueActionOnce(WorkStates.FETCHING_IMPORTS_FROM_STOREHOUSE);
+         // todo: import runs still need a hauling instruction for pulling stock from the storehouse into the home.
+         // checkForImportOrders always returns false until then, so this branch never runs
       }
    }
 

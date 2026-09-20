@@ -9,16 +9,15 @@ import org.slf4j.Logger;
 import com.google.common.collect.Lists;
 import com.mojang.logging.LogUtils;
 import com.uncreated.civilized.core.building.Building;
-import com.uncreated.civilized.core.building.logistics.LogisticsManager;
-import com.uncreated.civilized.core.building.logistics.orders.StorehouseOrder;
-import com.uncreated.civilized.core.building.logistics.orders.imports.ImportUpTo;
-import com.uncreated.civilized.core.building.logistics.orders.task.TaskConsumableItemRequirement;
-import com.uncreated.civilized.core.building.logistics.orders.task.TaskItemRequirement;
+import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventoryType;
+import com.uncreated.civilized.core.building.logistics.hauling.instruction.TakeToInventoryInstruction;
+import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
 import com.uncreated.civilized.core.building.state.GroveState;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
 import com.uncreated.civilized.entity.behaviour.worker.WorkTaskBehaviour;
+import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -47,37 +46,29 @@ public class ReplantSaplings extends WorkTaskBehaviour {
 
    @Override
    protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
+      if (!super.checkExtraStartConditions(level, villager))
+         return false;
 
-      LogisticsManager logisticsManager = getSettlement().getBehaviour().getLogisticsManager();
-
-      GroveState behaviour = (GroveState) getWorksite().getBuilding().getState();
-      TaskItemRequirement taskItemRequirement =
-            new TaskConsumableItemRequirement(
-                  level,
-                  "replant_saplings",
-                  behaviour::isCorrectSapling,
-                  StorehouseOrder.Origin.AUTOMATIC,
-                  16);
-      taskItemRequirement.setExpiry(12000);
-      logisticsManager.registerOrder(getHome().getBuilding(), taskItemRequirement);
-      ImportUpTo importOrder =
-            new ImportUpTo(
-                  level,
+      GroveState groveState = (GroveState) getWorksite().getBuilding().getState();
+      InventoryStockRequirement saplingRequirement =
+            new InventoryStockRequirement(
                   "saplings",
-                  taskItemRequirement.getItemSearch(),
-                  StorehouseOrder.Origin.AUTOMATIC,
+                  groveState::isCorrectSapling,
                   1,
-                  8,
-                  32);
-      importOrder.setExpiry(12000);
-      logisticsManager.registerOrder(getHome().getBuilding(), importOrder);
+                  16,
+                  VillagerInventoryType.WORK_TASK);
+      saplingFilter = groveState::isCorrectSapling;
 
-      saplingFilter = taskItemRequirement.getItemSearch();
-
-      if (getSaplingsInInventory(villager).isEmpty()) {
-         // todo: send notification that the villager is missing tool
-         getStateMachine().queueActionOnce(WorkStates.FETCHING_WORK_INPUT_FROM_HOME);
-         getStateMachine().queueActionOnce(this.getState());
+      InventoryStockRequirement.StockResult carrying = saplingRequirement.evaluate(villager);
+      if (!carrying.satisfied()) {
+         Optional<TakeToInventoryInstruction> instruction =
+               TakeToInventoryInstruction.tryCreate(saplingRequirement, homeAndStorehouseIfPresent());
+         if (instruction.isPresent()) {
+            villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
+            getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
+            getStateMachine().queueActionOnce(this.getState());
+            // todo: send notification that the villager is missing saplings
+         }
          return false;
       }
 

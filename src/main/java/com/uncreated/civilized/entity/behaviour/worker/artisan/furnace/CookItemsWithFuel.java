@@ -25,7 +25,6 @@ import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.BehaviourState;
 import com.uncreated.civilized.entity.behaviour.Cooldowns;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
-import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
 import com.uncreated.civilized.entity.behaviour.worker.WorkTaskBehaviour;
 import com.uncreated.civilized.util.ContainerHelper;
 
@@ -97,9 +96,9 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
       }
 
       if (cookingMachine.tryGetNextOrder(ingredientsChests, stockChests).isEmpty()) {
-         // if we cannot craft right now, we should try do a logistics run instead
-         getStateMachine().queueActionOnce(WorkStates.FETCHING_IMPORTS_FROM_STOREHOUSE);
-
+         // todo: the villager should fetch the missing ingredients and fuel from the storehouse. The old import orders
+         // were removed with the old logistics system, so this needs a hauling instruction built from the recipe's
+         // ingredients before it can work again
          return false;
       }
 
@@ -153,7 +152,7 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
          cookingMachine.consumeTokens(cookedGoods.getCount());
          changeItemsNeeded = cookingMachine.getProductionTokens() == 0;
 
-         getStateMachine().queueActionOnce(WorkStates.DROPPING_OFF_WORK_OUTPUT_AT_HOME);
+         goDropOffWorkOutputAtHome(villager);
 
          useSuccess = true;
       }

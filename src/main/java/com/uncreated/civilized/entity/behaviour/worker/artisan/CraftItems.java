@@ -88,8 +88,9 @@ public class CraftItems extends WorkTaskBehaviour {
       }
 
       if (craftingMachine.tryGetNextOrder(ingredientsChests, stockChests).isEmpty()) {
-         // if we cannot craft right now, we should fetch imports from the storehouse
-         getStateMachine().queueActionOnce(WorkStates.FETCHING_IMPORTS_FROM_STOREHOUSE);
+         // todo: the villager should fetch the missing ingredients from the storehouse. The old import orders were
+         // removed with the old logistics system, so this needs a hauling instruction built from the recipe's
+         // ingredients before it can work again
          return false;
       }
 
@@ -109,7 +110,7 @@ public class CraftItems extends WorkTaskBehaviour {
       villager.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
 
       if (itemsCrafted)
-         getStateMachine().queueActionOnce(WorkStates.DROPPING_OFF_WORK_OUTPUT_AT_HOME);
+         goDropOffWorkOutputAtHome(villager);
    }
 
    @Override
