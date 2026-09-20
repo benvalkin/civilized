@@ -64,7 +64,7 @@ public class CheckLogisticsOpportunities extends WorkTaskBehaviour {
       if (!getSharedCooldowns().hasCooldown(Cooldowns.EXPORT_RUN, level.getGameTime()) && checkForExportOrders()) {
 
          Optional<TransferToBuildingInstruction> transferToBuildingInstruction =
-               TransferToBuildingInstruction.tryCreate(everything, this.storehouse, home);
+               TransferToBuildingInstruction.createIfMetFromSourceBuildings(everything, this.storehouse, home);
          if (transferToBuildingInstruction.isPresent()) {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), transferToBuildingInstruction);
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);

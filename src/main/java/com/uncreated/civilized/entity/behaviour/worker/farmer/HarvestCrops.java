@@ -57,7 +57,7 @@ public class HarvestCrops extends WorkTaskBehaviour {
       InventoryStockRequirement.StockResult carrying = HOE_REQUIREMENT.evaluate(villager);
       if (!carrying.satisfied()) {
          Optional<TakeToInventoryInstruction> instruction =
-               TakeToInventoryInstruction.tryCreate(HOE_REQUIREMENT, homeAndStorehouseIfPresent());
+               TakeToInventoryInstruction.createIfMetFromSourceBuildings(HOE_REQUIREMENT, homeAndStorehouseIfPresent());
          if (instruction.isPresent()) {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);

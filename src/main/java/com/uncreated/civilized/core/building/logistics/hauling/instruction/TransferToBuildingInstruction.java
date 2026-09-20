@@ -20,83 +20,101 @@ public class TransferToBuildingInstruction extends ConditionalHaulingInstruction
    private final LoadedBuilding destinationBuilding;
 
    protected TransferToBuildingInstruction(
-         BuildingStockRequirement requirement,
+         List<BuildingStockRequirement> requirements,
          List<LoadedBuilding> sourceBuildings,
-         LoadedBuilding destinationBuilding) {
-      super(requirement, sourceBuildings);
-      this.destinationBuilding = destinationBuilding;
+         LoadedBuilding candidateSourceBuildings) {
+      super(requirements, sourceBuildings);
+      this.destinationBuilding = candidateSourceBuildings;
    }
 
-   public static Optional<TransferToBuildingInstruction> tryCreate(
+   /**
+    * Creates an instruction as long as the requirement can be met from the source buildings. When fulfilling this
+    * instruction, the villager will take whatever it can get from each source building.
+    */
+   public static Optional<TransferToBuildingInstruction> createIfMetFromSourceBuildings(
          BuildingStockRequirement requirement,
+         LoadedBuilding destinationBuilding,
+         List<LoadedBuilding> candidateSourceBuildings) {
+      return createIfAnyMetFromSourceBuildings(List.of(requirement), destinationBuilding, candidateSourceBuildings);
+   }
+
+   /**
+    * Creates an instruction as long as AT LEAST ONE of the requirements can be met from the source buildings. When
+    * fulfilling this instruction, the villager will take whatever it can get from each source building - i.e. when one
+    * requirement is satisfied and another isn't, the villager will still continue to other buildings in search of other
+    * items.
+    */
+   public static Optional<TransferToBuildingInstruction> createIfAnyMetFromSourceBuildings(
+         List<BuildingStockRequirement> requirements,
          LoadedBuilding destinationBuilding,
          List<LoadedBuilding> sourceBuildings) {
 
-      BuildingStockRequirement.StockResult stockResult = requirement.evaluate(sourceBuildings);
-      if (stockResult.satisfied()) {
-         TransferToBuildingInstruction instruction =
-               new TransferToBuildingInstruction(requirement, sourceBuildings, destinationBuilding);
-         return Optional.of(instruction);
-      }
+      boolean anyRequirementAvailable = requirements.stream().anyMatch(r -> r.evaluate(sourceBuildings).satisfied());
+      if (!anyRequirementAvailable)
+         return Optional.empty();
 
-      return Optional.empty();
+      return Optional.of(new TransferToBuildingInstruction(requirements, sourceBuildings, destinationBuilding));
    }
 
+   /**
+    * Creates an instruction only if ALL the requirements can be met from the source buildings. When fulfilling this
+    * instruction, the villager will take whatever it can get from each source building - i.e. when one requirement is
+    * satisfied and another isn't, the villager will still continue to other buildings in search of other items.
+    */
+   public static Optional<TransferToBuildingInstruction> createIfAllMetFromSourceBuildings(
+         List<BuildingStockRequirement> requirements,
+         LoadedBuilding destinationBuilding,
+         List<LoadedBuilding> sourceBuildings) {
+
+      boolean allRequirementAvailable = requirements.stream().allMatch(r -> r.evaluate(sourceBuildings).satisfied());
+      if (!allRequirementAvailable)
+         return Optional.empty();
+
+      return Optional.of(new TransferToBuildingInstruction(requirements, sourceBuildings, destinationBuilding));
+   }
+
+   @Override
    public HaulDecision takeItemsUntilSatisfied(CivilizedVillager villager, LoadedBuilding sourceBuilding) {
 
-      Container inventory = requirement.getHaulInventory(villager);
-      List<Container> destinationBuildingChests = destinationBuilding.findChests();
+      List<Container> chests = sourceBuilding.findChests();
 
-      if (!requirement.insatiable()) {
+      for (BuildingStockRequirement requirement : requirements) {
+         int quota = outstandingAmount(villager, requirement);
+         if (quota <= 0)
+            continue; // the destination building already has enough, or the villager is carrying the rest of it
 
-         AggregateItemStack itemsAlreadyAtDestinationBuilding =
-               requirement.calculateBuildingStock(
-                     destinationBuildingChests,
-                     destinationBuilding.getItemReservations().values());
-
-         if (itemsAlreadyAtDestinationBuilding.getCount() >= requirement.idealAmount())
-            return HaulDecision.REQUIREMENT_SATISFIED_NOTHING_MORE_TO_DO;
-
-         AggregateItemStack itemsAlreadyInInventory = ContainerHelper.countItems(inventory, requirement.filter());
-         AggregateItemStack grandExistingTotal =
-               new AggregateItemStack(itemsAlreadyInInventory, itemsAlreadyAtDestinationBuilding);
-
-         if (grandExistingTotal.getCount() >= requirement.idealAmount())
-            // we can fulfill the requirement if we offload our inventory
-            return HaulDecision.REQUIREMENT_SATISFIED_OFFLOAD_ITEMS;
-
-         int quota = requirement().idealAmount() - itemsAlreadyInInventory.getCount();
-         int taken = 0;
-
-         List<Container> chests = sourceBuilding.findChests();
-         for (Container source : chests) {
-            int transferred = ContainerHelper.transferNicely(source, inventory, requirement().filter(), quota);
-
-            quota -= transferred;
-            taken += transferred;
-
-            if (quota <= 0)
-               break;
-         }
-
-         int updatedItemsInInventory = itemsAlreadyInInventory.getCount() + taken;
-         if (updatedItemsInInventory >= requirement.idealAmount())
-            return HaulDecision.REQUIREMENT_SATISFIED_NOTHING_MORE_TO_DO;
-
-         return HaulDecision.REQUIREMENT_NOT_YET_SATISFIED;
-      } else {
-         List<Container> chests = sourceBuilding.findChests();
-         for (Container source : chests) {
-            ContainerHelper.transferNicely(source, inventory, requirement().filter(), Integer.MAX_VALUE);
-         }
-
-         return HaulDecision.REQUIREMENT_NOT_YET_SATISFIED;
+         takeForRequirement(villager, requirement, chests, quota);
       }
+
+      if (!allRequirementsSatisfied(villager))
+         return HaulDecision.REQUIREMENT_NOT_YET_SATISFIED;
+
+      // whatever was picked up still has to make its way to the destination building
+      if (countCarriedItems(villager).hasItems())
+         return HaulDecision.REQUIREMENT_SATISFIED_OFFLOAD_ITEMS;
+
+      return HaulDecision.REQUIREMENT_SATISFIED_NOTHING_MORE_TO_DO;
+   }
+
+   @Override
+   protected int outstandingAmount(CivilizedVillager villager, BuildingStockRequirement requirement) {
+      if (requirement.insatiable())
+         return BuildingStockRequirement.UNLIMITED;
+
+      AggregateItemStack itemsAtDestination =
+            requirement.calculateBuildingStock(
+                  destinationBuilding.findChests(),
+                  destinationBuilding.getItemReservations().values());
+
+      AggregateItemStack carried =
+            ContainerHelper.countItems(requirement.getHaulInventory(villager), requirement.filter());
+
+      return requirement.idealAmount() - itemsAtDestination.getCount() - carried.getCount();
    }
 
    @Override
    public String toString() {
-      return requirement.toString() + ": ["
+      return super.toString() + ": ["
             + sourceBuildings.stream()
                   .map(b -> b.getBuilding().getBuildingType().toString())
                   .collect(Collectors.joining(", "))

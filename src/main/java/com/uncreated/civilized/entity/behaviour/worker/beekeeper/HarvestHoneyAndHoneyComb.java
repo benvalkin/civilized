@@ -1,5 +1,6 @@
 package com.uncreated.civilized.entity.behaviour.worker.beekeeper;
 
+import java.util.List;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
@@ -66,13 +67,13 @@ public class HarvestHoneyAndHoneyComb extends WorkTaskBehaviour {
       if (nextFullBeehive == null)
          return false;
 
-      // InventoryStockRequirement.StockResult carryingShears = shearsRequirement.evaluate(villager);
+      InventoryStockRequirement.StockResult carryingShears = shearsRequirement.evaluate(villager);
       InventoryStockRequirement.StockResult carryingGlassBottles = glassBottlesRequirement.evaluate(villager);
 
-      if (/* !shears.satisfied() && */!carryingGlassBottles.satisfied()) {
-         // todo: only glassBottles can be picked up atm. we need support instructions for multiple requirements
+      if (!carryingShears.satisfied() && !carryingGlassBottles.satisfied()) {
          Optional<TakeToInventoryInstruction> instruction =
-               TakeToInventoryInstruction.tryCreate(glassBottlesRequirement, homeAndStorehouseIfPresent());
+               TakeToInventoryInstruction
+                     .createIfAnyMetFromSourceBuildings(List.of(shearsRequirement, glassBottlesRequirement), homeAndStorehouseIfPresent());
          if (instruction.isPresent()) {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);

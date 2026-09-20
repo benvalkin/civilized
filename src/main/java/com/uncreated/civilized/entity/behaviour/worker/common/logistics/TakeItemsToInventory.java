@@ -45,7 +45,7 @@ public class TakeItemsToInventory extends WorkTaskBehaviour {
 
       haulingInstruction = haulingInstructionMemory.get();
 
-      Optional<LoadedBuilding> nextBuilding = findNextBuildingWithStock();
+      Optional<LoadedBuilding> nextBuilding = findNextBuildingWithStock(villager);
       if (nextBuilding.isEmpty()) {
          // no more buildings to check, all seemed to be empty
          eraseMemory(villager);
@@ -59,21 +59,15 @@ public class TakeItemsToInventory extends WorkTaskBehaviour {
       return true;
    }
 
-   private Optional<LoadedBuilding> findNextBuildingWithStock() {
-      AggregateItemStack buildingStock;
+   private Optional<LoadedBuilding> findNextBuildingWithStock(CivilizedVillager villager) {
       for (currentSourceBuildingIndex =
             0; currentSourceBuildingIndex < haulingInstruction.sourceBuildings().size(); currentSourceBuildingIndex++) {
 
          LoadedBuilding candidateBuilding = haulingInstruction.sourceBuildings().get(currentSourceBuildingIndex);
 
-         List<Container> candidateBuildingChests =
-               haulingInstruction.sourceBuildings().get(currentSourceBuildingIndex).findChests();
-         buildingStock =
-               haulingInstruction.requirement()
-                     .calculateBuildingStock(candidateBuildingChests, candidateBuilding.getItemReservations().values());
-         if (buildingStock.hasItems()) {
-            return Optional.ofNullable(haulingInstruction.sourceBuildings().get(currentSourceBuildingIndex));
-         }
+         // a building is worth visiting when it stocks anything for a requirement the villager still needs items for
+         if (haulingInstruction.hasUsefulStock(villager, candidateBuilding))
+            return Optional.of(candidateBuilding);
       }
       return Optional.empty();
    }
@@ -112,14 +106,12 @@ public class TakeItemsToInventory extends WorkTaskBehaviour {
       if (haulDecision == ConditionalHaulingInstruction.HaulDecision.REQUIREMENT_SATISFIED_NOTHING_MORE_TO_DO) {
          doStop(level, villager, tickTime);
       } else if (haulDecision == ConditionalHaulingInstruction.HaulDecision.REQUIREMENT_NOT_YET_SATISFIED) {
-         Optional<LoadedBuilding> nextBuildingWithStock = findNextBuildingWithStock();
+         Optional<LoadedBuilding> nextBuildingWithStock = findNextBuildingWithStock(villager);
          if (nextBuildingWithStock.isEmpty()) {
 
             if (haulingInstruction instanceof TransferToBuildingInstruction transferToBuildingInstruction) {
                // try offload whatever we've been able to take
-               Container haulInventory = haulingInstruction.requirement().getHaulInventory(villager);
-               AggregateItemStack taken =
-                     ContainerHelper.countItems(haulInventory, haulingInstruction.requirement().filter());
+               AggregateItemStack taken = haulingInstruction.countCarriedItems(villager);
                if (taken.hasItems()) {
                   DropOffItemsInstruction dropOffItemsInstruction =
                         new DropOffItemsInstruction(

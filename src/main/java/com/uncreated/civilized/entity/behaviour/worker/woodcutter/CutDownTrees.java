@@ -56,7 +56,7 @@ public class CutDownTrees extends WorkTaskBehaviour {
       InventoryStockRequirement.StockResult carrying = AXE_REQUIREMENT.evaluate(villager);
       if (!carrying.satisfied()) {
          Optional<TakeToInventoryInstruction> instruction =
-               TakeToInventoryInstruction.tryCreate(AXE_REQUIREMENT, homeAndStorehouseIfPresent());
+               TakeToInventoryInstruction.createIfMetFromSourceBuildings(AXE_REQUIREMENT, homeAndStorehouseIfPresent());
          if (instruction.isPresent()) {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);

@@ -71,7 +71,7 @@ public class ShearSheep extends WorkTaskBehaviour {
       InventoryStockRequirement.StockResult carrying = shearsRequirement.evaluate(villager);
       if (!carrying.satisfied()) {
          Optional<TakeToInventoryInstruction> instruction =
-               TakeToInventoryInstruction.tryCreate(shearsRequirement, homeAndStorehouseIfPresent());
+               TakeToInventoryInstruction.createIfMetFromSourceBuildings(shearsRequirement, homeAndStorehouseIfPresent());
          if (instruction.isPresent()) {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);

@@ -84,7 +84,7 @@ public class Fish extends WorkTaskBehaviour {
       if (!carrying.satisfied()) {
          // todo: only glassBottles can be picked up atm. we need support instructions for multiple requirements
          Optional<TakeToInventoryInstruction> instruction =
-               TakeToInventoryInstruction.tryCreate(fishingRodRequirement, homeAndStorehouseIfPresent());
+               TakeToInventoryInstruction.createIfMetFromSourceBuildings(fishingRodRequirement, homeAndStorehouseIfPresent());
          if (instruction.isPresent()) {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
