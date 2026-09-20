@@ -22,6 +22,5 @@ public class WorkStates {
    public static final BehaviourState MINING_ORES = new BehaviourState("mining_ores");
    public static BehaviourState HARVESTING_CROPS = new BehaviourState("harvesting_crops");
    public static BehaviourState PLANTING_CROPS = new BehaviourState("planting_crops");
-   public static BehaviourState STROLL_AROUND_WORKSITE = new BehaviourState("stroll_around_worksite");
-   public static BehaviourState STROLL_OUTSIDE_WORKSITE = new BehaviourState("stroll_outside_worksite");
+   public static BehaviourState MONITOR_WORKSITE = new BehaviourState("monitor_worksite");
 }
