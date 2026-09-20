@@ -15,10 +15,8 @@ import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
 import com.uncreated.civilized.entity.behaviour.worker.WorkTaskBehaviour;
 import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
-import com.uncreated.civilized.util.ContainerHelper;
 
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.Container;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 public class TakeItemsToInventory extends WorkTaskBehaviour {
@@ -145,7 +143,7 @@ public class TakeItemsToInventory extends WorkTaskBehaviour {
 
    private void acceptNextTargetBuilding(CivilizedVillager villager, LoadedBuilding nextBuildingWithStock) {
       currentSourceBuilding = nextBuildingWithStock;
-      BlockEntity chest = currentSourceBuilding.findAnyChest().orElseThrow();
+      BlockEntity chest = currentSourceBuilding.anyChest().orElseThrow();
       travelHelper = new MediumDistanceTravelTask(villager, chest.getBlockPos(), 2);
    }
 

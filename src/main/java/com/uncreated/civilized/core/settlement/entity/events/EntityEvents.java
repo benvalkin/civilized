@@ -33,13 +33,6 @@ public class EntityEvents {
    }
 
    @SubscribeEvent
-   public static void civilizedVillagerKeepSleeping(CanContinueSleepingEvent event) {
-      // villagers without a free bed sleep on the floor, which vanilla would otherwise wake them up from straight away
-      if (event.getEntity() instanceof CivilizedVillager villager && villager.isSleepingOnFloor())
-         event.setContinueSleeping(true);
-   }
-
-   @SubscribeEvent
    public static void onServerTick(final ServerTickEvent.Post event) {
       LoadedBuildings.tickLoadedBuildings();
       LoadedSettlements.tickLoadedSettlements();

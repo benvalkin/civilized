@@ -77,7 +77,7 @@ public class CheckLogisticsOpportunities extends WorkTaskBehaviour {
    }
 
    private boolean checkForExportOrders() {
-      return getHome().findChests().stream().anyMatch(c -> !c.isEmpty());
+      return getHome().chests().stream().anyMatch(c -> !c.isEmpty());
    }
 
    private boolean checkForImportOrders(List<Container> source, List<Container> destination) {

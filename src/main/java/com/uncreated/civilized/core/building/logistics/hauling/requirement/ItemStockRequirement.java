@@ -57,7 +57,7 @@ public abstract class ItemStockRequirement {
       AggregateItemStack grossStock = new AggregateItemStack();
       Map<LoadedBuilding, AggregateItemStack> satisfiedBuildings = new HashMap<>();
       for (LoadedBuilding candidateBuilding : candidateSourceBuildings) {
-         List<Container> chests = candidateBuilding.findChests();
+         List<Container> chests = candidateBuilding.chests();
          AggregateItemStack buildingStock =
                calculateBuildingStock(chests, candidateBuilding.getItemReservations().values());
 

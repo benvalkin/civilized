@@ -70,7 +70,7 @@ public class TakeToInventoryInstruction extends ConditionalHaulingInstruction<In
    @Override
    public HaulDecision takeItemsUntilSatisfied(CivilizedVillager villager, LoadedBuilding building) {
 
-      List<Container> chests = building.findChests();
+      List<Container> chests = building.chests();
 
       for (InventoryStockRequirement requirement : requirements) {
          int quota = outstandingAmount(villager, requirement);

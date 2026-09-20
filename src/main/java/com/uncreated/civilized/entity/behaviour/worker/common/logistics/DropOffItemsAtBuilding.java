@@ -50,7 +50,7 @@ public class DropOffItemsAtBuilding extends WorkTaskBehaviour {
    @Override
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.start(level, villager, gameTime);
-      ChestBlockEntity chest = haulingInstruction.destinationBuilding().findAnyChest().orElseThrow();
+      ChestBlockEntity chest = haulingInstruction.destinationBuilding().anyChest().orElseThrow();
       travelHelper = new MediumDistanceTravelTask(villager, chest.getBlockPos(), 2);
    }
 
@@ -75,7 +75,7 @@ public class DropOffItemsAtBuilding extends WorkTaskBehaviour {
 
    protected void dropOffItems(ServerLevel level, CivilizedVillager villager, long tickTime) {
 
-      List<Container> chests = haulingInstruction.destinationBuilding().findChests();
+      List<Container> chests = haulingInstruction.destinationBuilding().chests();
 
       for (VillagerInventoryType villagerInventoryType : haulingInstruction.inventoriesToOffload()) {
          SimpleContainer inventory = villager.getInventory(villagerInventoryType);

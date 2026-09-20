@@ -76,7 +76,7 @@ public class TransferToBuildingInstruction extends ConditionalHaulingInstruction
    @Override
    public HaulDecision takeItemsUntilSatisfied(CivilizedVillager villager, LoadedBuilding sourceBuilding) {
 
-      List<Container> chests = sourceBuilding.findChests();
+      List<Container> chests = sourceBuilding.chests();
 
       for (BuildingStockRequirement requirement : requirements) {
          int quota = outstandingAmount(villager, requirement);
@@ -103,7 +103,7 @@ public class TransferToBuildingInstruction extends ConditionalHaulingInstruction
 
       AggregateItemStack itemsAtDestination =
             requirement.calculateBuildingStock(
-                  destinationBuilding.findChests(),
+                  destinationBuilding.chests(),
                   destinationBuilding.getItemReservations().values());
 
       AggregateItemStack carried =

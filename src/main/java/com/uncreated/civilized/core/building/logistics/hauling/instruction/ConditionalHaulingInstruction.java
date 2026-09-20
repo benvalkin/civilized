@@ -52,7 +52,7 @@ public abstract class ConditionalHaulingInstruction<T extends ItemStockRequireme
     * villager walking over there.
     */
    public boolean hasUsefulStock(CivilizedVillager villager, LoadedBuilding building) {
-      List<Container> chests = building.findChests();
+      List<Container> chests = building.chests();
       Collection<ItemReservation> reservations = building.getItemReservations().values();
 
       for (T requirement : requirements) {
