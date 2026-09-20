@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import com.google.common.collect.Lists;
 import com.mojang.logging.LogUtils;
 import com.uncreated.civilized.core.building.Building;
-import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventoryType;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.TakeToInventoryInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
 import com.uncreated.civilized.core.building.state.GroveState;
@@ -50,19 +49,13 @@ public class ReplantSaplings extends WorkTaskBehaviour {
          return false;
 
       GroveState groveState = (GroveState) getWorksite().getBuilding().getState();
-      InventoryStockRequirement saplingRequirement =
-            new InventoryStockRequirement(
-                  "saplings",
-                  groveState::isCorrectSapling,
-                  1,
-                  16,
-                  VillagerInventoryType.WORK_TASK);
       saplingFilter = groveState::isCorrectSapling;
 
-      InventoryStockRequirement.StockResult carrying = saplingRequirement.evaluate(villager);
+      InventoryStockRequirement.StockResult carrying = groveState.getSaplingRequirement().evaluate(villager);
       if (!carrying.satisfied()) {
          Optional<TakeToInventoryInstruction> instruction =
-               TakeToInventoryInstruction.tryCreate(saplingRequirement, homeAndStorehouseIfPresent());
+               TakeToInventoryInstruction
+                     .tryCreate(groveState.getSaplingRequirement(), homeAndStorehouseIfPresent());
          if (instruction.isPresent()) {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);

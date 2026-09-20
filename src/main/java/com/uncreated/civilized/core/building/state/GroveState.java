@@ -1,6 +1,8 @@
 package com.uncreated.civilized.core.building.state;
 
 import com.uncreated.civilized.core.building.Building;
+import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventoryType;
+import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
 import com.uncreated.civilized.core.settlement.Settlement;
 import com.uncreated.civilized.ui.menu.building.item.management.ItemManagementMenu;
 import com.uncreated.civilized.ui.menu.building.worksite.grove.items.ChooseSaplingsMenu;
@@ -24,9 +26,20 @@ public class GroveState extends BuildingState implements IItemManagementMenuSupp
    @Setter
    private ItemStack sapling;
 
+   @Getter
+   private final InventoryStockRequirement saplingRequirement;
+
    public GroveState(Building building) {
       super(building);
       sapling = DEFAULT_SAPLING;
+
+      saplingRequirement =
+            new InventoryStockRequirement(
+                  building.getBuildingType().toString().toLowerCase() + "_saplings",
+                  this::isCorrectSapling,
+                  1,
+                  16,
+                  VillagerInventoryType.WORK_TASK);
    }
 
    public void applyNbt(CompoundTag compoundTag, HolderLookup.Provider registryAccess) {
