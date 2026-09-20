@@ -5,15 +5,14 @@ import java.util.List;
 import java.util.Optional;
 
 import com.uncreated.civilized.core.building.BuildingTypes;
-import com.uncreated.civilized.core.building.logistics.LogisticsManager;
-import com.uncreated.civilized.core.building.logistics.orders.StorehouseOrder;
-import com.uncreated.civilized.core.building.logistics.orders.imports.ImportUpTo;
-import com.uncreated.civilized.core.building.logistics.orders.task.ToolRequirement;
+import com.uncreated.civilized.core.building.logistics.hauling.instruction.TakeToInventoryInstruction;
+import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
+import com.uncreated.civilized.core.building.logistics.hauling.requirement.ToolRequirement;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
 import com.uncreated.civilized.entity.behaviour.worker.WorkTaskBehaviour;
-import com.uncreated.civilized.util.ContainerHelper;
+import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -26,7 +25,7 @@ import net.minecraft.world.entity.ai.memory.MemoryStatus;
 import net.minecraft.world.entity.ai.memory.WalkTarget;
 import net.minecraft.world.entity.animal.Sheep;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.ShearsItem;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.storage.loot.BuiltInLootTables;
 import net.minecraft.world.level.storage.loot.LootParams;
@@ -46,13 +45,13 @@ public class ShearSheep extends WorkTaskBehaviour {
    private static final int WORK_INTERVAL_TICKS = 20;
    /** How close the villager has to be to a sheep to shear it, in blocks. Far enough to reach over a fence. */
    private static final double SHEARING_REACH = 3.5;
-   private static final int ORDER_EXPIRY_TICKS = 12000;
-   private static final String SHEAR_SHEEP_TOOL_REQUIREMENT = "shears";
 
    private long lastWorkTime;
    private MediumDistanceTravelTask travelHelper;
    private ItemStack shears;
    private boolean hasShearedSheep;
+   private static final ToolRequirement shearsRequirement =
+         new ToolRequirement("shears", i -> i.is(Items.SHEARS));
 
    public ShearSheep() {
       super(WorkStates.SHEARING_SHEEP, true, true, 120 * 20, 30 * 20);
@@ -69,35 +68,20 @@ public class ShearSheep extends WorkTaskBehaviour {
       if (getShearableSheep(level).isEmpty())
          return false;
 
-      LogisticsManager logisticsManager = getSettlement().getBehaviour().getLogisticsManager();
-
-      ToolRequirement shearsRequirement =
-            new ToolRequirement(level, "shear_sheep", ShearsItem.class, StorehouseOrder.Origin.AUTOMATIC);
-      shearsRequirement.setExpiry(ORDER_EXPIRY_TICKS);
-      logisticsManager.registerOrder(getHome().getBuilding(), shearsRequirement);
-
-      ImportUpTo shearsImport =
-            new ImportUpTo(
-                  level,
-                  SHEAR_SHEEP_TOOL_REQUIREMENT,
-                  shearsRequirement.getItemSearch(),
-                  StorehouseOrder.Origin.AUTOMATIC,
-                  1,
-                  1,
-                  1);
-      shearsImport.setExpiry(ORDER_EXPIRY_TICKS);
-      logisticsManager.registerOrder(getHome().getBuilding(), shearsImport);
-
-      Optional<ContainerHelper.ItemSearchResult> tool =
-            ContainerHelper.findItem(villager.getWorkInputInventory(), shearsRequirement.getItemSearch());
-      if (tool.isEmpty()) {
-         // todo: send notification that the villager is missing shears
-         getStateMachine().queueActionOnce(WorkStates.FETCHING_WORK_INPUT_FROM_HOME);
-         getStateMachine().queueActionOnce(this.getState());
+      InventoryStockRequirement.StockResult carrying = shearsRequirement.evaluate(villager);
+      if (!carrying.satisfied()) {
+         Optional<TakeToInventoryInstruction> instruction =
+               TakeToInventoryInstruction.tryCreate(shearsRequirement, homeAndStorehouseIfPresent());
+         if (instruction.isPresent()) {
+            villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
+            getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
+            getStateMachine().queueActionOnce(this.getState());
+            // todo: send notification that the villager is missing shears
+         }
          return false;
       }
 
-      shears = tool.get().itemStack();
+      shears = carrying.stock().getItemStacks().getFirst();
       return true;
    }
 
@@ -124,7 +108,7 @@ public class ShearSheep extends WorkTaskBehaviour {
       villager.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
 
       if (hasShearedSheep)
-         getStateMachine().queueActionOnce(WorkStates.DROPPING_OFF_WORK_OUTPUT_AT_HOME);
+         goDropOffWorkOutputAtHome(villager);
    }
 
    @Override

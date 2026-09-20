@@ -5,6 +5,9 @@ import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import com.uncreated.civilized.core.building.logistics.hauling.instruction.ConditionalHaulingInstruction;
+import com.uncreated.civilized.core.building.logistics.hauling.instruction.DropOffItemsInstruction;
+import com.uncreated.civilized.core.building.logistics.hauling.requirement.ItemStockRequirement;
 import com.uncreated.civilized.core.villagerinfo.VillagerOccupation;
 import com.uncreated.civilized.entity.sensor.CivilizedVillagerEnemySensor;
 
@@ -56,8 +59,10 @@ public class AIRegistry {
    // MEMORY_MODULES.register("import_desired", () -> new MemoryModuleType<>(Optional.empty()));
    public static final Supplier<MemoryModuleType<Player>> MM_DIALOGUE_TARGET =
          MEMORY_MODULES.register("dialogue_target_memory_module", () -> new MemoryModuleType<>(Optional.empty()));
-   public static final Supplier<MemoryModuleType<Boolean>> MM_DRAFTED =
-         MEMORY_MODULES.register("drafted", () -> new MemoryModuleType<>(Optional.empty()));
+   public static final Supplier<MemoryModuleType<ConditionalHaulingInstruction<? extends ItemStockRequirement>>> MM_TAKE_ITEMS_INSTRUCTION =
+         MEMORY_MODULES.register("take_items_instruction", () -> new MemoryModuleType<>(Optional.empty()));
+   public static final Supplier<MemoryModuleType<DropOffItemsInstruction>> MM_DROP_OFF_ITEMS_INSTRUCTION =
+         MEMORY_MODULES.register("drop_off_items_instruction", () -> new MemoryModuleType<>(Optional.empty()));
 
    public static DeferredRegister<SensorType<?>> SENSORS =
          DeferredRegister.create(BuiltInRegistries.SENSOR_TYPE, CIVILIZED_MOD_ID);

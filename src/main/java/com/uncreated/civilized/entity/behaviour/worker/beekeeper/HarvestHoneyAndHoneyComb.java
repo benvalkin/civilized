@@ -4,15 +4,15 @@ import java.util.Optional;
 
 import javax.annotation.Nullable;
 
-import com.uncreated.civilized.core.building.logistics.LogisticsManager;
-import com.uncreated.civilized.core.building.logistics.orders.StorehouseOrder;
-import com.uncreated.civilized.core.building.logistics.orders.imports.ImportUpTo;
-import com.uncreated.civilized.core.building.logistics.orders.task.TaskConsumableItemRequirement;
-import com.uncreated.civilized.core.building.logistics.orders.task.ToolRequirement;
+import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventoryType;
+import com.uncreated.civilized.core.building.logistics.hauling.instruction.TakeToInventoryInstruction;
+import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
+import com.uncreated.civilized.core.building.logistics.hauling.requirement.ToolRequirement;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
 import com.uncreated.civilized.entity.behaviour.worker.WorkTaskBehaviour;
+import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 import com.uncreated.civilized.util.ContainerHelper;
 
 import net.minecraft.core.BlockPos;
@@ -36,14 +36,22 @@ import net.minecraft.world.level.block.state.BlockState;
 public class HarvestHoneyAndHoneyComb extends WorkTaskBehaviour {
 
    private static final int HONEYCOMB_PER_HIVE = 3;
-   private static final int MAX_BOTTLES = 4;
    private static final int WORK_INTERVAL_TICKS = 2 * 20;
-   private static final int ORDER_EXPIRY_TICKS = 12000;
 
    private MediumDistanceTravelTask travelHelper;
    private long lastWorkTime;
    private @Nullable BlockPos nextFullBeehive;
    private boolean hasWorkOutputItems;
+
+   private static final ToolRequirement shearsRequirement = new ToolRequirement("shears", i -> i.is(Items.SHEARS));
+
+   private static final InventoryStockRequirement glassBottlesRequirement =
+         new InventoryStockRequirement(
+               "glass_bottles",
+               i -> i.is(Items.GLASS_BOTTLE),
+               1,
+               4,
+               VillagerInventoryType.WORK_TASK);
 
    public HarvestHoneyAndHoneyComb() {
       super(WorkStates.HARVESTING_HONEY, true, true, 120 * 20, 30 * 20);
@@ -54,64 +62,27 @@ public class HarvestHoneyAndHoneyComb extends WorkTaskBehaviour {
       if (!super.checkExtraStartConditions(level, villager))
          return false;
 
-      registerLogisticsOrders(level);
-
       findFullBeehive(level);
       if (nextFullBeehive == null)
          return false;
 
-      if (findShears(villager).isEmpty() && findGlassBottle(villager).isEmpty()) {
-         // todo: send notification that the villager is missing shears and bottles
-         getStateMachine().queueActionOnce(WorkStates.FETCHING_WORK_INPUT_FROM_HOME);
-         getStateMachine().queueActionOnce(this.getState());
+      // InventoryStockRequirement.StockResult carryingShears = shearsRequirement.evaluate(villager);
+      InventoryStockRequirement.StockResult carryingGlassBottles = glassBottlesRequirement.evaluate(villager);
+
+      if (/* !shears.satisfied() && */!carryingGlassBottles.satisfied()) {
+         // todo: only glassBottles can be picked up atm. we need support instructions for multiple requirements
+         Optional<TakeToInventoryInstruction> instruction =
+               TakeToInventoryInstruction.tryCreate(glassBottlesRequirement, homeAndStorehouseIfPresent());
+         if (instruction.isPresent()) {
+            villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
+            getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
+            getStateMachine().queueActionOnce(this.getState());
+            // todo: send notification that the villager is missing shears
+         }
          return false;
       }
 
       return true;
-   }
-
-   private void registerLogisticsOrders(ServerLevel level) {
-      LogisticsManager logisticsManager = getSettlement().getBehaviour().getLogisticsManager();
-
-      ToolRequirement shearsRequirement =
-            new ToolRequirement(level, "harvest_honey_comb", ShearsItem.class, StorehouseOrder.Origin.AUTOMATIC);
-      shearsRequirement.setExpiry(ORDER_EXPIRY_TICKS);
-      logisticsManager.registerOrder(getHome().getBuilding(), shearsRequirement);
-
-      ImportUpTo shearsImport =
-            new ImportUpTo(
-                  level,
-                  "shears",
-                  shearsRequirement.getItemSearch(),
-                  StorehouseOrder.Origin.AUTOMATIC,
-                  1,
-                  1,
-                  1);
-      shearsImport.setExpiry(ORDER_EXPIRY_TICKS);
-      logisticsManager.registerOrder(getHome().getBuilding(), shearsImport);
-
-      TaskConsumableItemRequirement bottlesRequirement =
-            new TaskConsumableItemRequirement(
-                  level,
-                  "harvest_honey",
-                  i -> i.is(Items.GLASS_BOTTLE),
-                  StorehouseOrder.Origin.AUTOMATIC,
-                  1,
-                  MAX_BOTTLES);
-      bottlesRequirement.setExpiry(ORDER_EXPIRY_TICKS);
-      logisticsManager.registerOrder(getHome().getBuilding(), bottlesRequirement);
-
-      ImportUpTo bottlesImport =
-            new ImportUpTo(
-                  level,
-                  "glass_bottle",
-                  bottlesRequirement.getItemSearch(),
-                  StorehouseOrder.Origin.AUTOMATIC,
-                  1,
-                  MAX_BOTTLES,
-                  MAX_BOTTLES);
-      bottlesImport.setExpiry(ORDER_EXPIRY_TICKS);
-      logisticsManager.registerOrder(getHome().getBuilding(), bottlesImport);
    }
 
    @Override
@@ -128,7 +99,7 @@ public class HarvestHoneyAndHoneyComb extends WorkTaskBehaviour {
       villager.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
 
       if (hasWorkOutputItems)
-         getStateMachine().queueActionOnce(WorkStates.DROPPING_OFF_WORK_OUTPUT_AT_HOME);
+         goDropOffWorkOutputAtHome(villager);
    }
 
    @Override

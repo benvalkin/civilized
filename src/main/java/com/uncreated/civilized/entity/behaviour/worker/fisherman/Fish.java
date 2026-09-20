@@ -6,15 +6,14 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
-import com.uncreated.civilized.core.building.logistics.LogisticsManager;
-import com.uncreated.civilized.core.building.logistics.orders.StorehouseOrder;
-import com.uncreated.civilized.core.building.logistics.orders.imports.ImportUpTo;
-import com.uncreated.civilized.core.building.logistics.orders.task.ToolRequirement;
+import com.uncreated.civilized.core.building.logistics.hauling.instruction.TakeToInventoryInstruction;
+import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
+import com.uncreated.civilized.core.building.logistics.hauling.requirement.ToolRequirement;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
 import com.uncreated.civilized.entity.behaviour.worker.WorkTaskBehaviour;
-import com.uncreated.civilized.util.ContainerHelper;
+import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -25,8 +24,8 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.behavior.BlockPosTracker;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
-import net.minecraft.world.item.FishingRodItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.loot.BuiltInLootTables;
@@ -56,6 +55,9 @@ public class Fish extends WorkTaskBehaviour {
    private long nextCatchTime;
    private int fishCaught;
 
+   private static final ToolRequirement fishingRodRequirement =
+         new ToolRequirement("fishingRod", i -> i.is(Items.FISHING_ROD));
+
    /**
     * @param minCatchTicks
     *           shortest wait between casting the line and catching something
@@ -73,44 +75,30 @@ public class Fish extends WorkTaskBehaviour {
       if (!super.checkExtraStartConditions(level, villager))
          return false;
 
-      LogisticsManager logisticsManager = getSettlement().getBehaviour().getLogisticsManager();
-
-      ToolRequirement rodRequirement =
-            new ToolRequirement(level, "fish", FishingRodItem.class, StorehouseOrder.Origin.AUTOMATIC);
-      rodRequirement.setExpiry(ORDER_EXPIRY_TICKS);
-      logisticsManager.registerOrder(getHome().getBuilding(), rodRequirement);
-
-      ImportUpTo rodImport =
-            new ImportUpTo(
-                  level,
-                  "fishing_rod",
-                  rodRequirement.getItemSearch(),
-                  StorehouseOrder.Origin.AUTOMATIC,
-                  1,
-                  1,
-                  1);
-      rodImport.setExpiry(ORDER_EXPIRY_TICKS);
-      logisticsManager.registerOrder(getHome().getBuilding(), rodImport);
-
       // the line needs somewhere to land, even though the building requirements already asked for a body of water
       List<BlockPos> waterBlocks = findWaterSurfaceBlocks(level);
       if (waterBlocks.isEmpty())
          return false;
 
-      // fishing from dry land looks a lot better than wading in, but a spot that is all water still gets fished from
-      fishingStand =
-            findFishingStand(level, villager, waterBlocks).orElse(getWorksite().getBuilding().getBlockPos());
-
-      Optional<ContainerHelper.ItemSearchResult> rod =
-            ContainerHelper.findItem(villager.getWorkInputInventory(), rodRequirement.getItemSearch());
-      if (rod.isEmpty()) {
-         // todo: send notification that the villager is missing a fishing rod
-         getStateMachine().queueActionOnce(WorkStates.FETCHING_WORK_INPUT_FROM_HOME);
-         getStateMachine().queueActionOnce(this.getState());
+      InventoryStockRequirement.StockResult carrying = fishingRodRequirement.evaluate(villager);
+      if (!carrying.satisfied()) {
+         // todo: only glassBottles can be picked up atm. we need support instructions for multiple requirements
+         Optional<TakeToInventoryInstruction> instruction =
+               TakeToInventoryInstruction.tryCreate(fishingRodRequirement, homeAndStorehouseIfPresent());
+         if (instruction.isPresent()) {
+            villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
+            getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
+            getStateMachine().queueActionOnce(this.getState());
+            // todo: send notification that the villager is missing shears
+         }
          return false;
       }
 
-      fishingRod = rod.get().itemStack();
+      fishingRod = carrying.stock().getItemStacks().getFirst();
+
+      // fishing from dry land looks a lot better than wading in, but a spot that is all water still gets fished from
+      fishingStand = findFishingStand(level, villager, waterBlocks).orElse(getWorksite().getBuilding().getBlockPos());
+
       return true;
    }
 
@@ -130,7 +118,7 @@ public class Fish extends WorkTaskBehaviour {
       villager.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
 
       if (fishCaught > 0)
-         getStateMachine().queueActionOnce(WorkStates.DROPPING_OFF_WORK_OUTPUT_AT_HOME);
+         goDropOffWorkOutputAtHome(villager);
    }
 
    @Override

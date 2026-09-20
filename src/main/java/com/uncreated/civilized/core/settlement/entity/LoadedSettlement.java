@@ -1,31 +1,33 @@
 package com.uncreated.civilized.core.settlement.entity;
 
-import com.uncreated.civilized.core.building.entity.behaviour.BuildingBehaviour;
+import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.settlement.Settlement;
 
 import com.uncreated.civilized.core.settlement.entity.behaviour.SettlementBehaviour;
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.Setter;
 import net.minecraft.world.level.Level;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Getter
 public class LoadedSettlement {
    private final Settlement settlement;
    private final Level level;
    private final SettlementBehaviour behaviour;
-   private int loadedBuildingsCount;
+   private final Set<LoadedBuilding> loadedBuildings;
 
-   void incrementLoadedBuildingsCount() {
-      loadedBuildingsCount++;
+   void add(LoadedBuilding building) {
+      loadedBuildings.add(building);
    }
-   void decrementLoadedBuildingsCount() {
-      loadedBuildingsCount--;
+   void remove(LoadedBuilding building) {
+      loadedBuildings.remove(building);
    }
 
    public LoadedSettlement(Settlement settlement, Level level) {
       this.settlement = settlement;
       this.level = level;
-      behaviour = new SettlementBehaviour(this);
+       this.loadedBuildings = new HashSet<>();
+       behaviour = new SettlementBehaviour(this);
    }
 }

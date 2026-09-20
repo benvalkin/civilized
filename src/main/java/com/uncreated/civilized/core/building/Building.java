@@ -18,7 +18,6 @@ import com.uncreated.civilized.core.building.state.BuildingState;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
@@ -32,7 +31,6 @@ import net.minecraft.world.level.block.entity.SignBlockEntity;
 
 @Getter
 @Builder(builderMethodName = "builder")
-@ToString
 public class Building {
 
    public static StreamCodec<RegistryFriendlyByteBuf, Building> CODEC =
@@ -125,14 +123,15 @@ public class Building {
       return null;
    }
 
-   public String toStringLite() {
+   @Override
+   public String toString() {
       return String.format(
-            "{dimension: %s buildingType: %s buildingId: %s blockPos: %s occupants: %s}",
-            dimension,
+            "%s: %s [occupants: %s dimension: %s blockPos: %s]",
             buildingType,
             buildingId.toString().substring(0, 6),
-            getBlockPos(),
-            occupantIds.size());
+            occupantIds.size(),
+            dimension,
+            getBlockPos());
    }
 
    // custom builder to set required fields so that the user doesn't have to

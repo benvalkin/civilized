@@ -20,12 +20,14 @@ public class LoadedBuildings {
 
    private final static Map<UUID, LoadedBuilding> loadedBuildings = new HashMap<>();
 
-   public static void load(Building building, Level level) {
-      loadedBuildings.put(building.getBuildingId(), new LoadedBuilding(building, level));
+   public static LoadedBuilding load(Building building, Level level) {
+      LoadedBuilding loadedBuilding = new LoadedBuilding(building, level);
+      loadedBuildings.put(building.getBuildingId(), loadedBuilding);
+      return loadedBuilding;
    }
 
-   public static void unload(UUID buildingId) {
-      loadedBuildings.remove(buildingId);
+   public static Optional<LoadedBuilding> unload(UUID buildingId) {
+      return Optional.ofNullable(loadedBuildings.remove(buildingId));
    }
 
    public static Optional<LoadedBuilding> checkLoaded(UUID buildingId) {

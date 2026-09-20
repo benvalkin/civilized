@@ -11,18 +11,14 @@ import com.uncreated.civilized.entity.behaviour.IdleStrollAroundSettlement;
 import com.uncreated.civilized.entity.behaviour.worker.artisan.CraftItems;
 import com.uncreated.civilized.entity.behaviour.worker.artisan.furnace.SmeltItems;
 import com.uncreated.civilized.entity.behaviour.worker.beekeeper.HarvestHoneyAndHoneyComb;
-import com.uncreated.civilized.entity.behaviour.worker.fisherman.Fish;
 import com.uncreated.civilized.entity.behaviour.worker.common.IdleStrollAroundWorksite;
 import com.uncreated.civilized.entity.behaviour.worker.common.IdleStrollOutsideWorksite;
 import com.uncreated.civilized.entity.behaviour.worker.common.logistics.CheckLogisticsOpportunities;
-import com.uncreated.civilized.entity.behaviour.worker.common.logistics.DropOffExportsAtStorehouse;
-import com.uncreated.civilized.entity.behaviour.worker.common.logistics.DropOffImportsAtHome;
-import com.uncreated.civilized.entity.behaviour.worker.common.logistics.DropoffWorkOutputAtHome;
-import com.uncreated.civilized.entity.behaviour.worker.common.logistics.FetchExportsFromHome;
-import com.uncreated.civilized.entity.behaviour.worker.common.logistics.FetchImportsFromStorehouse;
-import com.uncreated.civilized.entity.behaviour.worker.common.logistics.FetchWorkInputFromHome;
+import com.uncreated.civilized.entity.behaviour.worker.common.logistics.DropOffItemsAtBuilding;
+import com.uncreated.civilized.entity.behaviour.worker.common.logistics.TakeItemsToInventory;
 import com.uncreated.civilized.entity.behaviour.worker.farmer.HarvestCrops;
 import com.uncreated.civilized.entity.behaviour.worker.farmer.PlantCrops;
+import com.uncreated.civilized.entity.behaviour.worker.fisherman.Fish;
 import com.uncreated.civilized.entity.behaviour.worker.miner.MineOres;
 import com.uncreated.civilized.entity.behaviour.worker.rancher.BreedAnimals;
 import com.uncreated.civilized.entity.behaviour.worker.rancher.ShearSheep;
@@ -55,15 +51,14 @@ public class WorkActivities {
                               new HarvestCrops(),
                               new PlantCrops(),
                               new CheckLogisticsOpportunities(),
-                              new DropoffWorkOutputAtHome(),
-                              new FetchExportsFromHome(),
-                              new DropOffExportsAtStorehouse(),
-                              new FetchImportsFromStorehouse(),
-                              new DropOffImportsAtHome(),
-                              new FetchWorkInputFromHome(),
+                              new TakeItemsToInventory(),
+                              new DropOffItemsAtBuilding(),
                               new IdleStrollAroundWorksite(5, 3, 0.25f),
                               new IdleStrollAroundSettlement(5, 3, 0.25f)),
-                        ImmutableList.of(WorkStates.HARVESTING_CROPS, WorkStates.PLANTING_CROPS),
+                        ImmutableList.of(
+                              WorkStates.CHECK_LOGISTICS_OPPORTUNITIES,
+                              WorkStates.HARVESTING_CROPS,
+                              WorkStates.PLANTING_CROPS),
                         ImmutableList
                               .of(WorkStates.STROLL_AROUND_WORKSITE, BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT))));
    }
@@ -78,12 +73,8 @@ public class WorkActivities {
                               new CutDownTrees(),
                               new ReplantSaplings(),
                               new CheckLogisticsOpportunities(),
-                              new DropoffWorkOutputAtHome(),
-                              new FetchExportsFromHome(),
-                              new DropOffExportsAtStorehouse(),
-                              new FetchImportsFromStorehouse(),
-                              new DropOffImportsAtHome(),
-                              new FetchWorkInputFromHome(),
+                              new TakeItemsToInventory(),
+                              new DropOffItemsAtBuilding(),
                               new IdleStrollAroundWorksite(5, 3, 0.25f),
                               new IdleStrollAroundSettlement(5, 3, 0.25f)),
                         ImmutableList.of(
@@ -103,12 +94,8 @@ public class WorkActivities {
                         ImmutableList.of(
                               new MineOres(),
                               new CheckLogisticsOpportunities(),
-                              new DropoffWorkOutputAtHome(),
-                              new FetchExportsFromHome(),
-                              new DropOffExportsAtStorehouse(),
-                              new FetchImportsFromStorehouse(),
-                              new DropOffImportsAtHome(),
-                              new FetchWorkInputFromHome(),
+                              new TakeItemsToInventory(),
+                              new DropOffItemsAtBuilding(),
                               new IdleStrollAroundWorksite(5, 3, 0.25f),
                               new IdleStrollAroundSettlement(5, 3, 0.25f)),
                         ImmutableList.of(WorkStates.MINING_ORES, WorkStates.CHECK_LOGISTICS_OPPORTUNITIES),
@@ -127,12 +114,8 @@ public class WorkActivities {
                               new ShearSheep(),
                               new SlaughterAnimals<>(Cow.class),
                               new CheckLogisticsOpportunities(),
-                              new DropoffWorkOutputAtHome(),
-                              new FetchExportsFromHome(),
-                              new DropOffExportsAtStorehouse(),
-                              new FetchImportsFromStorehouse(),
-                              new DropOffImportsAtHome(),
-                              new FetchWorkInputFromHome(),
+                              new TakeItemsToInventory(),
+                              new DropOffItemsAtBuilding(),
                               new IdleStrollOutsideWorksite(4, 3, 0.25f),
                               new IdleStrollAroundSettlement(5, 3, 0.25f)),
                         ImmutableList.of(
@@ -154,12 +137,8 @@ public class WorkActivities {
                               new BreedAnimals<>(),
                               new HarvestHoneyAndHoneyComb(),
                               new CheckLogisticsOpportunities(),
-                              new DropoffWorkOutputAtHome(),
-                              new FetchExportsFromHome(),
-                              new DropOffExportsAtStorehouse(),
-                              new FetchImportsFromStorehouse(),
-                              new DropOffImportsAtHome(),
-                              new FetchWorkInputFromHome(),
+                              new TakeItemsToInventory(),
+                              new DropOffItemsAtBuilding(),
                               new IdleStrollOutsideWorksite(4, 3, 0.25f),
                               new IdleStrollAroundSettlement(5, 3, 0.25f)),
                         ImmutableList.of(
@@ -179,12 +158,8 @@ public class WorkActivities {
                         ImmutableList.of(
                               new Fish(10 * 20, 30 * 20),
                               new CheckLogisticsOpportunities(),
-                              new DropoffWorkOutputAtHome(),
-                              new FetchExportsFromHome(),
-                              new DropOffExportsAtStorehouse(),
-                              new FetchImportsFromStorehouse(),
-                              new DropOffImportsAtHome(),
-                              new FetchWorkInputFromHome(),
+                              new TakeItemsToInventory(),
+                              new DropOffItemsAtBuilding(),
                               new IdleStrollOutsideWorksite(4, 3, 0.25f),
                               new IdleStrollAroundSettlement(5, 3, 0.25f)),
                         ImmutableList.of(WorkStates.CHECK_LOGISTICS_OPPORTUNITIES, WorkStates.FISHING),
@@ -202,11 +177,8 @@ public class WorkActivities {
                               new SmeltItems(),
                               new CraftItems(),
                               new CheckLogisticsOpportunities(),
-                              new DropoffWorkOutputAtHome(),
-                              new FetchExportsFromHome(),
-                              new DropOffExportsAtStorehouse(),
-                              new FetchImportsFromStorehouse(),
-                              new DropOffImportsAtHome(),
+                              new TakeItemsToInventory(),
+                              new DropOffItemsAtBuilding(),
                               new IdleStrollAroundWorksite(4, 3, 0.25f),
                               new IdleStrollAroundSettlement(5, 3, 0.25f)),
                         ImmutableList.of(
@@ -225,11 +197,8 @@ public class WorkActivities {
                   new WorkBehaviourControl(
                         ImmutableList.of(
                               new CheckLogisticsOpportunities(),
-                              new DropoffWorkOutputAtHome(),
-                              new FetchExportsFromHome(),
-                              new DropOffExportsAtStorehouse(),
-                              new FetchImportsFromStorehouse(),
-                              new DropOffImportsAtHome(),
+                              new TakeItemsToInventory(),
+                              new DropOffItemsAtBuilding(),
                               new IdleStrollOutsideWorksite(4, 3, 0.25f),
                               new IdleStrollAroundSettlement(5, 3, 0.25f)),
                         ImmutableList.of(WorkStates.CHECK_LOGISTICS_OPPORTUNITIES),

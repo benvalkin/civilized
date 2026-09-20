@@ -108,8 +108,8 @@ public class ServerBuildingsStore extends BuildingStore {
                      .settlementId(itemTag.getUUID(Building.FIELD_SETTLEMENT_ID))
                      .placerId(itemTag.getUUID(Building.FIELD_PLACER_ID))
                      .buildingType(
-                           BuildingTypes
-                                 .getFromResourceLocation(ResourceLocation.parse(itemTag.getString(Building.FIELD_BUILDING_TYPE))))
+                           BuildingTypes.getFromResourceLocation(
+                                 ResourceLocation.parse(itemTag.getString(Building.FIELD_BUILDING_TYPE))))
                      .bounds(
                            new BuildingBounds(
                                  BlockPos.of(itemTag.getLong(Building.FIELD_CENTER_POS)),
@@ -175,7 +175,7 @@ public class ServerBuildingsStore extends BuildingStore {
                "Client {} tried to sync {} storeOperation for building {} that did not exist on the server. This sync will be ignored.",
                packet.storeOperation(),
                context.player().getScoreboardName(),
-               packet.building().toStringLite());
+               packet.building());
          return;
       }
 

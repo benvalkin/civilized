@@ -1,17 +1,24 @@
 package com.uncreated.civilized.entity.behaviour.worker;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
 
+import org.jetbrains.annotations.NotNull;
+
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.entity.LoadedBuildings;
+import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventoryType;
+import com.uncreated.civilized.core.building.logistics.hauling.instruction.DropOffItemsInstruction;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlement;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.BehaviourState;
 import com.uncreated.civilized.entity.behaviour.StatefulBehaviour;
+import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 
 import lombok.Getter;
 import net.minecraft.server.level.ServerLevel;
@@ -97,5 +104,19 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
    @Override
    protected void stop(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.stop(level, villager, gameTime);
+   }
+
+   protected @NotNull List<LoadedBuilding> homeAndStorehouseIfPresent() {
+      List<LoadedBuilding> sourceBuildings = new ArrayList<>();
+      sourceBuildings.add(getHome());
+      findStorehouse(getSettlement()).ifPresent(sourceBuildings::add);
+      return sourceBuildings;
+   }
+
+   protected void goDropOffWorkOutputAtHome(CivilizedVillager villager) {
+      DropOffItemsInstruction dropOffItemsInstruction =
+            new DropOffItemsInstruction(getHome(), List.of(VillagerInventoryType.WORK_OUTPUT));
+      villager.getBrain().setMemory(AIRegistry.MM_DROP_OFF_ITEMS_INSTRUCTION.get(), dropOffItemsInstruction);
+      getStateMachine().queueActionOnce(WorkStates.DROPPING_OFF_ITEMS_AT_BUILDING);
    }
 }

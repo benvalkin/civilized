@@ -6,15 +6,15 @@ import java.util.List;
 import java.util.Optional;
 
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
-import com.uncreated.civilized.core.building.logistics.LogisticsManager;
-import com.uncreated.civilized.core.building.logistics.PendingShipment;
+import com.uncreated.civilized.core.building.logistics.hauling.instruction.TransferToBuildingInstruction;
+import com.uncreated.civilized.core.building.logistics.hauling.requirement.BuildingStockRequirement;
+import com.uncreated.civilized.core.building.logistics.hauling.requirement.ItemStockRequirement;
 import com.uncreated.civilized.core.building.logistics.orders.LogisticsOrder;
-import com.uncreated.civilized.core.building.logistics.orders.LogisticsOrders;
-import com.uncreated.civilized.core.building.logistics.orders.imports.ImportOrder;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.Cooldowns;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
 import com.uncreated.civilized.entity.behaviour.worker.WorkTaskBehaviour;
+import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
@@ -40,6 +40,13 @@ public class CheckLogisticsOpportunities extends WorkTaskBehaviour {
       return !getBehaviourCooldowns().hasCooldown(Cooldowns.START, level.getGameTime());
    }
 
+   private final BuildingStockRequirement everything =
+         new BuildingStockRequirement(
+               "export_home_goods_to_storehouse",
+               i -> !i.isEmpty(),
+               1,
+               ItemStockRequirement.UNLIMITED);
+
    @Override
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
 
@@ -53,9 +60,15 @@ public class CheckLogisticsOpportunities extends WorkTaskBehaviour {
 
       List<Container> homeChests = LogisticsOrder.findChests(level, getHome().getBuilding());
       List<Container> storehouseChests = LogisticsOrder.findChests(level, this.storehouse.getBuilding());
-
+      List<LoadedBuilding> home = List.of(getHome());
       if (!getSharedCooldowns().hasCooldown(Cooldowns.EXPORT_RUN, level.getGameTime()) && checkForExportOrders()) {
-         getStateMachine().queueActionOnce(WorkStates.FETCHING_EXPORTS_FROM_HOME);
+
+         Optional<TransferToBuildingInstruction> transferToBuildingInstruction =
+               TransferToBuildingInstruction.tryCreate(everything, this.storehouse, home);
+         if (transferToBuildingInstruction.isPresent()) {
+            villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), transferToBuildingInstruction);
+            getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
+         }
       } else if (!getSharedCooldowns().hasCooldown(Cooldowns.IMPORT_RUN, level.getGameTime())
             && checkForImportOrders(storehouseChests, homeChests)) {
          getStateMachine().queueActionOnce(WorkStates.FETCHING_IMPORTS_FROM_STOREHOUSE);
@@ -63,24 +76,24 @@ public class CheckLogisticsOpportunities extends WorkTaskBehaviour {
    }
 
    private boolean checkForExportOrders() {
-      return FetchExportsFromHome
-            .areThereItemsToExport(getSettlement(), getHome().getBuilding(), storehouse.getBuilding());
+      return getHome().findChests().stream().anyMatch(c -> !c.isEmpty());
    }
 
    private boolean checkForImportOrders(List<Container> source, List<Container> destination) {
 
-      LogisticsManager logisticsManager = getSettlement().getBehaviour().getLogisticsManager();
-      LogisticsOrders<ImportOrder> importOrders = logisticsManager.getImportOrders(getHome().getBuilding());
-
-      for (ImportOrder order : importOrders.orders()) {
-
-         PendingShipment shipment = order.getNextShipment(source, destination);
-         if (shipment.shouldShip()) {
-            getStateMachine().queueActionOnce(WorkStates.FETCHING_IMPORTS_FROM_STOREHOUSE);
-            return true;
-         }
-      }
-
       return false;
+      // LogisticsManager logisticsManager = getSettlement().getBehaviour().getLogisticsManager();
+      // LogisticsOrders<ImportOrder> importOrders = logisticsManager.getImportOrders(getHome().getBuilding());
+      //
+      // for (ImportOrder order : importOrders.orders()) {
+      //
+      // PendingShipment shipment = order.getNextShipment(source, destination);
+      // if (shipment.shouldShip()) {
+      // getStateMachine().queueActionOnce(WorkStates.FETCHING_IMPORTS_FROM_STOREHOUSE);
+      // return true;
+      // }
+      // }
+      //
+      // return false;
    }
 }

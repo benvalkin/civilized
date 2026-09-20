@@ -18,6 +18,7 @@ import com.mojang.datafixers.util.Pair;
 import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Dynamic;
 import com.uncreated.civilized.core.StoreOperation;
+import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventoryType;
 import com.uncreated.civilized.core.dialogue.IVillageDialogue;
 import com.uncreated.civilized.core.dialogue.context.DialogueContext;
 import com.uncreated.civilized.core.dialogue.controller.DialogueController;
@@ -265,6 +266,15 @@ public class CivilizedVillager extends AgeableMob
       return logisticsInventory;
    }
 
+   public @NotNull SimpleContainer getInventory(VillagerInventoryType inventoryType) {
+      return switch (inventoryType) {
+      case WORK_TASK -> workInputInventory;
+      case WORK_OUTPUT -> workOutputInventory;
+      case LOGISTICS -> logisticsInventory;
+      case WEAPONS -> weaponInventory;
+      };
+   }
+
    public @NotNull SimpleContainer getWeaponInventory() {
       return weaponInventory;
    }
@@ -335,7 +345,8 @@ public class CivilizedVillager extends AgeableMob
                   AIRegistry.MM_CROP_FIELD_CENTER.get(),
                   AIRegistry.MM_VILLAGER_WORKTIME_OCCUPATION.get(),
                   AIRegistry.MM_DIALOGUE_TARGET.get(),
-                  AIRegistry.MM_DRAFTED.get(),
+                  AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(),
+                  AIRegistry.MM_DROP_OFF_ITEMS_INSTRUCTION.get(),
                   MemoryModuleType.JOB_SITE,
                   MemoryModuleType.HOME,
                   MemoryModuleType.PATH,
@@ -742,5 +753,19 @@ public class CivilizedVillager extends AgeableMob
    protected AABB getAttackBoundingBox() {
       AABB aabb = super.getAttackBoundingBox();
       return aabb.inflate(0.5F, (double) 0.0F, 0.5F);
+   }
+
+   @Override
+   public String toString() {
+      if (info == null)
+         return super.toString();
+
+      return String.format(
+            "%s \"%s %s\" %s - %s",
+            info.getOccupation(),
+            info.getFirstName(),
+            info.getLastName(),
+            info.getNpcRoles(),
+            super.toString());
    }
 }

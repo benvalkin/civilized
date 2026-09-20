@@ -1,14 +1,15 @@
 package com.uncreated.civilized.core.building.state.animalfarm;
 
-import java.util.Arrays;
-
 import com.uncreated.civilized.core.building.Building;
+import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventoryType;
+import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
 import com.uncreated.civilized.core.building.state.BuildingState;
 import com.uncreated.civilized.core.building.state.IItemManagementMenuSupplier;
 import com.uncreated.civilized.core.settlement.Settlement;
 import com.uncreated.civilized.ui.menu.building.item.management.ItemManagementMenu;
 import com.uncreated.civilized.ui.menu.building.worksite.animalfarm.items.ChooseAnimalFoodMenu;
 
+import lombok.Getter;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.SimpleContainer;
@@ -23,12 +24,23 @@ public abstract class AnimalFarmState extends BuildingState implements IItemMana
 
    public static final int NUMBER_OF_FOOD_SLOTS = 3;
 
+   @Getter
+   private final InventoryStockRequirement animalFoodRequirement;
+
    public AnimalFarmState(Building building) {
       super(building);
       foodSlots = new ItemStack[NUMBER_OF_FOOD_SLOTS];
       foodSlots[0] = ItemStack.EMPTY;
       foodSlots[1] = ItemStack.EMPTY;
       foodSlots[2] = ItemStack.EMPTY;
+
+      animalFoodRequirement =
+            new InventoryStockRequirement(
+                  building.getBuildingType().toString().toLowerCase() + "_animal_food",
+                  this::isCorrectAnimalFood,
+                  2,
+                  8,
+                  VillagerInventoryType.WORK_TASK);
    }
 
    public void applyNbt(CompoundTag compoundTag, HolderLookup.Provider registryAccess) {
@@ -67,10 +79,6 @@ public abstract class AnimalFarmState extends BuildingState implements IItemMana
    }
 
    public abstract void tryApplyDefaults(ItemStack[] foodSlots);
-
-   public boolean isCorrectFood(ItemStack stack) {
-      return Arrays.stream(foodSlots).anyMatch(i -> ItemStack.isSameItem(i, stack));
-   }
 
    public ItemStack getFoodSlot(int i) {
       return foodSlots[i];

@@ -4,6 +4,7 @@ import java.util.Set;
 
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
+import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.entity.LoadedBuildings;
 import com.uncreated.civilized.core.building.events.model.BuildingDeletedEvent;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
@@ -49,8 +50,8 @@ public class EntityEvents {
       if (event.isClientside())
          return;
 
+      LoadedBuildings.checkLoaded(event.getBuilding()).ifPresent(LoadedSettlements::onBuildingUnloaded);
       LoadedBuildings.unload(event.getBuilding().getBuildingId());
-      LoadedSettlements.onBuildingUnloaded(event.getBuilding());
    }
 
    @SubscribeEvent
@@ -65,9 +66,11 @@ public class EntityEvents {
       Set<Building> toAdd = ServerBuildingsStore.INSTANCE.findInChunk(event.getChunk().getPos(), serverLevel);
 
       toAdd.forEach(building -> {
-         LoadedBuildings.load(building, serverLevel);
-         LoadedSettlements
-               .onBuildingLoaded(ServerSettlementsStore.INSTANCE.get(building.getSettlementId()), serverLevel);
+         LoadedBuilding loadedBuilding = LoadedBuildings.load(building, serverLevel);
+         LoadedSettlements.onBuildingLoaded(
+               ServerSettlementsStore.INSTANCE.get(building.getSettlementId()),
+               loadedBuilding,
+               serverLevel);
       });
    }
 
@@ -80,8 +83,8 @@ public class EntityEvents {
       Set<Building> toRemove = ServerBuildingsStore.INSTANCE.findInChunk(event.getChunk().getPos(), serverLevel);
 
       toRemove.forEach(building -> {
+         LoadedBuildings.checkLoaded(building).ifPresent(LoadedSettlements::onBuildingUnloaded);
          LoadedBuildings.unload(building.getBuildingId());
-         LoadedSettlements.onBuildingUnloaded(building);
       });
    }
 

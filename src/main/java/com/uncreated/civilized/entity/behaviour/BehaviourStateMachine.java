@@ -1,8 +1,8 @@
 package com.uncreated.civilized.entity.behaviour;
 
+import java.util.Deque;
 import java.util.LinkedList;
 import java.util.Optional;
-import java.util.Queue;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -14,7 +14,7 @@ import lombok.experimental.Accessors;
 @Accessors(fluent = true)
 public class BehaviourStateMachine {
 
-   private Queue<BehaviourState> queue;
+   private Deque<BehaviourState> deque;
 
    @Getter
    @Setter(AccessLevel.PACKAGE)
@@ -25,29 +25,33 @@ public class BehaviourStateMachine {
    private boolean isIdle;
 
    public BehaviourStateMachine() {
-      queue = new LinkedList<>();
+      deque = new LinkedList<>();
       currentState = BehaviourStates.NONE;
    }
 
    public void queueAction(@NotNull BehaviourState newState) {
-      queue.add(newState);
+      deque.add(newState);
    }
 
    public void queueActionOnce(@NotNull BehaviourState newState) {
-      if (queue.contains(newState))
+      if (deque.contains(newState))
          return;
 
-      queue.add(newState);
+      deque.add(newState);
+   }
+
+   public void queueImmediately(@NotNull BehaviourState newState) {
+      deque.addFirst(newState);
    }
 
    Optional<BehaviourState> pollNextAction() {
-      if (queue.isEmpty())
+      if (deque.isEmpty())
          return Optional.empty();
 
-      return Optional.ofNullable(queue.poll());
+      return Optional.ofNullable(deque.poll());
    }
 
    boolean hasQueuedActions() {
-      return !queue.isEmpty();
+      return !deque.isEmpty();
    }
 }

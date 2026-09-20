@@ -1,6 +1,8 @@
 package com.uncreated.civilized.core.building.logistics;
 
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import org.apache.commons.compress.utils.Lists;
 
@@ -32,5 +34,33 @@ public class AggregateItemStack {
    public void add(ItemStack itemStack) {
       this.itemStacks.add(itemStack);
       this.count += itemStack.getCount();
+   }
+
+   public void add(AggregateItemStack other) {
+      this.itemStacks.addAll(other.getItemStacks());
+      this.count += other.getCount();
+   }
+
+   public void removeMatching(Predicate<ItemStack> predicate, int upTo) {
+      for (ItemStack itemStack : itemStacks) {
+         if (predicate.test(itemStack)) {
+            int toRemove = Math.min(upTo, itemStack.getCount());
+            itemStack.shrink(toRemove);
+            upTo -= toRemove;
+            if (upTo <= 0)
+               break;
+         }
+      }
+      itemStacks.removeIf(ItemStack::isEmpty);
+   }
+
+   public boolean hasItems() {
+      return count > 0;
+   }
+
+   @Override
+   public String toString() {
+      return count + " [" + itemStacks.stream().map(s -> s.getItem().toString()).collect(Collectors.joining(", "))
+            + "]";
    }
 }

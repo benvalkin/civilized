@@ -68,7 +68,7 @@ public class ClientBuildingStore extends BuildingStore {
          LOGGER.error(
                "Server tried to sync {} store operation for building {} that did not exist on {}'s client. This sync will be ignored.",
                packet.storeOperation(),
-               packet.building().toStringLite(),
+               packet.building(),
                context.player().getScoreboardName());
          return;
       }

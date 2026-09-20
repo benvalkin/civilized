@@ -62,7 +62,7 @@ public class SlaughterAnimals<T extends Animal> extends WorkTaskBehaviour {
       super.stop(level, villager, gameTime);
 
       if (killedAnimals)
-         getStateMachine().queueActionOnce(WorkStates.DROPPING_OFF_WORK_OUTPUT_AT_HOME);
+         goDropOffWorkOutputAtHome(villager);
    }
 
    private boolean killedAnimals;

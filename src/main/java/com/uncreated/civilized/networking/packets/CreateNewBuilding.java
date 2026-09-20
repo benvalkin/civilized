@@ -11,10 +11,10 @@ import com.uncreated.civilized.core.building.BuildingType;
 import com.uncreated.civilized.core.building.BuildingTypes;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.bounds.BuildingBounds;
+import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.entity.LoadedBuildings;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
-import com.uncreated.civilized.core.settlement.SettlementBounds;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
 import com.uncreated.civilized.ui.style.Colors;
 
@@ -79,8 +79,8 @@ public record CreateNewBuilding(BuildingType buildingType,
                   createNewBuilding.buildingBounds());
 
       if (serverLevel.isLoaded(building.getBlockPos())) {
-         LoadedBuildings.load(building, serverLevel);
-         LoadedSettlements.onBuildingLoaded(settlement.get(), serverLevel);
+         LoadedBuilding loadedBuilding = LoadedBuildings.load(building, serverLevel);
+         LoadedSettlements.onBuildingLoaded(settlement.get(), loadedBuilding, serverLevel);
       }
 
       Set<Building> settlementBuildings =

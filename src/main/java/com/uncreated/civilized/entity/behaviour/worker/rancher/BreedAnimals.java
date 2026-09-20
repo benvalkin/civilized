@@ -6,15 +6,14 @@ import java.util.Optional;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
-import com.uncreated.civilized.core.building.logistics.LogisticsManager;
-import com.uncreated.civilized.core.building.logistics.orders.StorehouseOrder;
-import com.uncreated.civilized.core.building.logistics.orders.imports.ImportUpTo;
-import com.uncreated.civilized.core.building.logistics.orders.task.TaskConsumableItemRequirement;
+import com.uncreated.civilized.core.building.logistics.hauling.instruction.TakeToInventoryInstruction;
+import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
 import com.uncreated.civilized.core.building.state.animalfarm.AnimalFarmState;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
 import com.uncreated.civilized.entity.behaviour.worker.WorkTaskBehaviour;
+import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
@@ -29,7 +28,6 @@ public class BreedAnimals<T extends Animal> extends WorkTaskBehaviour {
    public static final Logger LOGGER = LogUtils.getLogger();
    private long lastWorkTime;
    private MediumDistanceTravelTask travelHelper;
-
    private ItemStack handHeld;
 
    public BreedAnimals() {
@@ -49,39 +47,25 @@ public class BreedAnimals<T extends Animal> extends WorkTaskBehaviour {
       if (totalAnimals.size() > 8)
          return false;
 
-      LogisticsManager logisticsManager = getSettlement().getBehaviour().getLogisticsManager();
+      AnimalFarmState animalFarmState = (AnimalFarmState) getWorksite().getBuilding().getState();
 
-      AnimalFarmState behaviour = (AnimalFarmState) getWorksite().getBuilding().getState();
-      TaskConsumableItemRequirement taskItemRequirement =
-            new TaskConsumableItemRequirement(
-                  level,
-                  "breed_animals",
-                  behaviour::isCorrectFood,
-                  StorehouseOrder.Origin.AUTOMATIC,
-                  2,
-                  8);
-      taskItemRequirement.setExpiry(12000);
-      logisticsManager.registerOrder(getHome().getBuilding(), taskItemRequirement);
-      ImportUpTo importOrder =
-            new ImportUpTo(
-                  level,
-                  "animal_food",
-                  taskItemRequirement.getItemSearch(),
-                  StorehouseOrder.Origin.AUTOMATIC,
-                  1,
-                  8,
-                  8);
-      importOrder.setExpiry(12000);
-      logisticsManager.registerOrder(getHome().getBuilding(), importOrder);
-
-      List<ItemStack> animalFoodItemsInventory = getAnimalFoodItemsInventory(villager, breedableAnimals.getFirst());
-      if (animalFoodItemsInventory.stream().mapToInt(ItemStack::getCount).sum() < 2) {
-         getStateMachine().queueActionOnce(WorkStates.FETCHING_WORK_INPUT_FROM_HOME);
-         getStateMachine().queueActionOnce(this.getState());
+      InventoryStockRequirement.StockResult carrying =
+            animalFarmState.getAnimalFoodRequirement().evaluate(villager);
+      if (!carrying.satisfied()) {
+         Optional<TakeToInventoryInstruction> instruction =
+               TakeToInventoryInstruction
+                     .tryCreate(animalFarmState.getAnimalFoodRequirement(), homeAndStorehouseIfPresent());
+         if (instruction.isPresent()) {
+            villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
+            getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
+            getStateMachine().queueActionOnce(this.getState());
+            // todo: send notification that the villager is missing shears
+         }
          return false;
       }
-      this.handHeld = animalFoodItemsInventory.getFirst();
 
+      this.handHeld = carrying.stock().getItemStacks().getFirst();
+      assert this.handHeld.getCount() >= 2;
       return true;
    }
 
