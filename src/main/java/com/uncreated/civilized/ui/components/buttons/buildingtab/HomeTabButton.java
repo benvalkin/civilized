@@ -2,7 +2,7 @@ package com.uncreated.civilized.ui.components.buttons.buildingtab;
 
 import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
-import com.uncreated.civilized.ui.tabs.AScreenWithTabs;
+import com.uncreated.civilized.ui.tabs.ITabHost;
 
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
@@ -13,9 +13,9 @@ public class HomeTabButton extends BuildingTabButton {
    private static ResourceLocation ICON =
          ResourceLocation.fromNamespaceAndPath(CIVILIZED_MOD_ID, "icon/building_tab_home");
 
-   public HomeTabButton(AScreenWithTabs menuScreenWithTabs, int buttonTabIndex) {
+   public HomeTabButton(ITabHost tabHost, int buttonTabIndex) {
       super(
-            menuScreenWithTabs,
+            tabHost,
             buttonTabIndex,
             ICON,
             Tooltip.create(Component.translatable("menu.building.residence.info.tab.heading")));

@@ -10,6 +10,8 @@ import com.uncreated.civilized.ui.menu.building.residence.artisan.singleitem.Edi
 import com.uncreated.civilized.ui.menu.building.residence.artisan.singleitem.EditSmokingRecipeScreen;
 import com.uncreated.civilized.ui.menu.building.worksite.animalfarm.items.ChooseAnimalFoodMenu;
 import com.uncreated.civilized.ui.menu.building.worksite.animalfarm.items.ChooseAnimalFoodScreen;
+import com.uncreated.civilized.ui.menu.building.BuildingMenu;
+import com.uncreated.civilized.ui.menu.building.worksite.animalfarm.AnimalFarmBuildingScreen;
 import com.uncreated.civilized.ui.menu.building.worksite.cropfarm.items.ChooseCropsMenu;
 import com.uncreated.civilized.ui.menu.building.worksite.cropfarm.items.ChooseCropsScreen;
 import com.uncreated.civilized.ui.menu.building.worksite.grove.items.ChooseSaplingsMenu;
@@ -24,6 +26,18 @@ public class GuiSetupEvents {
 
    @SubscribeEvent
    public static void registerScreens(RegisterMenuScreensEvent event) {
+      // every building screen shares this one menu type. While the screens are being moved over to it, only the animal
+      // farms use it, so the animal farm screen is the only one it can create
+      event.register(
+            GuiRegistry.BUILDING_MENU.get(),
+            (MenuScreens.ScreenConstructor<BuildingMenu, AnimalFarmBuildingScreen>) (
+                  buildingMenu,
+                  inventory,
+                  component) -> new AnimalFarmBuildingScreen(
+                        buildingMenu,
+                        inventory,
+                        buildingMenu.getBuilding().getBuildingType().translationDark()));
+
       event.register(
             GuiRegistry.CHOOSE_CROPS_MENU.get(), // do not remove cast - it seems to cause compile errors even though
             // intellij thinks its redundant

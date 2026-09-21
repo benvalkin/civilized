@@ -9,12 +9,11 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.uncreated.civilized.core.building.Building;
+import com.uncreated.civilized.core.building.BuildingScreenOpener;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.neoforge.registration.attachments.DataAttachments;
-import com.uncreated.civilized.networking.packets.ShowBuildingScreen;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -25,7 +24,6 @@ import net.minecraft.world.level.block.SimpleWaterloggedBlock;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
-import net.neoforged.neoforge.network.PacketDistributor;
 
 @Mixin(SignBlock.class)
 public abstract class SignBlockMixin extends BaseEntityBlock implements SimpleWaterloggedBlock {
@@ -125,9 +123,7 @@ public abstract class SignBlockMixin extends BaseEntityBlock implements SimpleWa
       // menu.setSynchronizer(containerSynchronizer);
       // serverPlayer.containerMenu = menu;
 
-      CompoundTag additionalData = new CompoundTag();
-      building.get().getState().serverAddToBuildingScreenContext(additionalData, serverPlayer.serverLevel());
-      PacketDistributor.sendToPlayer(serverPlayer, new ShowBuildingScreen(buildingId, additionalData));
+      BuildingScreenOpener.open(serverPlayer, building.get());
       // building.get());
 
       // player.openMenu(new MenuProvider() {

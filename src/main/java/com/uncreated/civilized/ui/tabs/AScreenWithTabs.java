@@ -7,17 +7,13 @@ import org.jetbrains.annotations.Nullable;
 import com.uncreated.civilized.ui.components.IRefreshableUI;
 import com.uncreated.civilized.ui.style.Colors;
 
-import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 
-public abstract class AScreenWithTabs extends Screen implements IRefreshableUI {
-   private List<ATab> tabs;
-   @Getter
-   @Nullable
-   private ATab currentTab;
+public abstract class AScreenWithTabs extends Screen implements IRefreshableUI, ITabHost {
+   private TabController tabController;
 
    protected int leftPos;
    protected int topPos;
@@ -38,25 +34,17 @@ public abstract class AScreenWithTabs extends Screen implements IRefreshableUI {
       super.init();
       this.leftPos = (this.width - this.imageWidth) / 2;
       this.topPos = (this.height - this.imageHeight) / 2;
-      tabs = createTabs();
-      if (tabs.isEmpty()) {
-         throw new IllegalArgumentException("Tabs list cannot be empty.");
-      }
+      tabController = new TabController(createTabs(), this::addWidget, this::removeWidget);
       // WARNING: this line seems to cause misaligned button clicking for some reason
    }
 
+   @Override
    public ATab changeTab(int newTabIndex) {
-      if (currentTab != null) {
-         currentTab.onClose();
-         removeWidget(currentTab);
-      }
+      return tabController.changeTab(newTabIndex);
+   }
 
-      currentTab = tabs.get(newTabIndex);
-      currentTab.init();
-      refresh();
-      addWidget(currentTab);
-
-      return currentTab;
+   public @Nullable ATab getCurrentTab() {
+      return tabController.getCurrentTab();
    }
 
    public abstract int getFirstTabButtonX();
@@ -64,15 +52,11 @@ public abstract class AScreenWithTabs extends Screen implements IRefreshableUI {
    public abstract int getFirstTabButtonY();
 
    public ATab changeToDefaultTabIfNotSet() {
-      if (currentTab == null) {
-         changeTab(0);
-      }
-      return currentTab;
+      return tabController.changeToDefaultTabIfNotSet();
    }
 
    public void renderCurrentTabContents(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-      if (currentTab != null)
-         currentTab.render(graphics, mouseX, mouseY, partialTick);
+      tabController.renderCurrentTabContents(graphics, mouseX, mouseY, partialTick);
    }
 
    @Override
@@ -93,8 +77,8 @@ public abstract class AScreenWithTabs extends Screen implements IRefreshableUI {
    protected void renderBg(GuiGraphics p_283137_, float p_282476_, int p_281600_, int p_283194_) {
    }
 
+   @Override
    public void refresh() {
-      if (currentTab != null)
-         currentTab.refresh();
+      tabController.refresh();
    }
 }

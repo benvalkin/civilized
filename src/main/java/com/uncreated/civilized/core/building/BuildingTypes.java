@@ -37,7 +37,6 @@ import com.uncreated.civilized.ui.menu.building.residence.artisan.ButcheryBuildi
 import com.uncreated.civilized.ui.menu.building.residence.artisan.CraftsmanHouseBuildingScreen;
 import com.uncreated.civilized.ui.menu.building.residence.artisan.MasonBuildingScreen;
 import com.uncreated.civilized.ui.menu.building.worksite.WorksiteBuildingScreen;
-import com.uncreated.civilized.ui.menu.building.worksite.animalfarm.AnimalFarmBuildingScreen;
 import com.uncreated.civilized.ui.menu.building.worksite.cropfarm.CropFarmBuildingScreen;
 import com.uncreated.civilized.ui.menu.building.worksite.grove.GroveBuildingScreen;
 
@@ -308,7 +307,7 @@ public class BuildingTypes {
                .isWorksite(true)
                .isAnimalFarm(true)
                .createState(CowFarmState::new)
-               .buildingScreenSupplier(AnimalFarmBuildingScreen::new)
+               .usesBuildingMenu(true)
                .occupation(() -> VillagerOccupations.RANCHER)
                .build());
 
@@ -317,7 +316,7 @@ public class BuildingTypes {
                .isWorksite(true)
                .isAnimalFarm(true)
                .createState(SheepFarmState::new)
-               .buildingScreenSupplier(AnimalFarmBuildingScreen::new)
+               .usesBuildingMenu(true)
                .occupation(() -> VillagerOccupations.RANCHER)
                .build());
 
@@ -326,7 +325,7 @@ public class BuildingTypes {
                .isWorksite(true)
                .isAnimalFarm(true)
                .createState(PigFarmState::new)
-               .buildingScreenSupplier(AnimalFarmBuildingScreen::new)
+               .usesBuildingMenu(true)
                .occupation(() -> VillagerOccupations.RANCHER)
                .build());
 
@@ -335,7 +334,7 @@ public class BuildingTypes {
                .isWorksite(true)
                .isAnimalFarm(true)
                .createState(ChickenFarmState::new)
-               .buildingScreenSupplier(AnimalFarmBuildingScreen::new)
+               .usesBuildingMenu(true)
                .occupation(() -> VillagerOccupations.RANCHER)
                .build());
 
@@ -344,7 +343,7 @@ public class BuildingTypes {
                .isWorksite(true)
                .isAnimalFarm(true)
                .createState(BeeFarmState::new)
-               .buildingScreenSupplier(AnimalFarmBuildingScreen::new)
+               .usesBuildingMenu(true)
                .occupation(() -> VillagerOccupations.BEEKEEPER)
                .build());
    public static BuildingType FISHING_SPOT =

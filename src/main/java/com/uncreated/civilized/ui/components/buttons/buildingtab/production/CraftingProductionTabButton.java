@@ -4,7 +4,7 @@ import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
 import com.uncreated.civilized.core.building.production.bills.ProductionTypes;
 import com.uncreated.civilized.ui.components.buttons.buildingtab.BuildingTabButton;
-import com.uncreated.civilized.ui.tabs.AScreenWithTabs;
+import com.uncreated.civilized.ui.tabs.ITabHost;
 
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.resources.ResourceLocation;
@@ -14,7 +14,7 @@ public class CraftingProductionTabButton extends BuildingTabButton {
    private static ResourceLocation ICON =
          ResourceLocation.fromNamespaceAndPath(CIVILIZED_MOD_ID, "icon/building_tab_production_crafting");
 
-   public CraftingProductionTabButton(AScreenWithTabs menuScreenWithTabs, int buttonTabIndex) {
-      super(menuScreenWithTabs, buttonTabIndex, ICON, Tooltip.create(ProductionTypes.CRAFTING.heading()));
+   public CraftingProductionTabButton(ITabHost tabHost, int buttonTabIndex) {
+      super(tabHost, buttonTabIndex, ICON, Tooltip.create(ProductionTypes.CRAFTING.heading()));
    }
 }

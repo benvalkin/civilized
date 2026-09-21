@@ -2,7 +2,7 @@ package com.uncreated.civilized.ui.components.buttons.buildingtab;
 
 import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
-import com.uncreated.civilized.ui.tabs.AScreenWithTabs;
+import com.uncreated.civilized.ui.tabs.ITabHost;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ImageButton;
@@ -26,20 +26,20 @@ public class BuildingTabButton extends ImageButton {
    protected static final int BUTTON_SPACING = 23;
 
    public BuildingTabButton(
-         AScreenWithTabs screenWithTabs,
+         ITabHost tabHost,
          int buttonTabIndex,
          ResourceLocation iconTexture,
          Tooltip tooltip) {
       super(
-            screenWithTabs.getFirstTabButtonX(),
-            screenWithTabs.getFirstTabButtonY() + buttonTabIndex * BUTTON_SPACING,
+            tabHost.getFirstTabButtonX(),
+            tabHost.getFirstTabButtonY() + buttonTabIndex * BUTTON_SPACING,
             28,
             20,
             SPRITES,
-            b -> screenWithTabs.changeTab(buttonTabIndex));
+            b -> tabHost.changeTab(buttonTabIndex));
       this.iconTexture = iconTexture;
-      imageX = screenWithTabs.getFirstTabButtonX() - 2;
-      imageY = screenWithTabs.getFirstTabButtonY() - 7 + buttonTabIndex * BUTTON_SPACING;
+      imageX = tabHost.getFirstTabButtonX() - 2;
+      imageY = tabHost.getFirstTabButtonY() - 7 + buttonTabIndex * BUTTON_SPACING;
       this.setTooltip(tooltip);
    }
 

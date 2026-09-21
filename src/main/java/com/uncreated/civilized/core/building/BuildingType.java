@@ -46,6 +46,13 @@ public class BuildingType {
    private final BiFunction<BuildingScreenContext, Component, ABuildingScreen> buildingScreenSupplier =
          ResidenceBuildingScreen::new;
 
+   /**
+    * Whether this building's screen is backed by a {@code BuildingMenu}, i.e. whether it has been moved off the older
+    * screen-only approach. {@code buildingScreenSupplier} is ignored once this is set.
+    */
+   @Builder.Default
+   private final boolean usesBuildingMenu = false;
+
    public static BuildingTypeBuilder builder(ResourceLocation key) {
       return internalBuilder().resourceLocation(key);
    }

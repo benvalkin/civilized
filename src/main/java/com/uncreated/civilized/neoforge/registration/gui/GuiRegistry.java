@@ -9,6 +9,7 @@ import com.uncreated.civilized.ui.menu.building.residence.artisan.singleitem.Edi
 import com.uncreated.civilized.ui.menu.building.residence.artisan.singleitem.EditSmeltingRecipeMenu;
 import com.uncreated.civilized.ui.menu.building.residence.artisan.singleitem.EditSmokingRecipeMenu;
 import com.uncreated.civilized.ui.menu.building.worksite.animalfarm.items.ChooseAnimalFoodMenu;
+import com.uncreated.civilized.ui.menu.building.BuildingMenu;
 import com.uncreated.civilized.ui.menu.building.worksite.cropfarm.items.ChooseCropsMenu;
 import com.uncreated.civilized.ui.menu.building.worksite.grove.items.ChooseSaplingsMenu;
 
@@ -20,6 +21,9 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 public class GuiRegistry {
    public static final DeferredRegister<MenuType<?>> MENUS =
          DeferredRegister.create(BuiltInRegistries.MENU, CIVILIZED_MOD_ID);
+
+   public static final Supplier<MenuType<BuildingMenu>> BUILDING_MENU =
+         MENUS.register("building_menu", () -> IMenuTypeExtension.create(BuildingMenu::new));
 
    public static final Supplier<MenuType<ChooseCropsMenu>> CHOOSE_CROPS_MENU =
          MENUS.register("choose_crops_menu", () -> IMenuTypeExtension.create(ChooseCropsMenu::new));
