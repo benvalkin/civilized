@@ -13,7 +13,9 @@ import com.uncreated.civilized.core.building.state.BuildingState;
 import com.uncreated.civilized.core.villagerinfo.VillagerOccupation;
 import com.uncreated.civilized.core.villagerinfo.VillagerOccupations;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
+import com.uncreated.civilized.ui.menu.building.ABuildingMenuScreen;
 import com.uncreated.civilized.ui.menu.building.ABuildingScreen;
+import com.uncreated.civilized.ui.menu.building.BuildingMenu;
 import com.uncreated.civilized.ui.menu.building.residence.ResidenceBuildingScreen;
 import com.uncreated.civilized.ui.style.Colors;
 
@@ -21,6 +23,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.experimental.Accessors;
+import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -47,14 +50,17 @@ public class BuildingType {
          ResidenceBuildingScreen::new;
 
    /**
-    * Whether this building's screen is backed by a {@code BuildingMenu}, i.e. whether it has been moved off the older
-    * screen-only approach. {@code buildingScreenSupplier} is ignored once this is set.
+    * Creates this building's screen when it is backed by a {@link BuildingMenu}, i.e. once it has been moved off the
+    * older screen-only approach. {@code buildingScreenSupplier} is ignored once this is set.
     */
-   @Builder.Default
-   private final boolean usesBuildingMenu = false;
+   private final MenuScreens.ScreenConstructor<BuildingMenu, ABuildingMenuScreen> buildingMenuScreenSupplier;
 
    public static BuildingTypeBuilder builder(ResourceLocation key) {
       return internalBuilder().resourceLocation(key);
+   }
+
+   public boolean usesBuildingMenu() {
+      return buildingMenuScreenSupplier != null;
    }
 
    public VillagerOccupation occupation() {

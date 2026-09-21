@@ -9,6 +9,7 @@ import com.uncreated.civilized.ui.menu.building.ABuildingMenuScreen;
 import com.uncreated.civilized.ui.menu.building.BuildingMenu;
 import com.uncreated.civilized.ui.menu.building.BuildingSettingsTab;
 import com.uncreated.civilized.ui.menu.building.worksite.animalfarm.tabs.AnimalFarmInfoTab;
+import com.uncreated.civilized.ui.menu.building.worksite.animalfarm.tabs.AnimalFoodTab;
 import com.uncreated.civilized.ui.menu.building.worksite.tabs.ManageWorkersTab;
 import com.uncreated.civilized.ui.tabs.ATab;
 import com.uncreated.civilized.ui.tabs.ITabHost;
@@ -25,7 +26,7 @@ public class AnimalFarmBuildingScreen extends ABuildingMenuScreen {
 
    @Override
    protected ATab createDefaultTab(ITabHost tabHost) {
-      return new AnimalFarmInfoTab(tabHost, this.font, context, this);
+      return new AnimalFarmInfoTab(tabHost, this.font, context, t -> new AnimalFoodTab(t, this.font, context, this));
    }
 
    @Override

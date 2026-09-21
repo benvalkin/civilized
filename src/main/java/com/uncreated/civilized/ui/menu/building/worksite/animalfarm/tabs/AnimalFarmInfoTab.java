@@ -2,8 +2,7 @@ package com.uncreated.civilized.ui.menu.building.worksite.animalfarm.tabs;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import org.jetbrains.annotations.NotNull;
+import java.util.function.Function;
 
 import com.uncreated.civilized.core.building.state.animalfarm.AnimalFarmState;
 import com.uncreated.civilized.core.building.util.BuildingUtil;
@@ -15,6 +14,7 @@ import com.uncreated.civilized.ui.menu.building.ABuildingMenuScreen;
 import com.uncreated.civilized.ui.menu.building.ABuildingScreenTab;
 import com.uncreated.civilized.ui.menu.building.worksite.tabs.ManageWorkersTab;
 import com.uncreated.civilized.ui.style.Colors;
+import com.uncreated.civilized.ui.tabs.ATab;
 import com.uncreated.civilized.ui.tabs.ITabHost;
 
 import net.minecraft.client.gui.Font;
@@ -30,11 +30,7 @@ public class AnimalFarmInfoTab extends ABuildingScreenTab {
    private final Button chooseFood;
    private List<VillagerInfo> workers;
 
-   public AnimalFarmInfoTab(
-         ITabHost tabHost,
-         Font font,
-         BuildingScreenContext context,
-         ABuildingMenuScreen screen) {
+   public AnimalFarmInfoTab(ITabHost tabHost, Font font, BuildingScreenContext context, Function<ITabHost, ATab> createAnimalFoodTab) {
       super(tabHost, font, Component.translatable("menu.building.residence.info.tab.heading"), context);
       this.workers = createOccupantsList();
 
@@ -43,14 +39,10 @@ public class AnimalFarmInfoTab extends ABuildingScreenTab {
       chooseFood =
             Button.builder(
                   Component.translatable("menu.building.worksite.animal_farm.edit_allowed_animal_food"),
-                  openChooseFoodTab(tabHost, context, screen)).pos(getX(), getBottom() - 18).size(80, 18).build();
-   }
-
-   private Button.@NotNull OnPress openChooseFoodTab(
-         ITabHost tabHost,
-         BuildingScreenContext context,
-         ABuildingMenuScreen screen) {
-      return button -> tabHost.changeTab(tabHost.changeTab(new AnimalFoodTab(tabHost, this.font, context, screen)));
+                  button -> tabHost.changeTab(createAnimalFoodTab.apply(tabHost)))
+                  .pos(getX(), getBottom() - 18)
+                  .size(80, 18)
+                  .build();
    }
 
    @Override

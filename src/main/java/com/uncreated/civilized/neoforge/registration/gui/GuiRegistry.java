@@ -9,7 +9,6 @@ import com.uncreated.civilized.ui.menu.building.residence.artisan.singleitem.Edi
 import com.uncreated.civilized.ui.menu.building.residence.artisan.singleitem.EditSmeltingRecipeMenu;
 import com.uncreated.civilized.ui.menu.building.residence.artisan.singleitem.EditSmokingRecipeMenu;
 import com.uncreated.civilized.ui.menu.building.BuildingMenu;
-import com.uncreated.civilized.ui.menu.building.worksite.cropfarm.items.ChooseCropsMenu;
 import com.uncreated.civilized.ui.menu.building.worksite.grove.items.ChooseSaplingsMenu;
 
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -23,9 +22,6 @@ public class GuiRegistry {
 
    public static final Supplier<MenuType<BuildingMenu>> BUILDING_MENU =
          MENUS.register("building_menu", () -> IMenuTypeExtension.create(BuildingMenu::new));
-
-   public static final Supplier<MenuType<ChooseCropsMenu>> CHOOSE_CROPS_MENU =
-         MENUS.register("choose_crops_menu", () -> IMenuTypeExtension.create(ChooseCropsMenu::new));
 
    public static final Supplier<MenuType<ChooseSaplingsMenu>> CHOOSE_SAPLINGS_MENU =
          MENUS.register("choose_saplings_menu", () -> IMenuTypeExtension.create(ChooseSaplingsMenu::new));

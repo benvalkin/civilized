@@ -2,25 +2,13 @@ package com.uncreated.civilized.item;
 
 import java.util.Optional;
 
-import org.jetbrains.annotations.Nullable;
-
 import com.uncreated.civilized.core.building.Building;
+import com.uncreated.civilized.core.building.BuildingScreenOpener;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
-import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
-import com.uncreated.civilized.core.settlement.Settlement;
-import com.uncreated.civilized.ui.menu.building.worksite.cropfarm.items.ChooseCropsMenu;
 
-import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.MenuProvider;
-import net.minecraft.world.SimpleContainer;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.context.UseOnContext;
 
@@ -42,25 +30,9 @@ public class SettlementMandateItem extends Item {
             ServerBuildingsStore.INSTANCE.findEnclosingBuilding(clickedAir, context.getLevel());
       if (enclosingBuilding.isPresent()) {
 
-         Settlement settlement = ServerSettlementsStore.INSTANCE.get(enclosingBuilding.get().getSettlementId());
-
-         serverPlayer.openMenu(new MenuProvider() {
-            @Override
-            public Component getDisplayName() {
-               return enclosingBuilding.get().getBuildingType().translationDark().withStyle(ChatFormatting.UNDERLINE);
-            }
-
-            @Override
-            public @Nullable AbstractContainerMenu createMenu(int i, Inventory inventory, Player player) {
-               return new ChooseCropsMenu(i, inventory, new SimpleContainer(9), settlement, enclosingBuilding.get());
-            }
-
-            @Override
-            public void writeClientSideData(AbstractContainerMenu menu, RegistryFriendlyByteBuf buffer) {
-               buffer.writeUUID(settlement.getSettlementId());
-               buffer.writeUUID(enclosingBuilding.get().getBuildingId());
-            }
-         });
+         // this used to open the old crop chooser menu for whichever building was clicked. That menu has become a tab
+         // on the crop farm screen, so the building's own screen is opened instead
+         BuildingScreenOpener.open(serverPlayer, enclosingBuilding.get());
 
          return InteractionResult.SUCCESS;
       }

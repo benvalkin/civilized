@@ -2,17 +2,18 @@ package com.uncreated.civilized.ui.menu.building.worksite.cropfarm.tabs;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 import com.uncreated.civilized.core.building.state.CropFarmState;
 import com.uncreated.civilized.core.building.util.BuildingUtil;
 import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
-import com.uncreated.civilized.networking.packets.RequestBuildingItemManagementScreen;
 import com.uncreated.civilized.ui.components.widget.ItemDisplayWidget;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
 import com.uncreated.civilized.ui.menu.building.ABuildingScreenTab;
 import com.uncreated.civilized.ui.menu.building.worksite.tabs.ManageWorkersTab;
 import com.uncreated.civilized.ui.style.Colors;
+import com.uncreated.civilized.ui.tabs.ATab;
 import com.uncreated.civilized.ui.tabs.ITabHost;
 
 import net.minecraft.client.gui.Font;
@@ -21,7 +22,6 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.network.PacketDistributor;
 
 public class CropFarmInfoTab extends ABuildingScreenTab {
 
@@ -29,7 +29,11 @@ public class CropFarmInfoTab extends ABuildingScreenTab {
    private List<VillagerInfo> workers;
    private final Button chooseCrops;
 
-   public CropFarmInfoTab(ITabHost tabHost, Font font, BuildingScreenContext context) {
+   public CropFarmInfoTab(
+         ITabHost tabHost,
+         Font font,
+         BuildingScreenContext context,
+         Function<ITabHost, ATab> createCropsTab) {
       super(
             tabHost,
             font,
@@ -45,11 +49,7 @@ public class CropFarmInfoTab extends ABuildingScreenTab {
                   // notice how if the button's 'x' is set to the parent's width, the button seems to render right to
                   // left...
                   // is this a feature??
-                  this::onPressModifyItems).pos(getX(), getBottom() - 18).size(80, 18).build();
-   }
-
-   private void onPressModifyItems(Button button) {
-      PacketDistributor.sendToServer(new RequestBuildingItemManagementScreen(context.building().getBuildingId(), 3));
+                  button -> tabHost.changeTab(createCropsTab.apply(tabHost))).pos(getX(), getBottom() - 18).size(80, 18).build();
    }
 
    @Override
@@ -106,7 +106,6 @@ public class CropFarmInfoTab extends ABuildingScreenTab {
       this.workers = createOccupantsList();
 
       CropFarmState cropFarmState = (CropFarmState) context.building().getState();
-      cropFarmState.tryApplyDefaults();
 
       itemDisplayWidgets.clear();
       for (int i = 0; i < CropFarmState.NUMBER_OF_CROP_SLOTS; i++) {
