@@ -9,11 +9,11 @@ import org.jetbrains.annotations.Nullable;
 
 import com.uncreated.civilized.ui.components.SlotFrameRenderer;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
-import com.uncreated.civilized.ui.menu.building.worksite.animalfarm.tabs.TabCoords;
+import com.uncreated.civilized.ui.tabs.TabCoords;
 import com.uncreated.civilized.ui.style.Colors;
 import com.uncreated.civilized.ui.tabs.ATab;
-import com.uncreated.civilized.ui.tabs.ILazyLoadTabHost;
-import com.uncreated.civilized.ui.tabs.LazyLoadTabController;
+import com.uncreated.civilized.ui.tabs.ITabHost;
+import com.uncreated.civilized.ui.tabs.TabController;
 
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
@@ -30,7 +30,7 @@ import net.minecraft.world.inventory.Slot;
  * The tabbed screen of a building. It is backed by {@link BuildingMenu} so that the player's inventory is available for
  * certain actions (e.g. Editing Recipe tabs). Switching between them never opens or closes a menu.
  */
-public abstract class ABuildingMenuScreen extends AbstractContainerScreen<BuildingMenu> implements ILazyLoadTabHost {
+public abstract class ABuildingMenuScreen extends AbstractContainerScreen<BuildingMenu> implements ITabHost {
 
    private static final ResourceLocation MENU_TEXTURE =
          ResourceLocation.fromNamespaceAndPath(CIVILIZED_MOD_ID, "textures/gui/building_menu.png");
@@ -41,7 +41,7 @@ public abstract class ABuildingMenuScreen extends AbstractContainerScreen<Buildi
    @Getter
    protected final BuildingScreenContext context;
 
-   private LazyLoadTabController tabController;
+   private TabController tabController;
 
    @Getter
    protected TabCoords tabCoords;
@@ -57,9 +57,9 @@ public abstract class ABuildingMenuScreen extends AbstractContainerScreen<Buildi
       this.inventoryLabelY = this.imageHeight - 125;
    }
 
-   protected abstract ATab createDefaultTab(ILazyLoadTabHost tabHost);
+   protected abstract ATab createDefaultTab(ITabHost tabHost);
 
-   protected abstract List<Button> createTabButtons(ILazyLoadTabHost tabHost);
+   protected abstract List<Button> createTabButtons(ITabHost tabHost);
 
    @Override
    protected void init() {
@@ -70,9 +70,9 @@ public abstract class ABuildingMenuScreen extends AbstractContainerScreen<Buildi
                   leftPos + CONTENT_MARGIN_X,
                   topPos + CONTENT_MARGIN_Y,
                   imageWidth - CONTENT_MARGIN_X * 2,
-                  imageHeight - CONTENT_MARGIN_Y);
+                  imageHeight - CONTENT_MARGIN_Y * 2);
 
-      tabController = new LazyLoadTabController(this::createDefaultTab, this::addWidget, this::removeWidget);
+      tabController = new TabController(this::createDefaultTab, this::addWidget, this::removeWidget);
 
       createTabButtons(this).forEach(this::addRenderableWidget);
 

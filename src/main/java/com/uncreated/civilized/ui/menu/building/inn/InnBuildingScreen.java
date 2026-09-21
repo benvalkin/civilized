@@ -11,6 +11,7 @@ import com.uncreated.civilized.ui.menu.building.BuildingSettingsTab;
 import com.uncreated.civilized.ui.menu.building.inn.tabs.InnMainTab;
 import com.uncreated.civilized.ui.menu.building.inn.tabs.InnVisitorsTab;
 import com.uncreated.civilized.ui.tabs.ATab;
+import com.uncreated.civilized.ui.tabs.ITabHost;
 
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
@@ -23,22 +24,19 @@ public class InnBuildingScreen extends ABuildingScreen {
    }
 
    @Override
-   protected List<ATab> createTabs(int contentLeftPos, int contentTopPos, int tabWidth, int tabHeight) {
-
-      return List.of(
-            new InnMainTab(0, contentLeftPos, contentTopPos, tabWidth, tabHeight, this.font, context),
-            new InnVisitorsTab(1, contentLeftPos, contentTopPos, tabWidth, tabHeight, this.font, context),
-            new BuildingSettingsTab(2, contentLeftPos, contentTopPos, tabWidth, tabHeight, this.font, context));
+   protected ATab createDefaultTab(ITabHost tabHost) {
+      return new InnMainTab(tabHost, font, context);
    }
 
    @Override
-   public List<Button> createTabButtons() {
+   public List<Button> createTabButtons(ITabHost tabHost) {
       return List.of(
-            new HomeTabButton(this, 0),
+            new HomeTabButton(tabHost, 0, this::createDefaultTab),
             new ManageResidentsTabButton(
-                  this,
+                  tabHost,
                   1,
+                  host -> new InnVisitorsTab(host, font, context),
                   Tooltip.create(Component.translatable("menu.building.inn.visitors.count.heading"))),
-            new SettingsTabButton(this, 2));
+            new SettingsTabButton(tabHost, 2, host -> new BuildingSettingsTab(host, font, context)));
    }
 }

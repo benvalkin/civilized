@@ -1,4 +1,4 @@
-package com.uncreated.civilized.ui.menu.building.worksite.animalfarm.tabs;
+package com.uncreated.civilized.ui.tabs;
 
 public record TabCoords(
     int contentLeftPos,

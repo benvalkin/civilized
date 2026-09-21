@@ -2,6 +2,9 @@ package com.uncreated.civilized.ui.components.buttons.buildingtab;
 
 import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
+import java.util.function.Function;
+
+import com.uncreated.civilized.ui.tabs.ATab;
 import com.uncreated.civilized.ui.tabs.ITabHost;
 
 import net.minecraft.client.gui.GuiGraphics;
@@ -29,14 +32,18 @@ public class BuildingTabButton extends ImageButton {
          ITabHost tabHost,
          int buttonTabIndex,
          ResourceLocation iconTexture,
-         Tooltip tooltip) {
+         Tooltip tooltip,
+         Function<ITabHost, ATab> createTab) {
       super(
             tabHost.getFirstTabButtonX(),
             tabHost.getFirstTabButtonY() + buttonTabIndex * BUTTON_SPACING,
             28,
             20,
             SPRITES,
-            b -> tabHost.changeTab(buttonTabIndex));
+            b -> {
+               ATab tab = createTab.apply(tabHost);
+               tabHost.changeTab(tab);
+            });
       this.iconTexture = iconTexture;
       imageX = tabHost.getFirstTabButtonX() - 2;
       imageY = tabHost.getFirstTabButtonY() - 7 + buttonTabIndex * BUTTON_SPACING;

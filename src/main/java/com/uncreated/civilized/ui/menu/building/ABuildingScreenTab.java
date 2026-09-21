@@ -3,6 +3,7 @@ package com.uncreated.civilized.ui.menu.building;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
 import com.uncreated.civilized.ui.style.Colors;
 import com.uncreated.civilized.ui.tabs.ATabWithViewableItemSlots;
+import com.uncreated.civilized.ui.tabs.ITabHost;
 
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -14,15 +15,11 @@ public abstract class ABuildingScreenTab extends ATabWithViewableItemSlots {
    protected final BuildingScreenContext context;
 
    public ABuildingScreenTab(
-         int index,
-         int x,
-         int y,
-         int width,
-         int height,
+         ITabHost tabHost,
          Font font,
          Component tabTitle,
          BuildingScreenContext context) {
-      super(index, x, y, width, height, font);
+      super(tabHost.getTabCoords(), font);
       this.tabTitle = tabTitle;
       this.context = context;
    }

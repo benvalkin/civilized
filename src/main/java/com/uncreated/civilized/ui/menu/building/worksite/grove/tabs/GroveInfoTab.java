@@ -12,6 +12,7 @@ import com.uncreated.civilized.ui.context.BuildingScreenContext;
 import com.uncreated.civilized.ui.menu.building.ABuildingScreenTab;
 import com.uncreated.civilized.ui.menu.building.worksite.tabs.ManageWorkersTab;
 import com.uncreated.civilized.ui.style.Colors;
+import com.uncreated.civilized.ui.tabs.ITabHost;
 
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -26,20 +27,16 @@ public class GroveInfoTab extends ABuildingScreenTab {
    private List<VillagerInfo> workers;
    private final Button chooseSaplings;
 
-   public GroveInfoTab(int index, int x, int y, int width, int height, Font font, BuildingScreenContext context) {
+   public GroveInfoTab(ITabHost tabHost, Font font, BuildingScreenContext context) {
       super(
-            index,
-            x,
-            y,
-            width,
-            height,
+            tabHost,
             font,
             Component.translatable("menu.building.residence.info.tab.heading"),
             context);
       this.workers = createOccupantsList();
 
       GroveState groveState = (GroveState) context.building().getState();
-      itemDisplay = new ItemDisplayWidget(getX() + 18, getHeight() - 60, groveState.getSapling());
+      itemDisplay = new ItemDisplayWidget(getX() + 18, getBottom() - 60, groveState.getSapling());
 
       chooseSaplings =
             Button.builder(
@@ -47,7 +44,7 @@ public class GroveInfoTab extends ABuildingScreenTab {
                   // notice how if the button's 'x' is set to the parent's width, the button seems to render right to
                   // left...
                   // is this a feature??
-                  this::onPressModifyItems).pos(x, height - 18).size(80, 18).build();
+                  this::onPressModifyItems).pos(getX(), getBottom() - 18).size(80, 18).build();
    }
 
    private void onPressModifyItems(Button button) {
@@ -87,7 +84,7 @@ public class GroveInfoTab extends ABuildingScreenTab {
             font,
             Component.translatable("menu.building.worksite.grove.allowed_saplings.heading"),
             getX(),
-            getHeight() - 70,
+            getBottom() - 70,
             Colors.MENU_TEXT_DARK,
             false);
 

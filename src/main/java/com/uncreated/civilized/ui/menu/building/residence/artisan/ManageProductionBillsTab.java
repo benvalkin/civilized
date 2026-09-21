@@ -18,6 +18,7 @@ import com.uncreated.civilized.ui.context.BuildingScreenContext;
 import com.uncreated.civilized.ui.menu.building.ABuildingScreenTab;
 import com.uncreated.civilized.ui.menu.building.widgets.ProductionBillListViewWidget;
 import com.uncreated.civilized.ui.style.Colors;
+import com.uncreated.civilized.ui.tabs.ITabHost;
 
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -35,22 +36,18 @@ public class ManageProductionBillsTab extends ABuildingScreenTab {
    private ScrollListView<ProductionBill, ProductionBillListViewWidget> scrollView;
 
    public ManageProductionBillsTab(
-         int index,
-         int x,
-         int y,
-         int width,
-         int height,
+         ITabHost tabHost,
          Font font,
          BuildingScreenContext context,
          ProductionType productionType) {
-      super(index, x, y, width, height, font, productionType.heading(), context);
+      super(tabHost, font, productionType.heading(), context);
       this.productionType = productionType;
 
       addProductionBill =
             Button.builder(
                   Component.translatable("menu.building.residence.production_bills.add_bill.description"),
                   this::onAddBill)
-                  .pos(x + width - 80, height - 20)
+                  .pos(getX() + width - 80, getBottom() - 20)
                   .size(80, 20)
                   .tooltip(
                         Tooltip.create(
@@ -109,7 +106,7 @@ public class ManageProductionBillsTab extends ABuildingScreenTab {
          List<ProductionBill> productionBills) {
       final int elementHeight = 22;
 
-      return new ScrollListView<>(getX(), getY() + 20, width, height - 90, elementHeight, new IListViewBuilder<>() {
+      return new ScrollListView<>(getX(), getY() + 20, width, height - 45, elementHeight, new IListViewBuilder<>() {
 
          @Override
          public List<ProductionBill> provideModelData() {

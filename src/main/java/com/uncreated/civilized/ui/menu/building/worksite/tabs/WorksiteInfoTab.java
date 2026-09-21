@@ -10,6 +10,7 @@ import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
 import com.uncreated.civilized.ui.menu.building.ABuildingScreenTab;
 import com.uncreated.civilized.ui.style.Colors;
+import com.uncreated.civilized.ui.tabs.ITabHost;
 
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -21,19 +22,11 @@ public class WorksiteInfoTab extends ABuildingScreenTab {
    private List<VillagerInfo> workers;
 
    public WorksiteInfoTab(
-         int index,
-         int x,
-         int y,
-         int width,
-         int height,
+         ITabHost tabHost,
          Font font,
          BuildingScreenContext context) {
       super(
-            index,
-            x,
-            y,
-            width,
-            height,
+            tabHost,
             font,
             Component.translatable("menu.building.residence.info.tab.heading"),
             context);

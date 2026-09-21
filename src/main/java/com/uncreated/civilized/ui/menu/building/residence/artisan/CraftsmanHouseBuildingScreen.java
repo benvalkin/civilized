@@ -13,6 +13,7 @@ import com.uncreated.civilized.ui.menu.building.BuildingSettingsTab;
 import com.uncreated.civilized.ui.menu.building.residence.tabs.ManageResidentsTab;
 import com.uncreated.civilized.ui.menu.building.residence.tabs.ResidenceInfoTab;
 import com.uncreated.civilized.ui.tabs.ATab;
+import com.uncreated.civilized.ui.tabs.ITabHost;
 
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
@@ -24,29 +25,19 @@ public class CraftsmanHouseBuildingScreen extends ABuildingScreen {
    }
 
    @Override
-   protected List<ATab> createTabs(int contentLeftPos, int contentTopPos, int tabWidth, int tabHeight) {
-
-      return List.of(
-            new ResidenceInfoTab(0, contentLeftPos, contentTopPos, tabWidth, tabHeight, this.font, context),
-            new ManageProductionBillsTab(
-                  1,
-                  contentLeftPos,
-                  contentTopPos,
-                  tabWidth,
-                  tabHeight,
-                  this.font,
-                  context,
-                  ProductionTypes.CRAFTING),
-            new ManageResidentsTab(2, contentLeftPos, contentTopPos, tabWidth, tabHeight, this.font, context),
-            new BuildingSettingsTab(3, contentLeftPos, contentTopPos, tabWidth, tabHeight, this.font, context));
+   protected ATab createDefaultTab(ITabHost tabHost) {
+      return new ResidenceInfoTab(tabHost, font, context);
    }
 
    @Override
-   public List<Button> createTabButtons() {
+   public List<Button> createTabButtons(ITabHost tabHost) {
       return List.of(
-            new HomeTabButton(this, 0),
-            new CraftingProductionTabButton(this, 1),
-            new ManageResidentsTabButton(this, 2),
-            new SettingsTabButton(this, 3));
+            new HomeTabButton(tabHost, 0, this::createDefaultTab),
+            new CraftingProductionTabButton(
+                  tabHost,
+                  1,
+                  host -> new ManageProductionBillsTab(host, font, context, ProductionTypes.CRAFTING)),
+            new ManageResidentsTabButton(tabHost, 2, host -> new ManageResidentsTab(host, font, context)),
+            new SettingsTabButton(tabHost, 3, host -> new BuildingSettingsTab(host, font, context)));
    }
 }

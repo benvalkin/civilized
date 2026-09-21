@@ -21,7 +21,8 @@ import com.uncreated.civilized.ui.menu.building.worksite.animalfarm.AnimalFarmBu
 import com.uncreated.civilized.ui.menu.building.worksite.cropfarm.CropFarmBuildingScreen;
 import com.uncreated.civilized.ui.menu.building.worksite.grove.GroveBuildingScreen;
 import com.uncreated.civilized.ui.tabs.AScreenWithTabs;
-import com.uncreated.civilized.ui.tabs.ATab;
+import com.uncreated.civilized.ui.tabs.TabCoords;
+import com.uncreated.civilized.ui.tabs.ITabHost;
 
 import lombok.Getter;
 import net.minecraft.ChatFormatting;
@@ -35,40 +36,33 @@ public abstract class ABuildingScreen extends AScreenWithTabs {
    private static final ResourceLocation MENU_TEXTURE =
          ResourceLocation.fromNamespaceAndPath(CIVILIZED_MOD_ID, "textures/gui/building_menu.png");
 
+   private static final int CONTENT_MARGIN_X = 25;
+   private static final int CONTENT_MARGIN_Y = 20;
+
    @Getter
    protected final BuildingScreenContext context;
-   protected int contentLeftPos;
-   protected int contentTopPos;
-   protected int contentWidth;
-   protected int contentHeight;
+
+   @Getter
+   protected TabCoords tabCoords;
 
    public ABuildingScreen(BuildingScreenContext context, Component title) {
       super(title, 340, 200);
       this.context = context;
    }
 
-   @Override
-   protected final List<ATab> createTabs() {
-      int marginX = 25;
-      int marginY = 20;
-      contentLeftPos = leftPos + marginX;
-      contentTopPos = topPos + marginY;
-      contentWidth = width - (width - imageWidth) - marginX * 2;
-      contentHeight = height - (height - imageHeight) / 2 - marginY; // not sure why contentHeight doesn't need to be
-                                                                     // multiplied
-      // by 2...
-
-      return createTabs(contentLeftPos, contentTopPos, contentWidth, contentHeight);
-   }
-
-   protected abstract List<ATab> createTabs(int contentLeftPos, int contentTopPos, int tabWidth, int tabHeight);
-
-   protected abstract List<Button> createTabButtons();
+   protected abstract List<Button> createTabButtons(ITabHost tabHost);
 
    protected void init() {
       super.init();
 
-      createTabButtons().forEach(this::addRenderableWidget);
+      tabCoords =
+            new TabCoords(
+                  leftPos + CONTENT_MARGIN_X,
+                  topPos + CONTENT_MARGIN_Y,
+                  imageWidth - CONTENT_MARGIN_X * 2,
+                  imageHeight - CONTENT_MARGIN_Y * 2);
+
+      createTabButtons(this).forEach(this::addRenderableWidget);
 
       changeToDefaultTabIfNotSet();
    }

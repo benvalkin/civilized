@@ -8,6 +8,7 @@ import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
 import com.uncreated.civilized.ui.menu.building.ABuildingScreenTab;
 import com.uncreated.civilized.ui.style.Colors;
+import com.uncreated.civilized.ui.tabs.ITabHost;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.Font;
@@ -19,13 +20,9 @@ public class InnMainTab extends ABuildingScreenTab {
 
    private List<VillagerInfo> visitors;
 
-   public InnMainTab(int index, int x, int y, int width, int height, Font font, BuildingScreenContext context) {
+   public InnMainTab(ITabHost tabHost, Font font, BuildingScreenContext context) {
       super(
-            index,
-            x,
-            y,
-            width,
-            height,
+            tabHost,
             font,
             context.settlement()
                   .displayNameTranslationExtended()

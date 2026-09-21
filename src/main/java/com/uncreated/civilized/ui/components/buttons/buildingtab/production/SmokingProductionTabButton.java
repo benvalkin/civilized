@@ -2,8 +2,11 @@ package com.uncreated.civilized.ui.components.buttons.buildingtab.production;
 
 import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
+import java.util.function.Function;
+
 import com.uncreated.civilized.core.building.production.bills.ProductionTypes;
 import com.uncreated.civilized.ui.components.buttons.buildingtab.BuildingTabButton;
+import com.uncreated.civilized.ui.tabs.ATab;
 import com.uncreated.civilized.ui.tabs.ITabHost;
 
 import net.minecraft.client.gui.components.Tooltip;
@@ -14,7 +17,7 @@ public class SmokingProductionTabButton extends BuildingTabButton {
    private static ResourceLocation ICON =
          ResourceLocation.fromNamespaceAndPath(CIVILIZED_MOD_ID, "icon/building_tab_production_smoking");
 
-   public SmokingProductionTabButton(ITabHost tabHost, int buttonTabIndex) {
-      super(tabHost, buttonTabIndex, ICON, Tooltip.create(ProductionTypes.SMOKING.heading()));
+   public SmokingProductionTabButton(ITabHost tabHost, int buttonTabIndex, Function<ITabHost, ATab> createTab) {
+      super(tabHost, buttonTabIndex, ICON, Tooltip.create(ProductionTypes.SMOKING.heading()), createTab);
    }
 }

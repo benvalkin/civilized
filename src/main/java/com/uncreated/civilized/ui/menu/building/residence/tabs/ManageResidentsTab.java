@@ -17,6 +17,7 @@ import com.uncreated.civilized.ui.context.BuildingScreenContext;
 import com.uncreated.civilized.ui.menu.building.ABuildingScreenTab;
 import com.uncreated.civilized.ui.menu.building.widgets.ManageOccupantWidget;
 import com.uncreated.civilized.ui.style.Colors;
+import com.uncreated.civilized.ui.tabs.ITabHost;
 
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -31,25 +32,17 @@ public class ManageResidentsTab extends ABuildingScreenTab {
    private List<VillagerInfo> candidateOccupants;
 
    public ManageResidentsTab(
-         int index,
-         int x,
-         int y,
-         int width,
-         int height,
+         ITabHost tabHost,
          Font font,
          Component component,
          BuildingScreenContext context) {
-      super(index, x, y, width, height, font, component, context);
+      super(tabHost, font, component, context);
       refresh();
    }
 
-   public ManageResidentsTab(int index, int x, int y, int width, int height, Font font, BuildingScreenContext context) {
+   public ManageResidentsTab(ITabHost tabHost, Font font, BuildingScreenContext context) {
       this(
-            index,
-            x,
-            y,
-            width,
-            height,
+            tabHost,
             font,
             Component.translatable("menu.building.residence.residents.tab.heading"),
             context);
@@ -94,7 +87,7 @@ public class ManageResidentsTab extends ABuildingScreenTab {
 
       boolean isBuildingFull = currentOccupants.size() >= getMaxNumberOfOccupants();
 
-      return new ScrollListView<>(getX(), getY() + 30, width, height, elementHeight, new IListViewBuilder<>() {
+      return new ScrollListView<>(getX(), getY() + 30, width, height - 30, elementHeight, new IListViewBuilder<>() {
          @Override
          public List<VillagerInfo> provideModelData() {
             return candidateOccupants.stream()

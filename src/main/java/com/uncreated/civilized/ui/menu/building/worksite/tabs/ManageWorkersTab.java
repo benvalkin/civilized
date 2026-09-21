@@ -11,6 +11,7 @@ import com.uncreated.civilized.ui.context.BuildingScreenContext;
 import com.uncreated.civilized.ui.menu.building.residence.tabs.ManageResidentsTab;
 import com.uncreated.civilized.ui.menu.building.widgets.ManageOccupantWidget;
 import com.uncreated.civilized.ui.menu.building.widgets.ManageWorkerWidget;
+import com.uncreated.civilized.ui.tabs.ITabHost;
 
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
@@ -19,13 +20,9 @@ public class ManageWorkersTab extends ManageResidentsTab {
 
    public static final int MAX_ASSIGNED_WORKERS = 1;
 
-   public ManageWorkersTab(int index, int x, int y, int width, int height, Font font, BuildingScreenContext context) {
+   public ManageWorkersTab(ITabHost tabHost, Font font, BuildingScreenContext context) {
       super(
-            index,
-            x,
-            y,
-            width,
-            height,
+            tabHost,
             font,
             Component.translatable("menu.building.worksite.workers.tab.heading"),
             context);

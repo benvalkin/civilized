@@ -1,13 +1,12 @@
 package com.uncreated.civilized.ui.tabs;
 
-import java.util.List;
-
 import org.jetbrains.annotations.Nullable;
 
 import com.uncreated.civilized.ui.components.IRefreshableUI;
 import com.uncreated.civilized.ui.style.Colors;
 
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
@@ -27,20 +26,28 @@ public abstract class AScreenWithTabs extends Screen implements IRefreshableUI, 
       this.imageHeight = imageHeight;
    }
 
-   protected abstract List<ATab> createTabs();
+   protected abstract ATab createDefaultTab(ITabHost tabHost);
 
    @Override
    protected void init() {
       super.init();
       this.leftPos = (this.width - this.imageWidth) / 2;
       this.topPos = (this.height - this.imageHeight) / 2;
-      tabController = new TabController(createTabs(), this::addWidget, this::removeWidget);
+      tabController = new TabController(this::createDefaultTab, this::addWidget, this::removeWidget);
       // WARNING: this line seems to cause misaligned button clicking for some reason
    }
 
    @Override
-   public ATab changeTab(int newTabIndex) {
-      return tabController.changeTab(newTabIndex);
+   public ATab changeTab(ATab newTab) {
+      return tabController.changeTab(newTab);
+   }
+
+   @Override
+   public void setFocused(@Nullable GuiEventListener listener) {
+      if (listener instanceof ATab tab && tab != tabController.getCurrentTab())
+         listener = null;
+
+      super.setFocused(listener);
    }
 
    public @Nullable ATab getCurrentTab() {
@@ -52,7 +59,7 @@ public abstract class AScreenWithTabs extends Screen implements IRefreshableUI, 
    public abstract int getFirstTabButtonY();
 
    public ATab changeToDefaultTabIfNotSet() {
-      return tabController.changeToDefaultTabIfNotSet();
+      return tabController.changeToDefaultTabIfNotSet(this);
    }
 
    public void renderCurrentTabContents(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {

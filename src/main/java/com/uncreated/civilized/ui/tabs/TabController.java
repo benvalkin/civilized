@@ -1,7 +1,7 @@
 package com.uncreated.civilized.ui.tabs;
 
-import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -18,30 +18,30 @@ public class TabController implements IRefreshableUI {
    // It made much more sense to have a separate TabController class for keeping track of tabs instead of a vase
    // `ScreenWithTabs` class, simply because menu's already extend AbstractContainerMenu.
 
-   private final List<ATab> tabs;
    private final Consumer<ATab> attachTabToScreen;
    private final Consumer<ATab> detachTabFromScreen;
+   private final Function<ITabHost, ATab> defaultTab;
 
    @Getter
    @Nullable
    private ATab currentTab;
 
-   public TabController(List<ATab> tabs, Consumer<ATab> attachTabToScreen, Consumer<ATab> detachTabFromScreen) {
-      if (tabs.isEmpty())
-         throw new IllegalArgumentException("Tabs list cannot be empty.");
-
-      this.tabs = tabs;
+   public TabController(
+         Function<ITabHost, ATab> defaultTab,
+         Consumer<ATab> attachTabToScreen,
+         Consumer<ATab> detachTabFromScreen) {
+      this.defaultTab = defaultTab;
       this.attachTabToScreen = attachTabToScreen;
       this.detachTabFromScreen = detachTabFromScreen;
    }
 
-   public ATab changeTab(int newTabIndex) {
+   public ATab changeTab(ATab newTab) {
       if (currentTab != null) {
          currentTab.onClose();
          detachTabFromScreen.accept(currentTab);
       }
 
-      currentTab = tabs.get(newTabIndex);
+      currentTab = newTab;
       currentTab.init();
       refresh();
       attachTabToScreen.accept(currentTab);
@@ -49,9 +49,11 @@ public class TabController implements IRefreshableUI {
       return currentTab;
    }
 
-   public ATab changeToDefaultTabIfNotSet() {
-      if (currentTab == null)
-         changeTab(0);
+   public ATab changeToDefaultTabIfNotSet(ITabHost tabHost) {
+      if (currentTab == null) {
+         ATab defaultTab = this.defaultTab.apply(tabHost);
+         changeTab(defaultTab);
+      }
 
       return currentTab;
    }

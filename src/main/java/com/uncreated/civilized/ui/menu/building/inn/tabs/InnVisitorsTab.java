@@ -8,6 +8,7 @@ import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
 import com.uncreated.civilized.ui.menu.building.ABuildingScreenTab;
 import com.uncreated.civilized.ui.style.Colors;
+import com.uncreated.civilized.ui.tabs.ITabHost;
 
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -18,8 +19,8 @@ public class InnVisitorsTab extends ABuildingScreenTab {
 
    private List<VillagerInfo> visitors;
 
-   public InnVisitorsTab(int index, int x, int y, int width, int height, Font font, BuildingScreenContext context) {
-      super(index, x, y, width, height, font, Component.literal("Visitors"), context);
+   public InnVisitorsTab(ITabHost tabHost, Font font, BuildingScreenContext context) {
+      super(tabHost, font, Component.literal("Visitors"), context);
       this.visitors = createVisitorsList();
    }
 

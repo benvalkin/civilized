@@ -4,23 +4,23 @@ import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
 import java.util.function.Function;
 
-import com.uncreated.civilized.ui.menu.building.worksite.animalfarm.tabs.TabCoords;
+import com.uncreated.civilized.ui.tabs.TabCoords;
 import com.uncreated.civilized.ui.tabs.ATab;
-import com.uncreated.civilized.ui.tabs.ILazyLoadTabHost;
+import com.uncreated.civilized.ui.tabs.ITabHost;
 
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
-public class AnimalFoodTabButton extends LazyLoadBuildingTabButton {
+public class AnimalFoodTabButton extends BuildingTabButton {
 
    private static final ResourceLocation ICON =
          ResourceLocation.fromNamespaceAndPath(CIVILIZED_MOD_ID, "icon/building_tab_animal_food");
 
    public AnimalFoodTabButton(
-         ILazyLoadTabHost tabHost,
+         ITabHost tabHost,
          int buttonTabIndex,
-         Function<ILazyLoadTabHost, ATab> createTab) {
+         Function<ITabHost, ATab> createTab) {
       super(
             tabHost,
             buttonTabIndex,

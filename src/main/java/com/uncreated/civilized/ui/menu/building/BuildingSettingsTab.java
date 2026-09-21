@@ -6,6 +6,7 @@ import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.ClientBuildingStore;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
 import com.uncreated.civilized.ui.style.Colors;
+import com.uncreated.civilized.ui.tabs.ITabHost;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -26,36 +27,32 @@ public class BuildingSettingsTab extends ABuildingScreenTab {
    private boolean decommissionRequested;
 
    public BuildingSettingsTab(
-         int index,
-         int x,
-         int y,
-         int width,
-         int height,
+         ITabHost tabHost,
          Font font,
          BuildingScreenContext context) {
-      super(index, x, y, width, height, font, Component.translatable("menu.building.settings.tab.heading"), context);
+      super(tabHost, font, Component.translatable("menu.building.settings.tab.heading"), context);
       decommissionRequested = false;
 
       autoAssignOccupants =
             Checkbox.builder(Component.translatable("menu.building.settings.option.auto_assign_occupants"), font)
-                  .pos(x, y + 15)
+                  .pos(getX(), getY() + 15)
                   .maxWidth(width)
                   .build();
 
       decommission =
             Button.builder(
                   Component.translatable("menu.building.settings.option.delete_building"),
-                  this::onPressDecommission).pos(x, y + 40).size(120, 18).build();
+                  this::onPressDecommission).pos(getX(), getY() + 40).size(120, 18).build();
 
       decommissionConfirm =
             Button.builder(Component.translatable("gui.misc.button.confirm"), this::onPressDecommissionConfirm)
-                  .pos(x + width / 2 + 5, height - 20)
+                  .pos(getX() + width / 2 + 5, getBottom() - 20)
                   .size(width / 2 - 5, 18)
                   .build();
 
       decommissionCancel =
             Button.builder(Component.translatable("gui.misc.button.cancel"), this::onPressDecommissionCancel)
-                  .pos(x, height - 20)
+                  .pos(getX(), getBottom() - 20)
                   .size(width / 2 - 5, 18)
                   .build();
 

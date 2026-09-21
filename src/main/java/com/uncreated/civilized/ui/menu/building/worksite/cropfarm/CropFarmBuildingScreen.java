@@ -2,26 +2,36 @@ package com.uncreated.civilized.ui.menu.building.worksite.cropfarm;
 
 import java.util.List;
 
+import com.uncreated.civilized.ui.components.buttons.buildingtab.ManageWorkersTabButton;
+import com.uncreated.civilized.ui.components.buttons.buildingtab.SettingsTabButton;
+import com.uncreated.civilized.ui.components.buttons.buildingtab.WorksiteHomeTabButton;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
+import com.uncreated.civilized.ui.menu.building.ABuildingScreen;
 import com.uncreated.civilized.ui.menu.building.BuildingSettingsTab;
-import com.uncreated.civilized.ui.menu.building.worksite.WorksiteBuildingScreen;
 import com.uncreated.civilized.ui.menu.building.worksite.cropfarm.tabs.CropFarmInfoTab;
 import com.uncreated.civilized.ui.menu.building.worksite.tabs.ManageWorkersTab;
 import com.uncreated.civilized.ui.tabs.ATab;
+import com.uncreated.civilized.ui.tabs.ITabHost;
 
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 
-public class CropFarmBuildingScreen extends WorksiteBuildingScreen {
+public class CropFarmBuildingScreen extends ABuildingScreen {
 
    public CropFarmBuildingScreen(BuildingScreenContext context, Component title) {
       super(context, title);
    }
 
    @Override
-   protected List<ATab> createTabs(int contentLeftPos, int contentTopPos, int tabWidth, int tabHeight) {
+   protected ATab createDefaultTab(ITabHost tabHost) {
+      return new CropFarmInfoTab(tabHost, font, context);
+   }
+
+   @Override
+   public List<Button> createTabButtons(ITabHost tabHost) {
       return List.of(
-            new CropFarmInfoTab(0, contentLeftPos, contentTopPos, tabWidth, tabHeight, this.font, context),
-            new ManageWorkersTab(1, contentLeftPos, contentTopPos, tabWidth, tabHeight, this.font, context),
-            new BuildingSettingsTab(2, contentLeftPos, contentTopPos, tabWidth, tabHeight, this.font, context));
+            new WorksiteHomeTabButton(tabHost, 0, this::createDefaultTab),
+            new ManageWorkersTabButton(tabHost, 1, host -> new ManageWorkersTab(host, font, context)),
+            new SettingsTabButton(tabHost, 2, host -> new BuildingSettingsTab(host, font, context)));
    }
 }
