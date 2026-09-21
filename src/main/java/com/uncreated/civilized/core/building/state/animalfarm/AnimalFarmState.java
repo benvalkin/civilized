@@ -4,19 +4,14 @@ import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventoryType;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
 import com.uncreated.civilized.core.building.state.BuildingState;
-import com.uncreated.civilized.core.building.state.IItemManagementMenuSupplier;
-import com.uncreated.civilized.core.settlement.Settlement;
-import com.uncreated.civilized.ui.menu.building.item.management.ItemManagementMenu;
-import com.uncreated.civilized.ui.menu.building.worksite.animalfarm.items.ChooseAnimalFoodMenu;
+import com.uncreated.civilized.core.building.state.IGhostSlotState;
 
 import lombok.Getter;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.SimpleContainer;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 
-public abstract class AnimalFarmState extends BuildingState implements IItemManagementMenuSupplier {
+public abstract class AnimalFarmState extends BuildingState implements IGhostSlotState {
 
    public static final String FIELD_FOOD_SLOT = "food_slot_";
 
@@ -33,6 +28,7 @@ public abstract class AnimalFarmState extends BuildingState implements IItemMana
       foodSlots[0] = ItemStack.EMPTY;
       foodSlots[1] = ItemStack.EMPTY;
       foodSlots[2] = ItemStack.EMPTY;
+      tryApplyDefaults();
 
       animalFoodRequirement =
             new InventoryStockRequirement(
@@ -47,6 +43,7 @@ public abstract class AnimalFarmState extends BuildingState implements IItemMana
       readItemSlot(0, compoundTag);
       readItemSlot(1, compoundTag);
       readItemSlot(2, compoundTag);
+      tryApplyDefaults();
    }
 
    public CompoundTag toNbt(HolderLookup.Provider registryAccess) {
@@ -74,7 +71,17 @@ public abstract class AnimalFarmState extends BuildingState implements IItemMana
       tag.put(tagKey, foodSlots[i].save(building.getRegistryAccess()));
    }
 
+   /**
+    * Fills in the farm's usual food, but only when nothing has been chosen at all, so the player's choices are never
+    * overwritten. Done on both sides whenever the state is created or read, so that the server breeds with the same
+    * food the player sees on screen.
+    */
    public final void tryApplyDefaults() {
+      for (ItemStack foodSlot : foodSlots) {
+         if (!foodSlot.isEmpty())
+            return;
+      }
+
       tryApplyDefaults(foodSlots);
    }
 
@@ -89,12 +96,27 @@ public abstract class AnimalFarmState extends BuildingState implements IItemMana
    }
 
    @Override
-   public ItemManagementMenu createItemManagementMenu(
-         Integer containerId,
-         Inventory playerInventory,
-         Building building,
-         Settlement settlement) {
-      return new ChooseAnimalFoodMenu(containerId, playerInventory, new SimpleContainer(3), settlement, building);
+   public int getGhostSlotCount() {
+      return NUMBER_OF_FOOD_SLOTS;
+   }
+
+   @Override
+   public ItemStack getGhostSlotItem(int slot) {
+      return getFoodSlot(slot);
+   }
+
+   @Override
+   public boolean isValidGhostSlotItem(int slot, ItemStack stack) {
+      return stack.isEmpty() || isCorrectAnimalFood(stack);
+   }
+
+   @Override
+   public void setGhostSlotItem(int slot, ItemStack stack) {
+      setFoodSlot(slot, stack);
+
+      // clearing the last food slot brings the defaults back straight away, the same as the client does when it reads
+      // the change, so both sides keep breeding with the same food
+      tryApplyDefaults();
    }
 
    public abstract boolean isCorrectAnimalFood(ItemStack itemStack);

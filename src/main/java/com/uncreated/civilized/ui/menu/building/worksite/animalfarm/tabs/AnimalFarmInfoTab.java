@@ -7,7 +7,6 @@ import com.uncreated.civilized.core.building.state.animalfarm.AnimalFarmState;
 import com.uncreated.civilized.core.building.util.BuildingUtil;
 import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
-import com.uncreated.civilized.networking.packets.RequestBuildingItemManagementScreen;
 import com.uncreated.civilized.ui.components.widget.ItemDisplayWidget;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
 import com.uncreated.civilized.ui.menu.building.ABuildingScreenTab;
@@ -16,17 +15,14 @@ import com.uncreated.civilized.ui.style.Colors;
 
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.network.PacketDistributor;
 
 public class AnimalFarmInfoTab extends ABuildingScreenTab {
 
    private final ArrayList<ItemDisplayWidget> itemDisplayWidgets;
    private List<VillagerInfo> workers;
-   private final Button chooseFood;
 
    public AnimalFarmInfoTab(int index, int x, int y, int width, int height, Font font, BuildingScreenContext context) {
       super(
@@ -41,15 +37,6 @@ public class AnimalFarmInfoTab extends ABuildingScreenTab {
       this.workers = createOccupantsList();
 
       itemDisplayWidgets = new ArrayList<>();
-
-      chooseFood =
-            Button.builder(
-                  Component.translatable("menu.building.worksite.animal_farm.edit_allowed_animal_food"),
-                  this::onPressModifyItems).pos(x, height - 18).size(80, 18).build();
-   }
-
-   private void onPressModifyItems(Button button) {
-      PacketDistributor.sendToServer(new RequestBuildingItemManagementScreen(context.building().getBuildingId(), 3));
    }
 
    @Override
@@ -79,8 +66,6 @@ public class AnimalFarmInfoTab extends ABuildingScreenTab {
                false);
       }
 
-      chooseFood.render(graphics, mouseX, mouseY, partialTicks);
-
       graphics.drawString(
             font,
             Component.translatable("menu.building.worksite.animal_farm.allowed_animal_food.heading"),
@@ -95,7 +80,7 @@ public class AnimalFarmInfoTab extends ABuildingScreenTab {
 
    @Override
    public List<? extends GuiEventListener> children() {
-      return List.of(chooseFood);
+      return List.of();
    }
 
    private List<VillagerInfo> createOccupantsList() {
@@ -107,7 +92,6 @@ public class AnimalFarmInfoTab extends ABuildingScreenTab {
       this.workers = createOccupantsList();
 
       AnimalFarmState animalFarmState = (AnimalFarmState) context.building().getState();
-      animalFarmState.tryApplyDefaults();
 
       itemDisplayWidgets.clear();
       for (int i = 0; i < AnimalFarmState.NUMBER_OF_FOOD_SLOTS; i++) {

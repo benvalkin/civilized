@@ -23,6 +23,10 @@ public abstract class ATab extends AbstractContainerWidget implements IRefreshab
 
    }
 
+   public boolean showsPlayerInventory() {
+      return false;
+   }
+
    protected void onClose() {
 
    }

@@ -8,8 +8,6 @@ import com.uncreated.civilized.ui.menu.building.residence.artisan.singleitem.Edi
 import com.uncreated.civilized.ui.menu.building.residence.artisan.singleitem.EditSmeltingRecipeScreen;
 import com.uncreated.civilized.ui.menu.building.residence.artisan.singleitem.EditSmokingRecipeMenu;
 import com.uncreated.civilized.ui.menu.building.residence.artisan.singleitem.EditSmokingRecipeScreen;
-import com.uncreated.civilized.ui.menu.building.worksite.animalfarm.items.ChooseAnimalFoodMenu;
-import com.uncreated.civilized.ui.menu.building.worksite.animalfarm.items.ChooseAnimalFoodScreen;
 import com.uncreated.civilized.ui.menu.building.BuildingMenu;
 import com.uncreated.civilized.ui.menu.building.worksite.animalfarm.AnimalFarmBuildingScreen;
 import com.uncreated.civilized.ui.menu.building.worksite.cropfarm.items.ChooseCropsMenu;
@@ -59,18 +57,6 @@ public class GuiSetupEvents {
                         buildingMenu,
                         inventory,
                         Component.translatable("menu.building.worksite.grove.allowed_saplings.description")));
-
-      event.register(
-            GuiRegistry.CHOOSE_ANIMAL_FOOD_MENU.get(), // do not remove cast - it seems to cause compile errors even
-                                                       // though
-            // intellij thinks its redundant
-            (MenuScreens.ScreenConstructor<ChooseAnimalFoodMenu, ChooseAnimalFoodScreen>) (
-                  buildingMenu,
-                  inventory,
-                  component) -> new ChooseAnimalFoodScreen(
-                        buildingMenu,
-                        inventory,
-                        Component.translatable("menu.building.worksite.animal_farm.allowed_animal_food.description")));
 
       event.register(
             GuiRegistry.EDIT_CRAFTING_RECIPE_MENU.get(), // do not remove cast - it seems to cause compile errors even

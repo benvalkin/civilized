@@ -8,7 +8,6 @@ import com.uncreated.civilized.ui.menu.building.residence.artisan.crafting.EditC
 import com.uncreated.civilized.ui.menu.building.residence.artisan.singleitem.EditBlastingRecipeMenu;
 import com.uncreated.civilized.ui.menu.building.residence.artisan.singleitem.EditSmeltingRecipeMenu;
 import com.uncreated.civilized.ui.menu.building.residence.artisan.singleitem.EditSmokingRecipeMenu;
-import com.uncreated.civilized.ui.menu.building.worksite.animalfarm.items.ChooseAnimalFoodMenu;
 import com.uncreated.civilized.ui.menu.building.BuildingMenu;
 import com.uncreated.civilized.ui.menu.building.worksite.cropfarm.items.ChooseCropsMenu;
 import com.uncreated.civilized.ui.menu.building.worksite.grove.items.ChooseSaplingsMenu;
@@ -30,9 +29,6 @@ public class GuiRegistry {
 
    public static final Supplier<MenuType<ChooseSaplingsMenu>> CHOOSE_SAPLINGS_MENU =
          MENUS.register("choose_saplings_menu", () -> IMenuTypeExtension.create(ChooseSaplingsMenu::new));
-
-   public static final Supplier<MenuType<ChooseAnimalFoodMenu>> CHOOSE_ANIMAL_FOOD_MENU =
-         MENUS.register("choose_animal_food_menu", () -> IMenuTypeExtension.create(ChooseAnimalFoodMenu::new));
 
    public static final Supplier<MenuType<EditCraftingRecipeMenu>> EDIT_CRAFTING_RECIPE_MENU =
          MENUS.register("edit_crafting_recipe_menu", () -> IMenuTypeExtension.create(EditCraftingRecipeMenu::new));
