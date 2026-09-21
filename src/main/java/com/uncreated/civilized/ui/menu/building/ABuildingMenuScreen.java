@@ -134,6 +134,7 @@ public abstract class ABuildingMenuScreen extends AbstractContainerScreen<Buildi
 
    @Override
    protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
+      // commented out the below line as it might be better for GUI space not to render the the building name at the top
       // graphics.drawString(font, title, titleLabelX, titleLabelY, Colors.MENU_TEXT_DARK, false);
 
       // the inventory heading would otherwise sit on its own above nothing
