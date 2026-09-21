@@ -5,6 +5,7 @@ import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 import java.util.List;
 import java.util.Optional;
 
+import com.uncreated.civilized.ui.components.SlotFrameRenderer;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
 import com.uncreated.civilized.ui.style.Colors;
 import com.uncreated.civilized.ui.tabs.ATab;
@@ -110,6 +111,12 @@ public abstract class ABuildingMenuScreen extends AbstractContainerScreen<Buildi
             this.imageHeight,
             384,
             384);
+
+      // the background texture has no slots painted on it, since the inventory only shows on some tabs
+      for (Slot slot : menu.slots) {
+         if (slot.isActive())
+            SlotFrameRenderer.render(graphics, leftPos + slot.x, topPos + slot.y);
+      }
    }
 
    @Override

@@ -4,6 +4,8 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import com.uncreated.civilized.ui.components.SlotFrameRenderer;
+
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -18,9 +20,6 @@ public class GhostSlotWidget extends AbstractWidget {
    public static final int SIZE = 16;
    /** The same white overlay vanilla draws over a hovered slot. */
    private static final int SLOT_HIGHLIGHT_COLOR = 0x80FFFFFF;
-   private static final int SLOT_BACKGROUND_COLOR = 0xFF8B8B8B;
-   private static final int SLOT_SHADOW_COLOR = 0xFF373737;
-   private static final int SLOT_LIGHT_COLOR = 0xFFFFFFFF;
 
    private final Supplier<ItemStack> currentItem;
    private final Consumer<ItemStack> onItemChosen;
@@ -63,7 +62,7 @@ public class GhostSlotWidget extends AbstractWidget {
    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
       ItemStack item = currentItem.get();
 
-      renderSlotFrame(graphics);
+      SlotFrameRenderer.render(graphics, getX(), getY());
 
       if (isHovered())
          graphics.fill(getX(), getY(), getX() + SIZE, getY() + SIZE, SLOT_HIGHLIGHT_COLOR);
@@ -76,22 +75,6 @@ public class GhostSlotWidget extends AbstractWidget {
 
       if (isHovered())
          graphics.renderTooltip(Minecraft.getInstance().font, item, mouseX, mouseY);
-   }
-
-   /**
-    * Draws the same sunken square vanilla uses for inventory slots, so the slot can be seen while it is empty.
-    */
-   private void renderSlotFrame(GuiGraphics graphics) {
-      int left = getX() - 1;
-      int top = getY() - 1;
-      int right = getX() + SIZE + 1;
-      int bottom = getY() + SIZE + 1;
-
-      graphics.fill(left, top, right, bottom, SLOT_BACKGROUND_COLOR);
-      graphics.fill(left, top, right - 1, top + 1, SLOT_SHADOW_COLOR);
-      graphics.fill(left, top, left + 1, bottom - 1, SLOT_SHADOW_COLOR);
-      graphics.fill(left + 1, bottom - 1, right, bottom, SLOT_LIGHT_COLOR);
-      graphics.fill(right - 1, top + 1, right, bottom, SLOT_LIGHT_COLOR);
    }
 
    @Override
