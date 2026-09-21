@@ -4,7 +4,6 @@ import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
 import java.util.function.Function;
 
-import com.uncreated.civilized.ui.menu.building.worksite.animalfarm.tabs.TabCoords;
 import com.uncreated.civilized.ui.tabs.ATab;
 import com.uncreated.civilized.ui.tabs.ILazyLoadTabHost;
 
@@ -12,12 +11,12 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
-public class AnimalFoodTabButton extends LazyLoadBuildingTabButton {
+public class LazyLoadSettingsTabButton extends LazyLoadBuildingTabButton {
 
-   private static final ResourceLocation ICON =
-         ResourceLocation.fromNamespaceAndPath(CIVILIZED_MOD_ID, "icon/building_tab_animal_food");
+   private static ResourceLocation ICON =
+         ResourceLocation.fromNamespaceAndPath(CIVILIZED_MOD_ID, "icon/building_tab_settings");
 
-   public AnimalFoodTabButton(
+   public LazyLoadSettingsTabButton(
          ILazyLoadTabHost tabHost,
          int buttonTabIndex,
          Function<ILazyLoadTabHost, ATab> createTab) {
@@ -25,7 +24,7 @@ public class AnimalFoodTabButton extends LazyLoadBuildingTabButton {
             tabHost,
             buttonTabIndex,
             ICON,
-            Tooltip.create(Component.translatable("menu.building.worksite.animal_farm.edit_allowed_animal_food")),
+            Tooltip.create(Component.translatable("menu.building.settings.tab.heading")),
             createTab);
    }
 }

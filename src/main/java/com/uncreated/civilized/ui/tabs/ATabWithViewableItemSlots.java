@@ -6,6 +6,8 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import com.uncreated.civilized.ui.menu.building.worksite.animalfarm.tabs.TabCoords;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -25,7 +27,7 @@ public abstract class ATabWithViewableItemSlots extends ATab {
    private @Nullable Slot hoveredSlot;
 
    public ATabWithViewableItemSlots(int index, int x, int y, int width, int height, Font font) {
-      super(index, x, y, width, height, font);
+      super(index, new TabCoords(x, y, width, height), font);
    }
 
    @Override

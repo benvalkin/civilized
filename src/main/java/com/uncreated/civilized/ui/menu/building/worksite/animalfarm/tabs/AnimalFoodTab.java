@@ -7,8 +7,9 @@ import com.uncreated.civilized.core.building.state.animalfarm.AnimalFarmState;
 import com.uncreated.civilized.networking.packets.SetEyeDropperSlotItem;
 import com.uncreated.civilized.ui.components.widget.EyeDropperSlotWidget;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
-import com.uncreated.civilized.ui.menu.building.ABuildingScreenTab;
+import com.uncreated.civilized.ui.menu.building.ALazyLoadBuildingScreenTab;
 import com.uncreated.civilized.ui.style.Colors;
+import com.uncreated.civilized.ui.tabs.ILazyLoadTabHost;
 
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -17,7 +18,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-public class AnimalFoodTab extends ABuildingScreenTab {
+public class AnimalFoodTab extends ALazyLoadBuildingScreenTab {
 
    private static final int DESCRIPTION_Y = 12;
    private static final int SLOTS_Y = 38;
@@ -26,40 +27,32 @@ public class AnimalFoodTab extends ABuildingScreenTab {
    private final List<EyeDropperSlotWidget> foodSlots = new ArrayList<>();
 
    public AnimalFoodTab(
-         int index,
-         int x,
-         int y,
-         int width,
-         int height,
+         ILazyLoadTabHost tabHost,
          Font font,
          BuildingScreenContext context,
          AbstractContainerScreen<?> screen) {
       super(
-            index,
-            x,
-            y,
-            width,
-            height,
+            tabHost,
             font,
             Component.translatable("menu.building.worksite.animal_farm.allowed_animal_food.heading"),
             context);
 
+      int x = tabHost.getTabCoords().contentLeftPos();
+      int y = tabHost.getTabCoords().contentTopPos();
       int slotsWidth = EyeDropperSlotWidget.SIZE + (AnimalFarmState.NUMBER_OF_FOOD_SLOTS - 1) * SLOT_SPACING;
       int firstSlotX = x + (width - slotsWidth) / 2;
 
       for (int i = 0; i < AnimalFarmState.NUMBER_OF_FOOD_SLOTS; i++) {
          int foodSlot = i;
-         foodSlots
-               .add(
-                     new EyeDropperSlotWidget(
-                           screen,
-                           firstSlotX + i * SLOT_SPACING,
-                           y + SLOTS_Y,
-                           () -> animalFarmState().getFoodSlot(foodSlot),
-                           stack -> animalFarmState().isCorrectAnimalFood(stack),
-                           stack -> PacketDistributor
-                                 .sendToServer(
-                                       new SetEyeDropperSlotItem(context.building().getBuildingId(), foodSlot, stack))));
+         foodSlots.add(
+               new EyeDropperSlotWidget(
+                     screen,
+                     firstSlotX + i * SLOT_SPACING,
+                     y + SLOTS_Y,
+                     () -> animalFarmState().getFoodSlot(foodSlot),
+                     stack -> animalFarmState().isCorrectAnimalFood(stack),
+                     stack -> PacketDistributor.sendToServer(
+                           new SetEyeDropperSlotItem(context.building().getBuildingId(), foodSlot, stack))));
       }
    }
 

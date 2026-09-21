@@ -5,12 +5,15 @@ import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 import java.util.List;
 import java.util.Optional;
 
+import org.jetbrains.annotations.Nullable;
+
 import com.uncreated.civilized.ui.components.SlotFrameRenderer;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
+import com.uncreated.civilized.ui.menu.building.worksite.animalfarm.tabs.TabCoords;
 import com.uncreated.civilized.ui.style.Colors;
 import com.uncreated.civilized.ui.tabs.ATab;
-import com.uncreated.civilized.ui.tabs.ITabHost;
-import com.uncreated.civilized.ui.tabs.TabController;
+import com.uncreated.civilized.ui.tabs.ILazyLoadTabHost;
+import com.uncreated.civilized.ui.tabs.LazyLoadTabController;
 
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
@@ -27,7 +30,7 @@ import net.minecraft.world.inventory.Slot;
  * The tabbed screen of a building. It is backed by {@link BuildingMenu} so that the player's inventory is available for
  * certain actions (e.g. Editing Recipe tabs). Switching between them never opens or closes a menu.
  */
-public abstract class ABuildingMenuScreen extends AbstractContainerScreen<BuildingMenu> implements ITabHost {
+public abstract class ABuildingMenuScreen extends AbstractContainerScreen<BuildingMenu> implements ILazyLoadTabHost {
 
    private static final ResourceLocation MENU_TEXTURE =
          ResourceLocation.fromNamespaceAndPath(CIVILIZED_MOD_ID, "textures/gui/building_menu.png");
@@ -38,12 +41,10 @@ public abstract class ABuildingMenuScreen extends AbstractContainerScreen<Buildi
    @Getter
    protected final BuildingScreenContext context;
 
-   private TabController tabController;
+   private LazyLoadTabController tabController;
 
-   protected int contentLeftPos;
-   protected int contentTopPos;
-   protected int contentWidth;
-   protected int contentHeight;
+   @Getter
+   protected TabCoords tabCoords;
 
    public ABuildingMenuScreen(BuildingMenu menu, Inventory playerInventory, Component title) {
       super(menu, playerInventory, title);
@@ -56,36 +57,48 @@ public abstract class ABuildingMenuScreen extends AbstractContainerScreen<Buildi
       this.inventoryLabelY = this.imageHeight - 125;
    }
 
-   protected abstract List<ATab> createTabs(int contentLeftPos, int contentTopPos, int tabWidth, int tabHeight);
+   protected abstract ATab createDefaultTab(ILazyLoadTabHost tabHost);
 
-   protected abstract List<Button> createTabButtons();
+   protected abstract List<Button> createTabButtons(ILazyLoadTabHost tabHost);
 
    @Override
    protected void init() {
       super.init();
 
-      contentLeftPos = leftPos + CONTENT_MARGIN_X;
-      contentTopPos = topPos + CONTENT_MARGIN_Y;
-      contentWidth = imageWidth - CONTENT_MARGIN_X * 2;
-      contentHeight = imageHeight - CONTENT_MARGIN_Y;
+      tabCoords =
+            new TabCoords(
+                  leftPos + CONTENT_MARGIN_X,
+                  topPos + CONTENT_MARGIN_Y,
+                  imageWidth - CONTENT_MARGIN_X * 2,
+                  imageHeight - CONTENT_MARGIN_Y);
 
-      tabController =
-            new TabController(
-                  createTabs(contentLeftPos, contentTopPos, contentWidth, contentHeight),
-                  this::addWidget,
-                  this::removeWidget);
+      tabController = new LazyLoadTabController(this::createDefaultTab, this::addWidget, this::removeWidget);
 
-      createTabButtons().forEach(this::addRenderableWidget);
+      createTabButtons(this).forEach(this::addRenderableWidget);
 
-      ATab openTab = tabController.changeToDefaultTabIfNotSet();
+      ATab openTab = tabController.changeToDefaultTabIfNotSet(this);
       menu.setPlayerInventoryVisible(openTab.showsPlayerInventory());
    }
 
    @Override
-   public ATab changeTab(int newTabIndex) {
-      ATab newTab = tabController.changeTab(newTabIndex);
+   public ATab changeTab(ATab newTab) {
+      tabController.changeTab(newTab);
       menu.setPlayerInventoryVisible(newTab.showsPlayerInventory());
       return newTab;
+   }
+
+   /**
+    * Child widgets of the Building Screen (particularly buttons inside them) can change tabs. Minecraft focuses
+    * whatever widget took the click once the click is done, which by then is the tab that was just switched away from
+    * and is no longer on the screen. In this method override, we ensure that focus is always on the current tab -
+    * otherwise, remove tabs will still receive GUI events such a mouse clicks etc.
+    */
+   @Override
+   public void setFocused(@Nullable GuiEventListener listener) {
+      if (listener instanceof ATab tab && tab != tabController.getCurrentTab())
+         listener = null;
+
+      super.setFocused(listener);
    }
 
    @Override

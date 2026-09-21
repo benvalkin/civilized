@@ -2,6 +2,7 @@ package com.uncreated.civilized.ui.tabs;
 
 import com.uncreated.civilized.ui.components.IRefreshableUI;
 
+import com.uncreated.civilized.ui.menu.building.worksite.animalfarm.tabs.TabCoords;
 import lombok.Getter;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.AbstractContainerWidget;
@@ -13,8 +14,8 @@ public abstract class ATab extends AbstractContainerWidget implements IRefreshab
    protected final int index;
    protected final Font font;
 
-   public ATab(int index, int x, int y, int width, int height, Font font) {
-      super(x, y, width, height, Component.literal("Tab placeholder"));
+   public ATab(int index, TabCoords tabCoords, Font font) {
+      super(tabCoords.contentLeftPos(), tabCoords.contentTopPos(), tabCoords.tabWidth(), tabCoords.tabHeight(), Component.literal("Tab placeholder"));
       this.index = index;
       this.font = font;
    }

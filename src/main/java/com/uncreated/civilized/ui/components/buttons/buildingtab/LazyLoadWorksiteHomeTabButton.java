@@ -12,12 +12,12 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
-public class AnimalFoodTabButton extends LazyLoadBuildingTabButton {
+public class LazyLoadWorksiteHomeTabButton extends LazyLoadBuildingTabButton {
 
-   private static final ResourceLocation ICON =
-         ResourceLocation.fromNamespaceAndPath(CIVILIZED_MOD_ID, "icon/building_tab_animal_food");
+   private static ResourceLocation ICON =
+         ResourceLocation.fromNamespaceAndPath(CIVILIZED_MOD_ID, "icon/building_tab_worksite_home");
 
-   public AnimalFoodTabButton(
+   public LazyLoadWorksiteHomeTabButton(
          ILazyLoadTabHost tabHost,
          int buttonTabIndex,
          Function<ILazyLoadTabHost, ATab> createTab) {
@@ -25,7 +25,7 @@ public class AnimalFoodTabButton extends LazyLoadBuildingTabButton {
             tabHost,
             buttonTabIndex,
             ICON,
-            Tooltip.create(Component.translatable("menu.building.worksite.animal_farm.edit_allowed_animal_food")),
+            Tooltip.create(Component.translatable("menu.building.residence.info.tab.heading")),
             createTab);
    }
 }
