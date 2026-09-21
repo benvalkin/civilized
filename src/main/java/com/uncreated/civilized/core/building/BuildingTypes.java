@@ -172,7 +172,7 @@ public class BuildingTypes {
                .supportedProductionTypes(List.of(ProductionTypes.CRAFTING, ProductionTypes.SMELTING))
                .createState(BakeryState::new)
                .createBehaviour(ArtisanHouseBehaviour::new)
-               .buildingScreenSupplier(BakeryBuildingScreen::new)
+               .buildingMenuScreenSupplier(BakeryBuildingScreen::new)
                .occupation(() -> VillagerOccupations.BAKER)
                .build());
 
@@ -182,7 +182,7 @@ public class BuildingTypes {
                .supportedProductionTypes(List.of(ProductionTypes.CRAFTING, ProductionTypes.SMOKING))
                .createState(ButcheryState::new)
                .createBehaviour(ArtisanHouseBehaviour::new)
-               .buildingScreenSupplier(ButcheryBuildingScreen::new)
+               .buildingMenuScreenSupplier(ButcheryBuildingScreen::new)
                .occupation(() -> VillagerOccupations.BUTCHER)
                .build());
 
@@ -192,7 +192,7 @@ public class BuildingTypes {
                .supportedProductionTypes(List.of(ProductionTypes.CRAFTING, ProductionTypes.BLASTING))
                .createState(BlacksmithHouseState::new)
                .createBehaviour(ArtisanHouseBehaviour::new)
-               .buildingScreenSupplier(BlacksmithBuildingScreen::new)
+               .buildingMenuScreenSupplier(BlacksmithBuildingScreen::new)
                .occupation(() -> VillagerOccupations.BLACKSMITH)
                .build());
 
@@ -202,7 +202,7 @@ public class BuildingTypes {
                .supportedProductionTypes(List.of(ProductionTypes.CRAFTING, ProductionTypes.SMELTING))
                .createState(MasonHouseState::new)
                .createBehaviour(ArtisanHouseBehaviour::new)
-               .buildingScreenSupplier(MasonBuildingScreen::new)
+               .buildingMenuScreenSupplier(MasonBuildingScreen::new)
                .occupation(() -> VillagerOccupations.MASON)
                .build());
 
@@ -212,7 +212,7 @@ public class BuildingTypes {
                .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                .createState(CarpenterHouseState::new)
                .createBehaviour(ArtisanHouseBehaviour::new)
-               .buildingScreenSupplier(CraftsmanHouseBuildingScreen::new)
+               .buildingMenuScreenSupplier(CraftsmanHouseBuildingScreen::new)
                .occupation(() -> VillagerOccupations.CARPENTER)
                .build());
 
@@ -222,7 +222,7 @@ public class BuildingTypes {
                .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                .createState(ToolsmithHouseState::new)
                .createBehaviour(ArtisanHouseBehaviour::new)
-               .buildingScreenSupplier(CraftsmanHouseBuildingScreen::new)
+               .buildingMenuScreenSupplier(CraftsmanHouseBuildingScreen::new)
                .occupation(() -> VillagerOccupations.TOOLSMITH)
                .build());
 
@@ -232,7 +232,7 @@ public class BuildingTypes {
                .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                .createState(WeaponsmithHouseState::new)
                .createBehaviour(ArtisanHouseBehaviour::new)
-               .buildingScreenSupplier(CraftsmanHouseBuildingScreen::new)
+               .buildingMenuScreenSupplier(CraftsmanHouseBuildingScreen::new)
                .occupation(() -> VillagerOccupations.WEAPONSMITH)
                .build());
 
@@ -242,7 +242,7 @@ public class BuildingTypes {
                .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                .createState(ArmorerHouseState::new)
                .createBehaviour(ArtisanHouseBehaviour::new)
-               .buildingScreenSupplier(CraftsmanHouseBuildingScreen::new)
+               .buildingMenuScreenSupplier(CraftsmanHouseBuildingScreen::new)
                .occupation(() -> VillagerOccupations.ARMORER)
                .build());
 
@@ -252,7 +252,7 @@ public class BuildingTypes {
                .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                .createState(LeatherworkerHouseState::new)
                .createBehaviour(ArtisanHouseBehaviour::new)
-               .buildingScreenSupplier(CraftsmanHouseBuildingScreen::new)
+               .buildingMenuScreenSupplier(CraftsmanHouseBuildingScreen::new)
                .occupation(() -> VillagerOccupations.LEATHERWORKER)
                .build());
    public static BuildingType WEAVER_HOUSE =
@@ -261,7 +261,7 @@ public class BuildingTypes {
                .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                .createState(WeaverHouseState::new)
                .createBehaviour(ArtisanHouseBehaviour::new)
-               .buildingScreenSupplier(CraftsmanHouseBuildingScreen::new)
+               .buildingMenuScreenSupplier(CraftsmanHouseBuildingScreen::new)
                .occupation(() -> VillagerOccupations.WEAVER)
                .build());
 
@@ -271,7 +271,7 @@ public class BuildingTypes {
                .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                .createState(FletcherHouseState::new)
                .createBehaviour(ArtisanHouseBehaviour::new)
-               .buildingScreenSupplier(CraftsmanHouseBuildingScreen::new)
+               .buildingMenuScreenSupplier(CraftsmanHouseBuildingScreen::new)
                .occupation(() -> VillagerOccupations.FLETCHER)
                .build());
 
@@ -281,7 +281,7 @@ public class BuildingTypes {
                .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                .createState(CartographerHouseState::new)
                .createBehaviour(ArtisanHouseBehaviour::new)
-               .buildingScreenSupplier(CraftsmanHouseBuildingScreen::new)
+               .buildingMenuScreenSupplier(CraftsmanHouseBuildingScreen::new)
                .occupation(() -> VillagerOccupations.CARTOGRAPHER)
                .build());
 
@@ -291,7 +291,7 @@ public class BuildingTypes {
                .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                .createState(ArtistHouseState::new)
                .createBehaviour(ArtisanHouseBehaviour::new)
-               .buildingScreenSupplier(CraftsmanHouseBuildingScreen::new)
+               .buildingMenuScreenSupplier(CraftsmanHouseBuildingScreen::new)
                .occupation(() -> VillagerOccupations.ARTIST)
                .build());
 

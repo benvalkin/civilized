@@ -8,8 +8,8 @@ import com.uncreated.civilized.ui.components.buttons.buildingtab.ManageResidents
 import com.uncreated.civilized.ui.components.buttons.buildingtab.SettingsTabButton;
 import com.uncreated.civilized.ui.components.buttons.buildingtab.production.CraftingProductionTabButton;
 import com.uncreated.civilized.ui.components.buttons.buildingtab.production.SmeltingProductionTabButton;
-import com.uncreated.civilized.ui.context.BuildingScreenContext;
-import com.uncreated.civilized.ui.menu.building.ABuildingScreen;
+import com.uncreated.civilized.ui.menu.building.ABuildingMenuScreen;
+import com.uncreated.civilized.ui.menu.building.BuildingMenu;
 import com.uncreated.civilized.ui.menu.building.BuildingSettingsTab;
 import com.uncreated.civilized.ui.menu.building.residence.tabs.ManageResidentsTab;
 import com.uncreated.civilized.ui.menu.building.residence.tabs.ResidenceInfoTab;
@@ -18,11 +18,12 @@ import com.uncreated.civilized.ui.tabs.ITabHost;
 
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Inventory;
 
-public class MasonBuildingScreen extends ABuildingScreen {
+public class MasonBuildingScreen extends ABuildingMenuScreen {
 
-   public MasonBuildingScreen(BuildingScreenContext context, Component title) {
-      super(context, title);
+   public MasonBuildingScreen(BuildingMenu menu, Inventory playerInventory, Component title) {
+      super(menu, playerInventory, title);
    }
 
    @Override
