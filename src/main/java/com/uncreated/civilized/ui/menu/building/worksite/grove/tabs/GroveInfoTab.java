@@ -1,17 +1,18 @@
 package com.uncreated.civilized.ui.menu.building.worksite.grove.tabs;
 
 import java.util.List;
+import java.util.function.Function;
 
 import com.uncreated.civilized.core.building.state.GroveState;
 import com.uncreated.civilized.core.building.util.BuildingUtil;
 import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
-import com.uncreated.civilized.networking.packets.RequestBuildingItemManagementScreen;
 import com.uncreated.civilized.ui.components.widget.ItemDisplayWidget;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
 import com.uncreated.civilized.ui.menu.building.ABuildingScreenTab;
 import com.uncreated.civilized.ui.menu.building.worksite.tabs.ManageWorkersTab;
 import com.uncreated.civilized.ui.style.Colors;
+import com.uncreated.civilized.ui.tabs.ATab;
 import com.uncreated.civilized.ui.tabs.ITabHost;
 
 import net.minecraft.client.gui.Font;
@@ -19,7 +20,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
-import net.neoforged.neoforge.network.PacketDistributor;
 
 public class GroveInfoTab extends ABuildingScreenTab {
 
@@ -27,7 +27,11 @@ public class GroveInfoTab extends ABuildingScreenTab {
    private List<VillagerInfo> workers;
    private final Button chooseSaplings;
 
-   public GroveInfoTab(ITabHost tabHost, Font font, BuildingScreenContext context) {
+   public GroveInfoTab(
+         ITabHost tabHost,
+         Font font,
+         BuildingScreenContext context,
+         Function<ITabHost, ATab> createSaplingTab) {
       super(
             tabHost,
             font,
@@ -44,11 +48,7 @@ public class GroveInfoTab extends ABuildingScreenTab {
                   // notice how if the button's 'x' is set to the parent's width, the button seems to render right to
                   // left...
                   // is this a feature??
-                  this::onPressModifyItems).pos(getX(), getBottom() - 18).size(80, 18).build();
-   }
-
-   private void onPressModifyItems(Button button) {
-      PacketDistributor.sendToServer(new RequestBuildingItemManagementScreen(context.building().getBuildingId(), 1));
+                  button -> tabHost.changeTab(createSaplingTab.apply(tabHost))).pos(getX(), getBottom() - 18).size(80, 18).build();
    }
 
    @Override

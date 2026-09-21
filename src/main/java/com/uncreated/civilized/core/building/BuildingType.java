@@ -46,6 +46,10 @@ public class BuildingType {
    @Builder.Default
    private final Supplier<VillagerOccupation> occupation = () -> VillagerOccupations.UNEMPLOYED;
    @Builder.Default
+   // TODO: on dedicated servers, there are no GUI files, so we can't reference the class `ABuildingScreen` at all
+   // because Java's classloader won't find the class. A better solution is a building type to screen table, which also
+   // benefits different
+   // mod loaders.
    private final BiFunction<BuildingScreenContext, Component, ABuildingScreen> buildingScreenSupplier =
          ResidenceBuildingScreen::new;
 
@@ -91,6 +95,14 @@ public class BuildingType {
    public MutableComponent translationDark() {
       return Component.translatableWithFallback(translationKey(), resourceLocation.getPath().replace("_", " "))
             .withColor(Colors.BUILDING_DARK);
+   }
+
+   public MutableComponent shortName() {
+      return Component
+            .translatableWithFallback(
+                  resourceLocation.getNamespace() + ".building.short_name." + resourceLocation.getPath(),
+                  resourceLocation.getPath().replace("_", " "))
+            .withColor(Colors.BUILDING_LIGHT);
    }
 
    @Override

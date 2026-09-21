@@ -13,7 +13,6 @@ import com.uncreated.civilized.ui.tabs.ITabHost;
 
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
@@ -27,16 +26,8 @@ public class CropsTab extends ABuildingScreenTab {
 
    private final List<EyeDropperSlotWidget> cropSlots = new ArrayList<>();
 
-   public CropsTab(
-         ITabHost tabHost,
-         Font font,
-         BuildingScreenContext context,
-         AbstractContainerScreen<?> screen) {
-      super(
-            tabHost,
-            font,
-            Component.translatable("menu.building.worksite.crop_farm.allowed_crops.heading"),
-            context);
+   public CropsTab(ITabHost tabHost, Font font, BuildingScreenContext context, AbstractContainerScreen<?> screen) {
+      super(tabHost, font, Component.translatable("menu.building.worksite.crop_farm.allowed_crops.heading"), context);
 
       int x = tabHost.getTabCoords().contentLeftPos();
       int y = tabHost.getTabCoords().contentTopPos();
@@ -56,10 +47,6 @@ public class CropsTab extends ABuildingScreenTab {
                            new SetEyeDropperSlotItem(context.building().getBuildingId(), cropSlot, stack))));
       }
    }
-
-    private Button.OnPress openChooseFoodTab(ITabHost tabHost, BuildingScreenContext context, AbstractContainerScreen<?> screen) {
-        return b -> new CropsTab(tabHost, font, context, screen);
-    }
 
    private CropFarmState cropFarmState() {
       return (CropFarmState) context.building().getState();

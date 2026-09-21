@@ -15,7 +15,6 @@ import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.networking.packets.CreateNewBuilding;
 import com.uncreated.civilized.networking.packets.EditProductionBillUpdateState;
-import com.uncreated.civilized.networking.packets.RequestBuildingItemManagementScreen;
 import com.uncreated.civilized.networking.packets.SetEyeDropperSlotItem;
 import com.uncreated.civilized.networking.packets.RequestEditRecipeProductionScreen;
 import com.uncreated.civilized.networking.packets.ShowBuildingScreen;
@@ -73,11 +72,6 @@ public class PacketRegistry {
             ShowBuildingScreen.TYPE,
             ShowBuildingScreen.STREAM_CODEC,
             ShowBuildingScreen::clientReceiveShowBuildingScreen);
-
-      registrar.playToServer(
-            RequestBuildingItemManagementScreen.TYPE,
-            RequestBuildingItemManagementScreen.STREAM_CODEC,
-            RequestBuildingItemManagementScreen::serverReceiveRequestScreen);
 
       registrar.playToServer(
             SetEyeDropperSlotItem.TYPE,

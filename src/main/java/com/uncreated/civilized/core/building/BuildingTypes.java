@@ -369,7 +369,7 @@ public class BuildingTypes {
          declare(BuildingType.builder(createResourceKey("grove"))
                .isWorksite(true)
                .createState(GroveState::new)
-               .buildingScreenSupplier(GroveBuildingScreen::new)
+               .buildingMenuScreenSupplier(GroveBuildingScreen::new)
                .occupation(() -> VillagerOccupations.WOODCUTTER)
                .build());
 }

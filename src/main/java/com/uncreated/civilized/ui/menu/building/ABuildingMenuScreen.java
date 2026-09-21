@@ -9,11 +9,11 @@ import org.jetbrains.annotations.Nullable;
 
 import com.uncreated.civilized.ui.components.SlotFrameRenderer;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
-import com.uncreated.civilized.ui.tabs.TabCoords;
 import com.uncreated.civilized.ui.style.Colors;
 import com.uncreated.civilized.ui.tabs.ATab;
 import com.uncreated.civilized.ui.tabs.ITabHost;
 import com.uncreated.civilized.ui.tabs.TabController;
+import com.uncreated.civilized.ui.tabs.TabCoords;
 
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
@@ -134,7 +134,7 @@ public abstract class ABuildingMenuScreen extends AbstractContainerScreen<Buildi
 
    @Override
    protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
-      graphics.drawString(font, title, titleLabelX, titleLabelY, Colors.MENU_TEXT_DARK, false);
+      // graphics.drawString(font, title, titleLabelX, titleLabelY, Colors.MENU_TEXT_DARK, false);
 
       // the inventory heading would otherwise sit on its own above nothing
       if (menu.isPlayerInventoryVisible())

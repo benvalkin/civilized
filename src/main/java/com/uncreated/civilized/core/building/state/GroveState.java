@@ -3,20 +3,17 @@ package com.uncreated.civilized.core.building.state;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventoryType;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
-import com.uncreated.civilized.core.settlement.Settlement;
-import com.uncreated.civilized.ui.menu.building.item.management.ItemManagementMenu;
-import com.uncreated.civilized.ui.menu.building.worksite.grove.items.ChooseSaplingsMenu;
 
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.SimpleContainer;
-import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.SaplingBlock;
 
-public class GroveState extends BuildingState implements IItemManagementMenuSupplier {
+public class GroveState extends BuildingState implements IEyeDropperSlotState {
 
    public static final String FIELD_SAPLING = "sapling";
 
@@ -71,12 +68,28 @@ public class GroveState extends BuildingState implements IItemManagementMenuSupp
       return ItemStack.isSameItem(sapling, stack);
    }
 
+  public static boolean isPlantableSapling(ItemStack stack) {
+      return stack.getItem() instanceof BlockItem blockItem && blockItem.getBlock() instanceof SaplingBlock;
+   }
+
    @Override
-   public ItemManagementMenu createItemManagementMenu(
-         Integer containerId,
-         Inventory playerInventory,
-         Building building,
-         Settlement settlement) {
-      return new ChooseSaplingsMenu(containerId, playerInventory, new SimpleContainer(1), settlement, building);
+   public int getEyeDropperSlotCount() {
+      return 1;
+   }
+
+   @Override
+   public ItemStack getEyeDropperSlotItem(int slot) {
+      return sapling;
+   }
+
+   @Override
+   public boolean isValidEyeDropperSlotItem(int slot, ItemStack stack) {
+      return stack.isEmpty() || isPlantableSapling(stack);
+   }
+
+   @Override
+   public void setEyeDropperSlotItem(int slot, ItemStack stack) {
+      // clearing the slot/reading the state for the very first time reverts back to the default sapling
+      sapling = stack.isEmpty() ? DEFAULT_SAPLING : stack;
    }
 }

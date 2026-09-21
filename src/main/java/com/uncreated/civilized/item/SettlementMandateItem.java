@@ -12,6 +12,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.context.UseOnContext;
 
+@Deprecated
 public class SettlementMandateItem extends Item {
 
    public SettlementMandateItem(Properties properties) {
@@ -29,9 +30,7 @@ public class SettlementMandateItem extends Item {
       Optional<Building> enclosingBuilding =
             ServerBuildingsStore.INSTANCE.findEnclosingBuilding(clickedAir, context.getLevel());
       if (enclosingBuilding.isPresent()) {
-
-         // this used to open the old crop chooser menu for whichever building was clicked. That menu has become a tab
-         // on the crop farm screen, so the building's own screen is opened instead
+         // todo: make this item do something
          BuildingScreenOpener.open(serverPlayer, enclosingBuilding.get());
 
          return InteractionResult.SUCCESS;

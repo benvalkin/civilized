@@ -4,12 +4,15 @@ import static com.uncreated.civilized.ui.menu.building.worksite.tabs.ManageWorke
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.BuildingTypes;
 import com.uncreated.civilized.core.building.util.BuildingUtil;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
+import com.uncreated.civilized.core.villagerinfo.Gender;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 
@@ -63,22 +66,30 @@ public class SignHelper {
    private static Component[] getSignTextComponents(Building building) {
       if (building.getBuildingType().is(BuildingTypes.TOWN_HALL)) {
          Settlement settlement = ServerSettlementsStore.INSTANCE.get(building.getSettlementId());
-         return new Component[] { building.getBuildingType().translation(),
-               settlement.displayNameTranslation().withStyle(ChatFormatting.ITALIC), Component.empty(),
-               Component.empty() };
+         Set<VillagerInfo> citizens = ServerVillagerStore.INSTANCE.getCitizens(settlement.getSettlementId());
+         return new Component[] { building.getBuildingType().shortName(),
+               settlement.displayNameTranslation().withStyle(ChatFormatting.ITALIC),
+               Component.translatable("menu.building.town_hall.population.count", citizens.size()), Component.empty() };
       } else if (building.getBuildingType().is(BuildingTypes.INN)) {
          List<VillagerInfo> visitors = BuildingUtil.getResidents(building, ServerVillagerStore.INSTANCE);
-         return new Component[] { building.getBuildingType().translation(),
+         return new Component[] { building.getBuildingType().shortName(),
                Component.translatable("menu.building.inn.visitors.count", visitors.size()), Component.empty(),
                Component.empty() };
       } else if (building.getBuildingType().isResidence()) {
          List<VillagerInfo> residents = BuildingUtil.getResidents(building, ServerVillagerStore.INSTANCE);
-         return new Component[] { building.getBuildingType().translation(),
-               Component.translatable("menu.building.residence.residents.count", residents.size()), Component.empty(),
-               Component.empty() };
+
+         Optional<VillagerInfo> owner = residents.stream().filter(v -> v.getGender() == Gender.MALE).findFirst();
+         if (owner.isEmpty())
+            owner = residents.stream().findFirst();
+
+         String ownerName = owner.map(VillagerInfo::getLastName).orElse("");
+
+         return new Component[] { building.getBuildingType().shortName(),
+               Component.literal(ownerName).withStyle(ChatFormatting.ITALIC),
+               Component.translatable("menu.building.residence.residents.count", residents.size()), Component.empty() };
       } else if (building.getBuildingType().isWorksite()) {
          List<VillagerInfo> workers = BuildingUtil.getAssignedWorkers(building, ServerVillagerStore.INSTANCE);
-         return new Component[] { building.getBuildingType().translation(),
+         return new Component[] { building.getBuildingType().shortName(),
                Component.translatable("menu.building.worksite.workers.count", workers.size(), MAX_ASSIGNED_WORKERS),
                Component.empty(), Component.empty() };
       }

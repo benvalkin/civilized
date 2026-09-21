@@ -11,8 +11,6 @@ import com.uncreated.civilized.ui.menu.building.residence.artisan.singleitem.Edi
 import com.uncreated.civilized.core.building.BuildingType;
 import com.uncreated.civilized.ui.menu.building.ABuildingMenuScreen;
 import com.uncreated.civilized.ui.menu.building.BuildingMenu;
-import com.uncreated.civilized.ui.menu.building.worksite.grove.items.ChooseSaplingsMenu;
-import com.uncreated.civilized.ui.menu.building.worksite.grove.items.ChooseSaplingsScreen;
 
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.network.chat.Component;
@@ -31,17 +29,6 @@ public class GuiSetupEvents {
                return buildingType.buildingMenuScreenSupplier()
                      .create(buildingMenu, inventory, buildingType.translationDark());
             });
-
-      event.register(
-            GuiRegistry.CHOOSE_SAPLINGS_MENU.get(), // do not remove cast - it seems to cause compile errors even though
-            // intellij thinks its redundant
-            (MenuScreens.ScreenConstructor<ChooseSaplingsMenu, ChooseSaplingsScreen>) (
-                  buildingMenu,
-                  inventory,
-                  component) -> new ChooseSaplingsScreen(
-                        buildingMenu,
-                        inventory,
-                        Component.translatable("menu.building.worksite.grove.allowed_saplings.description")));
 
       event.register(
             GuiRegistry.EDIT_CRAFTING_RECIPE_MENU.get(), // do not remove cast - it seems to cause compile errors even
