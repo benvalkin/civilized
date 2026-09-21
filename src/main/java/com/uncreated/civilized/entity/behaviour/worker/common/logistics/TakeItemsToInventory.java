@@ -1,7 +1,9 @@
 package com.uncreated.civilized.entity.behaviour.worker.common.logistics;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.logistics.AggregateItemStack;
@@ -27,8 +29,8 @@ public class TakeItemsToInventory extends WorkTaskBehaviour {
    }
 
    private ConditionalHaulingInstruction<? extends ItemStockRequirement> haulingInstruction;
-   private int currentSourceBuildingIndex;
    private LoadedBuilding currentSourceBuilding;
+   private Set<LoadedBuilding> visitedBuildings = new LinkedHashSet<>(3);
 
    @Override
    protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
@@ -58,10 +60,11 @@ public class TakeItemsToInventory extends WorkTaskBehaviour {
    }
 
    private Optional<LoadedBuilding> findNextBuildingWithStock(CivilizedVillager villager) {
-      for (currentSourceBuildingIndex =
-            0; currentSourceBuildingIndex < haulingInstruction.sourceBuildings().size(); currentSourceBuildingIndex++) {
+      for (int i = 0; i < haulingInstruction.sourceBuildings().size(); i++) {
 
-         LoadedBuilding candidateBuilding = haulingInstruction.sourceBuildings().get(currentSourceBuildingIndex);
+         LoadedBuilding candidateBuilding = haulingInstruction.sourceBuildings().get(i);
+         if (visitedBuildings.contains(candidateBuilding))
+            continue;
 
          // a building is worth visiting when it stocks anything for a requirement the villager still needs items for
          if (haulingInstruction.hasUsefulStock(villager, candidateBuilding))
@@ -73,11 +76,13 @@ public class TakeItemsToInventory extends WorkTaskBehaviour {
    @Override
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.start(level, villager, gameTime);
+      visitedBuildings.clear();
    }
 
    @Override
    protected void stop(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.stop(level, villager, gameTime);
+      visitedBuildings.clear();
       eraseMemory(villager); // TODO: bug: queuing two of this behaviour back will not work properly if we erase the
                              // memory here (the second one's memory will be erased. We need a smarter system that
                              // allows memories to be queued along with behavior states.
@@ -101,8 +106,11 @@ public class TakeItemsToInventory extends WorkTaskBehaviour {
       ConditionalHaulingInstruction.HaulDecision haulDecision =
             haulingInstruction.takeItemsUntilSatisfied(villager, currentSourceBuilding);
 
+      visitedBuildings.add(currentSourceBuilding); // 'visited' means we tried to take from this building, regardless of
+                                                   // whether there were items in it
+
       if (haulDecision == ConditionalHaulingInstruction.HaulDecision.REQUIREMENT_SATISFIED_NOTHING_MORE_TO_DO) {
-         doStop(level, villager, tickTime);
+         return;
       } else if (haulDecision == ConditionalHaulingInstruction.HaulDecision.REQUIREMENT_NOT_YET_SATISFIED) {
          Optional<LoadedBuilding> nextBuildingWithStock = findNextBuildingWithStock(villager);
          if (nextBuildingWithStock.isEmpty()) {
@@ -120,8 +128,6 @@ public class TakeItemsToInventory extends WorkTaskBehaviour {
                   getStateMachine().queueImmediately(WorkStates.DROPPING_OFF_ITEMS_AT_BUILDING);
                }
             }
-
-            doStop(level, villager, tickTime);
             return;
          }
 
@@ -134,7 +140,6 @@ public class TakeItemsToInventory extends WorkTaskBehaviour {
                      List.of(VillagerInventoryType.LOGISTICS));
          villager.getBrain().setMemory(AIRegistry.MM_DROP_OFF_ITEMS_INSTRUCTION.get(), dropOffItemsInstruction);
          getStateMachine().queueImmediately(WorkStates.DROPPING_OFF_ITEMS_AT_BUILDING);
-         doStop(level, villager, tickTime);
       } else
          throw new UnsupportedOperationException(
                "Unsupported hauling decision for hauling instruction '" + haulingInstruction.getClass() + "': "

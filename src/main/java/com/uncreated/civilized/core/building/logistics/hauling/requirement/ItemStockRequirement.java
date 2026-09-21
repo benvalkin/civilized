@@ -15,6 +15,7 @@ import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.util.ContainerHelper;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
@@ -26,14 +27,21 @@ public abstract class ItemStockRequirement {
    protected final Predicate<ItemStack> filter;
    protected final int minimumAmountToSatisfy;
    protected final int idealAmount;
+   @Setter
+   protected boolean disregardExistingCarriedStock;
 
    public static final int UNLIMITED = Integer.MAX_VALUE;
 
-   public ItemStockRequirement(String key, Predicate<ItemStack> filter, int minimumAmountToSatisfy, int idealAmount) {
+   public ItemStockRequirement(
+         String key,
+         Predicate<ItemStack> filter,
+         int minimumAmountToSatisfy,
+         int idealAmount) {
       this.key = key;
       this.filter = filter;
       this.minimumAmountToSatisfy = minimumAmountToSatisfy;
       this.idealAmount = idealAmount;
+      this.disregardExistingCarriedStock = false;
 
       if (filter.test(ItemStack.EMPTY))
          throw new IllegalArgumentException("ItemStockRequirement filter is not allowed to match empty items.");

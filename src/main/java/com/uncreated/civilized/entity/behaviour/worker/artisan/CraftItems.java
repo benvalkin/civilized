@@ -3,7 +3,9 @@ package com.uncreated.civilized.entity.behaviour.worker.artisan;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 import com.mojang.datafixers.util.Pair;
@@ -11,9 +13,8 @@ import com.mojang.logging.LogUtils;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.entity.behaviour.ArtisanHouseBehaviour;
-import com.uncreated.civilized.core.building.logistics.LogisticsManager;
-import com.uncreated.civilized.core.building.logistics.orders.LogisticsOrder;
-import com.uncreated.civilized.core.building.logistics.orders.imports.ImportOrder;
+import com.uncreated.civilized.core.building.logistics.hauling.instruction.TransferToBuildingInstruction;
+import com.uncreated.civilized.core.building.logistics.hauling.requirement.BuildingStockRequirement;
 import com.uncreated.civilized.core.building.production.PendingProductionOutput;
 import com.uncreated.civilized.core.building.production.lines.crafting.CraftingMachine;
 import com.uncreated.civilized.core.building.production.lines.crafting.CraftingOrder;
@@ -22,6 +23,7 @@ import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
 import com.uncreated.civilized.entity.behaviour.worker.WorkTaskBehaviour;
+import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -43,8 +45,6 @@ public class CraftItems extends WorkTaskBehaviour {
 
    int workSpeedMultiplier = 2;
    private CraftingMachine craftingMachine;
-   private List<Container> ingredientsChests = new ArrayList<>();
-   private List<Container> stockChests = new ArrayList<>();
 
    public CraftItems() {
       super(WorkStates.CRAFTING_ITEMS, true, false, 90 * 20, 10 * 20);
@@ -52,6 +52,8 @@ public class CraftItems extends WorkTaskBehaviour {
 
    @Override
    protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
+      if (!super.checkExtraStartConditions(level, villager))
+         return false;
 
       Optional<LoadedBuilding> storehouse = findStorehouse(getSettlement());
 
@@ -71,30 +73,55 @@ public class CraftItems extends WorkTaskBehaviour {
       if (workBlock == null)
          return false;
 
-      LogisticsManager logisticsManager = getSettlement().getBehaviour().getLogisticsManager();
-
       ArtisanHouseBehaviour behaviour = (ArtisanHouseBehaviour) getWorksite().getBehaviour();
 
       craftingMachine = behaviour.getRecipeProductionSystem().getMachine(CraftingMachine.class);
 
-      ingredientsChests = LogisticsOrder.findChests(level, worksite);
-      stockChests =
-            storehouse.map(loadedBuilding -> LogisticsOrder.findChests(level, worksite, loadedBuilding.getBuilding()))
-                  .orElseGet(() -> ingredientsChests);
+      List<Container> worksiteChests = getWorksite().chests();
+      List<Container> storehouseChests = storehouse.map(LoadedBuilding::chests).orElse(List.of());
+      List<Container> storehouseAndWorksiteChests =
+            Stream.concat(worksiteChests.stream(), storehouseChests.stream()).toList();
 
-      for (CraftingOrder productionOrder : craftingMachine.getOrders()) {
-         List<ImportOrder> importOrders = productionOrder.createImportOrdersForIngredients(stockChests);
-         importOrders.forEach(i -> logisticsManager.registerOrder(worksite, i));
-      }
+      if (craftingMachine.tryGetNextOrder(worksiteChests, storehouseAndWorksiteChests).isEmpty()) {
 
-      if (craftingMachine.tryGetNextOrder(ingredientsChests, stockChests).isEmpty()) {
-         // todo: the villager should fetch the missing ingredients from the storehouse. The old import orders were
-         // removed with the old logistics system, so this needs a hauling instruction built from the recipe's
-         // ingredients before it can work again
+         // we cannot produce anything at the moment, so we should try import ingredients from the storehouse
+         if (storehouse.isEmpty())
+            return false; // cannot import anything if the storehouse doesn't exist
+
+         List<BuildingStockRequirement> allRecipeStockRequirements =
+               createIngredientsRequirementsForAllRecipes(storehouseAndWorksiteChests);
+
+         Optional<TransferToBuildingInstruction> fetchFromStorehouse =
+               TransferToBuildingInstruction.createIfAnyMetFromSourceBuildings(
+                     allRecipeStockRequirements,
+                     getWorksite(),
+                     List.of(storehouse.get()));
+         if (fetchFromStorehouse.isPresent()) {
+            villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), fetchFromStorehouse.get());
+            getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
+            getStateMachine().queueActionOnce(this.getState());
+         }
+
          return false;
       }
 
       return true;
+   }
+
+   private @NotNull List<BuildingStockRequirement> createIngredientsRequirementsForAllRecipes(
+         List<Container> storehouseAndWorksiteChests) {
+      List<BuildingStockRequirement> allRecipeStockRequirements = new ArrayList<>();
+      for (CraftingOrder productionOrder : craftingMachine.getOrders()) {
+
+         List<BuildingStockRequirement> recipeStockRequirements =
+               productionOrder.createIngredientRequirements(storehouseAndWorksiteChests);
+
+         if (recipeStockRequirements.isEmpty())
+            continue;
+
+         allRecipeStockRequirements.addAll(recipeStockRequirements);
+      }
+      return allRecipeStockRequirements;
    }
 
    @Override
@@ -109,8 +136,8 @@ public class CraftItems extends WorkTaskBehaviour {
       super.stop(level, villager, gameTime);
       villager.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
 
-      if (itemsCrafted)
-         goDropOffWorkOutputAtHome(villager);
+      // finishing crafting items does not immediately tell the villager go drop off items in the storehouse
+      dumpInventoryToChests(villager.getWorkOutputInventory(), getWorksite().chests());
    }
 
    @Override
@@ -136,8 +163,14 @@ public class CraftItems extends WorkTaskBehaviour {
 
          lastWorkTime = gameTime;
 
+         List<Container> worksiteChests = getWorksite().chests();
+         List<Container> storehouseChests =
+               findStorehouse(getSettlement()).map(LoadedBuilding::chests).orElse(List.of());
+         List<Container> storehouseAndWorksiteChests =
+               Stream.concat(worksiteChests.stream(), storehouseChests.stream()).toList();
+
          Optional<Pair<ProductionOrder, PendingProductionOutput>> nextOrder =
-               craftingMachine.tryGetNextOrder(ingredientsChests, stockChests);
+               craftingMachine.tryGetNextOrder(worksiteChests, storehouseAndWorksiteChests);
          if (nextOrder.isEmpty()) {
             // nothing more to craft
             doStop(level, villager, gameTime);

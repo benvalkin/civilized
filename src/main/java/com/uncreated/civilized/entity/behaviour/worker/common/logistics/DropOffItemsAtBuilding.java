@@ -83,34 +83,6 @@ public class DropOffItemsAtBuilding extends WorkTaskBehaviour {
       }
    }
 
-   protected Set<Item> dumpInventoryToChests(Container villagerInventory, List<Container> chests) {
-
-      Set<Item> itemTypesDumped = new HashSet<>();
-
-      for (int i = 0; i < villagerInventory.getContainerSize(); i++) {
-
-         ItemStack item = villagerInventory.getItem(i);
-         if (item.isEmpty())
-            continue;
-
-         Item itemType = item.getItem();
-
-         for (var chest : chests) {
-            // try to add item to chest
-            ItemStack remainder = ContainerHelper.addItemNicely(chest, item);
-            villagerInventory.removeItem(i, item.getCount() - remainder.getCount());
-
-            // if there is no remainder, we successfully inserted the stack
-            if (remainder.isEmpty()) {
-               itemTypesDumped.add(itemType);
-               break;
-            }
-         }
-      }
-
-      return itemTypesDumped;
-   }
-
    private void eraseMemory(CivilizedVillager villager) {
       villager.getBrain().eraseMemory(AIRegistry.MM_DROP_OFF_ITEMS_INSTRUCTION.get());
    }

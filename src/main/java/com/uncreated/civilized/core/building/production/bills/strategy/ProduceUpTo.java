@@ -2,18 +2,26 @@ package com.uncreated.civilized.core.building.production.bills.strategy;
 
 import com.uncreated.civilized.core.building.logistics.AggregateItemStack;
 
+import lombok.Getter;
+import lombok.experimental.Accessors;
+
+@Accessors(fluent = true)
+@Getter
 public class ProduceUpTo implements IProductionStrategy {
 
    private final int max;
+   private final int productionBatchSize;
 
-   public ProduceUpTo(int max) {
+   public ProduceUpTo(int max, int productionBatchSize) {
       this.max = max;
+      this.productionBatchSize = productionBatchSize;
    }
 
    @Override
    public int calculateStockDeficit(AggregateItemStack stockChestsStock) {
-      int diff = Math.clamp(max - stockChestsStock.getCount(), 0, max);
-      return Math.min(diff, max);
+      int deficit = max - stockChestsStock.getCount();
+      return Math.max(deficit, 0);
+
    }
 
    @Override

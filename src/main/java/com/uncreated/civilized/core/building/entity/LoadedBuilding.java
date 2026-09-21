@@ -4,8 +4,9 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 
 import com.uncreated.civilized.core.building.Building;
@@ -47,7 +48,8 @@ public class LoadedBuilding {
    }
 
    public List<Container> chests() {
-      // NOTE: the loaded events do not account for if a chest destroyed by an explosion, pushed by a piston, placed by a dispenser or another mod etc.
+      // NOTE: the loaded events do not account for if a chest destroyed by an explosion, pushed by a piston, placed by
+      // a dispenser or another mod etc.
       // So we should clean out stale entities
       chests.removeIf(BlockEntity::isRemoved);
       return chests.stream().map(c -> ((Container) c)).toList();
@@ -61,10 +63,13 @@ public class LoadedBuilding {
    // Only intended to be called once when this building is loaded.
    private void findChestsInsideBounds() {
       building.getBounds()
-              .getBlockEntitiesInsideBuilding(level)
-              .stream()
-              .filter(e -> e instanceof ChestBlockEntity)
-              .forEach(e -> chests.add((ChestBlockEntity) e));
+            // do not load extra chunks when looking for chest entities!
+            // chest entities in other chunks that are part of this building will be added to this building later when
+            // the chunk loads.
+            .getBlockEntitiesInsideBuilding(level, false)
+            .stream()
+            .filter(e -> e instanceof ChestBlockEntity)
+            .forEach(e -> chests.add((ChestBlockEntity) e));
    }
 
    public void onChestLoaded(ChestBlockEntity chest) {
@@ -79,5 +84,18 @@ public class LoadedBuilding {
    @Override
    public String toString() {
       return building.toString();
+   }
+
+   @Override
+   public boolean equals(Object o) {
+      if (o == null || getClass() != o.getClass())
+         return false;
+      LoadedBuilding building1 = (LoadedBuilding) o;
+      return Objects.equals(building.getBuildingId(), building1.building.getBuildingId());
+   }
+
+   @Override
+   public int hashCode() {
+      return Objects.hashCode(building.getBuildingId());
    }
 }

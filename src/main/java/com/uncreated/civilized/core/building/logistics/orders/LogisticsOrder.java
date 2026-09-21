@@ -51,7 +51,7 @@ public abstract class LogisticsOrder {
       for (Building building : buildings) {
          chests.addAll(
                building.getBounds()
-                     .getBlockEntitiesInsideBuilding(level)
+                     .getBlockEntitiesInsideBuilding(level, true)
                      .stream()
                      .filter(e -> e instanceof ChestBlockEntity)
                      .map(e -> ((Container) e))

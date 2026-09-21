@@ -50,8 +50,8 @@ public class ProductionBill {
       this.inputItems = inputItems;
       this.displayItem = displayItem;
       this.productionStrategy = switch (productionStrategyType) {
-      case ProductionStrategyType.PRODUCE_INFINITE -> new ProduceInfinite(displayItem.getMaxStackSize());
-      case ProductionStrategyType.PRODUCE_UP_TO -> new ProduceUpTo(billAmount);
+      case ProductionStrategyType.PRODUCE_INFINITE -> new ProduceInfinite(8);
+      case ProductionStrategyType.PRODUCE_UP_TO -> new ProduceUpTo(billAmount, 8);
       };
    }
 

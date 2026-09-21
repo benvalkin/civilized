@@ -1,14 +1,13 @@
 package com.uncreated.civilized.core.building.production.orders;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
 import com.uncreated.civilized.core.building.logistics.AggregateItemStack;
-import com.uncreated.civilized.core.building.logistics.orders.LogisticsOrder;
-import com.uncreated.civilized.core.building.logistics.orders.imports.ImportOrder;
-import com.uncreated.civilized.core.building.logistics.orders.imports.ImportUpTo;
+import com.uncreated.civilized.core.building.logistics.hauling.requirement.BuildingStockRequirement;
 import com.uncreated.civilized.core.building.production.PendingProductionOutput;
 import com.uncreated.civilized.core.building.production.bills.ProductionBill;
 import com.uncreated.civilized.core.building.production.orders.recipe.AssembledRecipe;
@@ -52,36 +51,43 @@ public abstract class ProductionOrder {
 
    protected abstract RecipeAssembler<?, ?> getRecipeAssembler(Recipe<?> value, RegistryAccess registryAccess);
 
-   public List<ImportOrder> createImportOrdersForIngredients(List<Container> stockChests) {
+   public List<BuildingStockRequirement> createIngredientRequirements(List<Container> stockChests) {
 
       // compute the current stock deficit so we know how many ingredients to import
       int stockDeficit = 0;
+      int productionBatchSize = bill.getProductionStrategy().productionBatchSize();
 
       Optional<ItemStack> defaultResultItem = recipeAssembler.getDefaultResultItem();
       if (defaultResultItem.isPresent()) {
          stockDeficit =
                bill.getProductionStrategy().calculateStockDeficit(calculateStock(stockChests, defaultResultItem.get()));
+
+         if (stockDeficit > productionBatchSize)
+            stockDeficit = productionBatchSize;
       }
 
-      List<ImportOrder> importOrders = new LinkedList<>();
+      if (stockDeficit <= 0)
+         // there is no reason to transport ingredients for bills that are already satisfied
+         return Collections.emptyList();
+
+      List<BuildingStockRequirement> requirements = new LinkedList<>();
 
       List<Ingredient> ingredients = recipeAssembler.getRecipe().placementInfo().ingredients();
 
-      for (int i = 0; i < ingredients.size(); i++) {
-         Ingredient ingredient = ingredients.get(i);
-         ImportOrder importOrder =
-               new ImportUpTo(
-                     level,
-                     String.format("ingredients_%s_%s_%s", bill.getProductionType(), getKey(), i),
+      for (Ingredient ingredient : ingredients) {
+
+         BuildingStockRequirement requirement =
+               new BuildingStockRequirement(
+                     String.format("%s:%s:%s", bill.getProductionType(), bill.getProductionType().toString(), getKey()),
                      in -> ingredient.acceptsItem(in.getItemHolder()),
-                     LogisticsOrder.Origin.AUTOMATIC,
                      1,
-                     16,
                      stockDeficit);
-         importOrders.add(importOrder);
+         // makes it so that duplicate ingredients are still taken
+         requirement.disregardExistingCarriedStock(true);
+         requirements.add(requirement);
       }
 
-      return importOrders;
+      return requirements;
    }
 
    public PendingProductionOutput getNextOutput(List<Container> ingredientsChests, List<Container> stockChests) {

@@ -34,7 +34,7 @@ public abstract class TaskItemRequirement extends LogisticsOrder {
    public PendingRequiredItems getRequiredItemsToTake(Building source, CivilizedVillager villager, Level level) {
       Collection<Container> sourceChests =
             source.getBounds()
-                  .getBlockEntitiesInsideBuilding(level)
+                  .getBlockEntitiesInsideBuilding(level, true)
                   .stream()
                   .filter(e -> e instanceof ChestBlockEntity)
                   .map(e -> ((Container) e))

@@ -16,8 +16,10 @@ import com.uncreated.civilized.entity.CivilizedVillager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
@@ -72,16 +74,18 @@ public class EntityEvents {
       });
 
       // chests in this chunk may belong to a building that was already loaded from one of its other chunks
-      forEachChestInChunk(event.getChunk(), serverLevel, chest -> LoadedBuildings.onChestLoaded(chest, serverLevel));
+      forEachChestInChunk(event.getChunk(), chest -> LoadedBuildings.onChestLoaded(chest, serverLevel));
    }
 
    @SubscribeEvent
    public static void onChunkUnloaded(ChunkEvent.Unload event) {
 
+      // IMPORTANT: take care not call level.getBlockEntity in this method, as it will load the chunk again
+
       if (event.getLevel().isClientSide() || !(event.getLevel() instanceof ServerLevel serverLevel))
          return;
 
-      forEachChestInChunk(event.getChunk(), serverLevel, chest -> LoadedBuildings.onChestUnloaded(chest, serverLevel));
+      forEachChestInChunk(event.getChunk(), chest -> LoadedBuildings.onChestUnloaded(chest, serverLevel));
 
       Set<Building> toRemove = ServerBuildingsStore.INSTANCE.findInChunk(event.getChunk().getPos(), serverLevel);
 
@@ -91,13 +95,12 @@ public class EntityEvents {
       });
    }
 
-   private static void forEachChestInChunk(
-         ChunkAccess chunk,
-         ServerLevel serverLevel,
-         Consumer<ChestBlockEntity> action) {
+   private static void forEachChestInChunk(ChunkAccess chunk, Consumer<ChestBlockEntity> action) {
+      if (!(chunk instanceof LevelChunk levelChunk))
+         return;
 
-      for (BlockPos blockPos : chunk.getBlockEntitiesPos()) {
-         if (serverLevel.getBlockEntity(blockPos) instanceof ChestBlockEntity chest)
+      for (BlockEntity blockEntity : levelChunk.getBlockEntities().values()) {
+         if (blockEntity instanceof ChestBlockEntity chest)
             action.accept(chest);
       }
    }

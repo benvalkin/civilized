@@ -5,7 +5,9 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 import com.mojang.datafixers.util.Pair;
@@ -13,9 +15,8 @@ import com.mojang.logging.LogUtils;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.entity.behaviour.ArtisanHouseBehaviour;
-import com.uncreated.civilized.core.building.logistics.LogisticsManager;
-import com.uncreated.civilized.core.building.logistics.orders.LogisticsOrder;
-import com.uncreated.civilized.core.building.logistics.orders.imports.ImportOrder;
+import com.uncreated.civilized.core.building.logistics.hauling.instruction.TransferToBuildingInstruction;
+import com.uncreated.civilized.core.building.logistics.hauling.requirement.BuildingStockRequirement;
 import com.uncreated.civilized.core.building.production.PendingProductionOutput;
 import com.uncreated.civilized.core.building.production.RecipeProductionSystem;
 import com.uncreated.civilized.core.building.production.lines.singleitem.SingleItemRecipeOrder;
@@ -25,7 +26,9 @@ import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.BehaviourState;
 import com.uncreated.civilized.entity.behaviour.Cooldowns;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
+import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
 import com.uncreated.civilized.entity.behaviour.worker.WorkTaskBehaviour;
+import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 import com.uncreated.civilized.util.ContainerHelper;
 
 import net.minecraft.server.level.ServerLevel;
@@ -45,8 +48,6 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
    private MediumDistanceTravelTask travelHelper;
 
    private CookingMachine cookingMachine;
-   private List<Container> ingredientsChests = new ArrayList<>();
-   private List<Container> stockChests = new ArrayList<>();
 
    public CookItemsWithFuel(BehaviourState state) {
       super(state, true, false, 60 * 20, 20);
@@ -54,6 +55,8 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
 
    @Override
    protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
+      if (!super.checkExtraStartConditions(level, villager))
+         return false;
 
       if (getBehaviourCooldowns().hasCooldown(Cooldowns.START, level.getGameTime()))
          return false;
@@ -79,30 +82,70 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
       if (furnaceBlockEntity == null)
          return false;
 
-      LogisticsManager logisticsManager = getSettlement().getBehaviour().getLogisticsManager();
-
-      ArtisanHouseBehaviour behaviour = (ArtisanHouseBehaviour) getHome().getBehaviour();
+      ArtisanHouseBehaviour behaviour = (ArtisanHouseBehaviour) getWorksite().getBehaviour();
 
       cookingMachine = getProductionMachine(behaviour.getRecipeProductionSystem());
 
-      ingredientsChests = LogisticsOrder.findChests(level, worksite);
-      stockChests =
-            storehouse.map(loadedBuilding -> LogisticsOrder.findChests(level, worksite, loadedBuilding.getBuilding()))
-                  .orElseGet(() -> ingredientsChests);
+      List<Container> worksiteChests = getWorksite().chests();
+      List<Container> storehouseChests = storehouse.map(LoadedBuilding::chests).orElse(List.of());
+      List<Container> storehouseAndWorksiteChests =
+            Stream.concat(worksiteChests.stream(), storehouseChests.stream()).toList();
 
-      for (SingleItemRecipeOrder productionOrder : cookingMachine.getOrders()) {
-         List<ImportOrder> importOrders = productionOrder.createImportOrdersForIngredients(stockChests);
-         importOrders.forEach(i -> logisticsManager.registerOrder(worksite, i));
-      }
+      if (cookingMachine.tryGetNextOrder(worksiteChests, storehouseAndWorksiteChests).isEmpty()) {
 
-      if (cookingMachine.tryGetNextOrder(ingredientsChests, stockChests).isEmpty()) {
-         // todo: the villager should fetch the missing ingredients and fuel from the storehouse. The old import orders
-         // were removed with the old logistics system, so this needs a hauling instruction built from the recipe's
-         // ingredients before it can work again
+         // there is nothing to put into the furnace
+         // we can still take cooked items out though
+         ItemStack cookedGoods = furnaceBlockEntity.getItem(2).copy();
+         if (!cookedGoods.isEmpty()
+               && furnaceBlockEntity.canTakeItem(villager.getWorkOutputInventory(), 3, cookedGoods)) {
+            villager.getWorkOutputInventory().addItem(cookedGoods);
+            furnaceBlockEntity.setItem(2, ItemStack.EMPTY);
+
+            cookingMachine.consumeTokens(cookedGoods.getCount());
+
+            dumpInventoryToChests(villager.getWorkOutputInventory(), getWorksite().chests());
+
+            villager.swing(InteractionHand.MAIN_HAND);
+         }
+
+         // we cannot produce anything at the moment, so we should try import ingredients from the storehouse
+         if (storehouse.isEmpty())
+            return false; // cannot import anything if the storehouse doesn't exist
+
+         List<BuildingStockRequirement> allRecipeStockRequirements =
+               createIngredientsRequirementsForAllRecipes(storehouseAndWorksiteChests);
+
+         Optional<TransferToBuildingInstruction> fetchFromStorehouse =
+               TransferToBuildingInstruction.createIfAnyMetFromSourceBuildings(
+                     allRecipeStockRequirements,
+                     getWorksite(),
+                     List.of(storehouse.get()));
+         if (fetchFromStorehouse.isPresent()) {
+            villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), fetchFromStorehouse.get());
+            getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
+            getStateMachine().queueActionOnce(this.getState());
+         }
+
          return false;
       }
 
       return true;
+   }
+
+   private @NotNull List<BuildingStockRequirement> createIngredientsRequirementsForAllRecipes(
+         List<Container> storehouseAndWorksiteChests) {
+      List<BuildingStockRequirement> allRecipeStockRequirements = new ArrayList<>();
+      for (SingleItemRecipeOrder productionOrder : cookingMachine.getOrders()) {
+
+         List<BuildingStockRequirement> recipeStockRequirements =
+               productionOrder.createIngredientRequirements(storehouseAndWorksiteChests);
+
+         if (recipeStockRequirements.isEmpty())
+            continue;
+
+         allRecipeStockRequirements.addAll(recipeStockRequirements);
+      }
+      return allRecipeStockRequirements;
    }
 
    protected abstract CookingMachine getProductionMachine(RecipeProductionSystem recipeProductionSystem);
@@ -152,13 +195,24 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
          cookingMachine.consumeTokens(cookedGoods.getCount());
          changeItemsNeeded = cookingMachine.getProductionTokens() == 0;
 
-         goDropOffWorkOutputAtHome(villager);
+         dumpInventoryToChests(villager.getWorkOutputInventory(), getWorksite().chests());
 
          useSuccess = true;
       }
 
+      Optional<LoadedBuilding> storehouse = findStorehouse(getSettlement());
+      if (storehouse.isEmpty()) {
+         doStop(level, villager, gameTime);
+         return;
+      }
+
+      List<Container> worksiteChests = getWorksite().chests();
+      List<Container> storehouseChests = storehouse.map(LoadedBuilding::chests).orElse(List.of());
+      List<Container> storehouseAndWorksiteChests =
+            Stream.concat(worksiteChests.stream(), storehouseChests.stream()).toList();
+
       Optional<Pair<ProductionOrder, PendingProductionOutput>> currentOrder =
-            cookingMachine.tryGetNextOrder(ingredientsChests, stockChests);
+            cookingMachine.tryGetNextOrder(worksiteChests, storehouseAndWorksiteChests);
       if (currentOrder.isEmpty()) {
          // nothing more to cook
          doStop(level, villager, gameTime);
@@ -197,7 +251,7 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
          } else if (!currentlyInFurnace.is(newInput.getItem()) && changeItemsNeeded) {
             // replace items if order's items are different to what's already in the furnace, adding the old items back
             // to building chests
-            if (ContainerHelper.addItemNicely(ingredientsChests, currentlyInFurnace).isEmpty()) {
+            if (ContainerHelper.addItemNicely(worksiteChests, currentlyInFurnace).isEmpty()) {
                furnaceBlockEntity.setItem(0, newInput);
                pendingOutput.consumeIngredients(toSmelt);
                useSuccess = true;

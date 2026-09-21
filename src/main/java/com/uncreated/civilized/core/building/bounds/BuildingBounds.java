@@ -1,20 +1,23 @@
 package com.uncreated.civilized.core.building.bounds;
 
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.SectionPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.AABB;
 
 @Getter
@@ -175,17 +178,35 @@ public class BuildingBounds {
       return true;
    }
 
-   public List<BlockEntity> getBlockEntitiesInsideBuilding(@NotNull Level level) {
+   public List<BlockEntity> getBlockEntitiesInsideBuilding(@NotNull Level level, boolean checkUnloadedChunks) {
 
-      List<BlockEntity> entitiesInside = Lists.newArrayList();
-      traverseBlocksWithin(traversal -> {
-         BlockEntity entity = level.getBlockEntity(traversal.getCurrentBlockPos());
-         if (entity == null)
-            return;
+      List<BlockEntity> blockEntities = new LinkedList<>();
 
-         entitiesInside.add(entity);
-      });
-      return entitiesInside;
+      int lowestChunkX = SectionPos.blockToSectionCoord(lowerCorner.getX());
+      int highestChunkX = SectionPos.blockToSectionCoord(upperCorner.getX());
+      int lowestChunkZ = SectionPos.blockToSectionCoord(lowerCorner.getZ());
+      int highestChunkZ = SectionPos.blockToSectionCoord(upperCorner.getZ());
+
+      for (int chunkX = lowestChunkX; chunkX <= highestChunkX; chunkX++) {
+         for (int chunkZ = lowestChunkZ; chunkZ <= highestChunkZ; chunkZ++) {
+
+            LevelChunk chunk = level.getChunkSource().getChunkNow(chunkX, chunkZ);
+            if (chunk == null) { // chunk is not loaded
+               if (!checkUnloadedChunks)
+                  continue;
+
+               // load the chunk
+               chunk = level.getChunk(chunkX, chunkZ);
+            }
+
+            for (Map.Entry<BlockPos, BlockEntity> blockEntity : chunk.getBlockEntities().entrySet()) {
+               if (contains(blockEntity.getKey()))
+                  blockEntities.add(blockEntity.getValue());
+            }
+         }
+      }
+
+      return blockEntities;
    }
 
    @Override

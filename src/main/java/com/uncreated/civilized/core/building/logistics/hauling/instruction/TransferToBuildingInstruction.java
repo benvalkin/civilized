@@ -106,6 +106,10 @@ public class TransferToBuildingInstruction extends ConditionalHaulingInstruction
                   destinationBuilding.chests(),
                   destinationBuilding.getItemReservations().values());
 
+      if (requirement.disregardExistingCarriedStock()) {
+         return requirement.idealAmount() - itemsAtDestination.getCount();
+      }
+
       AggregateItemStack carried =
             ContainerHelper.countItems(requirement.getHaulInventory(villager), requirement.filter());
 

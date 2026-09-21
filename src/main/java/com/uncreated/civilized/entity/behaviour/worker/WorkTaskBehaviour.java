@@ -1,11 +1,16 @@
 package com.uncreated.civilized.entity.behaviour.worker;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import com.uncreated.civilized.util.ContainerHelper;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.Item;
 import org.jetbrains.annotations.NotNull;
 
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
@@ -115,6 +120,34 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
       sourceBuildings.add(getHome());
       findStorehouse(getSettlement()).ifPresent(sourceBuildings::add);
       return sourceBuildings;
+   }
+
+   protected Set<Item> dumpInventoryToChests(Container villagerInventory, List<Container> chests) {
+
+      Set<Item> itemTypesDumped = new HashSet<>();
+
+      for (int i = 0; i < villagerInventory.getContainerSize(); i++) {
+
+         ItemStack item = villagerInventory.getItem(i);
+         if (item.isEmpty())
+            continue;
+
+         Item itemType = item.getItem();
+
+         for (var chest : chests) {
+            // try to add item to chest
+            ItemStack remainder = ContainerHelper.addItemNicely(chest, item);
+            villagerInventory.removeItem(i, item.getCount() - remainder.getCount());
+
+            // if there is no remainder, we successfully inserted the stack
+            if (remainder.isEmpty()) {
+               itemTypesDumped.add(itemType);
+               break;
+            }
+         }
+      }
+
+      return itemTypesDumped;
    }
 
    protected void goDropOffWorkOutputAtHome(CivilizedVillager villager) {

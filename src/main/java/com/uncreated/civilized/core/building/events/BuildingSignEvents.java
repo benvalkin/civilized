@@ -35,7 +35,7 @@ public class BuildingSignEvents {
       List<SignBlockEntity> signs =
             event.getBuilding()
                   .getBounds()
-                  .getBlockEntitiesInsideBuilding(loadedBuilding.get().getLevel())
+                  .getBlockEntitiesInsideBuilding(loadedBuilding.get().getLevel(), true)
                   .stream()
                   .filter(b -> b instanceof SignBlockEntity)
                   .map(b -> (SignBlockEntity) b)

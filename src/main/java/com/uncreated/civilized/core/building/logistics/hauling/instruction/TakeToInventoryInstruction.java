@@ -88,6 +88,11 @@ public class TakeToInventoryInstruction extends ConditionalHaulingInstruction<In
 
    @Override
    protected int outstandingAmount(CivilizedVillager villager, InventoryStockRequirement requirement) {
+
+      if (requirement.disregardExistingCarriedStock()) {
+         return requirement.idealAmount();
+      }
+
       AggregateItemStack carried =
             ContainerHelper.countItems(requirement.getHaulInventory(villager), requirement.filter());
       return requirement.idealAmount() - carried.getCount();
