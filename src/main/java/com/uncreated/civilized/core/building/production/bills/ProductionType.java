@@ -22,14 +22,18 @@ public class ProductionType {
    private final Supplier<RecipeProductionMachine<?>> createRecipeProductionMachine;
    private final IEditRecipeProductionMenuSupplier menuSupplier;
 
-    public ProductionType(ResourceLocation resourceLocation, RecipeType<?> recipeType, Supplier<RecipeProductionMachine<?>> createRecipeProductionMachine, IEditRecipeProductionMenuSupplier menuSupplier) {
-        this.resourceLocation = resourceLocation;
-        this.recipeType = recipeType;
-        this.createRecipeProductionMachine = createRecipeProductionMachine;
-        this.menuSupplier = menuSupplier;
-    }
+   public ProductionType(
+         ResourceLocation resourceLocation,
+         RecipeType<?> recipeType,
+         Supplier<RecipeProductionMachine<?>> createRecipeProductionMachine,
+         IEditRecipeProductionMenuSupplier menuSupplier) {
+      this.resourceLocation = resourceLocation;
+      this.recipeType = recipeType;
+      this.createRecipeProductionMachine = createRecipeProductionMachine;
+      this.menuSupplier = menuSupplier;
+   }
 
-    public String name() {
+   public String name() {
       return resourceLocation.getPath();
    }
 

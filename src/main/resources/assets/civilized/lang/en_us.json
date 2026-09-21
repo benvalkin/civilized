@@ -131,7 +131,7 @@
   "menu.building.residence.production_bills.edit_recipe.done.tooltip.recipe_not_allowed": "Recipe not allowed.",
   "menu.building.residence.production_bills.edit_recipe.tooltip.allowed_recipe_help.armorer": "Armorers can forge high quality armor pieces using various types of materials.",
   "menu.building.residence.production_bills.edit_recipe.tooltip.allowed_recipe_help.artist_house": "Artists specialize in creating paintings, candles, and coloring things with dyes.",
-  "menu.building.residence.production_bills.edit_recipe.tooltip.allowed_recipe_help.baker": "Bakers can make bread from wheat, as well as sugar from sugarcane. They can also produce other recipes that have wheat, dough or flour in them.",
+  "menu.building.residence.production_bills.edit_recipe.tooltip.allowed_recipe_help.baker": "Bakers can make bread from wheat, as well as sugar from sugarcane.\n\nThey can also cook vegetarian items, and produce other recipes that have wheat, dough or flour in them.",
   "menu.building.residence.production_bills.edit_recipe.tooltip.allowed_recipe_help.blacksmith": "Blacksmiths can smelt most types of ores and raw resources. They also know how to craft various things using metal ingots.",
   "menu.building.residence.production_bills.edit_recipe.tooltip.allowed_recipe_help.butcher": "Butchers can cook raw meat and other foods in the smoker. They can also create meals that contain meat.",
   "menu.building.residence.production_bills.edit_recipe.tooltip.allowed_recipe_help.carpenter": "Carpenters can craft a variety of blocks and items using wooden logs and planks.",

@@ -53,7 +53,7 @@ public class BakeryState extends ArtisanHouseState {
       return List.of();
    }
 
-   private static final List<TagKey<Item>> ALLOWED_INGREDIENT_TAGS =
+   private static final List<TagKey<Item>> ALLOWED_CRAFTING_INGREDIENT_TAGS =
          List.of(
                Tags.Items.CROPS_WHEAT,
                Tags.Items.FOODS_BREAD,
@@ -64,7 +64,12 @@ public class BakeryState extends ArtisanHouseState {
                CommonTags.FLOURS,
                CommonTags.FLOURS_WHEAT);
 
-   private static final List<Item> ALLOWED_OUTPUT_ITEMS = List.of(Items.SUGAR);
+   private static final List<TagKey<Item>> ALLOWED_SMELTING_INPUT_TAGS = List.of(Tags.Items.FOODS);
+
+   private static final List<TagKey<Item>> FORBIDDEN_SMELTING_OUTPUT_TAGS =
+         List.of(Tags.Items.FOODS_RAW_MEAT, Tags.Items.FOODS_RAW_FISH);
+
+   private static final List<Item> ALLOWED_CRAFTNG_OUTPUT_ITEMS = List.of(Items.SUGAR, Items.BAKED_POTATO);
 
    @Override
    public boolean recipeAllowed(
@@ -72,8 +77,15 @@ public class BakeryState extends ArtisanHouseState {
          RecipeInput recipeInput,
          ItemStack resultItem,
          ServerLevel level) {
-      return recipeHasAtLeastOneIngredientWithMatchingTag(recipeInput, ALLOWED_INGREDIENT_TAGS)
-            || itemIsOneOf(resultItem, ALLOWED_OUTPUT_ITEMS);
+      if (productionType.is(ProductionTypes.CRAFTING))
+         return recipeHasAtLeastOneIngredientWithMatchingTag(recipeInput, ALLOWED_CRAFTING_INGREDIENT_TAGS)
+               || itemIsOneOf(resultItem, ALLOWED_CRAFTNG_OUTPUT_ITEMS);
+
+      if (productionType.is(ProductionTypes.SMELTING))
+         return recipeHasAtLeastOneIngredientWithMatchingTag(recipeInput, ALLOWED_SMELTING_INPUT_TAGS)
+               && recipeHasNoIngredientsWithMatchingTag(recipeInput, FORBIDDEN_SMELTING_OUTPUT_TAGS);
+
+      return false;
    }
 
    @Override

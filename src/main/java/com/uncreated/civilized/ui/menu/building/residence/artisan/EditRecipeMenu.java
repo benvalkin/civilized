@@ -274,7 +274,7 @@ public abstract class EditRecipeMenu<TRecipe extends net.minecraft.world.item.cr
          EditProductionBillUpdateState packet,
          IPayloadContext context) {
 
-      if (!(context.player().containerMenu instanceof EditRecipeMenu editRecipeMenu))
+      if (!(context.player().containerMenu instanceof EditRecipeMenu<?, ?> editRecipeMenu))
          return;
 
       editRecipeMenu.setDesiredProductionStrategyType(packet.desiredProductionStrategyType());

@@ -62,4 +62,13 @@ public class ProductionBill {
 
       return recipeManager.byKey(recipeKey);
    }
+
+   @Override
+   public String toString() {
+      return switch (productionStrategy.getType()) {
+      case ProductionStrategyType.PRODUCE_INFINITE -> String.format("%s:infinite [%s, enabled:%s]", minecraftRecipeName, productionType, enabled);
+      case ProductionStrategyType.PRODUCE_UP_TO ->
+         String.format("%s:produce_up_to(%s) [%s, %s]", minecraftRecipeName, billAmount, productionType, enabled);
+      };
+   }
 }
