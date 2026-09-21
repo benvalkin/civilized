@@ -43,7 +43,7 @@ public class ChooseSaplingsMenu extends ItemManagementMenu {
       this.settlement = settlement;
       this.building = building;
 
-      this.addSlot(new SaplingEyedropperSlot(container, 0, 123 + 2 * 18, 52));
+      this.addSlot(new SaplingLegacyEyedropperSlot(container, 0, 123 + 2 * 18, 52));
 
       GroveState groveBehaviour = (GroveState) building.getState();
       this.container.setItem(0, groveBehaviour.getSapling());

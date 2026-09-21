@@ -8,7 +8,7 @@ import java.util.UUID;
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
-import com.uncreated.civilized.core.building.state.IGhostSlotState;
+import com.uncreated.civilized.core.building.state.IEyeDropperSlotState;
 import com.uncreated.civilized.ui.menu.building.BuildingMenu;
 
 import net.minecraft.core.UUIDUtil;
@@ -20,27 +20,27 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-public record SetGhostSlotItem(UUID buildingId, int slot, ItemStack item) implements CustomPacketPayload {
+public record SetEyeDropperSlotItem(UUID buildingId, int slot, ItemStack item) implements CustomPacketPayload {
 
-   public static final Type<SetGhostSlotItem> TYPE =
-         new Type<>(ResourceLocation.fromNamespaceAndPath(CIVILIZED_MOD_ID, "set_ghost_slot_item"));
+   public static final Type<SetEyeDropperSlotItem> TYPE =
+         new Type<>(ResourceLocation.fromNamespaceAndPath(CIVILIZED_MOD_ID, "set_eye_dropper_slot_item"));
 
-   public static final StreamCodec<RegistryFriendlyByteBuf, SetGhostSlotItem> STREAM_CODEC =
+   public static final StreamCodec<RegistryFriendlyByteBuf, SetEyeDropperSlotItem> STREAM_CODEC =
          StreamCodec.composite(
                UUIDUtil.STREAM_CODEC,
-               SetGhostSlotItem::buildingId,
+               SetEyeDropperSlotItem::buildingId,
                ByteBufCodecs.VAR_INT,
-               SetGhostSlotItem::slot,
+               SetEyeDropperSlotItem::slot,
                ItemStack.OPTIONAL_STREAM_CODEC,
-               SetGhostSlotItem::item,
-               SetGhostSlotItem::new);
+               SetEyeDropperSlotItem::item,
+               SetEyeDropperSlotItem::new);
 
    @Override
    public Type<? extends CustomPacketPayload> type() {
       return TYPE;
    }
 
-   public static void serverReceiveSetGhostSlotItem(SetGhostSlotItem packet, IPayloadContext context) {
+   public static void serverReceiveSetEyeDropperSlotItem(SetEyeDropperSlotItem packet, IPayloadContext context) {
 
       Optional<Building> building = ServerBuildingsStore.INSTANCE.find(packet.buildingId);
       if (building.isEmpty())
@@ -51,17 +51,17 @@ public record SetGhostSlotItem(UUID buildingId, int slot, ItemStack item) implem
             || !buildingMenu.getBuilding().getBuildingId().equals(packet.buildingId))
          return;
 
-      if (!(building.get().getState() instanceof IGhostSlotState ghostSlotState))
+      if (!(building.get().getState() instanceof IEyeDropperSlotState eyeDropperSlotState))
          return;
 
-      if (packet.slot < 0 || packet.slot >= ghostSlotState.getGhostSlotCount())
+      if (packet.slot < 0 || packet.slot >= eyeDropperSlotState.getEyeDropperSlotCount())
          return;
 
       ItemStack chosenItem = packet.item.copyWithCount(1);
-      if (!ghostSlotState.isValidGhostSlotItem(packet.slot, chosenItem))
+      if (!eyeDropperSlotState.isValidEyeDropperSlotItem(packet.slot, chosenItem))
          return;
 
-      ghostSlotState.setGhostSlotItem(packet.slot, chosenItem);
+      eyeDropperSlotState.setEyeDropperSlotItem(packet.slot, chosenItem);
 
       ServerBuildingsStore.INSTANCE.replicateChange(building.get(), StoreOperation.UPDATE);
       ServerBuildingsStore.INSTANCE.setDirty();

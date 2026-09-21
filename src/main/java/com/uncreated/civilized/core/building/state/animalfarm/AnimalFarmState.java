@@ -4,14 +4,14 @@ import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventoryType;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
 import com.uncreated.civilized.core.building.state.BuildingState;
-import com.uncreated.civilized.core.building.state.IGhostSlotState;
+import com.uncreated.civilized.core.building.state.IEyeDropperSlotState;
 
 import lombok.Getter;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 
-public abstract class AnimalFarmState extends BuildingState implements IGhostSlotState {
+public abstract class AnimalFarmState extends BuildingState implements IEyeDropperSlotState {
 
    public static final String FIELD_FOOD_SLOT = "food_slot_";
 
@@ -96,22 +96,22 @@ public abstract class AnimalFarmState extends BuildingState implements IGhostSlo
    }
 
    @Override
-   public int getGhostSlotCount() {
+   public int getEyeDropperSlotCount() {
       return NUMBER_OF_FOOD_SLOTS;
    }
 
    @Override
-   public ItemStack getGhostSlotItem(int slot) {
+   public ItemStack getEyeDropperSlotItem(int slot) {
       return getFoodSlot(slot);
    }
 
    @Override
-   public boolean isValidGhostSlotItem(int slot, ItemStack stack) {
+   public boolean isValidEyeDropperSlotItem(int slot, ItemStack stack) {
       return stack.isEmpty() || isCorrectAnimalFood(stack);
    }
 
    @Override
-   public void setGhostSlotItem(int slot, ItemStack stack) {
+   public void setEyeDropperSlotItem(int slot, ItemStack stack) {
       setFoodSlot(slot, stack);
 
       // clearing the last food slot brings the defaults back straight away, the same as the client does when it reads

@@ -4,7 +4,6 @@ import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.ClientBuildingStore;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
-import com.uncreated.civilized.core.building.production.bills.ProductionType;
 import com.uncreated.civilized.core.building.state.CropFarmState;
 import com.uncreated.civilized.core.settlement.ClientSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
@@ -44,9 +43,9 @@ public class ChooseCropsMenu extends ItemManagementMenu {
       this.settlement = settlement;
       this.building = building;
 
-      this.addSlot(new CropEyedropperSlot(container, 0, 123, 52));
-      this.addSlot(new CropEyedropperSlot(container, 1, 123 + 2 * 18, 52));
-      this.addSlot(new CropEyedropperSlot(container, 2, 123 + 4 * 18, 52));
+      this.addSlot(new CropLegacyEyedropperSlot(container, 0, 123, 52));
+      this.addSlot(new CropLegacyEyedropperSlot(container, 1, 123 + 2 * 18, 52));
+      this.addSlot(new CropLegacyEyedropperSlot(container, 2, 123 + 4 * 18, 52));
 
       CropFarmState cropFarmBehaviour = (CropFarmState) building.getState();
       cropFarmBehaviour.tryApplyDefaults();

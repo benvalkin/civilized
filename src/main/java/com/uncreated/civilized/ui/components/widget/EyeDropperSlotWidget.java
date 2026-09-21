@@ -15,7 +15,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
-public class GhostSlotWidget extends AbstractWidget {
+public class EyeDropperSlotWidget extends AbstractWidget {
 
    public static final int SIZE = 16;
    /** The same white overlay vanilla draws over a hovered slot. */
@@ -28,7 +28,7 @@ public class GhostSlotWidget extends AbstractWidget {
    @Getter
    private final AbstractContainerScreen<?> parentScreen;
 
-   public GhostSlotWidget(
+   public EyeDropperSlotWidget(
          AbstractContainerScreen<?> parentScreen,
          int x,
          int y,
@@ -44,7 +44,6 @@ public class GhostSlotWidget extends AbstractWidget {
 
    @Override
    public void onClick(double mouseX, double mouseY) {
-      // the stack the player is dragging around belongs to the menu, and is only read here, never changed
       ItemStack carried = parentScreen.getMenu().getCarried();
 
       if (carried.isEmpty()) {

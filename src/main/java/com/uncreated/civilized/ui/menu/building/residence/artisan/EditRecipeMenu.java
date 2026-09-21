@@ -20,7 +20,7 @@ import com.uncreated.civilized.networking.packets.EditProductionBillUpdateState;
 import com.uncreated.civilized.networking.packets.ShowBuildingScreen;
 import com.uncreated.civilized.networking.packets.TellProductionBillRecipeAllowed;
 import com.uncreated.civilized.ui.menu.building.item.management.ItemManagementMenu;
-import com.uncreated.civilized.ui.menu.item.management.EyedropperSlot;
+import com.uncreated.civilized.ui.menu.item.management.LegacyEyedropperSlot;
 import com.uncreated.civilized.ui.menu.item.management.ReadonlySlot;
 
 import lombok.Getter;
@@ -120,7 +120,7 @@ public abstract class EditRecipeMenu<TRecipe extends net.minecraft.world.item.cr
       if (playerInventory.player.level() instanceof ServerLevel sLevel)
          this.serverLevel = sLevel;
 
-      List<EyedropperSlot> inputSlots = setupInputSlots(craftingMenuContainer);
+      List<LegacyEyedropperSlot> inputSlots = setupInputSlots(craftingMenuContainer);
       if (inputSlots.isEmpty())
          throw new IllegalStateException("Edit recipe menu needs at least 1 input slot.");
 
@@ -166,7 +166,7 @@ public abstract class EditRecipeMenu<TRecipe extends net.minecraft.world.item.cr
       }
    }
 
-   protected abstract List<EyedropperSlot> setupInputSlots(Container craftingMenuContainer);
+   protected abstract List<LegacyEyedropperSlot> setupInputSlots(Container craftingMenuContainer);
 
    protected abstract ReadonlySlot setupOutputSlot(Container resultSlotContainer);
 

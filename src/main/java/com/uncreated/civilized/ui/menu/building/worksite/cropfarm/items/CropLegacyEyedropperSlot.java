@@ -1,14 +1,14 @@
 package com.uncreated.civilized.ui.menu.building.worksite.cropfarm.items;
 
-import com.uncreated.civilized.ui.menu.item.management.EyedropperSlot;
+import com.uncreated.civilized.ui.menu.item.management.LegacyEyedropperSlot;
 
 import net.minecraft.world.Container;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.CropBlock;
 
-public class CropEyedropperSlot extends EyedropperSlot {
-   public CropEyedropperSlot(Container container, int slot, int x, int y) {
+public class CropLegacyEyedropperSlot extends LegacyEyedropperSlot {
+   public CropLegacyEyedropperSlot(Container container, int slot, int x, int y) {
       super(container, slot, x, y);
    }
 

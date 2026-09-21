@@ -16,7 +16,7 @@ import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.networking.packets.CreateNewBuilding;
 import com.uncreated.civilized.networking.packets.EditProductionBillUpdateState;
 import com.uncreated.civilized.networking.packets.RequestBuildingItemManagementScreen;
-import com.uncreated.civilized.networking.packets.SetGhostSlotItem;
+import com.uncreated.civilized.networking.packets.SetEyeDropperSlotItem;
 import com.uncreated.civilized.networking.packets.RequestEditRecipeProductionScreen;
 import com.uncreated.civilized.networking.packets.ShowBuildingScreen;
 import com.uncreated.civilized.networking.packets.TellProductionBillRecipeAllowed;
@@ -80,9 +80,9 @@ public class PacketRegistry {
             RequestBuildingItemManagementScreen::serverReceiveRequestScreen);
 
       registrar.playToServer(
-            SetGhostSlotItem.TYPE,
-            SetGhostSlotItem.STREAM_CODEC,
-            SetGhostSlotItem::serverReceiveSetGhostSlotItem);
+            SetEyeDropperSlotItem.TYPE,
+            SetEyeDropperSlotItem.STREAM_CODEC,
+            SetEyeDropperSlotItem::serverReceiveSetEyeDropperSlotItem);
 
       registrar.playToServer(
             RequestEditRecipeProductionScreen.TYPE,

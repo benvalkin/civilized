@@ -11,7 +11,7 @@ import com.uncreated.civilized.core.building.production.bills.ProductionTypes;
 import com.uncreated.civilized.core.settlement.Settlement;
 import com.uncreated.civilized.neoforge.registration.gui.GuiRegistry;
 import com.uncreated.civilized.ui.menu.building.residence.artisan.EditRecipeMenu;
-import com.uncreated.civilized.ui.menu.item.management.EyedropperSlot;
+import com.uncreated.civilized.ui.menu.item.management.LegacyEyedropperSlot;
 import com.uncreated.civilized.ui.menu.item.management.ReadonlySlot;
 
 import net.minecraft.core.NonNullList;
@@ -52,12 +52,12 @@ public class EditCraftingRecipeMenu extends EditRecipeMenu<CraftingRecipe, Craft
    }
 
    @Override
-   protected List<EyedropperSlot> setupInputSlots(Container craftingMenuContainer) {
-      List<EyedropperSlot> slots = new ArrayList<>();
+   protected List<LegacyEyedropperSlot> setupInputSlots(Container craftingMenuContainer) {
+      List<LegacyEyedropperSlot> slots = new ArrayList<>();
       int slotIndex = 0;
       for (int y = 0; y < 3; y++) {
          for (int x = 0; x < 3; x++) {
-            slots.add(new EyedropperSlot(craftingMenuContainer, slotIndex, 51 + 18 * x, 20 + 18 * y));
+            slots.add(new LegacyEyedropperSlot(craftingMenuContainer, slotIndex, 51 + 18 * x, 20 + 18 * y));
             slotIndex++;
          }
       }

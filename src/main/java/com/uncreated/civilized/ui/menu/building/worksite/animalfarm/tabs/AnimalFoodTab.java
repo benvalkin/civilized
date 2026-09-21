@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.uncreated.civilized.core.building.state.animalfarm.AnimalFarmState;
-import com.uncreated.civilized.networking.packets.SetGhostSlotItem;
-import com.uncreated.civilized.ui.components.widget.GhostSlotWidget;
+import com.uncreated.civilized.networking.packets.SetEyeDropperSlotItem;
+import com.uncreated.civilized.ui.components.widget.EyeDropperSlotWidget;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
 import com.uncreated.civilized.ui.menu.building.ABuildingScreenTab;
 import com.uncreated.civilized.ui.style.Colors;
@@ -23,7 +23,7 @@ public class AnimalFoodTab extends ABuildingScreenTab {
    private static final int SLOTS_Y = 38;
    private static final int SLOT_SPACING = 36;
 
-   private final List<GhostSlotWidget> foodSlots = new ArrayList<>();
+   private final List<EyeDropperSlotWidget> foodSlots = new ArrayList<>();
 
    public AnimalFoodTab(
          int index,
@@ -44,14 +44,14 @@ public class AnimalFoodTab extends ABuildingScreenTab {
             Component.translatable("menu.building.worksite.animal_farm.allowed_animal_food.heading"),
             context);
 
-      int slotsWidth = GhostSlotWidget.SIZE + (AnimalFarmState.NUMBER_OF_FOOD_SLOTS - 1) * SLOT_SPACING;
+      int slotsWidth = EyeDropperSlotWidget.SIZE + (AnimalFarmState.NUMBER_OF_FOOD_SLOTS - 1) * SLOT_SPACING;
       int firstSlotX = x + (width - slotsWidth) / 2;
 
       for (int i = 0; i < AnimalFarmState.NUMBER_OF_FOOD_SLOTS; i++) {
          int foodSlot = i;
          foodSlots
                .add(
-                     new GhostSlotWidget(
+                     new EyeDropperSlotWidget(
                            screen,
                            firstSlotX + i * SLOT_SPACING,
                            y + SLOTS_Y,
@@ -59,7 +59,7 @@ public class AnimalFoodTab extends ABuildingScreenTab {
                            stack -> animalFarmState().isCorrectAnimalFood(stack),
                            stack -> PacketDistributor
                                  .sendToServer(
-                                       new SetGhostSlotItem(context.building().getBuildingId(), foodSlot, stack))));
+                                       new SetEyeDropperSlotItem(context.building().getBuildingId(), foodSlot, stack))));
       }
    }
 
