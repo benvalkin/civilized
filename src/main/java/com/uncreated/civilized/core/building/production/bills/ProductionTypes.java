@@ -81,6 +81,7 @@ public class ProductionTypes {
                createResourceKey("crafting_production"),
                RecipeType.CRAFTING,
                CraftingMachine::new,
+               ItemFilters.DEFAULT_CRAFTING_FILTERS,
                3,
                3,
                ProductionTypes::findCraftingRecipe);
@@ -89,6 +90,7 @@ public class ProductionTypes {
                createResourceKey("smelting_production"),
                RecipeType.SMELTING,
                SmeltingMachine::new,
+               ItemFilters.DEFAULT_COOKING_WITH_FUEL_FILTERS,
                1,
                1,
                cookingRecipeLookup(RecipeType.SMELTING));
@@ -97,6 +99,7 @@ public class ProductionTypes {
                createResourceKey("blasting_production"),
                RecipeType.BLASTING,
                BlastingMachine::new,
+               ItemFilters.DEFAULT_COOKING_WITH_FUEL_FILTERS,
                1,
                1,
                cookingRecipeLookup(RecipeType.BLASTING));
@@ -105,6 +108,7 @@ public class ProductionTypes {
                createResourceKey("smoking_production"),
                RecipeType.SMOKING,
                SmokingMachine::new,
+               ItemFilters.DEFAULT_COOKING_WITH_FUEL_FILTERS,
                1,
                1,
                cookingRecipeLookup(RecipeType.SMOKING));

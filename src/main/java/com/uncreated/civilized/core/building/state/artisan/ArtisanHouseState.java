@@ -8,6 +8,8 @@ import java.util.Optional;
 
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.production.RecipeProductionMachine;
+import com.uncreated.civilized.core.building.production.bills.ItemFilters;
+import com.uncreated.civilized.core.building.production.bills.NbtHelper;
 import com.uncreated.civilized.core.building.production.bills.ProductionBill;
 import com.uncreated.civilized.core.building.production.bills.ProductionRecipe;
 import com.uncreated.civilized.core.building.production.bills.ProductionType;
@@ -101,7 +103,8 @@ public abstract class ArtisanHouseState extends BuildingState {
                      ProductionStrategyType.valueOf(bt.getString("production_strategy_type")),
                      bt.getInt("bill_amount"),
                      bt.getBoolean("enabled"),
-                     readItemList(bt.getList("input_items", Tag.TAG_COMPOUND), registryAccess),
+                     NbtHelper.readItemList(bt.getList("input_items", Tag.TAG_COMPOUND), registryAccess),
+                     ItemFilters.fromNbt(bt.getList("ingredient_filters", Tag.TAG_COMPOUND), registryAccess),
                      ItemStack.parse(registryAccess, bt.getCompound("display_item")).orElse(ItemStack.EMPTY));
          productionBills.add(bill);
 
@@ -134,34 +137,14 @@ public abstract class ArtisanHouseState extends BuildingState {
          billTag.putString("production_strategy_type", bill.getProductionStrategy().getType().name());
          billTag.putInt("bill_amount", bill.getBillAmount());
          billTag.putBoolean("enabled", bill.isEnabled());
-         billTag.put("input_items", writeItemList(bill.getInputItems(), registryAccess));
+         billTag.put("input_items", NbtHelper.writeItemList(bill.getInputItems(), registryAccess));
+         billTag.put("ingredient_filters", bill.getIngredientFilters().toNbt(registryAccess));
          billTag.put("display_item", bill.getDisplayItem().save(registryAccess, new CompoundTag()));
          list.add(billTag);
       }
 
       tag.put("production_bills", list);
       rootTag.put("production_bills_" + productionType.name().toLowerCase(), tag);
-   }
-
-   private List<ItemStack> readItemList(ListTag listTag, HolderLookup.Provider registryAccess) {
-      List<ItemStack> result = new ArrayList<>();
-      for (Tag tag : listTag) {
-         if (!(tag instanceof CompoundTag itemTag))
-            continue;
-
-         ItemStack itemStack = ItemStack.parseOptional(registryAccess, itemTag);
-         result.add(itemStack);
-      }
-      return result;
-   }
-
-   private ListTag writeItemList(List<ItemStack> items, HolderLookup.Provider registryAccess) {
-      ListTag list = new ListTag();
-      for (ItemStack item : items) {
-         list.add(item.saveOptional(registryAccess));
-      }
-
-      return list;
    }
 
    public Optional<List<ProductionBill>> tryGetProductionBills(ProductionType productionType) {
@@ -213,7 +196,10 @@ public abstract class ArtisanHouseState extends BuildingState {
       return result;
    }
 
-   public RecipeEvaluation serverEvaluateRecipe(ProductionType productionType, List<ItemStack> inputs, ServerLevel level) {
+   public RecipeEvaluation serverEvaluateRecipe(
+         ProductionType productionType,
+         List<ItemStack> inputs,
+         ServerLevel level) {
       Optional<ProductionRecipe> recipe = productionType.recipeLookup().find(inputs, level);
       if (recipe.isEmpty())
          return new RecipeEvaluation(Optional.empty(), RecipeAllowed.INVALID_RECIPE);
@@ -298,6 +284,7 @@ public abstract class ArtisanHouseState extends BuildingState {
             64,
             true,
             inputItems,
+            productionType.createEmptyIngredientFilters().get(),
             displayItem);
    }
 }

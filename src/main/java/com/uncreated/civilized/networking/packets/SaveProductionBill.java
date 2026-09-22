@@ -78,8 +78,11 @@ public record SaveProductionBill(UUID buildingId, ProductionType productionType,
    public static void serverReceiveSaveProductionBill(SaveProductionBill packet, IPayloadContext context) {
 
       Optional<ProductionBillEditValidation.EditableArtisanHouse> artisanHouse =
-            ProductionBillEditValidation
-                  .findArtisanHouseForRecipeValidation(packet.buildingId, packet.productionType, packet.inputs, context);
+            ProductionBillEditValidation.findArtisanHouseForRecipeValidation(
+                  packet.buildingId,
+                  packet.productionType,
+                  packet.inputs,
+                  context);
       if (artisanHouse.isEmpty() || !(context.player() instanceof ServerPlayer serverPlayer))
          return;
 
@@ -107,6 +110,7 @@ public record SaveProductionBill(UUID buildingId, ProductionType productionType,
                   amount,
                   packet.enabled,
                   inputs,
+                  packet.productionType.createEmptyIngredientFilters().get(),
                   recipe.result());
 
       if (isNewBill)

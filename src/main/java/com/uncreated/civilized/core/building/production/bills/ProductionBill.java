@@ -31,6 +31,8 @@ public class ProductionBill {
    private final List<ItemStack> inputItems;
    private final ItemStack displayItem;
 
+   private final ItemFilters ingredientFilters;
+
    private final int startingProductionTokens = DEFAULT_STARTING_PRODUCTION_TOKENS;
 
    public static final int DEFAULT_STARTING_PRODUCTION_TOKENS = 8;
@@ -42,6 +44,7 @@ public class ProductionBill {
          int billAmount,
          boolean enabled,
          List<ItemStack> inputItems,
+         ItemFilters ingredientFilters,
          ItemStack displayItem) {
       this.minecraftRecipeName = recipeName;
       this.productionType = productionType;
@@ -53,6 +56,7 @@ public class ProductionBill {
       case ProductionStrategyType.PRODUCE_INFINITE -> new ProduceInfinite(8);
       case ProductionStrategyType.PRODUCE_UP_TO -> new ProduceUpTo(billAmount, 8);
       };
+      this.ingredientFilters = ingredientFilters;
    }
 
    public Optional<RecipeHolder<?>> resolveRecipe(RecipeManager recipeManager) {
@@ -66,7 +70,8 @@ public class ProductionBill {
    @Override
    public String toString() {
       return switch (productionStrategy.getType()) {
-      case ProductionStrategyType.PRODUCE_INFINITE -> String.format("%s:infinite [%s, enabled:%s]", minecraftRecipeName, productionType, enabled);
+      case ProductionStrategyType.PRODUCE_INFINITE ->
+         String.format("%s:infinite [%s, enabled:%s]", minecraftRecipeName, productionType, enabled);
       case ProductionStrategyType.PRODUCE_UP_TO ->
          String.format("%s:produce_up_to(%s) [%s, %s]", minecraftRecipeName, billAmount, productionType, enabled);
       };
