@@ -5,8 +5,8 @@ import java.util.List;
 import com.uncreated.civilized.ui.components.buttons.buildingtab.ManageWorkersTabButton;
 import com.uncreated.civilized.ui.components.buttons.buildingtab.SettingsTabButton;
 import com.uncreated.civilized.ui.components.buttons.buildingtab.WorksiteHomeTabButton;
-import com.uncreated.civilized.ui.context.BuildingScreenContext;
-import com.uncreated.civilized.ui.menu.building.ABuildingScreen;
+import com.uncreated.civilized.ui.menu.building.ABuildingMenuScreen;
+import com.uncreated.civilized.ui.menu.building.BuildingMenu;
 import com.uncreated.civilized.ui.menu.building.BuildingSettingsTab;
 import com.uncreated.civilized.ui.menu.building.worksite.tabs.WorksiteInfoTab;
 import com.uncreated.civilized.ui.menu.building.worksite.tabs.ManageWorkersTab;
@@ -15,11 +15,12 @@ import com.uncreated.civilized.ui.tabs.ITabHost;
 
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Inventory;
 
-public class WorksiteBuildingScreen extends ABuildingScreen {
+public class WorksiteBuildingScreen extends ABuildingMenuScreen {
 
-   public WorksiteBuildingScreen(BuildingScreenContext context, Component title) {
-      super(context, title);
+   public WorksiteBuildingScreen(BuildingMenu menu, Inventory playerInventory, Component title) {
+      super(menu, playerInventory, title);
    }
 
    @Override

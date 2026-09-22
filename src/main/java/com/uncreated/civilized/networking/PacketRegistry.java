@@ -18,7 +18,6 @@ import com.uncreated.civilized.networking.packets.PreviewProductionBill;
 import com.uncreated.civilized.networking.packets.ProductionBillPreview;
 import com.uncreated.civilized.networking.packets.SaveProductionBill;
 import com.uncreated.civilized.networking.packets.SetEyeDropperSlotItem;
-import com.uncreated.civilized.networking.packets.ShowBuildingScreen;
 import com.uncreated.civilized.ui.menu.dialogue.VillagerDialogueScreen;
 
 import net.neoforged.bus.api.SubscribeEvent;
@@ -66,11 +65,6 @@ public class PacketRegistry {
             CreateNewBuilding.TYPE,
             CreateNewBuilding.STREAM_CODEC,
             CreateNewBuilding::serverReceiveCreateNewBuilding);
-
-      registrar.playToClient(
-            ShowBuildingScreen.TYPE,
-            ShowBuildingScreen.STREAM_CODEC,
-            ShowBuildingScreen::clientReceiveShowBuildingScreen);
 
       registrar.playToServer(
             SetEyeDropperSlotItem.TYPE,

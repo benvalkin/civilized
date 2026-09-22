@@ -103,7 +103,7 @@ public class BuildingTypes {
    public static BuildingType INN =
          declare(BuildingType.builder(createResourceKey("inn"))
                .isResidence(true)
-               .buildingScreenSupplier(InnBuildingScreen::new)
+               .buildingMenuScreenSupplier(InnBuildingScreen::new)
                .build());
    public static BuildingType TOWN_SQUARE = declare(BuildingType.builder(createResourceKey("town_square")).build());
    public static BuildingType STOREHOUSE = declare(BuildingType.builder(createResourceKey("storehouse")).build());
@@ -350,19 +350,19 @@ public class BuildingTypes {
    public static BuildingType FISHING_SPOT =
          declare(BuildingType.builder(createResourceKey("fishing_spot"))
                .isWorksite(true)
-               .buildingScreenSupplier(WorksiteBuildingScreen::new)
+               .buildingMenuScreenSupplier(WorksiteBuildingScreen::new)
                .occupation(() -> VillagerOccupations.FISHERMAN)
                .build());
    public static BuildingType MINE =
          declare(BuildingType.builder(createResourceKey("mine"))
                .isWorksite(true)
-               .buildingScreenSupplier(WorksiteBuildingScreen::new)
+               .buildingMenuScreenSupplier(WorksiteBuildingScreen::new)
                .occupation(() -> VillagerOccupations.MINER)
                .build());
    public static BuildingType QUARRY =
          declare(BuildingType.builder(createResourceKey("quarry"))
                .isWorksite(true)
-               .buildingScreenSupplier(WorksiteBuildingScreen::new)
+               .buildingMenuScreenSupplier(WorksiteBuildingScreen::new)
                .occupation(() -> VillagerOccupations.STONECUTTER)
                .build());
    public static BuildingType GROVE =

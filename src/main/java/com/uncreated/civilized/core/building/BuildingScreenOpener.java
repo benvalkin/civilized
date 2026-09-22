@@ -1,7 +1,6 @@
 package com.uncreated.civilized.core.building;
 
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
-import com.uncreated.civilized.networking.packets.ShowBuildingScreen;
 import com.uncreated.civilized.ui.menu.building.BuildingMenu;
 
 import net.minecraft.nbt.CompoundTag;
@@ -12,7 +11,6 @@ import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.neoforged.neoforge.network.PacketDistributor;
 
 /**
  * Opens a building's screen for a player.
@@ -23,11 +21,6 @@ public class BuildingScreenOpener {
 
       CompoundTag additionalData = new CompoundTag();
       building.getState().serverAddToBuildingScreenContext(additionalData, player.serverLevel());
-
-      if (!building.getBuildingType().usesBuildingMenu()) {
-         PacketDistributor.sendToPlayer(player, new ShowBuildingScreen(building.getBuildingId(), additionalData));
-         return;
-      }
 
       // Opening the menu done next tick.
       // The reason for this is that closing a menu replaces the player's open menu with their

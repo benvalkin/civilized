@@ -13,7 +13,7 @@ public class GuiSetupEvents {
 
    @SubscribeEvent
    public static void registerScreens(RegisterMenuScreensEvent event) {
-      // every building screen shares this one menu type, so the building's type decides which screen it gets
+      // every building screen shares this one menu type. The building's BuildingType decides which screen it gets.
       event.register(
             GuiRegistry.BUILDING_MENU.get(),
             (MenuScreens.ScreenConstructor<BuildingMenu, ABuildingMenuScreen>) (buildingMenu, inventory, component) -> {

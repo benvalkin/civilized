@@ -2,7 +2,6 @@ package com.uncreated.civilized.core.building;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -12,9 +11,7 @@ import com.uncreated.civilized.core.building.production.bills.ProductionType;
 import com.uncreated.civilized.core.building.state.BuildingState;
 import com.uncreated.civilized.core.villagerinfo.VillagerOccupation;
 import com.uncreated.civilized.core.villagerinfo.VillagerOccupations;
-import com.uncreated.civilized.ui.context.BuildingScreenContext;
 import com.uncreated.civilized.ui.menu.building.ABuildingMenuScreen;
-import com.uncreated.civilized.ui.menu.building.ABuildingScreen;
 import com.uncreated.civilized.ui.menu.building.BuildingMenu;
 import com.uncreated.civilized.ui.menu.building.residence.ResidenceBuildingScreen;
 import com.uncreated.civilized.ui.style.Colors;
@@ -45,26 +42,16 @@ public class BuildingType {
    @Getter(AccessLevel.NONE)
    @Builder.Default
    private final Supplier<VillagerOccupation> occupation = () -> VillagerOccupations.UNEMPLOYED;
-   @Builder.Default
-   // TODO: on dedicated servers, there are no GUI files, so we can't reference the class `ABuildingScreen` at all
+   /** Creates this building's screen, which is backed by a {@link BuildingMenu}. */
+   // TODO: on dedicated servers, there are no GUI files, so we can't reference the class `ABuildingMenuScreen` at all
    // because Java's classloader won't find the class. A better solution is a building type to screen table, which also
-   // benefits different
-   // mod loaders.
-   private final BiFunction<BuildingScreenContext, Component, ABuildingScreen> buildingScreenSupplier =
+   // benefits different mod loaders.
+   @Builder.Default
+   private final MenuScreens.ScreenConstructor<BuildingMenu, ABuildingMenuScreen> buildingMenuScreenSupplier =
          ResidenceBuildingScreen::new;
-
-   /**
-    * Creates this building's screen when it is backed by a {@link BuildingMenu}, i.e. once it has been moved off the
-    * older screen-only approach. {@code buildingScreenSupplier} is ignored once this is set.
-    */
-   private final MenuScreens.ScreenConstructor<BuildingMenu, ABuildingMenuScreen> buildingMenuScreenSupplier;
 
    public static BuildingTypeBuilder builder(ResourceLocation key) {
       return internalBuilder().resourceLocation(key);
-   }
-
-   public boolean usesBuildingMenu() {
-      return buildingMenuScreenSupplier != null;
    }
 
    public VillagerOccupation occupation() {
