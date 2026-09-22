@@ -20,17 +20,28 @@ public class ProductionType {
    private final ResourceLocation resourceLocation;
    private final RecipeType<?> recipeType;
    private final Supplier<RecipeProductionMachine<?>> createRecipeProductionMachine;
-   private final IEditRecipeProductionMenuSupplier menuSupplier;
+   /** How many input slots wide the recipe grid is, e.g. 3 for crafting and 1 for cooking. */
+   private final int inputGridWidth;
+   private final int inputGridHeight;
+   private final IProductionRecipeLookup recipeLookup;
 
    public ProductionType(
          ResourceLocation resourceLocation,
          RecipeType<?> recipeType,
          Supplier<RecipeProductionMachine<?>> createRecipeProductionMachine,
-         IEditRecipeProductionMenuSupplier menuSupplier) {
+         int inputGridWidth,
+         int inputGridHeight,
+         IProductionRecipeLookup recipeLookup) {
       this.resourceLocation = resourceLocation;
       this.recipeType = recipeType;
       this.createRecipeProductionMachine = createRecipeProductionMachine;
-      this.menuSupplier = menuSupplier;
+      this.inputGridWidth = inputGridWidth;
+      this.inputGridHeight = inputGridHeight;
+      this.recipeLookup = recipeLookup;
+   }
+
+   public int inputSlotCount() {
+      return inputGridWidth * inputGridHeight;
    }
 
    public String name() {

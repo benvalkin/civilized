@@ -2,7 +2,7 @@ package com.uncreated.civilized.ui.menu.building.widgets;
 
 import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
-import com.uncreated.civilized.ui.menu.building.residence.artisan.RecipeAllowed;
+import com.uncreated.civilized.core.building.production.bills.RecipeAllowed;
 
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;

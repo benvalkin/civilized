@@ -8,7 +8,6 @@ import com.uncreated.civilized.core.building.ClientBuildingStore;
 import com.uncreated.civilized.core.building.production.bills.ProductionBill;
 import com.uncreated.civilized.core.building.production.bills.strategy.ProductionStrategyType;
 import com.uncreated.civilized.core.building.state.artisan.ArtisanHouseState;
-import com.uncreated.civilized.networking.packets.RequestEditRecipeProductionScreen;
 import com.uncreated.civilized.ui.components.buttons.TrashcanButton;
 import com.uncreated.civilized.ui.components.widget.ItemDisplayWidget;
 import com.uncreated.civilized.ui.style.Colors;
@@ -22,7 +21,6 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
-import net.neoforged.neoforge.network.PacketDistributor;
 
 public class ProductionBillListViewWidget extends AbstractContainerWidget {
 
@@ -34,6 +32,7 @@ public class ProductionBillListViewWidget extends AbstractContainerWidget {
    private final ItemDisplayWidget itemDisplay;
    private final Checkbox enabledButton;
    private final TrashcanButton deleteButton;
+   private final Runnable onEdit;
 
    public ProductionBillListViewWidget(
          int x,
@@ -43,12 +42,14 @@ public class ProductionBillListViewWidget extends AbstractContainerWidget {
          Font font,
          ProductionBill productionBill,
          int productionBillIndex,
-         Building building) {
+         Building building,
+         Runnable onEdit) {
       super(x, y, width, height, Component.literal("ManageOccupantWidget"));
       this.font = font;
       this.productionBillIndex = productionBillIndex;
       this.productionBill = productionBill;
       this.building = building;
+      this.onEdit = onEdit;
 
       itemDisplay = new ItemDisplayWidget(x + 4, y, productionBill.getDisplayItem());
 
@@ -128,12 +129,6 @@ public class ProductionBillListViewWidget extends AbstractContainerWidget {
    }
 
    private void onPressEdit(Button b) {
-      PacketDistributor.sendToServer(
-            new RequestEditRecipeProductionScreen(
-                  building.getBuildingId(),
-                  9,
-                  productionBill.getProductionType(),
-                  productionBillIndex,
-                  false));
+      onEdit.run();
    }
 }

@@ -37,7 +37,13 @@ public class CraftsmanHouseBuildingScreen extends ABuildingMenuScreen {
             new CraftingProductionTabButton(
                   tabHost,
                   1,
-                  host -> new ManageProductionBillsTab(host, font, context, ProductionTypes.CRAFTING)),
+                  host -> new ManageProductionBillsTab(
+                        host,
+                        font,
+                        context,
+                        ProductionTypes.CRAFTING,
+                        EditProductionBillLayout.CRAFTING,
+                        this)),
             new ManageResidentsTabButton(tabHost, 2, host -> new ManageResidentsTab(host, font, context)),
             new SettingsTabButton(tabHost, 3, host -> new BuildingSettingsTab(host, font, context)));
    }

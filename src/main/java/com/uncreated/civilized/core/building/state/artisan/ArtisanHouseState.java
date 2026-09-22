@@ -9,8 +9,10 @@ import java.util.Optional;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.production.RecipeProductionMachine;
 import com.uncreated.civilized.core.building.production.bills.ProductionBill;
+import com.uncreated.civilized.core.building.production.bills.ProductionRecipe;
 import com.uncreated.civilized.core.building.production.bills.ProductionType;
 import com.uncreated.civilized.core.building.production.bills.ProductionTypes;
+import com.uncreated.civilized.core.building.production.bills.RecipeAllowed;
 import com.uncreated.civilized.core.building.production.bills.strategy.ProductionStrategyType;
 import com.uncreated.civilized.core.building.production.orders.ProductionOrder;
 import com.uncreated.civilized.core.building.state.BuildingState;
@@ -209,6 +211,22 @@ public abstract class ArtisanHouseState extends BuildingState {
       }
 
       return result;
+   }
+
+   public RecipeEvaluation serverEvaluateRecipe(ProductionType productionType, List<ItemStack> inputs, ServerLevel level) {
+      Optional<ProductionRecipe> recipe = productionType.recipeLookup().find(inputs, level);
+      if (recipe.isEmpty())
+         return new RecipeEvaluation(Optional.empty(), RecipeAllowed.INVALID_RECIPE);
+
+      boolean allowed = recipeAllowed(productionType, recipe.get().input(), recipe.get().result(), level);
+      return new RecipeEvaluation(recipe, allowed ? RecipeAllowed.ALLOWED : RecipeAllowed.NOT_ALLOWED);
+   }
+
+   public record RecipeEvaluation(Optional<ProductionRecipe> recipe, RecipeAllowed recipeAllowed) {
+
+      public ItemStack resultItem() {
+         return recipe.map(ProductionRecipe::result).orElse(ItemStack.EMPTY);
+      }
    }
 
    public abstract boolean recipeAllowed(

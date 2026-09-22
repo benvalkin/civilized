@@ -14,12 +14,11 @@ import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.networking.packets.CreateNewBuilding;
-import com.uncreated.civilized.networking.packets.EditProductionBillUpdateState;
+import com.uncreated.civilized.networking.packets.PreviewProductionBill;
+import com.uncreated.civilized.networking.packets.ProductionBillPreview;
+import com.uncreated.civilized.networking.packets.SaveProductionBill;
 import com.uncreated.civilized.networking.packets.SetEyeDropperSlotItem;
-import com.uncreated.civilized.networking.packets.RequestEditRecipeProductionScreen;
 import com.uncreated.civilized.networking.packets.ShowBuildingScreen;
-import com.uncreated.civilized.networking.packets.TellProductionBillRecipeAllowed;
-import com.uncreated.civilized.ui.menu.building.residence.artisan.crafting.EditCraftingRecipeMenu;
 import com.uncreated.civilized.ui.menu.dialogue.VillagerDialogueScreen;
 
 import net.neoforged.bus.api.SubscribeEvent;
@@ -79,11 +78,6 @@ public class PacketRegistry {
             SetEyeDropperSlotItem::serverReceiveSetEyeDropperSlotItem);
 
       registrar.playToServer(
-            RequestEditRecipeProductionScreen.TYPE,
-            RequestEditRecipeProductionScreen.STREAM_CODEC,
-            RequestEditRecipeProductionScreen::serverReceiveRequestScreen);
-
-      registrar.playToServer(
             GiveItemsToPlayer.TYPE,
             GiveItemsToPlayer.STREAM_CODEC,
             RewardActions::serverGiveItemsToPlayer);
@@ -94,13 +88,18 @@ public class PacketRegistry {
             VillagerDialogueScreen::serverReceiveShowScreen);
 
       registrar.playToServer(
-            EditProductionBillUpdateState.TYPE,
-            EditProductionBillUpdateState.CODEC,
-            EditCraftingRecipeMenu::serverReceiveDesiredProductionBillAmount);
+            PreviewProductionBill.TYPE,
+            PreviewProductionBill.STREAM_CODEC,
+            PreviewProductionBill::serverReceivePreviewProductionBill);
 
       registrar.playToClient(
-            TellProductionBillRecipeAllowed.TYPE,
-            TellProductionBillRecipeAllowed.STREAM_CODEC,
-            TellProductionBillRecipeAllowed::clientReceiveRecipeAllowed);
+            ProductionBillPreview.TYPE,
+            ProductionBillPreview.STREAM_CODEC,
+            ProductionBillPreview::clientReceiveProductionBillPreview);
+
+      registrar.playToServer(
+            SaveProductionBill.TYPE,
+            SaveProductionBill.STREAM_CODEC,
+            SaveProductionBill::serverReceiveSaveProductionBill);
    }
 }

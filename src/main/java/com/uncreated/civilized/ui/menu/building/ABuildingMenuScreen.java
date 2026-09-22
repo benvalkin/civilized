@@ -30,7 +30,8 @@ import net.minecraft.world.inventory.Slot;
  * The tabbed screen of a building. It is backed by {@link BuildingMenu} so that the player's inventory is available for
  * certain actions (e.g. Editing Recipe tabs). Switching between them never opens or closes a menu.
  */
-public abstract class ABuildingMenuScreen extends AbstractContainerScreen<BuildingMenu> implements ITabHost {
+public abstract class ABuildingMenuScreen extends AbstractContainerScreen<BuildingMenu>
+      implements ITabHost, IBuildingScreen {
 
    private static final ResourceLocation MENU_TEXTURE =
          ResourceLocation.fromNamespaceAndPath(CIVILIZED_MOD_ID, "textures/gui/building_menu.png");
@@ -99,6 +100,10 @@ public abstract class ABuildingMenuScreen extends AbstractContainerScreen<Buildi
          listener = null;
 
       super.setFocused(listener);
+   }
+
+   public @Nullable ATab getCurrentTab() {
+      return tabController.getCurrentTab();
    }
 
    @Override
@@ -179,6 +184,7 @@ public abstract class ABuildingMenuScreen extends AbstractContainerScreen<Buildi
       return false;
    }
 
+   @Override
    public void refresh() {
       if (tabController != null)
          tabController.refresh();

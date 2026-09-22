@@ -5,7 +5,7 @@ import java.util.UUID;
 import com.uncreated.civilized.CivilizedMod;
 import com.uncreated.civilized.core.building.events.model.BuildingUpdatedEvent;
 import com.uncreated.civilized.core.villagerinfo.events.model.VillagerInfoUpdatedEvent;
-import com.uncreated.civilized.ui.menu.building.ABuildingScreen;
+import com.uncreated.civilized.ui.menu.building.IBuildingScreen;
 
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
@@ -19,7 +19,7 @@ public class UIUpdateEvents {
       if (!event.isClientside())
          return;
 
-      if (!(Minecraft.getInstance().screen instanceof ABuildingScreen buildingScreen))
+      if (!(Minecraft.getInstance().screen instanceof IBuildingScreen buildingScreen))
          return;
 
       UUID viewedBuildingId = buildingScreen.getContext().building().getBuildingId();
@@ -36,7 +36,7 @@ public class UIUpdateEvents {
       if (!event.isClientside())
          return;
 
-      if (!(Minecraft.getInstance().screen instanceof ABuildingScreen buildingScreen))
+      if (!(Minecraft.getInstance().screen instanceof IBuildingScreen buildingScreen))
          return;
 
       UUID viewedBuildingId = buildingScreen.getContext().building().getBuildingId();

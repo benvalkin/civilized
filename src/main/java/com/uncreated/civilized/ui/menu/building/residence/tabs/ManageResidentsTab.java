@@ -2,7 +2,6 @@ package com.uncreated.civilized.ui.menu.building.residence.tabs;
 
 import java.util.List;
 
-import com.uncreated.civilized.core.villagerinfo.VillagerOccupations;
 import org.apache.commons.compress.utils.Lists;
 
 import com.uncreated.civilized.core.building.Building;
@@ -10,7 +9,7 @@ import com.uncreated.civilized.core.building.util.BuildingUtil;
 import com.uncreated.civilized.core.settlement.Settlement;
 import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
-import com.uncreated.civilized.core.villagerinfo.VillagerOccupation;
+import com.uncreated.civilized.core.villagerinfo.VillagerOccupations;
 import com.uncreated.civilized.ui.components.IListViewBuilder;
 import com.uncreated.civilized.ui.components.ScrollListView;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
@@ -31,21 +30,13 @@ public class ManageResidentsTab extends ABuildingScreenTab {
    private List<VillagerInfo> currentOccupants;
    private List<VillagerInfo> candidateOccupants;
 
-   public ManageResidentsTab(
-         ITabHost tabHost,
-         Font font,
-         Component component,
-         BuildingScreenContext context) {
+   public ManageResidentsTab(ITabHost tabHost, Font font, Component component, BuildingScreenContext context) {
       super(tabHost, font, component, context);
       refresh();
    }
 
    public ManageResidentsTab(ITabHost tabHost, Font font, BuildingScreenContext context) {
-      this(
-            tabHost,
-            font,
-            Component.translatable("menu.building.residence.residents.tab.heading"),
-            context);
+      this(tabHost, font, Component.translatable("menu.building.residence.residents.tab.heading"), context);
    }
 
    @Override

@@ -32,7 +32,7 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
-public abstract class ABuildingScreen extends AScreenWithTabs {
+public abstract class ABuildingScreen extends AScreenWithTabs implements IBuildingScreen {
    private static final ResourceLocation MENU_TEXTURE =
          ResourceLocation.fromNamespaceAndPath(CIVILIZED_MOD_ID, "textures/gui/building_menu.png");
 

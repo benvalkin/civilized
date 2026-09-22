@@ -2,21 +2,27 @@ package com.uncreated.civilized.core.building.production.bills;
 
 import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
+import io.netty.buffer.ByteBuf;
+
+import java.util.List;
+import java.util.Optional;
+
 import com.uncreated.civilized.CivilizedMod;
 import com.uncreated.civilized.core.building.production.lines.crafting.CraftingMachine;
 import com.uncreated.civilized.core.building.production.lines.singleitem.cooking.BlastingMachine;
 import com.uncreated.civilized.core.building.production.lines.singleitem.cooking.SmeltingMachine;
 import com.uncreated.civilized.core.building.production.lines.singleitem.cooking.SmokingMachine;
-import com.uncreated.civilized.ui.menu.building.residence.artisan.crafting.EditCraftingRecipeMenu;
-import com.uncreated.civilized.ui.menu.building.residence.artisan.singleitem.EditBlastingRecipeMenu;
-import com.uncreated.civilized.ui.menu.building.residence.artisan.singleitem.EditSmeltingRecipeMenu;
-import com.uncreated.civilized.ui.menu.building.residence.artisan.singleitem.EditSmokingRecipeMenu;
 
 import net.minecraft.core.Registry;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.SimpleContainer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.AbstractCookingRecipe;
+import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -63,80 +69,66 @@ public class ProductionTypes {
       });
    }
 
+   /**
+    * Production Types can be sent over the network by registry name. Decodes to {@code null} for a name that is not
+    * registered.
+    */
+   public static final StreamCodec<ByteBuf, ProductionType> STREAM_CODEC =
+         ResourceLocation.STREAM_CODEC.map(ProductionTypes::getFromResourceLocation, ProductionType::resourceLocation);
+
    public static final ProductionType CRAFTING =
          new ProductionType(
                createResourceKey("crafting_production"),
                RecipeType.CRAFTING,
                CraftingMachine::new,
-               (
-                     containerId,
-                     playerInventory,
-                     settlement,
-                     building,
-                     productionBillIndex,
-                     isNewBill) -> new EditCraftingRecipeMenu(
-                           containerId,
-                           playerInventory,
-                           new SimpleContainer(9),
-                           settlement,
-                           building,
-                           productionBillIndex,
-                           isNewBill));
+               3,
+               3,
+               ProductionTypes::findCraftingRecipe);
    public static final ProductionType SMELTING =
          new ProductionType(
                createResourceKey("smelting_production"),
                RecipeType.SMELTING,
                SmeltingMachine::new,
-               (
-                     containerId,
-                     playerInventory,
-                     settlement,
-                     building,
-                     productionBillIndex,
-                     isNewBill) -> new EditSmeltingRecipeMenu(
-                           containerId,
-                           playerInventory,
-                           new SimpleContainer(9),
-                           settlement,
-                           building,
-                           productionBillIndex,
-                           isNewBill));
+               1,
+               1,
+               cookingRecipeLookup(RecipeType.SMELTING));
    public static final ProductionType BLASTING =
          new ProductionType(
                createResourceKey("blasting_production"),
                RecipeType.BLASTING,
                BlastingMachine::new,
-               (
-                     containerId,
-                     playerInventory,
-                     settlement,
-                     building,
-                     productionBillIndex,
-                     isNewBill) -> new EditBlastingRecipeMenu(
-                           containerId,
-                           playerInventory,
-                           new SimpleContainer(9),
-                           settlement,
-                           building,
-                           productionBillIndex,
-                           isNewBill));
+               1,
+               1,
+               cookingRecipeLookup(RecipeType.BLASTING));
    public static final ProductionType SMOKING =
          new ProductionType(
                createResourceKey("smoking_production"),
                RecipeType.SMOKING,
                SmokingMachine::new,
-               (
-                     containerId,
-                     playerInventory,
-                     settlement,
-                     building,
-                     productionBillIndex,
-                     isNewBill) -> new EditSmokingRecipeMenu(
-                           containerId,
-                           playerInventory,
-                           new SimpleContainer(9),
-                           settlement,
-                           building,
-                           productionBillIndex,
-                           isNewBill));
+               1,
+               1,
+               cookingRecipeLookup(RecipeType.SMOKING));
+
+   private static Optional<ProductionRecipe> findCraftingRecipe(List<ItemStack> inputs, ServerLevel level) {
+      CraftingInput input = CraftingInput.of(3, 3, inputs);
+
+      return level.recipeAccess()
+            .getRecipeFor(RecipeType.CRAFTING, input, level)
+            .map(recipe -> new ProductionRecipe(recipe, input, recipe.value().assemble(input, level.registryAccess())));
+   }
+
+   private static <T extends AbstractCookingRecipe> IProductionRecipeLookup cookingRecipeLookup(
+         RecipeType<T> recipeType) {
+      return (inputs, level) -> {
+         SingleRecipeInput input = new SingleRecipeInput(inputs.getFirst());
+
+         return level.recipeAccess()
+               .getRecipeFor(recipeType, input, level)
+               .map(
+                     recipe -> new ProductionRecipe(
+                           recipe,
+                           input,
+                           recipe.value().assemble(input, level.registryAccess())));
+      };
+   }
 }

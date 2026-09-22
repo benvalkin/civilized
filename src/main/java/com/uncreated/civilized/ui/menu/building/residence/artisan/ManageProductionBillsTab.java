@@ -11,7 +11,7 @@ import com.uncreated.civilized.core.building.ClientBuildingStore;
 import com.uncreated.civilized.core.building.production.bills.ProductionBill;
 import com.uncreated.civilized.core.building.production.bills.ProductionType;
 import com.uncreated.civilized.core.building.state.artisan.ArtisanHouseState;
-import com.uncreated.civilized.networking.packets.RequestEditRecipeProductionScreen;
+import com.uncreated.civilized.networking.packets.SaveProductionBill;
 import com.uncreated.civilized.ui.components.IListViewBuilder;
 import com.uncreated.civilized.ui.components.ScrollListView;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
@@ -25,13 +25,16 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
-import net.neoforged.neoforge.network.PacketDistributor;
 
 public class ManageProductionBillsTab extends ABuildingScreenTab {
 
+   private final ITabHost tabHost;
+   private final AbstractContainerScreen<?> screen;
    private final Button addProductionBill;
    private final ProductionType productionType;
+   private final EditProductionBillLayout editBillLayout;
    @Nullable
    private ScrollListView<ProductionBill, ProductionBillListViewWidget> scrollView;
 
@@ -39,9 +42,14 @@ public class ManageProductionBillsTab extends ABuildingScreenTab {
          ITabHost tabHost,
          Font font,
          BuildingScreenContext context,
-         ProductionType productionType) {
+         ProductionType productionType,
+         EditProductionBillLayout editBillLayout,
+         AbstractContainerScreen<?> screen) {
       super(tabHost, font, productionType.heading(), context);
+      this.tabHost = tabHost;
+      this.screen = screen;
       this.productionType = productionType;
+      this.editBillLayout = editBillLayout;
 
       addProductionBill =
             Button.builder(
@@ -62,16 +70,20 @@ public class ManageProductionBillsTab extends ABuildingScreenTab {
    }
 
    private void onAddBill(Button button) {
-      ArtisanHouseState state = (ArtisanHouseState) context.building().getState();
-      int newIndex = state.getProductionBills(productionType).size();
+      openEditBillTab(SaveProductionBill.NEW_BILL);
+   }
 
-      PacketDistributor.sendToServer(
-            new RequestEditRecipeProductionScreen(
-                  context.building().getBuildingId(),
-                  9,
+   private void openEditBillTab(int billIndex) {
+      tabHost.changeTab(
+            new EditProductionBillTab(
+                  tabHost,
+                  font,
+                  context,
+                  screen,
                   productionType,
-                  newIndex,
-                  true));
+                  editBillLayout,
+                  billIndex,
+                  () -> tabHost.changeTab(new ManageProductionBillsTab(tabHost, font, context, productionType, editBillLayout, screen))));
    }
 
    @Override
@@ -130,7 +142,8 @@ public class ManageProductionBillsTab extends ABuildingScreenTab {
                   font,
                   productionBill,
                   elementIndex,
-                  context.building());
+                  context.building(),
+                  () -> openEditBillTab(elementIndex));
          }
       });
    }

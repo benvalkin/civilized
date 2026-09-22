@@ -1,6 +1,5 @@
 package com.uncreated.civilized.core.building.util;
 
-import static com.uncreated.civilized.ui.menu.building.residence.tabs.ManageResidentsTab.MAX_ASSIGNED_RESIDENTS;
 import static com.uncreated.civilized.ui.menu.building.worksite.tabs.ManageWorkersTab.MAX_ASSIGNED_WORKERS;
 
 import java.util.List;
@@ -12,6 +11,7 @@ import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.BuildingStore;
 import com.uncreated.civilized.core.building.BuildingType;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
+import com.uncreated.civilized.core.villagerinfo.VillagerNpcRole;
 import com.uncreated.civilized.core.villagerinfo.VillagerStore;
 
 public class BuildingUtil {
@@ -21,15 +21,24 @@ public class BuildingUtil {
    }
 
    public static List<VillagerInfo> getAssignedWorkers(Building building, VillagerStore store) {
-      return store.getCitizens(building.getSettlementId()).stream().filter(v -> v.isAssignedWorkerOf(building)).toList();
+      return store.getCitizens(building.getSettlementId())
+            .stream()
+            .filter(v -> v.isAssignedWorkerOf(building))
+            .toList();
    }
 
    public static boolean isBuildingFull(Building building, VillagerStore store) {
-      return store.getCitizens(building.getSettlementId()).stream().filter(v -> v.isOccupantOf(building)).count() == MAX_ASSIGNED_RESIDENTS;
+      return store.getCitizens(building.getSettlementId())
+            .stream()
+            .filter(v -> v.getNpcRoles().contains(VillagerNpcRole.WORKER) && v.isOccupantOf(building))
+            .count() >= MAX_ASSIGNED_WORKERS;
    }
 
    public static boolean isWorksiteFull(Building building, VillagerStore store) {
-      return store.getCitizens(building.getSettlementId()).stream().filter(v -> v.isAssignedWorkerOf(building)).count() == MAX_ASSIGNED_WORKERS;
+      return store.getCitizens(building.getSettlementId())
+            .stream()
+            .filter(v -> v.isAssignedWorkerOf(building))
+            .count() == MAX_ASSIGNED_WORKERS;
    }
 
    public static Optional<Building> findUnoccupiedHome(
