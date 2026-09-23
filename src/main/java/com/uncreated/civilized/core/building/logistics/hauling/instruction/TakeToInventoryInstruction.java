@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.logistics.AggregateItemStack;
+import com.uncreated.civilized.core.building.logistics.hauling.ItemReservation;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.util.ContainerHelper;
@@ -19,8 +20,9 @@ import net.minecraft.world.Container;
 public class TakeToInventoryInstruction extends ConditionalHaulingInstruction<InventoryStockRequirement> {
    protected TakeToInventoryInstruction(
          List<InventoryStockRequirement> requirements,
-         List<LoadedBuilding> sourceBuildings) {
-      super(requirements, sourceBuildings);
+         List<LoadedBuilding> sourceBuildings,
+         String reservationKey) {
+      super(requirements, sourceBuildings, reservationKey);
    }
 
    /**
@@ -50,7 +52,7 @@ public class TakeToInventoryInstruction extends ConditionalHaulingInstruction<In
       if (!anyRequirementSatisfied)
          return Optional.empty();
 
-      return Optional.of(new TakeToInventoryInstruction(requirements, candidateSourceBuildings));
+      return Optional.of(new TakeToInventoryInstruction(requirements, candidateSourceBuildings, reservationKey));
    }
 
    /**
@@ -68,20 +70,25 @@ public class TakeToInventoryInstruction extends ConditionalHaulingInstruction<In
       if (!allRequirementAvailable)
          return Optional.empty();
 
-      return Optional.of(new TakeToInventoryInstruction(requirements, sourceBuildings));
+      return Optional.of(new TakeToInventoryInstruction(requirements, sourceBuildings, reservationKey));
    }
 
    @Override
-   public HaulDecision takeItemsUntilSatisfied(CivilizedVillager villager, LoadedBuilding building) {
+   public HaulDecision takeItemsUntilSatisfied(
+         CivilizedVillager villager,
+         LoadedBuilding sourceBuilding,
+         String reservationKey) {
 
-      List<Container> chests = building.chests();
+      List<Container> chests = sourceBuilding.chests();
+
+      List<ItemReservation> itemReservations = sourceBuilding.getReservationsExcluding(reservationKey);
 
       for (InventoryStockRequirement requirement : requirements) {
          int quota = outstandingAmount(villager, requirement);
          if (quota <= 0)
             continue; // villager already has enough of these items
 
-         takeForRequirement(villager, requirement, chests, quota);
+         takeForRequirement(villager, requirement, chests, itemReservations, quota);
       }
 
       if (allRequirementsSatisfied(villager))

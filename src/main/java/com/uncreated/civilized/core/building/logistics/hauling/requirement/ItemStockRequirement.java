@@ -62,7 +62,7 @@ public abstract class ItemStockRequirement {
       for (LoadedBuilding candidateBuilding : candidateSourceBuildings) {
          List<Container> chests = candidateBuilding.chests();
          AggregateItemStack buildingStock =
-               calculateBuildingStock(reservationKey, chests, candidateBuilding.getItemReservations());
+               calculateBuildingStock(chests, candidateBuilding.getReservationsExcluding(reservationKey));
 
          if (buildingStock.getCount() > 0) {
             grossStock.add(buildingStock);
@@ -75,21 +75,16 @@ public abstract class ItemStockRequirement {
    }
 
    public AggregateItemStack calculateBuildingStock(
-         String reservationKey,
-         List<Container> chests,
-         Map<String, ItemReservation> reservations) {
+           List<Container> chests,
+         List<ItemReservation> reservations) {
       AggregateItemStack buildingStock = new AggregateItemStack();
       for (Container chest : chests) {
          AggregateItemStack chestStock = ContainerHelper.countItems(chest, filter);
          buildingStock.add(chestStock);
       }
 
-      for (Map.Entry<String, ItemReservation> reservationEntry : reservations.entrySet()) {
-
-         if (reservationEntry.getKey().equals(reservationKey))
-            continue;
-
-         buildingStock.removeMatching(reservationEntry.getValue().filter(), reservationEntry.getValue().amount());
+      for (ItemReservation reservation : reservations) {
+         buildingStock.removeMatching(reservation.filter(), reservation.amount());
       }
       return buildingStock;
    }

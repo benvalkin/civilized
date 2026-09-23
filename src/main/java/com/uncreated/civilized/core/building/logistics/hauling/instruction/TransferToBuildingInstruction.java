@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.logistics.AggregateItemStack;
+import com.uncreated.civilized.core.building.logistics.hauling.ItemReservation;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.BuildingStockRequirement;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.util.ContainerHelper;
@@ -22,8 +23,9 @@ public class TransferToBuildingInstruction extends ConditionalHaulingInstruction
    protected TransferToBuildingInstruction(
          List<BuildingStockRequirement> requirements,
          List<LoadedBuilding> sourceBuildings,
-         LoadedBuilding candidateSourceBuildings) {
-      super(requirements, sourceBuildings);
+         LoadedBuilding candidateSourceBuildings,
+         String reservationKey) {
+      super(requirements, sourceBuildings, reservationKey);
       this.destinationBuilding = candidateSourceBuildings;
    }
 
@@ -60,7 +62,8 @@ public class TransferToBuildingInstruction extends ConditionalHaulingInstruction
       if (!anyRequirementAvailable)
          return Optional.empty();
 
-      return Optional.of(new TransferToBuildingInstruction(requirements, sourceBuildings, destinationBuilding));
+      return Optional
+            .of(new TransferToBuildingInstruction(requirements, sourceBuildings, destinationBuilding, reservationKey));
    }
 
    /**
@@ -79,20 +82,26 @@ public class TransferToBuildingInstruction extends ConditionalHaulingInstruction
       if (!allRequirementAvailable)
          return Optional.empty();
 
-      return Optional.of(new TransferToBuildingInstruction(requirements, sourceBuildings, destinationBuilding));
+      return Optional
+            .of(new TransferToBuildingInstruction(requirements, sourceBuildings, destinationBuilding, reservationKey));
    }
 
    @Override
-   public HaulDecision takeItemsUntilSatisfied(CivilizedVillager villager, LoadedBuilding sourceBuilding) {
+   public HaulDecision takeItemsUntilSatisfied(
+         CivilizedVillager villager,
+         LoadedBuilding sourceBuilding,
+         String reservationKey) {
 
       List<Container> chests = sourceBuilding.chests();
+
+      List<ItemReservation> itemReservations = sourceBuilding.getReservationsExcluding(reservationKey);
 
       for (BuildingStockRequirement requirement : requirements) {
          int quota = outstandingAmount(villager, requirement);
          if (quota <= 0)
             continue; // the destination building already has enough, or the villager is carrying the rest of it
 
-         takeForRequirement(villager, requirement, chests, quota);
+         takeForRequirement(villager, requirement, chests, itemReservations, quota);
       }
 
       if (!allRequirementsSatisfied(villager))
@@ -110,13 +119,10 @@ public class TransferToBuildingInstruction extends ConditionalHaulingInstruction
       if (requirement.insatiable())
          return BuildingStockRequirement.UNLIMITED;
 
-      String reservationKey = villager.getInfo().getVillagerId().toString();
-
       AggregateItemStack itemsAtDestination =
             requirement.calculateBuildingStock(
-                  reservationKey,
                   destinationBuilding.chests(),
-                  destinationBuilding.getItemReservations());
+                  destinationBuilding.getReservationsExcluding(reservationKey));
 
       if (requirement.disregardExistingCarriedStock()) {
          return requirement.idealAmount() - itemsAtDestination.getCount();

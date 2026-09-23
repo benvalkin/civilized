@@ -86,6 +86,10 @@ public class TakeItemsToInventory extends WorkTaskBehaviour {
       eraseMemory(villager); // TODO: bug: queuing two of this behaviour back will not work properly if we erase the
                              // memory here (the second one's memory will be erased. We need a smarter system that
                              // allows memories to be queued along with behavior states.
+
+      // cancel any reservations we've made in case this activity stops early
+      if (currentSourceBuilding != null)
+         currentSourceBuilding.cancelReservation(haulingInstruction.reservationKey());
    }
 
    @Override
@@ -103,11 +107,15 @@ public class TakeItemsToInventory extends WorkTaskBehaviour {
 
    protected void takeItems(ServerLevel level, CivilizedVillager villager, long tickTime) {
 
-      ConditionalHaulingInstruction.HaulDecision haulDecision =
-            haulingInstruction.takeItemsUntilSatisfied(villager, currentSourceBuilding);
+      String reservationKey = haulingInstruction.reservationKey();
 
-      visitedBuildings.add(currentSourceBuilding); // 'visited' means we tried to take from this building, regardless of
-                                                   // whether there were items in it
+      ConditionalHaulingInstruction.HaulDecision haulDecision =
+            haulingInstruction.takeItemsUntilSatisfied(villager, currentSourceBuilding, reservationKey);
+
+      // now we have successfully taken everything we can from this building
+      currentSourceBuilding.cancelReservation(reservationKey);
+      // 'visited' means we tried to take from this building, regardless of whether there were items in it
+      visitedBuildings.add(currentSourceBuilding);
 
       if (haulDecision == ConditionalHaulingInstruction.HaulDecision.REQUIREMENT_SATISFIED_NOTHING_MORE_TO_DO) {
          return;
@@ -148,8 +156,18 @@ public class TakeItemsToInventory extends WorkTaskBehaviour {
 
    private void acceptNextTargetBuilding(CivilizedVillager villager, LoadedBuilding nextBuildingWithStock) {
       currentSourceBuilding = nextBuildingWithStock;
+      placeReservationsOnBuilding(villager, currentSourceBuilding);
       BlockEntity chest = currentSourceBuilding.anyChest().orElseThrow();
       travelHelper = new MediumDistanceTravelTask(villager, chest.getBlockPos(), 2);
+   }
+
+   private void placeReservationsOnBuilding(CivilizedVillager villager, LoadedBuilding building) {
+      for (ItemStockRequirement requirement : haulingInstruction.requirements()) {
+
+         String reservationKey = haulingInstruction.reservationKey();
+         String reservationName = String.format("%s - %s", villager.getInfo().getFullName(), requirement.toString());
+         building.placeReservation(reservationKey, reservationName, requirement.filter(), requirement.idealAmount());
+      }
    }
 
    private void eraseMemory(CivilizedVillager villager) {

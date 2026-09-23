@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Optional;
 
 import com.mojang.datafixers.util.Pair;
-import com.uncreated.civilized.core.building.production.bills.ItemFilters;
 import com.uncreated.civilized.core.building.production.bills.ProductionBill;
 import com.uncreated.civilized.core.building.production.bills.ProductionType;
 import com.uncreated.civilized.core.building.production.bills.strategy.ProductionStrategyType;
@@ -64,6 +63,9 @@ public abstract class RecipeProductionMachine<Order extends ProductionOrder> {
    public Optional<Pair<ProductionOrder, PendingProductionOutput>> tryGetNextOrder(
          List<Container> ingredientsChests,
          List<Container> stockChests) {
+
+      if (orders.isEmpty())
+         return Optional.empty();
 
       int attempts = 0;
       do {

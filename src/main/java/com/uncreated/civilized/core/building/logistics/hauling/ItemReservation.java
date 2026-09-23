@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import com.uncreated.civilized.core.building.logistics.AggregateItemStack;
-import com.uncreated.civilized.util.ContainerHelper;
 
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -15,11 +14,13 @@ import net.minecraft.world.item.ItemStack;
 @Getter
 public class ItemReservation {
    private final String key;
+   private final String name;
    protected final Predicate<ItemStack> filter;
    protected final int amount;
 
-   public ItemReservation(String key, Predicate<ItemStack> filter, int amount) {
+   public ItemReservation(String key, String name, Predicate<ItemStack> filter, int amount) {
       this.key = key;
+      this.name = name;
       this.filter = filter;
       this.amount = amount;
 
@@ -31,15 +32,33 @@ public class ItemReservation {
    }
 
    public AggregateItemStack calculateReservedItems(List<Container> storage) {
-      AggregateItemStack reservedStock = new AggregateItemStack();
+
+      int quota = amount;
+      AggregateItemStack reservedItems = new AggregateItemStack();
       for (Container container : storage) {
-         reservedStock.add(ContainerHelper.countItems(container, filter));
+         for (int i = 0; i < container.getContainerSize(); i++) {
+            ItemStack item = container.getItem(i);
+            if (!filter.test(item))
+               continue;
+
+            // add until we reach the reservation's amount
+            ItemStack toAdd = item.copy();
+            // clamp the toAdd item amount to the remaining quota in case this stack is bigger than what we have left to
+            // add
+            toAdd.setCount(Math.min(toAdd.getCount(), quota));
+            quota -= toAdd.getCount();
+            reservedItems.add(toAdd);
+
+            if (quota <= 0)
+               break;
+         }
       }
-      return reservedStock;
+
+      return reservedItems;
    }
 
    @Override
    public String toString() {
-      return key + ": " + amount;
+      return name + " (" + key + "): " + amount;
    }
 }

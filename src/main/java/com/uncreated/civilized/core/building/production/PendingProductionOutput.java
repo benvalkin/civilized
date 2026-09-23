@@ -97,6 +97,7 @@ public record PendingProductionOutput(Recipe<?> recipe, AssembledRecipe<?> assem
                longestBurnTimeEncountered = burnTime;
                requiredFuelItemType = item.getItem();
                consumableIngredientStack = new ConsumableIngredientStack();
+               ingredientsFound = 0;
             }
 
             if (!item.is(requiredFuelItemType))

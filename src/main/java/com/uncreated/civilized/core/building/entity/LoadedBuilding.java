@@ -1,7 +1,8 @@
 package com.uncreated.civilized.core.building.entity;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -12,8 +13,8 @@ import java.util.function.Predicate;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.entity.behaviour.BuildingBehaviour;
 import com.uncreated.civilized.core.building.logistics.hauling.ItemReservation;
-import com.uncreated.civilized.entity.CivilizedVillager;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
@@ -26,7 +27,8 @@ public class LoadedBuilding {
    private final Building building;
    private final Level level;
    private final BuildingBehaviour behaviour;
-   private final Map<String, ItemReservation> itemReservations;
+   @Getter(AccessLevel.PRIVATE)
+   private final Map<String, List<ItemReservation>> itemReservations;
    private final Set<ChestBlockEntity> chests = new LinkedHashSet<>();
 
    public LoadedBuilding(Building building, Level level) {
@@ -34,18 +36,41 @@ public class LoadedBuilding {
       this.level = level;
       behaviour = building.getBuildingType().createBehaviour().apply(this);
       behaviour.start();
-      itemReservations = new HashMap<>();
+      itemReservations = new LinkedHashMap<>();
 
       findChestsInsideBounds();
    }
 
-   public void reserveItems(CivilizedVillager villager, String key, Predicate<ItemStack> matching, int amount) {
-      String reservationKey = villager.getInfo().getVillagerId().toString();
-      itemReservations.put(reservationKey, new ItemReservation(key, matching, amount));
+   public void placeReservation(
+         String reservationKey,
+         String reservationName,
+         Predicate<ItemStack> matching,
+         int amount) {
+
+      itemReservations.compute(reservationKey, (k, v) -> {
+         if (v == null) {
+            LinkedList<ItemReservation> list = new LinkedList<>();
+            list.add(new ItemReservation(k, reservationName, matching, amount));
+            return list;
+         } else {
+            v.add(new ItemReservation(k, reservationName, matching, amount));
+            return v;
+         }
+      });
    }
 
-   public void cancelReservations(CivilizedVillager villager) {
-      String reservationKey = villager.getInfo().getVillagerId().toString();
+   public List<ItemReservation> getReservationsExcluding(String reservationKey) {
+      List<ItemReservation> others = new LinkedList<>();
+      for (Map.Entry<String, List<ItemReservation>> stringListEntry : itemReservations.entrySet()) {
+         if (stringListEntry.getKey().equals(reservationKey))
+            continue;
+
+         others.addAll(stringListEntry.getValue());
+      }
+      return others;
+   }
+
+   public void cancelReservation(String reservationKey) {
       itemReservations.remove(reservationKey);
    }
 

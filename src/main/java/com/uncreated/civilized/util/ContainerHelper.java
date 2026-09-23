@@ -74,6 +74,10 @@ public class ContainerHelper {
          Container toContainer,
          Predicate<ItemStack> searchFunction,
          int upTo) {
+
+      if (upTo <= 0)
+         return 0;
+
       int containerSize = fromContainer.getContainerSize();
       int addedSoFar = 0;
 

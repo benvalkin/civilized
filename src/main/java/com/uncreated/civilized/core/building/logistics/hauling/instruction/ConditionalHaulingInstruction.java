@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.logistics.AggregateItemStack;
+import com.uncreated.civilized.core.building.logistics.hauling.ItemReservation;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.ItemStockRequirement;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.util.ContainerHelper;
@@ -12,6 +13,7 @@ import com.uncreated.civilized.util.ContainerHelper;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
 
 @Accessors(fluent = true)
 @Getter
@@ -19,10 +21,15 @@ public abstract class ConditionalHaulingInstruction<T extends ItemStockRequireme
    protected final List<T> requirements;
    protected final List<LoadedBuilding> sourceBuildings;
    protected int currentBuildingIndex;
+   protected final String reservationKey;
 
-   protected ConditionalHaulingInstruction(List<T> requirements, List<LoadedBuilding> sourceBuildings) {
+   protected ConditionalHaulingInstruction(
+         List<T> requirements,
+         List<LoadedBuilding> sourceBuildings,
+         String reservationKey) {
       this.requirements = requirements;
       this.sourceBuildings = sourceBuildings;
+      this.reservationKey = reservationKey;
       this.currentBuildingIndex = 0;
 
       if (requirements.isEmpty()) {
@@ -34,7 +41,10 @@ public abstract class ConditionalHaulingInstruction<T extends ItemStockRequireme
       }
    }
 
-   public abstract HaulDecision takeItemsUntilSatisfied(CivilizedVillager villager, LoadedBuilding sourceBuilding);
+   public abstract HaulDecision takeItemsUntilSatisfied(
+         CivilizedVillager villager,
+         LoadedBuilding sourceBuilding,
+         String reservationKey);
 
    /**
     * How many more items of this requirement the villager still wants to pick up. 0 once it needs no more.
@@ -56,9 +66,7 @@ public abstract class ConditionalHaulingInstruction<T extends ItemStockRequireme
          if (outstandingAmount(villager, requirement) <= 0)
             continue;
 
-         String reservationKey = villager.getInfo().getVillagerId().toString();
-
-         if (requirement.calculateBuildingStock(reservationKey, chests, building.getItemReservations()).hasItems())
+         if (requirement.calculateBuildingStock(chests, building.getReservationsExcluding(reservationKey)).hasItems())
             return true;
       }
 
@@ -82,7 +90,10 @@ public abstract class ConditionalHaulingInstruction<T extends ItemStockRequireme
          CivilizedVillager villager,
          T requirement,
          List<Container> sourceChests,
+         List<ItemReservation> itemReservations,
          int quota) {
+
+      quota = adjustQuotaForReservedItems(quota, itemReservations, requirement, sourceChests);
 
       Container haulInventory = requirement.getHaulInventory(villager);
       int taken = 0;
@@ -96,6 +107,29 @@ public abstract class ConditionalHaulingInstruction<T extends ItemStockRequireme
       }
 
       return taken;
+   }
+
+   /**
+    * @return a new reduced quota value that takes into account the building's other reservations that we didn't place
+    *         (i.e. reservations that don't match the supplied {@code reservationKey})
+    */
+   protected static int adjustQuotaForReservedItems(
+         int quota,
+         List<ItemReservation> itemReservations,
+         ItemStockRequirement requirement,
+         List<Container> chests) {
+      for (ItemReservation reservation : itemReservations) {
+
+         AggregateItemStack reservedItems = reservation.calculateReservedItems(chests);
+
+         for (ItemStack itemStack : reservedItems.getItemStacks()) {
+            boolean requirementCanEatIntoReservedItem = requirement.filter().test(itemStack);
+            if (requirementCanEatIntoReservedItem) {
+               quota -= itemStack.getCount();
+            }
+         }
+      }
+      return quota;
    }
 
    @Override

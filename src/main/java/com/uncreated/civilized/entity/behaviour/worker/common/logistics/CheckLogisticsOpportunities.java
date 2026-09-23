@@ -64,9 +64,13 @@ public class CheckLogisticsOpportunities extends WorkTaskBehaviour {
       if (!getSharedCooldowns().hasCooldown(Cooldowns.EXPORT_RUN, level.getGameTime()) && checkForExportOrders()) {
 
          String reservationKey = villager.getInfo().getVillagerId().toString();
-
+         // note that this instruction reserved every single item in the chest since it takes everything to the
+         // storehouse.
+         // this seems okay, but maybe double check in future
          Optional<TransferToBuildingInstruction> transferToBuildingInstruction =
-               TransferToBuildingInstruction.createIfMetFromSourceBuildings(reservationKey, everything, this.storehouse, home);
+               TransferToBuildingInstruction
+                     .createIfMetFromSourceBuildings(reservationKey, everything, this.storehouse, home);
+
          if (transferToBuildingInstruction.isPresent()) {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), transferToBuildingInstruction);
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
