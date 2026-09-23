@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import com.google.common.collect.Lists;
 import com.mojang.logging.LogUtils;
 import com.uncreated.civilized.core.building.Building;
-import com.uncreated.civilized.core.building.logistics.hauling.ItemReservation;
+import com.uncreated.civilized.core.building.logistics.hauling.ReservationKey;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.TakeToInventoryInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.ToolRequirement;
@@ -56,10 +56,12 @@ public class CutDownTrees extends WorkTaskBehaviour {
 
       InventoryStockRequirement.StockResult carrying = AXE_REQUIREMENT.evaluate(villager);
       if (!carrying.satisfied()) {
-         String party = ItemReservation.partKeyFor(villager, this.getState().toString());
+         String party = ReservationKey.partyKeyFor(villager, this.getState().toString());
          Optional<TakeToInventoryInstruction> instruction =
-               TakeToInventoryInstruction
-                     .createIfMetFromSourceBuildings(party, AXE_REQUIREMENT.key(), AXE_REQUIREMENT, homeAndStorehouseIfPresent());
+               TakeToInventoryInstruction.createIfMetFromSourceBuildings(
+                     new ReservationKey(party, AXE_REQUIREMENT.key()),
+                     AXE_REQUIREMENT,
+                     homeAndStorehouseIfPresent());
          if (instruction.isPresent()) {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);

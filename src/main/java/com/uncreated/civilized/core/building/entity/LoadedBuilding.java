@@ -13,6 +13,7 @@ import java.util.function.Predicate;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.entity.behaviour.BuildingBehaviour;
 import com.uncreated.civilized.core.building.logistics.hauling.ItemReservation;
+import com.uncreated.civilized.core.building.logistics.hauling.ReservationKey;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -41,13 +42,13 @@ public class LoadedBuilding {
       findChestsInsideBounds();
    }
 
-   public void placeReservation(String party, String reservationName, List<ItemReservation.Entry> entries) {
-      partyItemReservations.computeIfAbsent(party, p -> new LinkedHashMap<>())
-            .put(reservationName, new ItemReservation(party, reservationName, entries));
+   public void placeReservation(ReservationKey key, List<ItemReservation.Entry> entries) {
+      partyItemReservations.computeIfAbsent(key.party(), party -> new LinkedHashMap<>())
+            .put(key.name(), new ItemReservation(key, entries));
    }
 
-   public void placeReservation(String party, String reservationName, Predicate<ItemStack> matching, int amount) {
-      placeReservation(party, reservationName, List.of(new ItemReservation.Entry(matching, amount)));
+   public void placeReservation(ReservationKey key, Predicate<ItemStack> matching, int amount) {
+      placeReservation(key, List.of(new ItemReservation.Entry(matching, amount)));
    }
 
    public List<ItemReservation> getReservationsExcluding(String party) {
@@ -61,15 +62,15 @@ public class LoadedBuilding {
       return others;
    }
 
-   public Optional<ItemReservation> cancelReservation(String party, String reservationName) {
-      Map<String, ItemReservation> reservations = partyItemReservations.get(party);
+   public Optional<ItemReservation> cancelReservation(ReservationKey key) {
+      Map<String, ItemReservation> reservations = partyItemReservations.get(key.party());
       if (reservations == null)
          return Optional.empty();
 
-      ItemReservation removed = reservations.remove(reservationName);
+      ItemReservation removed = reservations.remove(key.name());
 
       if (reservations.isEmpty())
-         partyItemReservations.remove(party);
+         partyItemReservations.remove(key.party());
 
       return Optional.ofNullable(removed);
    }

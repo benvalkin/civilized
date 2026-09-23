@@ -91,7 +91,7 @@ public class TakeItemsToInventory extends WorkTaskBehaviour {
       // cancel any reservations we've made in case this activity stops early
       if (currentSourceBuilding != null)
          currentSourceBuilding
-               .cancelReservation(haulingInstruction.reservationParty(), haulingInstruction.reservationName());
+               .cancelReservation(haulingInstruction.reservationKey());
    }
 
    @Override
@@ -109,13 +109,11 @@ public class TakeItemsToInventory extends WorkTaskBehaviour {
 
    protected void takeItems(ServerLevel level, CivilizedVillager villager, long tickTime) {
 
-      String party = haulingInstruction.reservationParty();
-
       ConditionalHaulingInstruction.HaulDecision haulDecision =
-            haulingInstruction.takeItemsUntilSatisfied(villager, currentSourceBuilding, party);
+            haulingInstruction.takeItemsUntilSatisfied(villager, currentSourceBuilding);
 
       // now we have successfully taken everything we can from this building
-      currentSourceBuilding.cancelReservation(party, haulingInstruction.reservationName());
+      currentSourceBuilding.cancelReservation(haulingInstruction.reservationKey());
       // 'visited' means we tried to take from this building, regardless of whether there were items in it
       visitedBuildings.add(currentSourceBuilding);
 
@@ -170,7 +168,7 @@ public class TakeItemsToInventory extends WorkTaskBehaviour {
                   .map(requirement -> new ItemReservation.Entry(requirement.filter(), requirement.idealAmount()))
                   .toList();
 
-      building.placeReservation(haulingInstruction.reservationParty(), haulingInstruction.reservationName(), entries);
+      building.placeReservation(haulingInstruction.reservationKey(), entries);
    }
 
    private void eraseMemory(CivilizedVillager villager) {

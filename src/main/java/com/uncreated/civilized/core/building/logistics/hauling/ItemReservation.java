@@ -18,8 +18,7 @@ import net.minecraft.world.item.ItemStack;
 @Accessors(fluent = true)
 @Getter
 public class ItemReservation {
-   private final String party;
-   private final String name;
+   private final ReservationKey key;
    private final List<Entry> entries;
 
 
@@ -33,17 +32,16 @@ public class ItemReservation {
       }
    }
 
-   public ItemReservation(String party, String name, List<Entry> entries) {
+   public ItemReservation(ReservationKey key, List<Entry> entries) {
       if (entries.isEmpty())
          throw new IllegalArgumentException("ItemReservation must reserve at least one kind of item");
 
-      this.party = party;
-      this.name = name;
+      this.key = key;
       this.entries = List.copyOf(entries);
    }
 
    /**
-    * Calculates the items in {@code storage} that this reservation holds on to. Entries are filled in order, and each item is only
+    * Calculates the items in {@code storage} that this reservation holds on to. Each item is only
     * counted once, i.e. two entries matching the same items do not hold onto the same item stack.
     */
    public AggregateItemStack calculateReservedItems(List<Container> storage) {
@@ -86,10 +84,6 @@ public class ItemReservation {
    @Override
    public String toString() {
       String amounts = entries.stream().map(entry -> String.valueOf(entry.amount())).collect(Collectors.joining(", "));
-      return name + ":[" + amounts + "] (" + party + ")";
-   }
-
-   public static String partKeyFor(CivilizedVillager villager, String activityName) {
-      return villager.getInfo().getVillagerId().toString() + ":" + activityName;
+      return key.name() + ":[" + amounts + "] (" + key.party() + ")";
    }
 }

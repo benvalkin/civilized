@@ -7,6 +7,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.uncreated.civilized.core.building.logistics.hauling.ItemReservation;
+import com.uncreated.civilized.core.building.logistics.hauling.ReservationKey;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.TakeToInventoryInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.ToolRequirement;
@@ -83,11 +84,10 @@ public class Fish extends WorkTaskBehaviour {
 
       InventoryStockRequirement.StockResult carrying = fishingRodRequirement.evaluate(villager);
       if (!carrying.satisfied()) {
-         String party = ItemReservation.partKeyFor(villager, this.getState().toString());
+         String party = ReservationKey.partyKeyFor(villager, this.getState().toString());
          Optional<TakeToInventoryInstruction> instruction =
                TakeToInventoryInstruction.createIfMetFromSourceBuildings(
-                     party,
-                     fishingRodRequirement.key(),
+                     new ReservationKey(party, fishingRodRequirement.key()),
                      fishingRodRequirement,
                      homeAndStorehouseIfPresent());
          if (instruction.isPresent()) {

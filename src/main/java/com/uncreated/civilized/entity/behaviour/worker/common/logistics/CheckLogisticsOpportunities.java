@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
-import com.uncreated.civilized.core.building.logistics.hauling.ItemReservation;
+import com.uncreated.civilized.core.building.logistics.hauling.ReservationKey;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.TransferToBuildingInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.BuildingStockRequirement;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.ItemStockRequirement;
@@ -25,7 +25,7 @@ public class CheckLogisticsOpportunities extends WorkTaskBehaviour {
    private LoadedBuilding storehouse;
 
    public CheckLogisticsOpportunities() {
-      super(WorkStates.CHECK_LOGISTICS_OPPORTUNITIES, true, true, 0, 5 * 20);
+      super(WorkStates.CHECK_LOGISTICS_OPPORTUNITIES, true, true, 0, 120 * 20);
    }
 
    @Override
@@ -64,13 +64,16 @@ public class CheckLogisticsOpportunities extends WorkTaskBehaviour {
       List<LoadedBuilding> home = List.of(getHome());
       if (!getSharedCooldowns().hasCooldown(Cooldowns.EXPORT_RUN, level.getGameTime()) && checkForExportOrders()) {
 
-         String party = ItemReservation.partKeyFor(villager, this.getState().toString());
+         String party = ReservationKey.partyKeyFor(villager, this.getState().toString());
          // note that this instruction reserved every single item in the chest since it takes everything to the
          // storehouse.
          // this seems okay, but maybe double check in future
          Optional<TransferToBuildingInstruction> transferToBuildingInstruction =
-               TransferToBuildingInstruction
-                     .createIfMetFromSourceBuildings(party, "everything", everything, this.storehouse, home);
+               TransferToBuildingInstruction.createIfMetFromSourceBuildings(
+                     new ReservationKey(party, "everything"),
+                     everything,
+                     this.storehouse,
+                     home);
 
          if (transferToBuildingInstruction.isPresent()) {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), transferToBuildingInstruction);

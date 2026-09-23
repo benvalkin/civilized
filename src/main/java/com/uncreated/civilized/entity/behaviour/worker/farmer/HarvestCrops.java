@@ -5,10 +5,10 @@ import java.util.Optional;
 
 import javax.annotation.Nullable;
 
-import com.uncreated.civilized.core.building.logistics.hauling.ItemReservation;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
+import com.uncreated.civilized.core.building.logistics.hauling.ReservationKey;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.TakeToInventoryInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.ToolRequirement;
@@ -57,11 +57,13 @@ public class HarvestCrops extends WorkTaskBehaviour {
 
       InventoryStockRequirement.StockResult carrying = HOE_REQUIREMENT.evaluate(villager);
       if (!carrying.satisfied()) {
-         String party = ItemReservation.partKeyFor(villager, this.getState().toString());
+         String party = ReservationKey.partyKeyFor(villager, this.getState().toString());
 
          Optional<TakeToInventoryInstruction> instruction =
-               TakeToInventoryInstruction
-                     .createIfMetFromSourceBuildings(party, HOE_REQUIREMENT.key(), HOE_REQUIREMENT, homeAndStorehouseIfPresent());
+               TakeToInventoryInstruction.createIfMetFromSourceBuildings(
+                     new ReservationKey(party, HOE_REQUIREMENT.key()),
+                     HOE_REQUIREMENT,
+                     homeAndStorehouseIfPresent());
          if (instruction.isPresent()) {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);

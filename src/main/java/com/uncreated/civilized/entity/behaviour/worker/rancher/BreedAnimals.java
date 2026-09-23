@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
 import com.uncreated.civilized.core.building.logistics.hauling.ItemReservation;
+import com.uncreated.civilized.core.building.logistics.hauling.ReservationKey;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.TakeToInventoryInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
 import com.uncreated.civilized.core.building.state.animalfarm.AnimalFarmState;
@@ -53,11 +54,10 @@ public class BreedAnimals<T extends Animal> extends WorkTaskBehaviour {
 
       InventoryStockRequirement.StockResult carrying = animalFoodRequirement.evaluate(villager);
       if (!carrying.satisfied()) {
-         String party = ItemReservation.partKeyFor(villager, this.getState().toString());
+         String party = ReservationKey.partyKeyFor(villager, this.getState().toString());
          Optional<TakeToInventoryInstruction> instruction =
                TakeToInventoryInstruction.createIfMetFromSourceBuildings(
-                     party,
-                     animalFoodRequirement.key(),
+                     new ReservationKey(party, animalFoodRequirement.key()),
                      animalFoodRequirement,
                      homeAndStorehouseIfPresent());
          if (instruction.isPresent()) {
@@ -70,8 +70,7 @@ public class BreedAnimals<T extends Animal> extends WorkTaskBehaviour {
          // reserve the minimum viable animal food at the storehouse
          findStorehouse(getSettlement()).ifPresent(storehouse -> {
             storehouse.placeReservation(
-                  party,
-                  animalFoodRequirement.key() + "_static",
+                  new ReservationKey(party, animalFoodRequirement.key() + "_static"),
                   animalFoodRequirement.filter(),
                   animalFoodRequirement.minimumAcceptableAmount());
          });

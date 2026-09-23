@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.logistics.AggregateItemStack;
 import com.uncreated.civilized.core.building.logistics.hauling.ItemReservation;
+import com.uncreated.civilized.core.building.logistics.hauling.ReservationKey;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.ItemStockRequirement;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.util.ContainerHelper;
@@ -21,18 +22,15 @@ public abstract class ConditionalHaulingInstruction<T extends ItemStockRequireme
    protected final List<T> requirements;
    protected final List<LoadedBuilding> sourceBuildings;
    protected int currentBuildingIndex;
-   protected final String reservationParty;
-   protected final String reservationName;
+   protected final ReservationKey reservationKey;
 
    protected ConditionalHaulingInstruction(
          List<T> requirements,
          List<LoadedBuilding> sourceBuildings,
-         String reservationParty,
-         String reservationName) {
+         ReservationKey reservationKey) {
       this.requirements = requirements;
       this.sourceBuildings = sourceBuildings;
-      this.reservationParty = reservationParty;
-      this.reservationName = reservationName;
+      this.reservationKey = reservationKey;
       this.currentBuildingIndex = 0;
 
       if (requirements.isEmpty()) {
@@ -46,8 +44,7 @@ public abstract class ConditionalHaulingInstruction<T extends ItemStockRequireme
 
    public abstract HaulDecision takeItemsUntilSatisfied(
          CivilizedVillager villager,
-         LoadedBuilding sourceBuilding,
-         String reservationParty);
+         LoadedBuilding sourceBuilding);
 
    /**
     * How many more items of this requirement the villager still wants to pick up. 0 once it needs no more.
@@ -69,7 +66,7 @@ public abstract class ConditionalHaulingInstruction<T extends ItemStockRequireme
          if (outstandingAmount(villager, requirement) <= 0)
             continue;
 
-         if (requirement.calculateBuildingStock(chests, building.getReservationsExcluding(reservationParty)).hasItems())
+         if (requirement.calculateBuildingStock(chests, building.getReservationsExcluding(reservationKey.party())).hasItems())
             return true;
       }
 

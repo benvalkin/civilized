@@ -6,6 +6,7 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 import com.uncreated.civilized.core.building.logistics.hauling.ItemReservation;
+import com.uncreated.civilized.core.building.logistics.hauling.ReservationKey;
 import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventoryType;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.TakeToInventoryInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
@@ -73,12 +74,11 @@ public class HarvestHoneyAndHoneyComb extends WorkTaskBehaviour {
 
       if (!carryingShears.satisfied() && !carryingGlassBottles.satisfied()) {
 
-         String party = ItemReservation.partKeyFor(villager, this.getState().toString());
+         String party = ReservationKey.partyKeyFor(villager, this.getState().toString());
 
          Optional<TakeToInventoryInstruction> instruction =
                TakeToInventoryInstruction.createIfAnyMetFromSourceBuildings(
-                     party,
-                     "shears_and_honeycomb",
+                     new ReservationKey(party, "shears_and_honeycomb"),
                      List.of(shearsRequirement, glassBottlesRequirement),
                      homeAndStorehouseIfPresent());
          if (instruction.isPresent()) {

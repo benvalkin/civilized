@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.logistics.AggregateItemStack;
 import com.uncreated.civilized.core.building.logistics.hauling.ItemReservation;
+import com.uncreated.civilized.core.building.logistics.hauling.ReservationKey;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.BuildingStockRequirement;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.util.ContainerHelper;
@@ -24,9 +25,8 @@ public class TransferToBuildingInstruction extends ConditionalHaulingInstruction
          List<BuildingStockRequirement> requirements,
          List<LoadedBuilding> sourceBuildings,
          LoadedBuilding candidateSourceBuildings,
-         String reservationParty,
-         String reservationName) {
-      super(requirements, sourceBuildings, reservationParty, reservationName);
+         ReservationKey reservationKey) {
+      super(requirements, sourceBuildings, reservationKey);
       this.destinationBuilding = candidateSourceBuildings;
    }
 
@@ -35,14 +35,12 @@ public class TransferToBuildingInstruction extends ConditionalHaulingInstruction
     * instruction, the villager will take whatever it can get from each source building.
     */
    public static Optional<TransferToBuildingInstruction> createIfMetFromSourceBuildings(
-         String reservationParty,
-         String reservationName,
+         ReservationKey reservationKey,
          BuildingStockRequirement requirement,
          LoadedBuilding destinationBuilding,
          List<LoadedBuilding> candidateSourceBuildings) {
       return createIfAnyMetFromSourceBuildings(
-            reservationParty,
-            reservationName,
+            reservationKey,
             List.of(requirement),
             destinationBuilding,
             candidateSourceBuildings);
@@ -55,14 +53,13 @@ public class TransferToBuildingInstruction extends ConditionalHaulingInstruction
     * items.
     */
    public static Optional<TransferToBuildingInstruction> createIfAnyMetFromSourceBuildings(
-         String reservationParty,
-         String reservationName,
+         ReservationKey reservationKey,
          List<BuildingStockRequirement> requirements,
          LoadedBuilding destinationBuilding,
          List<LoadedBuilding> sourceBuildings) {
 
       boolean anyRequirementAvailable =
-            requirements.stream().anyMatch(r -> r.evaluate(reservationParty, sourceBuildings).satisfied());
+            requirements.stream().anyMatch(r -> r.evaluate(reservationKey.party(), sourceBuildings).satisfied());
       if (!anyRequirementAvailable)
          return Optional.empty();
 
@@ -71,8 +68,7 @@ public class TransferToBuildingInstruction extends ConditionalHaulingInstruction
                   requirements,
                   sourceBuildings,
                   destinationBuilding,
-                  reservationParty,
-                  reservationName));
+                  reservationKey));
    }
 
    /**
@@ -81,14 +77,13 @@ public class TransferToBuildingInstruction extends ConditionalHaulingInstruction
     * satisfied and another isn't, the villager will still continue to other buildings in search of other items.
     */
    public static Optional<TransferToBuildingInstruction> createIfAllMetFromSourceBuildings(
-         String reservationParty,
-         String reservationName,
+         ReservationKey reservationKey,
          List<BuildingStockRequirement> requirements,
          LoadedBuilding destinationBuilding,
          List<LoadedBuilding> sourceBuildings) {
 
       boolean allRequirementAvailable =
-            requirements.stream().allMatch(r -> r.evaluate(reservationParty, sourceBuildings).satisfied());
+            requirements.stream().allMatch(r -> r.evaluate(reservationKey.party(), sourceBuildings).satisfied());
       if (!allRequirementAvailable)
          return Optional.empty();
 
@@ -97,19 +92,17 @@ public class TransferToBuildingInstruction extends ConditionalHaulingInstruction
                   requirements,
                   sourceBuildings,
                   destinationBuilding,
-                  reservationParty,
-                  reservationName));
+                  reservationKey));
    }
 
    @Override
    public HaulDecision takeItemsUntilSatisfied(
          CivilizedVillager villager,
-         LoadedBuilding sourceBuilding,
-         String reservationParty) {
+         LoadedBuilding sourceBuilding) {
 
       List<Container> chests = sourceBuilding.chests();
 
-      List<ItemReservation> itemReservations = sourceBuilding.getReservationsExcluding(reservationParty);
+      List<ItemReservation> itemReservations = sourceBuilding.getReservationsExcluding(reservationKey.party());
 
       for (BuildingStockRequirement requirement : requirements) {
          int quota = outstandingAmount(villager, requirement);
@@ -137,7 +130,7 @@ public class TransferToBuildingInstruction extends ConditionalHaulingInstruction
       AggregateItemStack itemsAtDestination =
             requirement.calculateBuildingStock(
                   destinationBuilding.chests(),
-                  destinationBuilding.getReservationsExcluding(reservationParty));
+                  destinationBuilding.getReservationsExcluding(reservationKey.party()));
 
       if (requirement.disregardExistingCarriedStock()) {
          return requirement.idealAmount() - itemsAtDestination.getCount();
