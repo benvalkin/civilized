@@ -40,47 +40,6 @@ public class ItemReservation {
       this.entries = List.copyOf(entries);
    }
 
-   /**
-    * Calculates the items in {@code storage} that this reservation holds on to. Each item is only
-    * counted once, i.e. two entries matching the same items do not hold onto the same item stack.
-    */
-   public AggregateItemStack calculateReservedItems(List<Container> storage) {
-      AggregateItemStack reservedItems = new AggregateItemStack();
-
-      // how many items in each slot have not been claimed by an earlier entry yet
-      Map<Container, int[]> unclaimed = new IdentityHashMap<>();
-      for (Container container : storage) {
-         int[] counts = new int[container.getContainerSize()];
-         for (int i = 0; i < counts.length; i++)
-            counts[i] = container.getItem(i).getCount();
-         unclaimed.put(container, counts);
-      }
-
-      for (Entry entry : entries) {
-         int quota = entry.amount();
-
-         for (Container container : storage) {
-            int[] counts = unclaimed.get(container);
-
-            for (int i = 0; i < counts.length && quota > 0; i++) {
-               ItemStack item = container.getItem(i);
-               if (counts[i] <= 0 || !entry.filter().test(item))
-                  continue;
-
-               int claimed = Math.min(counts[i], quota);
-               counts[i] -= claimed;
-               quota -= claimed;
-               reservedItems.add(item.copyWithCount(claimed));
-            }
-
-            if (quota <= 0)
-               break;
-         }
-      }
-
-      return reservedItems;
-   }
-
    @Override
    public String toString() {
       String amounts = entries.stream().map(entry -> String.valueOf(entry.amount())).collect(Collectors.joining(", "));

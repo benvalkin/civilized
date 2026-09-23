@@ -14,7 +14,6 @@ import com.uncreated.civilized.util.ContainerHelper;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import net.minecraft.world.Container;
-import net.minecraft.world.item.ItemStack;
 
 @Accessors(fluent = true)
 @Getter
@@ -109,26 +108,13 @@ public abstract class ConditionalHaulingInstruction<T extends ItemStockRequireme
       return taken;
    }
 
-   /**
-    * @return a new reduced quota value that takes into account a list of other reservations from other parties
-    */
    protected static int adjustQuotaForReservedItems(
          int quota,
          List<ItemReservation> itemReservations,
          ItemStockRequirement requirement,
          List<Container> chests) {
-      for (ItemReservation reservation : itemReservations) {
-
-         AggregateItemStack reservedItems = reservation.calculateReservedItems(chests);
-
-         for (ItemStack itemStack : reservedItems.getItemStacks()) {
-            boolean requirementCanEatIntoReservedItem = requirement.filter().test(itemStack);
-            if (requirementCanEatIntoReservedItem) {
-               quota -= itemStack.getCount();
-            }
-         }
-      }
-      return quota;
+      int unreserved = requirement.calculateBuildingStock(chests, itemReservations).getCount();
+      return Math.min(quota, unreserved);
    }
 
    @Override
