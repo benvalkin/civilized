@@ -24,24 +24,24 @@ import net.minecraft.world.item.ItemStack;
 public abstract class ItemStockRequirement {
    private final String key;
    protected final Predicate<ItemStack> filter;
-   protected final int minimumAmountToSatisfy;
+   protected final int minimumAcceptableAmount;
    protected final int idealAmount;
    @Setter
    protected boolean disregardExistingCarriedStock;
 
    public static final int UNLIMITED = Integer.MAX_VALUE;
 
-   public ItemStockRequirement(String key, Predicate<ItemStack> filter, int minimumAmountToSatisfy, int idealAmount) {
+   public ItemStockRequirement(String key, Predicate<ItemStack> filter, int minimumAcceptableAmount, int idealAmount) {
       this.key = key;
       this.filter = filter;
-      this.minimumAmountToSatisfy = minimumAmountToSatisfy;
+      this.minimumAcceptableAmount = minimumAcceptableAmount;
       this.idealAmount = idealAmount;
       this.disregardExistingCarriedStock = false;
 
       if (filter.test(ItemStack.EMPTY))
          throw new IllegalArgumentException("ItemStockRequirement filter is not allowed to match empty items.");
 
-      if (minimumAmountToSatisfy <= 0 || idealAmount <= 0 || minimumAmountToSatisfy > idealAmount)
+      if (minimumAcceptableAmount <= 0 || idealAmount <= 0 || minimumAcceptableAmount > idealAmount)
          throw new IllegalArgumentException(
                "Invalid ItemStockRequirement amounts - at least one was 0, or min was greater than max");
    }
@@ -55,14 +55,14 @@ public abstract class ItemStockRequirement {
     */
    public abstract @NotNull Container getHaulInventory(CivilizedVillager villager);
 
-   public StockResult evaluate(String reservationKey, List<LoadedBuilding> candidateSourceBuildings) {
+   public StockResult evaluate(String party, List<LoadedBuilding> candidateSourceBuildings) {
 
       AggregateItemStack grossStock = new AggregateItemStack();
       Map<LoadedBuilding, AggregateItemStack> satisfiedBuildings = new HashMap<>();
       for (LoadedBuilding candidateBuilding : candidateSourceBuildings) {
          List<Container> chests = candidateBuilding.chests();
          AggregateItemStack buildingStock =
-               calculateBuildingStock(chests, candidateBuilding.getReservationsExcluding(reservationKey));
+               calculateBuildingStock(chests, candidateBuilding.getReservationsExcluding(party));
 
          if (buildingStock.getCount() > 0) {
             grossStock.add(buildingStock);
@@ -70,7 +70,7 @@ public abstract class ItemStockRequirement {
          }
       }
 
-      boolean satisfied = grossStock.getCount() >= minimumAmountToSatisfy;
+      boolean satisfied = grossStock.getCount() >= minimumAcceptableAmount;
       return new BuildingStockRequirement.StockResult(satisfied, grossStock, satisfiedBuildings);
    }
 
@@ -95,9 +95,9 @@ public abstract class ItemStockRequirement {
 
    @Override
    public String toString() {
-      if (minimumAmountToSatisfy == idealAmount)
-         return key + ": " + minimumAmountToSatisfy;
+      if (minimumAcceptableAmount == idealAmount)
+         return key + ": " + minimumAcceptableAmount;
 
-      return key + ": " + minimumAmountToSatisfy + "-" + idealAmount;
+      return key + ": " + minimumAcceptableAmount + "-" + idealAmount;
    }
 }

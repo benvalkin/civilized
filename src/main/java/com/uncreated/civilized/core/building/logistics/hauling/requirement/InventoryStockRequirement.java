@@ -33,7 +33,7 @@ public class InventoryStockRequirement extends ItemStockRequirement {
    public StockResult evaluate(CivilizedVillager villager) {
       Container inventory = getHaulInventory(villager);
       AggregateItemStack stock = ContainerHelper.countItems(inventory, filter);
-      boolean satisfied = stock.getCount() >= minimumAmountToSatisfy;
+      boolean satisfied = stock.getCount() >= minimumAcceptableAmount;
       return new StockResult(satisfied, stock);
    }
 

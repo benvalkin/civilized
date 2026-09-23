@@ -89,7 +89,8 @@ public class TakeItemsToInventory extends WorkTaskBehaviour {
 
       // cancel any reservations we've made in case this activity stops early
       if (currentSourceBuilding != null)
-         currentSourceBuilding.cancelReservation(haulingInstruction.reservationKey());
+         currentSourceBuilding
+               .cancelReservation(haulingInstruction.reservationParty(), haulingInstruction.reservationName());
    }
 
    @Override
@@ -107,13 +108,13 @@ public class TakeItemsToInventory extends WorkTaskBehaviour {
 
    protected void takeItems(ServerLevel level, CivilizedVillager villager, long tickTime) {
 
-      String reservationKey = haulingInstruction.reservationKey();
+      String party = haulingInstruction.reservationParty();
 
       ConditionalHaulingInstruction.HaulDecision haulDecision =
-            haulingInstruction.takeItemsUntilSatisfied(villager, currentSourceBuilding, reservationKey);
+            haulingInstruction.takeItemsUntilSatisfied(villager, currentSourceBuilding, party);
 
       // now we have successfully taken everything we can from this building
-      currentSourceBuilding.cancelReservation(reservationKey);
+      currentSourceBuilding.cancelReservation(party, haulingInstruction.reservationName());
       // 'visited' means we tried to take from this building, regardless of whether there were items in it
       visitedBuildings.add(currentSourceBuilding);
 
@@ -164,9 +165,9 @@ public class TakeItemsToInventory extends WorkTaskBehaviour {
    private void placeReservationsOnBuilding(CivilizedVillager villager, LoadedBuilding building) {
       for (ItemStockRequirement requirement : haulingInstruction.requirements()) {
 
-         String reservationKey = haulingInstruction.reservationKey();
-         String reservationName = String.format("%s - %s", villager.getInfo().getFullName(), requirement.toString());
-         building.placeReservation(reservationKey, reservationName, requirement.filter(), requirement.idealAmount());
+         String party = haulingInstruction.reservationParty();
+         String reservationName = haulingInstruction.reservationName();
+         building.placeReservation(party, reservationName, requirement.filter(), requirement.idealAmount());
       }
    }
 

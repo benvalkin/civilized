@@ -28,7 +28,23 @@ public class BuildingBehaviour {
 
    }
 
-   public void serverTick(ServerLevel level, long gameTime) {
-      // base must be empty otherwise all subclasses need to call this super method
+   private long lastResetDay = -1;
+
+   public final void serverTickInternal(ServerLevel level, long gameTime, long dayTime) {
+      long day = dayTime / 24000L;
+      if (day != lastResetDay) {
+         lastResetDay = day;
+         getEntity().cancelAllReservations();
+      }
+      try {
+         serverTick(level, gameTime, dayTime);
+      } catch (Exception ex) {
+         LOGGER.error("Error while ticking building {}", getBuilding().getBuildingId(), ex);
+      }
    }
+
+   public void serverTick(ServerLevel level, long gameTime, long dayTime) {
+      // base must be empty
+   }
+
 }

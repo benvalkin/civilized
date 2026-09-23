@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
+import com.uncreated.civilized.core.building.logistics.hauling.ItemReservation;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.TakeToInventoryInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
 import com.uncreated.civilized.core.building.state.animalfarm.AnimalFarmState;
@@ -48,14 +49,16 @@ public class BreedAnimals<T extends Animal> extends WorkTaskBehaviour {
          return false;
 
       AnimalFarmState animalFarmState = (AnimalFarmState) getWorksite().getBuilding().getState();
+      InventoryStockRequirement animalFoodRequirement = animalFarmState.getAnimalFoodRequirement();
 
-      InventoryStockRequirement.StockResult carrying = animalFarmState.getAnimalFoodRequirement().evaluate(villager);
+      InventoryStockRequirement.StockResult carrying = animalFoodRequirement.evaluate(villager);
       if (!carrying.satisfied()) {
-         String reservationKey = villager.getInfo().getVillagerId().toString();
+         String party = ItemReservation.partKeyFor(villager, this.getState().toString());
          Optional<TakeToInventoryInstruction> instruction =
                TakeToInventoryInstruction.createIfMetFromSourceBuildings(
-                     reservationKey,
-                     animalFarmState.getAnimalFoodRequirement(),
+                     party,
+                     animalFoodRequirement.key(),
+                     animalFoodRequirement,
                      homeAndStorehouseIfPresent());
          if (instruction.isPresent()) {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
@@ -63,6 +66,16 @@ public class BreedAnimals<T extends Animal> extends WorkTaskBehaviour {
             getStateMachine().queueActionOnce(this.getState());
             // todo: send notification that the villager is missing shears
          }
+
+         // reserve the minimum viable animal food at the storehouse
+         findStorehouse(getSettlement()).ifPresent(storehouse -> {
+            storehouse.placeReservation(
+                  party,
+                  animalFoodRequirement.key() + "_static",
+                  animalFoodRequirement.filter(),
+                  animalFoodRequirement.minimumAcceptableAmount());
+         });
+
          return false;
       }
 

@@ -48,7 +48,7 @@ public class ArtisanHouseBehaviour extends BuildingBehaviour {
    private long refreshedTime = 0;
 
    @Override
-   public void serverTick(ServerLevel level, long gameTime) {
+   public void serverTick(ServerLevel level, long gameTime, long dayTime) {
       if (gameTime >= refreshedTime) {
          refreshedTime = gameTime + PRODUCTION_BILL_REFRESH_INTERVAL;
          refreshProductionOrders();

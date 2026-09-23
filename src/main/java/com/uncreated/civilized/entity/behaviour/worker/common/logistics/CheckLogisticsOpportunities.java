@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
+import com.uncreated.civilized.core.building.logistics.hauling.ItemReservation;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.TransferToBuildingInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.BuildingStockRequirement;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.ItemStockRequirement;
@@ -63,13 +64,13 @@ public class CheckLogisticsOpportunities extends WorkTaskBehaviour {
       List<LoadedBuilding> home = List.of(getHome());
       if (!getSharedCooldowns().hasCooldown(Cooldowns.EXPORT_RUN, level.getGameTime()) && checkForExportOrders()) {
 
-         String reservationKey = villager.getInfo().getVillagerId().toString();
+         String party = ItemReservation.partKeyFor(villager, this.getState().toString());
          // note that this instruction reserved every single item in the chest since it takes everything to the
          // storehouse.
          // this seems okay, but maybe double check in future
          Optional<TransferToBuildingInstruction> transferToBuildingInstruction =
                TransferToBuildingInstruction
-                     .createIfMetFromSourceBuildings(reservationKey, everything, this.storehouse, home);
+                     .createIfMetFromSourceBuildings(party, "everything", everything, this.storehouse, home);
 
          if (transferToBuildingInstruction.isPresent()) {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), transferToBuildingInstruction);

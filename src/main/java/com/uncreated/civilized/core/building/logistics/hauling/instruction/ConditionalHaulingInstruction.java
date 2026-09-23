@@ -21,15 +21,18 @@ public abstract class ConditionalHaulingInstruction<T extends ItemStockRequireme
    protected final List<T> requirements;
    protected final List<LoadedBuilding> sourceBuildings;
    protected int currentBuildingIndex;
-   protected final String reservationKey;
+   protected final String reservationParty;
+   protected final String reservationName;
 
    protected ConditionalHaulingInstruction(
          List<T> requirements,
          List<LoadedBuilding> sourceBuildings,
-         String reservationKey) {
+         String reservationParty,
+         String reservationName) {
       this.requirements = requirements;
       this.sourceBuildings = sourceBuildings;
-      this.reservationKey = reservationKey;
+      this.reservationParty = reservationParty;
+      this.reservationName = reservationName;
       this.currentBuildingIndex = 0;
 
       if (requirements.isEmpty()) {
@@ -44,7 +47,7 @@ public abstract class ConditionalHaulingInstruction<T extends ItemStockRequireme
    public abstract HaulDecision takeItemsUntilSatisfied(
          CivilizedVillager villager,
          LoadedBuilding sourceBuilding,
-         String reservationKey);
+         String reservationParty);
 
    /**
     * How many more items of this requirement the villager still wants to pick up. 0 once it needs no more.
@@ -66,7 +69,7 @@ public abstract class ConditionalHaulingInstruction<T extends ItemStockRequireme
          if (outstandingAmount(villager, requirement) <= 0)
             continue;
 
-         if (requirement.calculateBuildingStock(chests, building.getReservationsExcluding(reservationKey)).hasItems())
+         if (requirement.calculateBuildingStock(chests, building.getReservationsExcluding(reservationParty)).hasItems())
             return true;
       }
 
@@ -110,8 +113,7 @@ public abstract class ConditionalHaulingInstruction<T extends ItemStockRequireme
    }
 
    /**
-    * @return a new reduced quota value that takes into account the building's other reservations that we didn't place
-    *         (i.e. reservations that don't match the supplied {@code reservationKey})
+    * @return a new reduced quota value that takes into account a list of other reservations from other parties
     */
    protected static int adjustQuotaForReservedItems(
          int quota,

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.uncreated.civilized.core.building.BuildingTypes;
+import com.uncreated.civilized.core.building.logistics.hauling.ItemReservation;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.TakeToInventoryInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.ToolRequirement;
@@ -69,10 +70,10 @@ public class ShearSheep extends WorkTaskBehaviour {
 
       InventoryStockRequirement.StockResult carrying = shearsRequirement.evaluate(villager);
       if (!carrying.satisfied()) {
-         String reservationKey = villager.getInfo().getVillagerId().toString();
+         String party = ItemReservation.partKeyFor(villager, this.getState().toString());
          Optional<TakeToInventoryInstruction> instruction =
                TakeToInventoryInstruction
-                     .createIfMetFromSourceBuildings(reservationKey, shearsRequirement, homeAndStorehouseIfPresent());
+                     .createIfMetFromSourceBuildings(party, shearsRequirement.key(), shearsRequirement, homeAndStorehouseIfPresent());
          if (instruction.isPresent()) {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);

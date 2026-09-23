@@ -27,7 +27,7 @@ public class InnBehaviour extends BuildingBehaviour {
    }
 
    @Override
-   public void serverTick(ServerLevel level, long gameTime) {
+   public void serverTick(ServerLevel level, long gameTime, long dayTime) {
       eventScheduler.tick(level, gameTime, () -> trySpawnVisitor(level));
    }
 

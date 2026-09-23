@@ -72,12 +72,12 @@ public class LoadedBuildings {
    public static void tickLoadedBuildings() {
       for (LoadedBuilding loadedBuilding : loadedBuildings.values()) {
 
-         try {
             loadedBuilding.getBehaviour()
-                  .serverTick((ServerLevel) loadedBuilding.getLevel(), loadedBuilding.getLevel().getGameTime());
-         } catch (Exception ex) {
-            LOGGER.error("Error while ticking building {}", loadedBuilding.getBuilding().getBuildingId(), ex);
-         }
+                  .serverTickInternal(
+                        (ServerLevel) loadedBuilding.getLevel(),
+                        loadedBuilding.getLevel().getGameTime(),
+                        loadedBuilding.getLevel().getDayTime());
+
       }
    }
 }

@@ -28,7 +28,7 @@ public class LoadedBuilding {
    private final Level level;
    private final BuildingBehaviour behaviour;
    @Getter(AccessLevel.PRIVATE)
-   private final Map<String, List<ItemReservation>> itemReservations;
+   private final Map<String, Map<String, ItemReservation>> partyItemReservations;
    private final Set<ChestBlockEntity> chests = new LinkedHashSet<>();
 
    public LoadedBuilding(Building building, Level level) {
@@ -36,42 +36,54 @@ public class LoadedBuilding {
       this.level = level;
       behaviour = building.getBuildingType().createBehaviour().apply(this);
       behaviour.start();
-      itemReservations = new LinkedHashMap<>();
+      partyItemReservations = new LinkedHashMap<>();
 
       findChestsInsideBounds();
    }
 
-   public void placeReservation(
-         String reservationKey,
-         String reservationName,
-         Predicate<ItemStack> matching,
-         int amount) {
-
-      itemReservations.compute(reservationKey, (k, v) -> {
-         if (v == null) {
-            LinkedList<ItemReservation> list = new LinkedList<>();
-            list.add(new ItemReservation(k, reservationName, matching, amount));
-            return list;
+   public void placeReservation(String party, String reservationName, Predicate<ItemStack> matching, int amount) {
+      partyItemReservations.compute(party, (k, reservations) -> {
+         if (reservations == null) {
+            Map<String, ItemReservation> reservationsNew = new LinkedHashMap<>();
+            reservationsNew.put(reservationName, new ItemReservation(party, reservationName, matching, amount));
+            return reservationsNew;
          } else {
-            v.add(new ItemReservation(k, reservationName, matching, amount));
-            return v;
+            reservations.put(reservationName, new ItemReservation(party, reservationName, matching, amount));
+            return reservations;
          }
       });
    }
 
-   public List<ItemReservation> getReservationsExcluding(String reservationKey) {
+   public List<ItemReservation> getReservationsExcluding(String party) {
       List<ItemReservation> others = new LinkedList<>();
-      for (Map.Entry<String, List<ItemReservation>> stringListEntry : itemReservations.entrySet()) {
-         if (stringListEntry.getKey().equals(reservationKey))
+      for (Map.Entry<String, Map<String, ItemReservation>> entry : partyItemReservations.entrySet()) {
+         if (entry.getKey().equals(party))
             continue;
 
-         others.addAll(stringListEntry.getValue());
+         others.addAll(entry.getValue().values());
       }
       return others;
    }
 
-   public void cancelReservation(String reservationKey) {
-      itemReservations.remove(reservationKey);
+   public Optional<ItemReservation> cancelReservation(String party, String reservationName) {
+      Map<String, ItemReservation> reservations = partyItemReservations.get(party);
+      if (reservations == null)
+         return Optional.empty();
+
+      ItemReservation removed = reservations.remove(reservationName);
+
+      if (reservations.isEmpty())
+         partyItemReservations.remove(party);
+
+      return Optional.ofNullable(removed);
+   }
+
+   public void cancelReservationForParty(String party) {
+      partyItemReservations.remove(party);
+   }
+
+   public void cancelAllReservations() {
+      partyItemReservations.clear();
    }
 
    public List<Container> chests() {

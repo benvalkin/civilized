@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import com.uncreated.civilized.core.building.logistics.AggregateItemStack;
+import com.uncreated.civilized.entity.CivilizedVillager;
 
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -13,13 +14,13 @@ import net.minecraft.world.item.ItemStack;
 @Accessors(fluent = true)
 @Getter
 public class ItemReservation {
-   private final String key;
+   private final String party;
    private final String name;
    protected final Predicate<ItemStack> filter;
    protected final int amount;
 
-   public ItemReservation(String key, String name, Predicate<ItemStack> filter, int amount) {
-      this.key = key;
+   public ItemReservation(String party, String name, Predicate<ItemStack> filter, int amount) {
+      this.party = party;
       this.name = name;
       this.filter = filter;
       this.amount = amount;
@@ -59,6 +60,10 @@ public class ItemReservation {
 
    @Override
    public String toString() {
-      return name + " (" + key + "): " + amount;
+      return name + ":" + amount + " (" + party + ")";
+   }
+
+   public static String partKeyFor(CivilizedVillager villager, String activityName) {
+      return villager.getInfo().getVillagerId().toString() + ":" + activityName;
    }
 }

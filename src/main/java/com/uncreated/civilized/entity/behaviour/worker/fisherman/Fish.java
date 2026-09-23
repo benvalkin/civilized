@@ -6,6 +6,7 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
+import com.uncreated.civilized.core.building.logistics.hauling.ItemReservation;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.TakeToInventoryInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.ToolRequirement;
@@ -82,10 +83,13 @@ public class Fish extends WorkTaskBehaviour {
 
       InventoryStockRequirement.StockResult carrying = fishingRodRequirement.evaluate(villager);
       if (!carrying.satisfied()) {
-         String reservationKey = villager.getInfo().getVillagerId().toString();
+         String party = ItemReservation.partKeyFor(villager, this.getState().toString());
          Optional<TakeToInventoryInstruction> instruction =
                TakeToInventoryInstruction.createIfMetFromSourceBuildings(
-                     reservationKey, fishingRodRequirement, homeAndStorehouseIfPresent());
+                     party,
+                     fishingRodRequirement.key(),
+                     fishingRodRequirement,
+                     homeAndStorehouseIfPresent());
          if (instruction.isPresent()) {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);

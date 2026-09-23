@@ -21,8 +21,9 @@ public class TakeToInventoryInstruction extends ConditionalHaulingInstruction<In
    protected TakeToInventoryInstruction(
          List<InventoryStockRequirement> requirements,
          List<LoadedBuilding> sourceBuildings,
-         String reservationKey) {
-      super(requirements, sourceBuildings, reservationKey);
+         String reservationParty,
+         String reservationName) {
+      super(requirements, sourceBuildings, reservationParty, reservationName);
    }
 
    /**
@@ -30,10 +31,15 @@ public class TakeToInventoryInstruction extends ConditionalHaulingInstruction<In
     * instruction, the villager will take whatever it can get from each source building. items.
     */
    public static Optional<TakeToInventoryInstruction> createIfMetFromSourceBuildings(
-         String reservationKey,
+         String reservationParty,
+         String reservationName,
          InventoryStockRequirement requirement,
          List<LoadedBuilding> candidateSourceBuildings) {
-      return createIfAnyMetFromSourceBuildings(reservationKey, List.of(requirement), candidateSourceBuildings);
+      return createIfAnyMetFromSourceBuildings(
+            reservationParty,
+            reservationName,
+            List.of(requirement),
+            candidateSourceBuildings);
    }
 
    /**
@@ -43,16 +49,18 @@ public class TakeToInventoryInstruction extends ConditionalHaulingInstruction<In
     * items.
     */
    public static Optional<TakeToInventoryInstruction> createIfAnyMetFromSourceBuildings(
-         String reservationKey,
+         String reservationParty,
+         String reservationName,
          List<InventoryStockRequirement> requirements,
          List<LoadedBuilding> candidateSourceBuildings) {
 
       boolean anyRequirementSatisfied =
-            requirements.stream().anyMatch(r -> r.evaluate(reservationKey, candidateSourceBuildings).satisfied());
+            requirements.stream().anyMatch(r -> r.evaluate(reservationParty, candidateSourceBuildings).satisfied());
       if (!anyRequirementSatisfied)
          return Optional.empty();
 
-      return Optional.of(new TakeToInventoryInstruction(requirements, candidateSourceBuildings, reservationKey));
+      return Optional.of(
+            new TakeToInventoryInstruction(requirements, candidateSourceBuildings, reservationParty, reservationName));
    }
 
    /**
@@ -61,27 +69,29 @@ public class TakeToInventoryInstruction extends ConditionalHaulingInstruction<In
     * satisfied and another isn't, the villager will still continue to other buildings in search of other items.
     */
    public static Optional<TakeToInventoryInstruction> createIfAllMetFromSourceBuildings(
-         String reservationKey,
+         String reservationParty,
+         String reservationName,
          List<InventoryStockRequirement> requirements,
          List<LoadedBuilding> sourceBuildings) {
 
       boolean allRequirementAvailable =
-            requirements.stream().allMatch(r -> r.evaluate(reservationKey, sourceBuildings).satisfied());
+            requirements.stream().allMatch(r -> r.evaluate(reservationParty, sourceBuildings).satisfied());
       if (!allRequirementAvailable)
          return Optional.empty();
 
-      return Optional.of(new TakeToInventoryInstruction(requirements, sourceBuildings, reservationKey));
+      return Optional
+            .of(new TakeToInventoryInstruction(requirements, sourceBuildings, reservationParty, reservationName));
    }
 
    @Override
    public HaulDecision takeItemsUntilSatisfied(
          CivilizedVillager villager,
          LoadedBuilding sourceBuilding,
-         String reservationKey) {
+         String reservationParty) {
 
       List<Container> chests = sourceBuilding.chests();
 
-      List<ItemReservation> itemReservations = sourceBuilding.getReservationsExcluding(reservationKey);
+      List<ItemReservation> itemReservations = sourceBuilding.getReservationsExcluding(reservationParty);
 
       for (InventoryStockRequirement requirement : requirements) {
          int quota = outstandingAmount(villager, requirement);

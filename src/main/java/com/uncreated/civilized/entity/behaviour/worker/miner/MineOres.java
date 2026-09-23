@@ -8,6 +8,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
+import com.uncreated.civilized.core.building.logistics.hauling.ItemReservation;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.TakeToInventoryInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.ToolRequirement;
@@ -60,10 +61,13 @@ public class MineOres extends WorkTaskBehaviour {
 
       InventoryStockRequirement.StockResult carrying = PICKAXE_REQUIREMENT.evaluate(villager);
       if (!carrying.satisfied()) {
-         String reservationKey = villager.getInfo().getVillagerId().toString();
+         String party = ItemReservation.partKeyFor(villager, this.getState().toString());
          Optional<TakeToInventoryInstruction> instruction =
-               TakeToInventoryInstruction
-                     .createIfMetFromSourceBuildings(reservationKey, PICKAXE_REQUIREMENT, homeAndStorehouseIfPresent());
+               TakeToInventoryInstruction.createIfMetFromSourceBuildings(
+                     party,
+                     PICKAXE_REQUIREMENT.key(),
+                     PICKAXE_REQUIREMENT,
+                     homeAndStorehouseIfPresent());
          if (instruction.isPresent()) {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
