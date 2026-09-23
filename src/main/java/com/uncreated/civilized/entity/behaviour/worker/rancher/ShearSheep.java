@@ -50,8 +50,7 @@ public class ShearSheep extends WorkTaskBehaviour {
    private MediumDistanceTravelTask travelHelper;
    private ItemStack shears;
    private boolean hasShearedSheep;
-   private static final ToolRequirement shearsRequirement =
-         new ToolRequirement("shears", i -> i.is(Items.SHEARS));
+   private static final ToolRequirement shearsRequirement = new ToolRequirement("shears", i -> i.is(Items.SHEARS));
 
    public ShearSheep() {
       super(WorkStates.SHEARING_SHEEP, true, true, 120 * 20, 30 * 20);
@@ -70,8 +69,10 @@ public class ShearSheep extends WorkTaskBehaviour {
 
       InventoryStockRequirement.StockResult carrying = shearsRequirement.evaluate(villager);
       if (!carrying.satisfied()) {
+         String reservationKey = villager.getInfo().getVillagerId().toString();
          Optional<TakeToInventoryInstruction> instruction =
-               TakeToInventoryInstruction.createIfMetFromSourceBuildings(shearsRequirement, homeAndStorehouseIfPresent());
+               TakeToInventoryInstruction
+                     .createIfMetFromSourceBuildings(reservationKey, shearsRequirement, homeAndStorehouseIfPresent());
          if (instruction.isPresent()) {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);

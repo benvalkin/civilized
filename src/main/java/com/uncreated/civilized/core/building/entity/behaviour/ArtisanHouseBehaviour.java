@@ -32,12 +32,26 @@ public class ArtisanHouseBehaviour extends BuildingBehaviour {
    @Override
    public void start() {
 
-      ArtisanHouseState artisanHouseState = (ArtisanHouseState) getBuilding().getState();
-
       registerProductionMachines(recipeProductionSystem);
 
+      refreshProductionOrders();
+   }
+
+   private void refreshProductionOrders() {
+      ArtisanHouseState artisanHouseState = (ArtisanHouseState) getBuilding().getState();
       for (RecipeProductionMachine<?> machine : recipeProductionSystem.registeredMachines()) {
          artisanHouseState.createProductionOrders(machine, (ServerLevel) getEntity().getLevel());
+      }
+   }
+
+   private static final long PRODUCTION_BILL_REFRESH_INTERVAL = 5 * 20;
+   private long refreshedTime = 0;
+
+   @Override
+   public void serverTick(ServerLevel level, long gameTime) {
+      if (gameTime >= refreshedTime) {
+         refreshedTime = gameTime + PRODUCTION_BILL_REFRESH_INTERVAL;
+         refreshProductionOrders();
       }
    }
 }

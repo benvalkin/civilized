@@ -51,6 +51,8 @@ public abstract class ArtisanHouseState extends BuildingState {
          RecipeProductionMachine<Order> machine,
          ServerLevel serverLevel) {
 
+      machine.clearOrders();
+
       RecipeManager recipeManager = serverLevel.getServer().getRecipeManager();
 
       List<ProductionBill> productionBills =
@@ -104,12 +106,26 @@ public abstract class ArtisanHouseState extends BuildingState {
                      bt.getInt("bill_amount"),
                      bt.getBoolean("enabled"),
                      NbtHelper.readItemList(bt.getList("input_items", Tag.TAG_COMPOUND), registryAccess),
-                     ItemFilters.fromNbt(bt.getList("ingredient_filters", Tag.TAG_COMPOUND), registryAccess),
+                     readIngredientFilters(bt, registryAccess, productionType),
                      ItemStack.parse(registryAccess, bt.getCompound("display_item")).orElse(ItemStack.EMPTY));
          productionBills.add(bill);
 
          productionLines.put(productionType, productionBills);
       }
+   }
+
+   private static ItemFilters readIngredientFilters(
+         CompoundTag billTag,
+         HolderLookup.Provider registryAccess,
+         ProductionType productionType) {
+
+      ItemFilters filters =
+            ItemFilters.fromNbt(billTag.getList("ingredient_filters", Tag.TAG_COMPOUND), registryAccess);
+
+      // failsafe for in case the saved production bill's number of filters doesn't match the recipe's number of input
+      // slots - we simply create default filters when this happens.
+      return filters.size() == productionType.recipeSlots().size() ? filters
+            : productionType.createDefaultItemFilters().get();
    }
 
    public CompoundTag toNbt(HolderLookup.Provider registryAccess) {
@@ -138,7 +154,7 @@ public abstract class ArtisanHouseState extends BuildingState {
          billTag.putInt("bill_amount", bill.getBillAmount());
          billTag.putBoolean("enabled", bill.isEnabled());
          billTag.put("input_items", NbtHelper.writeItemList(bill.getInputItems(), registryAccess));
-         billTag.put("ingredient_filters", bill.getIngredientFilters().toNbt(registryAccess));
+         billTag.put("ingredient_filters", bill.getItemFilters().toNbt(registryAccess));
          billTag.put("display_item", bill.getDisplayItem().save(registryAccess, new CompoundTag()));
          list.add(billTag);
       }
@@ -284,7 +300,7 @@ public abstract class ArtisanHouseState extends BuildingState {
             64,
             true,
             inputItems,
-            productionType.createEmptyIngredientFilters().get(),
+            productionType.createDefaultIngredientFilters(),
             displayItem);
    }
 }

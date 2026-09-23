@@ -29,5 +29,6 @@ public class BuildingBehaviour {
    }
 
    public void serverTick(ServerLevel level, long gameTime) {
+      // base must be empty otherwise all subclasses need to call this super method
    }
 }

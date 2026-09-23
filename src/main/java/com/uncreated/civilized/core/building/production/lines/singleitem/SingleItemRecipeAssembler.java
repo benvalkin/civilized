@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import com.uncreated.civilized.core.building.production.bills.ItemFilter;
 import com.uncreated.civilized.core.building.production.orders.recipe.AssembledRecipe;
 import com.uncreated.civilized.core.building.production.orders.recipe.RecipeAssembler;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -32,7 +33,7 @@ public class SingleItemRecipeAssembler extends RecipeAssembler<SingleItemRecipe,
       this.registryAccess = registryAccess;
    }
 
-   public RecipeSatisfiedResult isRecipeSatisfied(List<Container> containers) {
+   public RecipeSatisfiedResult isRecipeSatisfied(List<Container> containers, ItemFilter ingredientsFilter) {
 
       Ingredient singleIngredient = getRecipe().placementInfo().ingredients().getFirst();
 
@@ -42,6 +43,9 @@ public class SingleItemRecipeAssembler extends RecipeAssembler<SingleItemRecipe,
 
             ItemStack itemStack = container.getItem(s);
             if (itemStack.isEmpty())
+               continue;
+
+            if (!ingredientsFilter.acceptsItem(itemStack))
                continue;
 
             ItemStack candidateIngredient = container.getItem(s).copy();

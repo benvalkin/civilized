@@ -28,9 +28,10 @@ public class TakeToInventoryInstruction extends ConditionalHaulingInstruction<In
     * instruction, the villager will take whatever it can get from each source building. items.
     */
    public static Optional<TakeToInventoryInstruction> createIfMetFromSourceBuildings(
+         String reservationKey,
          InventoryStockRequirement requirement,
          List<LoadedBuilding> candidateSourceBuildings) {
-      return createIfAnyMetFromSourceBuildings(List.of(requirement), candidateSourceBuildings);
+      return createIfAnyMetFromSourceBuildings(reservationKey, List.of(requirement), candidateSourceBuildings);
    }
 
    /**
@@ -40,11 +41,12 @@ public class TakeToInventoryInstruction extends ConditionalHaulingInstruction<In
     * items.
     */
    public static Optional<TakeToInventoryInstruction> createIfAnyMetFromSourceBuildings(
+         String reservationKey,
          List<InventoryStockRequirement> requirements,
          List<LoadedBuilding> candidateSourceBuildings) {
 
       boolean anyRequirementSatisfied =
-            requirements.stream().anyMatch(r -> r.evaluate(candidateSourceBuildings).satisfied());
+            requirements.stream().anyMatch(r -> r.evaluate(reservationKey, candidateSourceBuildings).satisfied());
       if (!anyRequirementSatisfied)
          return Optional.empty();
 
@@ -57,10 +59,12 @@ public class TakeToInventoryInstruction extends ConditionalHaulingInstruction<In
     * satisfied and another isn't, the villager will still continue to other buildings in search of other items.
     */
    public static Optional<TakeToInventoryInstruction> createIfAllMetFromSourceBuildings(
+         String reservationKey,
          List<InventoryStockRequirement> requirements,
          List<LoadedBuilding> sourceBuildings) {
 
-      boolean allRequirementAvailable = requirements.stream().allMatch(r -> r.evaluate(sourceBuildings).satisfied());
+      boolean allRequirementAvailable =
+            requirements.stream().allMatch(r -> r.evaluate(reservationKey, sourceBuildings).satisfied());
       if (!allRequirementAvailable)
          return Optional.empty();
 

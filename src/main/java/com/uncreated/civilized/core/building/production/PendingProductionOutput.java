@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import com.uncreated.civilized.core.building.production.bills.ItemFilter;
+import com.uncreated.civilized.core.building.production.bills.RecipeSlotType;
+import com.uncreated.civilized.core.building.production.orders.ProductionOrder;
 import com.uncreated.civilized.core.building.production.orders.recipe.AssembledRecipe;
 
 import lombok.EqualsAndHashCode;
@@ -58,7 +61,16 @@ public record PendingProductionOutput(Recipe<?> recipe, AssembledRecipe<?> assem
       return consumableIngredients;
    }
 
-   public ConsumableIngredientStack getConsumableFuel(RecipeType<?> recipeType, int quota, ServerLevel level) {
+   public ConsumableIngredientStack getConsumableFuel(
+         int recipeSlot,
+         ProductionOrder productionOrder,
+         int quota,
+         ServerLevel level) {
+
+      RecipeType<?> recipeType = productionOrder.getBill().getProductionType().recipeType();
+      RecipeSlotType fuelSlot = productionOrder.getBill().getProductionType().recipeSlots().get(recipeSlot);
+
+      ItemFilter itemFilter = productionOrder.getBill().getItemFilters().getFilter(recipeSlot);
 
       ConsumableIngredientStack consumableIngredientStack = new ConsumableIngredientStack();
 
@@ -71,6 +83,13 @@ public record PendingProductionOutput(Recipe<?> recipe, AssembledRecipe<?> assem
          for (int i = 0; i < sourceContainer.getContainerSize(); i++) {
             ItemStack item = sourceContainer.getItem(i);
 
+            if (!fuelSlot.isItemAllowed(item, level))
+               continue;
+
+            if (!itemFilter.acceptsItem(item))
+               continue;
+
+            // we are calling getBurnTime twice here because of fuel.isItemAllowed - probably not the best thing
             int burnTime = item.getBurnTime(recipeType, level.fuelValues());
 
             if (burnTime > longestBurnTimeEncountered) {

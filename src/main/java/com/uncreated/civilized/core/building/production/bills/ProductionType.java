@@ -1,5 +1,6 @@
 package com.uncreated.civilized.core.building.production.bills;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 
@@ -20,7 +21,9 @@ public class ProductionType {
    private final ResourceLocation resourceLocation;
    private final RecipeType<?> recipeType;
    private final Supplier<RecipeProductionMachine<?>> createRecipeProductionMachine;
-   private final Supplier<ItemFilters> createEmptyIngredientFilters;
+   private final Supplier<ItemFilters> createDefaultItemFilters;
+   /** The kinds of item this type's recipes consume, one per "recipe slot", e.g. ingredients and fuel. */
+   private final List<RecipeSlotType> recipeSlots;
    /** How many input slots wide the recipe grid is, e.g. 3 for crafting and 1 for cooking. */
    private final int inputGridWidth;
    private final int inputGridHeight;
@@ -30,17 +33,24 @@ public class ProductionType {
          ResourceLocation resourceLocation,
          RecipeType<?> recipeType,
          Supplier<RecipeProductionMachine<?>> createRecipeProductionMachine,
-         Supplier<ItemFilters> createEmptyIngredientFilters,
+         Supplier<ItemFilters> createDefaultItemFilters,
+         List<RecipeSlotType> recipeSlots,
          int inputGridWidth,
          int inputGridHeight,
          IProductionRecipeLookup recipeLookup) {
       this.resourceLocation = resourceLocation;
       this.recipeType = recipeType;
       this.createRecipeProductionMachine = createRecipeProductionMachine;
-      this.createEmptyIngredientFilters = createEmptyIngredientFilters;
+      this.createDefaultItemFilters = createDefaultItemFilters;
+      this.recipeSlots = recipeSlots;
       this.inputGridWidth = inputGridWidth;
       this.inputGridHeight = inputGridHeight;
       this.recipeLookup = recipeLookup;
+   }
+
+   /** Filters that let everything through, one per recipe slot. */
+   public ItemFilters createDefaultIngredientFilters() {
+      return createDefaultItemFilters.get();
    }
 
    public int inputSlotCount() {

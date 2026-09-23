@@ -1,7 +1,6 @@
 package com.uncreated.civilized.core.building.production.orders;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -9,6 +8,7 @@ import java.util.Optional;
 import com.uncreated.civilized.core.building.logistics.AggregateItemStack;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.BuildingStockRequirement;
 import com.uncreated.civilized.core.building.production.PendingProductionOutput;
+import com.uncreated.civilized.core.building.production.bills.ItemFilter;
 import com.uncreated.civilized.core.building.production.bills.ProductionBill;
 import com.uncreated.civilized.core.building.production.orders.recipe.AssembledRecipe;
 import com.uncreated.civilized.core.building.production.orders.recipe.RecipeAssembler;
@@ -51,9 +51,32 @@ public abstract class ProductionOrder {
 
    protected abstract RecipeAssembler<?, ?> getRecipeAssembler(Recipe<?> value, RegistryAccess registryAccess);
 
-   public List<BuildingStockRequirement> createIngredientRequirements(List<Container> stockChests) {
+   public List<BuildingStockRequirement> createStandardIngredientRequirements(int recipeSlot, int batchSize) {
 
-      // compute the current stock deficit so we know how many ingredients to import
+      List<BuildingStockRequirement> requirements = new LinkedList<>();
+
+      List<Ingredient> ingredients = recipeAssembler.getRecipe().placementInfo().ingredients();
+
+      ItemFilter itemFilter = this.bill.getItemFilters().getFilter(recipeSlot);
+
+      for (Ingredient ingredient : ingredients) {
+
+         BuildingStockRequirement requirement =
+               new BuildingStockRequirement(
+                     String.format("%s:%s:%s", bill.getProductionType(), bill.getProductionType().toString(), getKey()),
+                     i -> isAcceptableIngredient(i, ingredient, itemFilter),
+                     1,
+                     batchSize);
+         // makes it so that duplicate ingredients are still taken
+         requirement.disregardExistingCarriedStock(true);
+         requirements.add(requirement);
+      }
+
+      return requirements;
+   }
+
+   public int calculateFinalProductDeficit(List<Container> stockChests) {
+      // compute the current deficit of final product items so we know how many ingredients to import
       int stockDeficit = 0;
       int productionBatchSize = bill.getProductionStrategy().productionBatchSize();
 
@@ -65,34 +88,24 @@ public abstract class ProductionOrder {
          if (stockDeficit > productionBatchSize)
             stockDeficit = productionBatchSize;
       }
+      return stockDeficit;
+   }
 
-      if (stockDeficit <= 0)
-         // there is no reason to transport ingredients for bills that are already satisfied
-         return Collections.emptyList();
+   public static boolean isAcceptableIngredient(ItemStack itemStack, Ingredient ingredient, ItemFilter filter) {
 
-      List<BuildingStockRequirement> requirements = new LinkedList<>();
+      boolean validIngredient = ingredient.acceptsItem(itemStack.getItemHolder());
+      if (!validIngredient)
+         return false;
 
-      List<Ingredient> ingredients = recipeAssembler.getRecipe().placementInfo().ingredients();
-
-      for (Ingredient ingredient : ingredients) {
-
-         BuildingStockRequirement requirement =
-               new BuildingStockRequirement(
-                     String.format("%s:%s:%s", bill.getProductionType(), bill.getProductionType().toString(), getKey()),
-                     in -> ingredient.acceptsItem(in.getItemHolder()),
-                     1,
-                     stockDeficit);
-         // makes it so that duplicate ingredients are still taken
-         requirement.disregardExistingCarriedStock(true);
-         requirements.add(requirement);
-      }
-
-      return requirements;
+      return filter.acceptsItem(itemStack);
    }
 
    public PendingProductionOutput getNextOutput(List<Container> ingredientsChests, List<Container> stockChests) {
 
-      RecipeAssembler.RecipeSatisfiedResult recipeSatisfied = recipeAssembler.isRecipeSatisfied(ingredientsChests);
+      // ingredients filter is always slot 0
+      ItemFilter ingredientsFilter = getBill().getItemFilters().getFilter(0);
+
+      RecipeAssembler.RecipeSatisfiedResult recipeSatisfied = recipeAssembler.isRecipeSatisfied(ingredientsChests, ingredientsFilter);
 
       AssembledRecipe<?> assembledRecipe = recipeAssembler.assembleRecipe(recipeSatisfied.availableInput());
 

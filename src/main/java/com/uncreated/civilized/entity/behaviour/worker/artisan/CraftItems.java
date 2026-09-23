@@ -91,8 +91,11 @@ public class CraftItems extends WorkTaskBehaviour {
          List<BuildingStockRequirement> allRecipeStockRequirements =
                createIngredientsRequirementsForAllRecipes(storehouseAndWorksiteChests);
 
+         String reservationKey = villager.getInfo().getVillagerId().toString();
+
          Optional<TransferToBuildingInstruction> fetchFromStorehouse =
                TransferToBuildingInstruction.createIfAnyMetFromSourceBuildings(
+                     reservationKey,
                      allRecipeStockRequirements,
                      getWorksite(),
                      List.of(storehouse.get()));
@@ -113,13 +116,15 @@ public class CraftItems extends WorkTaskBehaviour {
       List<BuildingStockRequirement> allRecipeStockRequirements = new ArrayList<>();
       for (CraftingOrder productionOrder : craftingMachine.getOrders()) {
 
-         List<BuildingStockRequirement> recipeStockRequirements =
-               productionOrder.createIngredientRequirements(storehouseAndWorksiteChests);
-
-         if (recipeStockRequirements.isEmpty())
+         int finalProductDeficit = productionOrder.calculateFinalProductDeficit(storehouseAndWorksiteChests);
+         if (finalProductDeficit <= 0)
+            // there is no reason to transport ingredients for bills that are already satisfied
             continue;
 
-         allRecipeStockRequirements.addAll(recipeStockRequirements);
+         List<BuildingStockRequirement> craftingIngredientsRequirements =
+               productionOrder.createStandardIngredientRequirements(0, finalProductDeficit);
+
+         allRecipeStockRequirements.addAll(craftingIngredientsRequirements);
       }
       return allRecipeStockRequirements;
    }

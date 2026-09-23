@@ -6,9 +6,11 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import com.uncreated.civilized.core.building.production.bills.ItemFilters;
 import com.uncreated.civilized.core.building.production.bills.ProductionBill;
 import com.uncreated.civilized.core.building.production.bills.ProductionType;
 import com.uncreated.civilized.core.building.production.bills.RecipeAllowed;
+import com.uncreated.civilized.core.building.production.bills.RecipeSlotType;
 import com.uncreated.civilized.core.building.production.bills.strategy.ProductionStrategyType;
 import com.uncreated.civilized.core.building.state.artisan.ArtisanHouseState;
 import com.uncreated.civilized.networking.packets.PreviewProductionBill;
@@ -50,13 +52,19 @@ public class EditProductionBillTab extends ABuildingScreenTab {
    private static final int ARROW_WIDTH = 10;
    private static final int ARROW_HEIGHT = 9;
    private static final int RECIPE_ALLOWED_ICON_SIZE = 18;
+   private static final int FILTER_BUTTON_WIDTH = 64;
+   private static final int FILTER_BUTTON_HEIGHT = 18;
 
+   private final ITabHost tabHost;
+   private final AbstractContainerScreen<?> screen;
    private final ProductionType productionType;
    private final int billIndex;
    private final Runnable returnToBills;
 
    /** The item chosen for each input slot. Only sent to the server when previewing or saving. */
    private final ItemStack[] inputs;
+   /** Which items the villagers may use, one filter per recipe slot. Edited in {@link EditItemFilterTab}. */
+   private final ItemFilters ingredientFilters;
    private final boolean enabled;
    private ProductionStrategyType strategy;
    private int amount;
@@ -72,6 +80,7 @@ public class EditProductionBillTab extends ABuildingScreenTab {
    private final RecipeAllowedIcon recipeAllowedIcon;
    private final CycleButton<ProductionStrategyType> strategyButton;
    private final ItemQuantitySelectorWidget quantitySelector;
+   private final List<Button> itemFilterButtons = new ArrayList<>();
    private final Button done;
    private final Button cancel;
 
@@ -93,6 +102,8 @@ public class EditProductionBillTab extends ABuildingScreenTab {
          int billIndex,
          Runnable returnToBills) {
       super(tabHost, font, productionType.heading(), context);
+      this.tabHost = tabHost;
+      this.screen = screen;
       this.productionType = productionType;
       this.billIndex = billIndex;
       this.returnToBills = returnToBills;
@@ -108,11 +119,13 @@ public class EditProductionBillTab extends ABuildingScreenTab {
          for (int i = 0; i < inputs.length && i < billInputs.size(); i++)
             inputs[i] = billInputs.get(i).copy();
 
+         ingredientFilters = existingBill.getItemFilters().copy();
          enabled = existingBill.isEnabled();
          strategy = existingBill.getProductionStrategy().getType();
          amount = existingBill.getBillAmount();
          resultItem = existingBill.getDisplayItem();
       } else {
+         ingredientFilters = productionType.createDefaultIngredientFilters();
          enabled = true;
          strategy = ProductionStrategyType.PRODUCE_INFINITE;
          amount = -1;
@@ -156,7 +169,7 @@ public class EditProductionBillTab extends ABuildingScreenTab {
                   .withInitialValue(strategy)
                   .create(
                         getRight() - 130,
-                        getY() + 15,
+                        getY(),
                         100,
                         18,
                         Component.translatable("production_bill.production_strategy.heading"),
@@ -165,11 +178,29 @@ public class EditProductionBillTab extends ABuildingScreenTab {
       quantitySelector =
             new ItemQuantitySelectorWidget(
                   getRight() - 65,
-                  getY() + 38,
+                  getY() + 20,
                   resultItem,
                   Math.max(amount, 1),
                   newAmount -> amount = newAmount);
       quantitySelector.visible = strategy.requiresAmount();
+
+      List<RecipeSlotType> recipeSlots = productionType.recipeSlots();
+      for (int i = 0; i < recipeSlots.size(); i++) {
+         RecipeSlotType recipeSlot = recipeSlots.get(i);
+         int recipeSlotIndex = i;
+         itemFilterButtons.add(
+               Button.builder(recipeSlot.name(), button -> openItemFilterTab(recipeSlot, recipeSlotIndex))
+                     .pos(
+                           getX() + layout.itemFilterButtonsX(),
+                           getY() + layout.itemFilterButtonsY() + i * (FILTER_BUTTON_HEIGHT + 2))
+                     .size(FILTER_BUTTON_WIDTH, FILTER_BUTTON_HEIGHT)
+                     .tooltip(
+                           Tooltip.create(
+                                 Component.translatable(
+                                       "menu.building.residence.production_bills.edit_item_filter.tooltip",
+                                       recipeSlot.name())))
+                     .build());
+      }
 
       done =
             Button.builder(Component.translatable("gui.misc.button.done"), button -> save())
@@ -193,6 +224,25 @@ public class EditProductionBillTab extends ABuildingScreenTab {
 
       List<ProductionBill> bills = artisanHouseState().getProductionBills(productionType);
       return billIndex < bills.size() ? bills.get(billIndex) : null;
+   }
+
+   /**
+    * Opens the item filter tab for one recipe slot. Closeing the item filter tab returns to this one after its done
+    */
+   private void openItemFilterTab(RecipeSlotType recipeSlot, int recipeSlotIndex) {
+      tabHost.changeTab(
+            new EditItemFilterTab(
+                  tabHost,
+                  font,
+                  context,
+                  screen,
+                  recipeSlot,
+                  ingredientFilters.getFilter(recipeSlotIndex),
+                  filter -> {
+                     ingredientFilters.setFilter(recipeSlotIndex, filter);
+                     tabHost.changeTab(this);
+                  },
+                  () -> tabHost.changeTab(this)));
    }
 
    private ArtisanHouseState artisanHouseState() {
@@ -274,6 +324,7 @@ public class EditProductionBillTab extends ABuildingScreenTab {
                   productionType,
                   billIndex,
                   List.of(inputs),
+                  ingredientFilters,
                   strategy,
                   amount,
                   enabled));
@@ -304,11 +355,13 @@ public class EditProductionBillTab extends ABuildingScreenTab {
                font,
                Component.translatable("gui.misc.quantity"),
                getRight() - 120,
-               getY() + 43,
+               getY() + 26,
                Colors.MENU_TEXT_DARK,
                false);
          quantitySelector.render(graphics, mouseX, mouseY, partialTicks);
       }
+
+      itemFilterButtons.forEach(button -> button.render(graphics, mouseX, mouseY, partialTicks));
 
       cancel.render(graphics, mouseX, mouseY, partialTicks);
       done.render(graphics, mouseX, mouseY, partialTicks);
@@ -319,6 +372,7 @@ public class EditProductionBillTab extends ABuildingScreenTab {
       List<GuiEventListener> children = new ArrayList<>(inputSlots);
       children.add(output);
       children.add(strategyButton);
+      children.addAll(itemFilterButtons);
       children.add(quantitySelector);
       children.add(cancel);
       children.add(done);

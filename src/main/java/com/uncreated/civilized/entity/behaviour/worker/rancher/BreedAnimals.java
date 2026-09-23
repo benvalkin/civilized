@@ -51,8 +51,10 @@ public class BreedAnimals<T extends Animal> extends WorkTaskBehaviour {
 
       InventoryStockRequirement.StockResult carrying = animalFarmState.getAnimalFoodRequirement().evaluate(villager);
       if (!carrying.satisfied()) {
+         String reservationKey = villager.getInfo().getVillagerId().toString();
          Optional<TakeToInventoryInstruction> instruction =
                TakeToInventoryInstruction.createIfMetFromSourceBuildings(
+                     reservationKey,
                      animalFarmState.getAnimalFoodRequirement(),
                      homeAndStorehouseIfPresent());
          if (instruction.isPresent()) {

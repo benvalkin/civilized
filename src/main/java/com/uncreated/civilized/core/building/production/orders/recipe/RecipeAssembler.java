@@ -3,6 +3,7 @@ package com.uncreated.civilized.core.building.production.orders.recipe;
 import java.util.List;
 import java.util.Optional;
 
+import com.uncreated.civilized.core.building.production.bills.ItemFilter;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
@@ -23,7 +24,7 @@ public abstract class RecipeAssembler<TRecipe extends Recipe<?>, TRecipeInput ex
 
    public abstract Optional<ItemStack> getDefaultResultItem();
 
-   public abstract RecipeSatisfiedResult isRecipeSatisfied(List<Container> containers);
+   public abstract RecipeSatisfiedResult isRecipeSatisfied(List<Container> containers, ItemFilter ingredientsFilter);
 
    public record RecipeSatisfiedResult(boolean satisfied, int numberOfIngredientsSatisfied, int numberOfRequiredIngredients,
                                        List<ItemStack> availableInput) {

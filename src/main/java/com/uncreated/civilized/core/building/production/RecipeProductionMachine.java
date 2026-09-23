@@ -4,9 +4,9 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Queue;
 
 import com.mojang.datafixers.util.Pair;
+import com.uncreated.civilized.core.building.production.bills.ItemFilters;
 import com.uncreated.civilized.core.building.production.bills.ProductionBill;
 import com.uncreated.civilized.core.building.production.bills.ProductionType;
 import com.uncreated.civilized.core.building.production.bills.strategy.ProductionStrategyType;
@@ -18,14 +18,20 @@ import net.minecraft.world.Container;
 
 public abstract class RecipeProductionMachine<Order extends ProductionOrder> {
 
-   private final Queue<Order> orders;
+   private final List<Order> orders;
 
    public RecipeProductionMachine() {
       orders = new LinkedList<>();
+      currentOrderIndex = 0;
+      productionTokens = 0;
    }
 
    public void registerOrder(Order productionOrder) {
       orders.add(productionOrder);
+   }
+
+   public void clearOrders() {
+      orders.clear();
    }
 
    public Collection<Order> getOrders() {
@@ -37,7 +43,9 @@ public abstract class RecipeProductionMachine<Order extends ProductionOrder> {
    public abstract ProductionType getProductionType();
 
    @Getter
-   private int productionTokens = 0;
+   private int productionTokens;
+
+   private int currentOrderIndex;
 
    public void consumeToken() {
       productionTokens--;
@@ -59,7 +67,12 @@ public abstract class RecipeProductionMachine<Order extends ProductionOrder> {
 
       int attempts = 0;
       do {
-         Order currentlyProcessing = orders.peek();
+
+         if (currentOrderIndex >= orders.size() && !orders.isEmpty())
+            // In case someone removed a product bill and the index is now too high, set it to the last order.
+            currentOrderIndex = orders.size() - 1;
+
+         Order currentlyProcessing = orders.get(currentOrderIndex);
 
          if (productionTokens > 0) {
             Optional<PendingProductionOutput> possibleOutput =
@@ -68,8 +81,15 @@ public abstract class RecipeProductionMachine<Order extends ProductionOrder> {
                return Optional.of(Pair.of(currentlyProcessing, possibleOutput.get()));
          }
 
-         // if it is not possible to produce the current order, try move onto the next one
-         orders.add(orders.remove()); // reset and move to back of the list
+         // if it is not possible to produce the current order, either because it has no ingredients or no more tokens,
+         // try move onto the next one
+         currentOrderIndex++;
+
+         // reset the cycle if its reaches the end
+         if (currentOrderIndex >= orders.size())
+            currentOrderIndex = 0;
+
+         // add more tokens
          productionTokens = currentlyProcessing.getBill().getStartingProductionTokens();
          attempts++;
       } while (attempts < orders.size());

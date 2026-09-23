@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
+import com.uncreated.civilized.core.building.production.bills.ItemFilters;
 import com.uncreated.civilized.core.building.production.bills.ProductionBill;
 import com.uncreated.civilized.core.building.production.bills.ProductionRecipe;
 import com.uncreated.civilized.core.building.production.bills.ProductionType;
@@ -37,7 +38,8 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  *           how many to keep in stock, only used by strategies that need an amount
  */
 public record SaveProductionBill(UUID buildingId, ProductionType productionType, int billIndex, List<ItemStack> inputs,
-      ProductionStrategyType strategy, int amount, boolean enabled) implements CustomPacketPayload {
+      ItemFilters ingredientFilters, ProductionStrategyType strategy, int amount, boolean enabled)
+      implements CustomPacketPayload {
 
    public static final int NEW_BILL = -1;
 
@@ -54,6 +56,7 @@ public record SaveProductionBill(UUID buildingId, ProductionType productionType,
       ProductionTypes.STREAM_CODEC.encode(buffer, productionType);
       ByteBufCodecs.VAR_INT.encode(buffer, billIndex);
       ItemStack.OPTIONAL_LIST_STREAM_CODEC.encode(buffer, inputs);
+      ItemFilters.STREAM_CODEC.encode(buffer, ingredientFilters);
       NeoForgeStreamCodecs.enumCodec(ProductionStrategyType.class).encode(buffer, strategy);
       ByteBufCodecs.VAR_INT.encode(buffer, amount);
       ByteBufCodecs.BOOL.encode(buffer, enabled);
@@ -65,6 +68,7 @@ public record SaveProductionBill(UUID buildingId, ProductionType productionType,
             ProductionTypes.STREAM_CODEC.decode(buffer),
             ByteBufCodecs.VAR_INT.decode(buffer),
             ItemStack.OPTIONAL_LIST_STREAM_CODEC.decode(buffer),
+            ItemFilters.STREAM_CODEC.decode(buffer),
             NeoForgeStreamCodecs.enumCodec(ProductionStrategyType.class).decode(buffer),
             ByteBufCodecs.VAR_INT.decode(buffer),
             ByteBufCodecs.BOOL.decode(buffer));
@@ -92,7 +96,12 @@ public record SaveProductionBill(UUID buildingId, ProductionType productionType,
       if (!isNewBill && (packet.billIndex < 0 || packet.billIndex >= existingBills.size()))
          return;
 
+      // a bill has one filter per recipe slot, so a packet with any other number of them is not for this recipe
+      if (packet.ingredientFilters.size() != packet.productionType.recipeSlots().size())
+         return;
+
       List<ItemStack> inputs = ProductionBillEditValidation.singleItems(packet.inputs);
+      ItemFilters ingredientFilters = ProductionBillEditValidation.sanitized(packet.ingredientFilters);
 
       ArtisanHouseState.RecipeEvaluation evaluation =
             artisanHouseState.serverEvaluateRecipe(packet.productionType, inputs, serverPlayer.serverLevel());
@@ -110,7 +119,7 @@ public record SaveProductionBill(UUID buildingId, ProductionType productionType,
                   amount,
                   packet.enabled,
                   inputs,
-                  packet.productionType.createEmptyIngredientFilters().get(),
+                  ingredientFilters,
                   recipe.result());
 
       if (isNewBill)

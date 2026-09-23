@@ -55,7 +55,7 @@ public abstract class ABuildingMenuScreen extends AbstractContainerScreen<Buildi
       this.titleLabelX = 30;
       this.titleLabelY = 2;
       this.inventoryLabelX = 90;
-      this.inventoryLabelY = this.imageHeight - 125;
+      this.inventoryLabelY = this.imageHeight - 107;
    }
 
    protected abstract ATab createDefaultTab(ITabHost tabHost);

@@ -1,12 +1,10 @@
 package com.uncreated.civilized.core.building.logistics.hauling.instruction;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.logistics.AggregateItemStack;
-import com.uncreated.civilized.core.building.logistics.hauling.ItemReservation;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.ItemStockRequirement;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.util.ContainerHelper;
@@ -53,13 +51,14 @@ public abstract class ConditionalHaulingInstruction<T extends ItemStockRequireme
     */
    public boolean hasUsefulStock(CivilizedVillager villager, LoadedBuilding building) {
       List<Container> chests = building.chests();
-      Collection<ItemReservation> reservations = building.getItemReservations().values();
 
       for (T requirement : requirements) {
          if (outstandingAmount(villager, requirement) <= 0)
             continue;
 
-         if (requirement.calculateBuildingStock(chests, reservations).hasItems())
+         String reservationKey = villager.getInfo().getVillagerId().toString();
+
+         if (requirement.calculateBuildingStock(reservationKey, chests, building.getItemReservations()).hasItems())
             return true;
       }
 

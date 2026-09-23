@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import com.uncreated.civilized.core.building.production.bills.ItemFilter;
+import com.uncreated.civilized.core.building.production.bills.ItemFilters;
 import com.uncreated.civilized.core.building.production.orders.recipe.AssembledRecipe;
 import com.uncreated.civilized.core.building.production.orders.recipe.RecipeAssembler;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -32,7 +34,7 @@ public class CraftingRecipeAssembler extends RecipeAssembler<CraftingRecipe, Cra
         this.registryAccess = registryAccess;
     }
 
-    public RecipeSatisfiedResult isRecipeSatisfied(List<Container> containers) {
+    public RecipeSatisfiedResult isRecipeSatisfied(List<Container> containers, ItemFilter ingredientsFilter) {
 
         // 3x3 "crafting window" in array form
         ItemStack[] craftingWindow = new ItemStack[9];
@@ -49,6 +51,9 @@ public class CraftingRecipeAssembler extends RecipeAssembler<CraftingRecipe, Cra
 
                 ItemStack itemStack = container.getItem(s);
                 if (itemStack.isEmpty())
+                    continue;
+
+                if (!ingredientsFilter.acceptsItem(itemStack))
                     continue;
 
                 // copy the candidate ingredient's item stack because we will decrement it later as we "add it" to the

@@ -1,6 +1,5 @@
 package com.uncreated.civilized.core.building.logistics.hauling.requirement;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,11 +31,7 @@ public abstract class ItemStockRequirement {
 
    public static final int UNLIMITED = Integer.MAX_VALUE;
 
-   public ItemStockRequirement(
-         String key,
-         Predicate<ItemStack> filter,
-         int minimumAmountToSatisfy,
-         int idealAmount) {
+   public ItemStockRequirement(String key, Predicate<ItemStack> filter, int minimumAmountToSatisfy, int idealAmount) {
       this.key = key;
       this.filter = filter;
       this.minimumAmountToSatisfy = minimumAmountToSatisfy;
@@ -60,14 +55,14 @@ public abstract class ItemStockRequirement {
     */
    public abstract @NotNull Container getHaulInventory(CivilizedVillager villager);
 
-   public StockResult evaluate(List<LoadedBuilding> candidateSourceBuildings) {
+   public StockResult evaluate(String reservationKey, List<LoadedBuilding> candidateSourceBuildings) {
 
       AggregateItemStack grossStock = new AggregateItemStack();
       Map<LoadedBuilding, AggregateItemStack> satisfiedBuildings = new HashMap<>();
       for (LoadedBuilding candidateBuilding : candidateSourceBuildings) {
          List<Container> chests = candidateBuilding.chests();
          AggregateItemStack buildingStock =
-               calculateBuildingStock(chests, candidateBuilding.getItemReservations().values());
+               calculateBuildingStock(reservationKey, chests, candidateBuilding.getItemReservations());
 
          if (buildingStock.getCount() > 0) {
             grossStock.add(buildingStock);
@@ -79,15 +74,22 @@ public abstract class ItemStockRequirement {
       return new BuildingStockRequirement.StockResult(satisfied, grossStock, satisfiedBuildings);
    }
 
-   public AggregateItemStack calculateBuildingStock(List<Container> chests, Collection<ItemReservation> reservations) {
+   public AggregateItemStack calculateBuildingStock(
+         String reservationKey,
+         List<Container> chests,
+         Map<String, ItemReservation> reservations) {
       AggregateItemStack buildingStock = new AggregateItemStack();
       for (Container chest : chests) {
          AggregateItemStack chestStock = ContainerHelper.countItems(chest, filter);
          buildingStock.add(chestStock);
       }
 
-      for (ItemReservation reservationEntry : reservations) {
-         buildingStock.removeMatching(reservationEntry.filter(), reservationEntry.amount());
+      for (Map.Entry<String, ItemReservation> reservationEntry : reservations.entrySet()) {
+
+         if (reservationEntry.getKey().equals(reservationKey))
+            continue;
+
+         buildingStock.removeMatching(reservationEntry.getValue().filter(), reservationEntry.getValue().amount());
       }
       return buildingStock;
    }

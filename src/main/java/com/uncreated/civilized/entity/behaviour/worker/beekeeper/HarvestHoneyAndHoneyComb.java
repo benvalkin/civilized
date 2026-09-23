@@ -71,9 +71,14 @@ public class HarvestHoneyAndHoneyComb extends WorkTaskBehaviour {
       InventoryStockRequirement.StockResult carryingGlassBottles = glassBottlesRequirement.evaluate(villager);
 
       if (!carryingShears.satisfied() && !carryingGlassBottles.satisfied()) {
+
+         String reservationKey = villager.getInfo().getVillagerId().toString();
+
          Optional<TakeToInventoryInstruction> instruction =
-               TakeToInventoryInstruction
-                     .createIfAnyMetFromSourceBuildings(List.of(shearsRequirement, glassBottlesRequirement), homeAndStorehouseIfPresent());
+               TakeToInventoryInstruction.createIfAnyMetFromSourceBuildings(
+                     reservationKey,
+                     List.of(shearsRequirement, glassBottlesRequirement),
+                     homeAndStorehouseIfPresent());
          if (instruction.isPresent()) {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);

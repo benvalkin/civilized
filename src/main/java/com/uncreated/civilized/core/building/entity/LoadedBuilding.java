@@ -26,7 +26,7 @@ public class LoadedBuilding {
    private final Building building;
    private final Level level;
    private final BuildingBehaviour behaviour;
-   private final Map<CivilizedVillager, ItemReservation> itemReservations;
+   private final Map<String, ItemReservation> itemReservations;
    private final Set<ChestBlockEntity> chests = new LinkedHashSet<>();
 
    public LoadedBuilding(Building building, Level level) {
@@ -40,11 +40,13 @@ public class LoadedBuilding {
    }
 
    public void reserveItems(CivilizedVillager villager, String key, Predicate<ItemStack> matching, int amount) {
-      itemReservations.put(villager, new ItemReservation(key, matching, amount));
+      String reservationKey = villager.getInfo().getVillagerId().toString();
+      itemReservations.put(reservationKey, new ItemReservation(key, matching, amount));
    }
 
    public void cancelReservations(CivilizedVillager villager) {
-      itemReservations.remove(villager);
+      String reservationKey = villager.getInfo().getVillagerId().toString();
+      itemReservations.remove(reservationKey);
    }
 
    public List<Container> chests() {

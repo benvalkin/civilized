@@ -29,7 +29,7 @@ public class BuildingMenu extends AbstractContainerMenu {
    private static final double MAX_DISTANCE_FROM_BUILDING = 64;
 
    private static final int INVENTORY_X = 87;
-   private static final int INVENTORY_Y = 88;
+   private static final int INVENTORY_Y = 105;
 
    @Setter
    private boolean playerInventoryVisible;

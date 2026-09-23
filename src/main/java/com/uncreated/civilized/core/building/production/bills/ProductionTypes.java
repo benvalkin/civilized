@@ -81,7 +81,8 @@ public class ProductionTypes {
                createResourceKey("crafting_production"),
                RecipeType.CRAFTING,
                CraftingMachine::new,
-               ItemFilters.DEFAULT_CRAFTING_FILTERS,
+               () -> ItemFilters.emptyItemFilters(1),
+               List.of(RecipeSlotType.INGREDIENTS),
                3,
                3,
                ProductionTypes::findCraftingRecipe);
@@ -90,7 +91,8 @@ public class ProductionTypes {
                createResourceKey("smelting_production"),
                RecipeType.SMELTING,
                SmeltingMachine::new,
-               ItemFilters.DEFAULT_COOKING_WITH_FUEL_FILTERS,
+               () -> new ItemFilters(ItemFilter.allowAllItems(), ItemFilter.defaultBurnableFuel()),
+               List.of(RecipeSlotType.INGREDIENTS, RecipeSlotType.fuel(RecipeType.SMELTING)),
                1,
                1,
                cookingRecipeLookup(RecipeType.SMELTING));
@@ -99,7 +101,8 @@ public class ProductionTypes {
                createResourceKey("blasting_production"),
                RecipeType.BLASTING,
                BlastingMachine::new,
-               ItemFilters.DEFAULT_COOKING_WITH_FUEL_FILTERS,
+               () -> new ItemFilters(ItemFilter.allowAllItems(), ItemFilter.defaultBurnableFuel()),
+               List.of(RecipeSlotType.INGREDIENTS, RecipeSlotType.fuel(RecipeType.BLASTING)),
                1,
                1,
                cookingRecipeLookup(RecipeType.BLASTING));
@@ -108,7 +111,8 @@ public class ProductionTypes {
                createResourceKey("smoking_production"),
                RecipeType.SMOKING,
                SmokingMachine::new,
-               ItemFilters.DEFAULT_COOKING_WITH_FUEL_FILTERS,
+               () -> new ItemFilters(ItemFilter.allowAllItems(), ItemFilter.defaultBurnableFuel()),
+               List.of(RecipeSlotType.INGREDIENTS, RecipeSlotType.fuel(RecipeType.SMOKING)),
                1,
                1,
                cookingRecipeLookup(RecipeType.SMOKING));

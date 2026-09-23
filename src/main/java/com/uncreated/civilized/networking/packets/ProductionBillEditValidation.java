@@ -3,9 +3,12 @@ package com.uncreated.civilized.networking.packets;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
+import com.uncreated.civilized.core.building.production.bills.ItemFilter;
+import com.uncreated.civilized.core.building.production.bills.ItemFilters;
 import com.uncreated.civilized.core.building.production.bills.ProductionType;
 import com.uncreated.civilized.core.building.state.artisan.ArtisanHouseState;
 import com.uncreated.civilized.ui.menu.building.BuildingMenu;
@@ -54,6 +57,10 @@ final class ProductionBillEditValidation {
          return Optional.empty();
 
       return Optional.of(new EditableArtisanHouse(building.get(), artisanHouseState));
+   }
+
+   static ItemFilters sanitized(ItemFilters filters) {
+      return new ItemFilters(filters.getFilters().stream().map(ItemFilter::sanitized).collect(Collectors.toList()));
    }
 
    /** One of each input, since a bill only records which item goes in each slot. */

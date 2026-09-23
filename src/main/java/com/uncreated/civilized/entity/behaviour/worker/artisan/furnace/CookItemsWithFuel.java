@@ -19,6 +19,8 @@ import com.uncreated.civilized.core.building.logistics.hauling.instruction.Trans
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.BuildingStockRequirement;
 import com.uncreated.civilized.core.building.production.PendingProductionOutput;
 import com.uncreated.civilized.core.building.production.RecipeProductionSystem;
+import com.uncreated.civilized.core.building.production.bills.ItemFilter;
+import com.uncreated.civilized.core.building.production.bills.RecipeSlotType;
 import com.uncreated.civilized.core.building.production.lines.singleitem.SingleItemRecipeOrder;
 import com.uncreated.civilized.core.building.production.lines.singleitem.cooking.CookingMachine;
 import com.uncreated.civilized.core.building.production.orders.ProductionOrder;
@@ -113,10 +115,13 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
             return false; // cannot import anything if the storehouse doesn't exist
 
          List<BuildingStockRequirement> allRecipeStockRequirements =
-               createIngredientsRequirementsForAllRecipes(storehouseAndWorksiteChests);
+               createIngredientsRequirementsForAllRecipes(storehouseAndWorksiteChests, level);
+
+         String reservationKey = villager.getInfo().getVillagerId().toString();
 
          Optional<TransferToBuildingInstruction> fetchFromStorehouse =
                TransferToBuildingInstruction.createIfAnyMetFromSourceBuildings(
+                     reservationKey,
                      allRecipeStockRequirements,
                      getWorksite(),
                      List.of(storehouse.get()));
@@ -133,19 +138,54 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
    }
 
    private @NotNull List<BuildingStockRequirement> createIngredientsRequirementsForAllRecipes(
-         List<Container> storehouseAndWorksiteChests) {
+         List<Container> storehouseAndWorksiteChests,
+         ServerLevel level) {
       List<BuildingStockRequirement> allRecipeStockRequirements = new ArrayList<>();
       for (SingleItemRecipeOrder productionOrder : cookingMachine.getOrders()) {
 
-         List<BuildingStockRequirement> recipeStockRequirements =
-               productionOrder.createIngredientRequirements(storehouseAndWorksiteChests);
-
-         if (recipeStockRequirements.isEmpty())
+         int finalProductDeficit = productionOrder.calculateFinalProductDeficit(storehouseAndWorksiteChests);
+         if (finalProductDeficit <= 0)
+            // there is no reason to transport ingredients for bills that are already satisfied
             continue;
 
-         allRecipeStockRequirements.addAll(recipeStockRequirements);
+         List<BuildingStockRequirement> cookingIngredientsRequirements =
+               productionOrder.createStandardIngredientRequirements(0, finalProductDeficit);
+
+         // A better solution would be to let the RecipeType influence the batch size
+         BuildingStockRequirement createFuelRequirement =
+               createFuelRequirement(1, productionOrder, finalProductDeficit, level);
+
+         allRecipeStockRequirements.add(createFuelRequirement);
+
+         allRecipeStockRequirements.addAll(cookingIngredientsRequirements);
       }
       return allRecipeStockRequirements;
+   }
+
+   private BuildingStockRequirement createFuelRequirement(
+         int recipeSlot,
+         SingleItemRecipeOrder productionOrder,
+         int amount,
+         ServerLevel level) {
+
+      RecipeSlotType fuelSlot = productionOrder.getBill().getProductionType().recipeSlots().get(recipeSlot);
+
+      ItemFilter itemFilter = productionOrder.getBill().getItemFilters().getFilter(recipeSlot);
+
+      BuildingStockRequirement requirement =
+            new BuildingStockRequirement(
+                  String.format(
+                        "%s:%s:%s",
+                        productionOrder.getBill().getProductionType(),
+                        productionOrder.getBill().getProductionType().toString(),
+                        productionOrder.getKey()),
+                  i -> fuelSlot.isItemAllowed(i, level) && itemFilter.acceptsItem(i),
+                  1,
+                  amount);
+      // makes it so that duplicate ingredients are still taken
+      requirement.disregardExistingCarriedStock(true);
+
+      return requirement;
    }
 
    protected abstract CookingMachine getProductionMachine(RecipeProductionSystem recipeProductionSystem);
@@ -223,11 +263,11 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
          return;
       }
 
+      ProductionOrder order = currentOrder.get().getFirst();
       PendingProductionOutput pendingOutput = currentOrder.get().getSecond();
       List<PendingProductionOutput.ConsumableIngredientStack> toSmelt = pendingOutput.getConsumableIngredients();
 
-      PendingProductionOutput.ConsumableIngredientStack fuel =
-            pendingOutput.getConsumableFuel(cookingMachine.getProductionType().recipeType(), 8, level);
+      PendingProductionOutput.ConsumableIngredientStack fuel = pendingOutput.getConsumableFuel(1, order, 8, level);
 
       // try place fuel, or leave alone if there is already fuel
       if (!fuel.subStacks().isEmpty()) {

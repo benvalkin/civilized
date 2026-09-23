@@ -82,9 +82,10 @@ public class Fish extends WorkTaskBehaviour {
 
       InventoryStockRequirement.StockResult carrying = fishingRodRequirement.evaluate(villager);
       if (!carrying.satisfied()) {
-         // todo: only glassBottles can be picked up atm. we need support instructions for multiple requirements
+         String reservationKey = villager.getInfo().getVillagerId().toString();
          Optional<TakeToInventoryInstruction> instruction =
-               TakeToInventoryInstruction.createIfMetFromSourceBuildings(fishingRodRequirement, homeAndStorehouseIfPresent());
+               TakeToInventoryInstruction.createIfMetFromSourceBuildings(
+                     reservationKey, fishingRodRequirement, homeAndStorehouseIfPresent());
          if (instruction.isPresent()) {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
