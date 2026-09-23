@@ -7,6 +7,7 @@ import java.util.Set;
 
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.logistics.AggregateItemStack;
+import com.uncreated.civilized.core.building.logistics.hauling.ItemReservation;
 import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventoryType;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.ConditionalHaulingInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.DropOffItemsInstruction;
@@ -157,18 +158,19 @@ public class TakeItemsToInventory extends WorkTaskBehaviour {
 
    private void acceptNextTargetBuilding(CivilizedVillager villager, LoadedBuilding nextBuildingWithStock) {
       currentSourceBuilding = nextBuildingWithStock;
-      placeReservationsOnBuilding(villager, currentSourceBuilding);
+      placeReservationsOnBuilding(currentSourceBuilding);
       BlockEntity chest = currentSourceBuilding.anyChest().orElseThrow();
       travelHelper = new MediumDistanceTravelTask(villager, chest.getBlockPos(), 2);
    }
 
-   private void placeReservationsOnBuilding(CivilizedVillager villager, LoadedBuilding building) {
-      for (ItemStockRequirement requirement : haulingInstruction.requirements()) {
+   private void placeReservationsOnBuilding(LoadedBuilding building) {
+      List<ItemReservation.Entry> entries =
+            haulingInstruction.requirements()
+                  .stream()
+                  .map(requirement -> new ItemReservation.Entry(requirement.filter(), requirement.idealAmount()))
+                  .toList();
 
-         String party = haulingInstruction.reservationParty();
-         String reservationName = haulingInstruction.reservationName();
-         building.placeReservation(party, reservationName, requirement.filter(), requirement.idealAmount());
-      }
+      building.placeReservation(haulingInstruction.reservationParty(), haulingInstruction.reservationName(), entries);
    }
 
    private void eraseMemory(CivilizedVillager villager) {

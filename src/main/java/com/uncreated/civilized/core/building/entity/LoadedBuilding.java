@@ -41,17 +41,13 @@ public class LoadedBuilding {
       findChestsInsideBounds();
    }
 
+   public void placeReservation(String party, String reservationName, List<ItemReservation.Entry> entries) {
+      partyItemReservations.computeIfAbsent(party, p -> new LinkedHashMap<>())
+            .put(reservationName, new ItemReservation(party, reservationName, entries));
+   }
+
    public void placeReservation(String party, String reservationName, Predicate<ItemStack> matching, int amount) {
-      partyItemReservations.compute(party, (k, reservations) -> {
-         if (reservations == null) {
-            Map<String, ItemReservation> reservationsNew = new LinkedHashMap<>();
-            reservationsNew.put(reservationName, new ItemReservation(party, reservationName, matching, amount));
-            return reservationsNew;
-         } else {
-            reservations.put(reservationName, new ItemReservation(party, reservationName, matching, amount));
-            return reservations;
-         }
-      });
+      placeReservation(party, reservationName, List.of(new ItemReservation.Entry(matching, amount)));
    }
 
    public List<ItemReservation> getReservationsExcluding(String party) {

@@ -46,6 +46,7 @@ public class AggregateItemStack {
          if (predicate.test(itemStack)) {
             int toRemove = Math.min(upTo, itemStack.getCount());
             itemStack.shrink(toRemove);
+            count -= toRemove;
             upTo -= toRemove;
             if (upTo <= 0)
                break;

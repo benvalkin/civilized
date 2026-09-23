@@ -1,7 +1,10 @@
 package com.uncreated.civilized.core.building.logistics.hauling;
 
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import com.uncreated.civilized.core.building.logistics.AggregateItemStack;
 import com.uncreated.civilized.entity.CivilizedVillager;
@@ -11,44 +14,66 @@ import lombok.experimental.Accessors;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 
+
 @Accessors(fluent = true)
 @Getter
 public class ItemReservation {
    private final String party;
    private final String name;
-   protected final Predicate<ItemStack> filter;
-   protected final int amount;
+   private final List<Entry> entries;
 
-   public ItemReservation(String party, String name, Predicate<ItemStack> filter, int amount) {
-      this.party = party;
-      this.name = name;
-      this.filter = filter;
-      this.amount = amount;
 
-      if (filter.test(ItemStack.EMPTY))
-         throw new IllegalArgumentException("ItemReservation filter is not allowed to match empty items.");
+   public record Entry(Predicate<ItemStack> filter, int amount) {
+      public Entry {
+         if (filter.test(ItemStack.EMPTY))
+            throw new IllegalArgumentException("ItemReservation filter is not allowed to match empty items.");
 
-      if (this.amount <= 0)
-         throw new IllegalArgumentException("ItemReservation amount must be greater than zero");
+         if (amount <= 0)
+            throw new IllegalArgumentException("ItemReservation amount must be greater than zero");
+      }
    }
 
+   public ItemReservation(String party, String name, List<Entry> entries) {
+      if (entries.isEmpty())
+         throw new IllegalArgumentException("ItemReservation must reserve at least one kind of item");
+
+      this.party = party;
+      this.name = name;
+      this.entries = List.copyOf(entries);
+   }
+
+   /**
+    * Calculates the items in {@code storage} that this reservation holds on to. Entries are filled in order, and each item is only
+    * counted once, i.e. two entries matching the same items do not hold onto the same item stack.
+    */
    public AggregateItemStack calculateReservedItems(List<Container> storage) {
-
-      int quota = amount;
       AggregateItemStack reservedItems = new AggregateItemStack();
-      for (Container container : storage) {
-         for (int i = 0; i < container.getContainerSize(); i++) {
-            ItemStack item = container.getItem(i);
-            if (!filter.test(item))
-               continue;
 
-            // add until we reach the reservation's amount
-            ItemStack toAdd = item.copy();
-            // clamp the toAdd item amount to the remaining quota in case this stack is bigger than what we have left to
-            // add
-            toAdd.setCount(Math.min(toAdd.getCount(), quota));
-            quota -= toAdd.getCount();
-            reservedItems.add(toAdd);
+      // how many items in each slot have not been claimed by an earlier entry yet
+      Map<Container, int[]> unclaimed = new IdentityHashMap<>();
+      for (Container container : storage) {
+         int[] counts = new int[container.getContainerSize()];
+         for (int i = 0; i < counts.length; i++)
+            counts[i] = container.getItem(i).getCount();
+         unclaimed.put(container, counts);
+      }
+
+      for (Entry entry : entries) {
+         int quota = entry.amount();
+
+         for (Container container : storage) {
+            int[] counts = unclaimed.get(container);
+
+            for (int i = 0; i < counts.length && quota > 0; i++) {
+               ItemStack item = container.getItem(i);
+               if (counts[i] <= 0 || !entry.filter().test(item))
+                  continue;
+
+               int claimed = Math.min(counts[i], quota);
+               counts[i] -= claimed;
+               quota -= claimed;
+               reservedItems.add(item.copyWithCount(claimed));
+            }
 
             if (quota <= 0)
                break;
@@ -60,7 +85,8 @@ public class ItemReservation {
 
    @Override
    public String toString() {
-      return name + ":" + amount + " (" + party + ")";
+      String amounts = entries.stream().map(entry -> String.valueOf(entry.amount())).collect(Collectors.joining(", "));
+      return name + ":[" + amounts + "] (" + party + ")";
    }
 
    public static String partKeyFor(CivilizedVillager villager, String activityName) {

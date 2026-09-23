@@ -84,7 +84,8 @@ public abstract class ItemStockRequirement {
       }
 
       for (ItemReservation reservation : reservations) {
-         buildingStock.removeMatching(reservation.filter(), reservation.amount());
+         for (ItemReservation.Entry entry : reservation.entries())
+            buildingStock.removeMatching(entry.filter(), entry.amount());
       }
       return buildingStock;
    }
