@@ -8,9 +8,6 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import com.uncreated.civilized.util.ContainerHelper;
-import net.minecraft.world.Container;
-import net.minecraft.world.item.Item;
 import org.jetbrains.annotations.NotNull;
 
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
@@ -24,12 +21,15 @@ import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.BehaviourState;
 import com.uncreated.civilized.entity.behaviour.StatefulBehaviour;
 import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
+import com.uncreated.civilized.util.ContainerHelper;
 
 import lombok.Getter;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 public abstract class WorkTaskBehaviour extends StatefulBehaviour {
@@ -113,6 +113,14 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
    @Override
    protected void stop(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.stop(level, villager, gameTime);
+   }
+
+   /**
+    * Creates a unique reservation party name for the specified villager using its villagerId and this work behaviour's
+    * {@link BehaviourState}. Used for reserving items during logistics.
+    */
+   protected String reservationPartyKey(CivilizedVillager villager) {
+      return villager.getInfo().getVillagerId() + ":" + getState();
    }
 
    protected @NotNull List<LoadedBuilding> homeAndStorehouseIfPresent() {

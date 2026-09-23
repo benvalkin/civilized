@@ -64,7 +64,7 @@ public class CheckLogisticsOpportunities extends WorkTaskBehaviour {
       List<LoadedBuilding> home = List.of(getHome());
       if (!getSharedCooldowns().hasCooldown(Cooldowns.EXPORT_RUN, level.getGameTime()) && checkForExportOrders()) {
 
-         String party = ReservationKey.partyKeyFor(villager, this.getState().toString());
+         String party = reservationPartyKey(villager);
          // note that this instruction reserved every single item in the chest since it takes everything to the
          // storehouse.
          // this seems okay, but maybe double check in future

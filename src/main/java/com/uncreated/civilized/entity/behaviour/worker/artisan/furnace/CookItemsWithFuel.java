@@ -15,7 +15,6 @@ import com.mojang.logging.LogUtils;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.entity.behaviour.ArtisanHouseBehaviour;
-import com.uncreated.civilized.core.building.logistics.hauling.ItemReservation;
 import com.uncreated.civilized.core.building.logistics.hauling.ReservationKey;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.TransferToBuildingInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.BuildingStockRequirement;
@@ -119,7 +118,7 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
          List<BuildingStockRequirement> allRecipeStockRequirements =
                createIngredientsRequirementsForAllRecipes(storehouseAndWorksiteChests, level);
 
-         String party = ReservationKey.partyKeyFor(villager, this.getState().toString());
+         String party = reservationPartyKey(villager);
 
          Optional<TransferToBuildingInstruction> fetchFromStorehouse =
                TransferToBuildingInstruction.createIfAnyMetFromSourceBuildings(

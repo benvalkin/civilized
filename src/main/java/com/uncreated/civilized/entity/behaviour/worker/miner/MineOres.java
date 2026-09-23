@@ -8,7 +8,6 @@ import java.util.Optional;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
-import com.uncreated.civilized.core.building.logistics.hauling.ItemReservation;
 import com.uncreated.civilized.core.building.logistics.hauling.ReservationKey;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.TakeToInventoryInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
@@ -62,7 +61,7 @@ public class MineOres extends WorkTaskBehaviour {
 
       InventoryStockRequirement.StockResult carrying = PICKAXE_REQUIREMENT.evaluate(villager);
       if (!carrying.satisfied()) {
-         String party = ReservationKey.partyKeyFor(villager, this.getState().toString());
+         String party = reservationPartyKey(villager);
          Optional<TakeToInventoryInstruction> instruction =
                TakeToInventoryInstruction.createIfMetFromSourceBuildings(
                      new ReservationKey(party, PICKAXE_REQUIREMENT.key()),

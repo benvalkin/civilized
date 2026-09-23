@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import com.google.common.collect.Lists;
 import com.mojang.logging.LogUtils;
 import com.uncreated.civilized.core.building.Building;
-import com.uncreated.civilized.core.building.logistics.hauling.ItemReservation;
 import com.uncreated.civilized.core.building.logistics.hauling.ReservationKey;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.TakeToInventoryInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
@@ -55,7 +54,7 @@ public class ReplantSaplings extends WorkTaskBehaviour {
 
       InventoryStockRequirement.StockResult carrying = groveState.getSaplingRequirement().evaluate(villager);
       if (!carrying.satisfied()) {
-         String party = ReservationKey.partyKeyFor(villager, this.getState().toString());
+         String party = reservationPartyKey(villager);
          Optional<TakeToInventoryInstruction> instruction =
                TakeToInventoryInstruction.createIfMetFromSourceBuildings(
                      new ReservationKey(party, groveState.getSaplingRequirement().key()),

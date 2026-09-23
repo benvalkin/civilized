@@ -57,7 +57,7 @@ public class HarvestCrops extends WorkTaskBehaviour {
 
       InventoryStockRequirement.StockResult carrying = HOE_REQUIREMENT.evaluate(villager);
       if (!carrying.satisfied()) {
-         String party = ReservationKey.partyKeyFor(villager, this.getState().toString());
+         String party = reservationPartyKey(villager);
 
          Optional<TakeToInventoryInstruction> instruction =
                TakeToInventoryInstruction.createIfMetFromSourceBuildings(

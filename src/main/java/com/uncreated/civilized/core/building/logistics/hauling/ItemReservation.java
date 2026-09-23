@@ -1,26 +1,18 @@
 package com.uncreated.civilized.core.building.logistics.hauling;
 
-import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import com.uncreated.civilized.core.building.logistics.AggregateItemStack;
-import com.uncreated.civilized.entity.CivilizedVillager;
-
 import lombok.Getter;
 import lombok.experimental.Accessors;
-import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
-
 
 @Accessors(fluent = true)
 @Getter
 public class ItemReservation {
    private final ReservationKey key;
    private final List<Entry> entries;
-
 
    public record Entry(Predicate<ItemStack> filter, int amount) {
       public Entry {

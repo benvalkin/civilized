@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import com.uncreated.civilized.core.building.logistics.hauling.ItemReservation;
 import com.uncreated.civilized.core.building.logistics.hauling.ReservationKey;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -93,7 +92,7 @@ public class CraftItems extends WorkTaskBehaviour {
          List<BuildingStockRequirement> allRecipeStockRequirements =
                createIngredientsRequirementsForAllRecipes(storehouseAndWorksiteChests);
 
-         String party = ReservationKey.partyKeyFor(villager, this.getState().toString());
+         String party = reservationPartyKey(villager);
 
          Optional<TransferToBuildingInstruction> fetchFromStorehouse =
                TransferToBuildingInstruction.createIfAnyMetFromSourceBuildings(

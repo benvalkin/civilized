@@ -56,7 +56,7 @@ public class CutDownTrees extends WorkTaskBehaviour {
 
       InventoryStockRequirement.StockResult carrying = AXE_REQUIREMENT.evaluate(villager);
       if (!carrying.satisfied()) {
-         String party = ReservationKey.partyKeyFor(villager, this.getState().toString());
+         String party = reservationPartyKey(villager);
          Optional<TakeToInventoryInstruction> instruction =
                TakeToInventoryInstruction.createIfMetFromSourceBuildings(
                      new ReservationKey(party, AXE_REQUIREMENT.key()),
