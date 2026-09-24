@@ -50,6 +50,10 @@ public class ItemFilter {
       return new ItemFilter(mode, new LinkedList<>(sanitizedItems));
    }
 
+   public boolean allowsEverything() {
+      return items.isEmpty();
+   }
+
    public static ItemFilter allowAllItems() {
       return new ItemFilter(ItemFilterMode.WHITELIST, new LinkedList<>());
    }

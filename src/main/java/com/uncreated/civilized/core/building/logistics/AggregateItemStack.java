@@ -12,34 +12,51 @@ import net.minecraft.world.item.ItemStack;
 @Getter
 public class AggregateItemStack {
    private final List<ItemStack> itemStacks;
+   private final boolean mutable;
    private int count;
 
-   public AggregateItemStack(List<ItemStack> itemStacks) {
-      this.itemStacks = itemStacks;
+   public AggregateItemStack(List<ItemStack> itemStacks, boolean mutable) {
+      this.mutable = mutable;
+      this.itemStacks = itemStacks.stream().map(i -> mutable ? i : i.copy()).collect(Collectors.toList());
       this.count = itemStacks.stream().mapToInt(ItemStack::getCount).sum();
    }
 
-   public AggregateItemStack() {
+   public AggregateItemStack(List<ItemStack> itemStacks) {
+      this(itemStacks, false);
+   }
+
+   public AggregateItemStack(boolean mutable) {
+      this.mutable = mutable;
       this.itemStacks = Lists.newArrayList();
       this.count = 0;
    }
 
-   public AggregateItemStack(AggregateItemStack... aggregateItemStacks) {
+   public AggregateItemStack() {
+      this(false);
+   }
+
+   public AggregateItemStack(boolean mutable, AggregateItemStack... aggregateItemStacks) {
+      this.mutable = mutable;
       this.itemStacks = Lists.newArrayList();
       for (AggregateItemStack other : aggregateItemStacks)
          for (ItemStack itemStack : other.itemStacks)
-            this.itemStacks.add(itemStack.copy());
+            this.itemStacks.add(mutable ? itemStack : itemStack.copy());
       this.count = itemStacks.stream().mapToInt(ItemStack::getCount).sum();
    }
 
+   public AggregateItemStack(AggregateItemStack... aggregateItemStacks) {
+      this(false, aggregateItemStacks);
+   }
+
    public void add(ItemStack itemStack) {
-      this.itemStacks.add(itemStack.copy());
+      this.itemStacks.add(mutable ? itemStack : itemStack.copy());
       this.count += itemStack.getCount();
    }
 
    public void add(AggregateItemStack other) {
       for (ItemStack itemStack : other.itemStacks)
-         this.itemStacks.add(itemStack.copy());
+         this.itemStacks.add(mutable ? itemStack : itemStack.copy());
+
       this.count += other.getCount();
    }
 
