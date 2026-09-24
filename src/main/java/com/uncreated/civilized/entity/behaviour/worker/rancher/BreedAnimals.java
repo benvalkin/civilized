@@ -40,20 +40,32 @@ public class BreedAnimals<T extends Animal> extends WorkTaskBehaviour {
       if (!super.checkExtraStartConditions(level, villager))
          return false;
 
-      List<Animal> breedableAnimals = getBreedableAnimals(level);
-      if (breedableAnimals.size() < 2)
-         return false;
-
       List<Animal> totalAnimals = getTotalAnimals(level);
       if (totalAnimals.size() > 8)
          return false;
 
+      String party = reservationPartyKey(villager);
+
       AnimalFarmState animalFarmState = (AnimalFarmState) getWorksite().getBuilding().getState();
       InventoryStockRequirement animalFoodRequirement = animalFarmState.getAnimalFoodRequirement();
 
+      if (totalAnimals.size() > 2) {
+         // if there enough total animals to breed, reserve the minimum viable animal food at the storehouse
+         findStorehouse(getSettlement()).ifPresent(storehouse -> {
+            storehouse.placeReservation(
+                  new ReservationKey(party, animalFoodRequirement.key() + "_static"),
+                  animalFoodRequirement.filter(),
+                  animalFoodRequirement.minimumAcceptableAmount());
+         });
+      }
+
+      List<Animal> breedableAnimals = getBreedableAnimals(level);
+      if (breedableAnimals.size() < 2) {
+         return false;
+      }
+
       InventoryStockRequirement.StockResult carrying = animalFoodRequirement.evaluate(villager);
       if (!carrying.satisfied()) {
-         String party = reservationPartyKey(villager);
          Optional<TakeToInventoryInstruction> instruction =
                TakeToInventoryInstruction.createIfMetFromSourceBuildings(
                      new ReservationKey(party, animalFoodRequirement.key()),
@@ -65,14 +77,6 @@ public class BreedAnimals<T extends Animal> extends WorkTaskBehaviour {
             getStateMachine().queueActionOnce(this.getState());
             // todo: send notification that the villager is missing shears
          }
-
-         // reserve the minimum viable animal food at the storehouse
-         findStorehouse(getSettlement()).ifPresent(storehouse -> {
-            storehouse.placeReservation(
-                  new ReservationKey(party, animalFoodRequirement.key() + "_static"),
-                  animalFoodRequirement.filter(),
-                  animalFoodRequirement.minimumAcceptableAmount());
-         });
 
          return false;
       }

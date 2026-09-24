@@ -27,17 +27,19 @@ public class AggregateItemStack {
    public AggregateItemStack(AggregateItemStack... aggregateItemStacks) {
       this.itemStacks = Lists.newArrayList();
       for (AggregateItemStack other : aggregateItemStacks)
-         this.itemStacks.addAll(other.getItemStacks());
+         for (ItemStack itemStack : other.itemStacks)
+            this.itemStacks.add(itemStack.copy());
       this.count = itemStacks.stream().mapToInt(ItemStack::getCount).sum();
    }
 
    public void add(ItemStack itemStack) {
-      this.itemStacks.add(itemStack);
+      this.itemStacks.add(itemStack.copy());
       this.count += itemStack.getCount();
    }
 
    public void add(AggregateItemStack other) {
-      this.itemStacks.addAll(other.getItemStacks());
+      for (ItemStack itemStack : other.itemStacks)
+         this.itemStacks.add(itemStack.copy());
       this.count += other.getCount();
    }
 

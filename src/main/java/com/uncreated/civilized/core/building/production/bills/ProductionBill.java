@@ -19,7 +19,8 @@ import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
 
 @Getter
-public class ProductionBill {
+public class
+ProductionBill {
 
    private final String minecraftRecipeName;
    private final ProductionType productionType;

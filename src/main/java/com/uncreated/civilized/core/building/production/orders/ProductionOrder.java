@@ -62,8 +62,11 @@ public abstract class ProductionOrder {
       for (Ingredient ingredient : ingredients) {
 
          BuildingStockRequirement requirement =
-               new BuildingStockRequirement(
-                     String.format("%s:%s:%s", bill.getProductionType(), bill.getProductionType().toString(), getKey()),
+               new BuildingStockRequirement(String.format(
+                       "%s:%s",
+                       bill.getProductionType(),
+                       bill.getMinecraftRecipeName()
+               ),
                      i -> isAcceptableIngredient(i, ingredient, itemFilter),
                      1,
                      batchSize);
@@ -105,7 +108,8 @@ public abstract class ProductionOrder {
       // ingredients filter is always slot 0
       ItemFilter ingredientsFilter = getBill().getItemFilters().getFilter(0);
 
-      RecipeAssembler.RecipeSatisfiedResult recipeSatisfied = recipeAssembler.isRecipeSatisfied(ingredientsChests, ingredientsFilter);
+      RecipeAssembler.RecipeSatisfiedResult recipeSatisfied =
+            recipeAssembler.isRecipeSatisfied(ingredientsChests, ingredientsFilter);
 
       AssembledRecipe<?> assembledRecipe = recipeAssembler.assembleRecipe(recipeSatisfied.availableInput());
 

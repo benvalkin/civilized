@@ -176,10 +176,9 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
       BuildingStockRequirement requirement =
             new BuildingStockRequirement(
                   String.format(
-                        "%s:%s:%s",
+                        "%s:%s:fuel",
                         productionOrder.getBill().getProductionType(),
-                        productionOrder.getBill().getProductionType().toString(),
-                        productionOrder.getKey()),
+                        productionOrder.getBill().getMinecraftRecipeName()),
                   i -> fuelSlot.isItemAllowed(i, level) && itemFilter.acceptsItem(i),
                   1,
                   amount);
