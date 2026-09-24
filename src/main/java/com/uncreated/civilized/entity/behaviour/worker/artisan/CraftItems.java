@@ -197,6 +197,7 @@ public class CraftItems extends WorkTaskBehaviour {
          craftingMachine.consumeToken();
 
          villager.swing(InteractionHand.MAIN_HAND, true);
+         villager.addWorkExhaustion(1);
          villager.setItemSlot(EquipmentSlot.MAINHAND, resultItem.copyWithCount(1));
          villager.getBrain().setMemory(MemoryModuleType.LOOK_TARGET, new BlockPosTracker(workBlock));
 

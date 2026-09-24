@@ -128,6 +128,7 @@ public class ReplantSaplings extends WorkTaskBehaviour {
          }
 
          villager.swing(InteractionHand.MAIN_HAND, true);
+         villager.addWorkExhaustion(1);
 
          SaplingBlock saplingBlock = (SaplingBlock) Block.byItem(saplingStack.get().getItem());
 

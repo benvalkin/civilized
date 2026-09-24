@@ -192,6 +192,7 @@ public class ShearSheep extends WorkTaskBehaviour {
     */
    private void shear(ServerLevel level, CivilizedVillager villager, Sheep sheep) {
       villager.swing(InteractionHand.MAIN_HAND, true);
+      villager.addWorkExhaustion(1);
 
       LootParams lootParams =
             new LootParams.Builder(level).withParameter(LootContextParams.ORIGIN, sheep.position())

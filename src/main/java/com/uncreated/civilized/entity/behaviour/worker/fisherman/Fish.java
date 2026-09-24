@@ -168,6 +168,7 @@ public class Fish extends WorkTaskBehaviour {
 
       villager.getBrain().setMemory(MemoryModuleType.LOOK_TARGET, new BlockPosTracker(castTarget));
       villager.swing(InteractionHand.MAIN_HAND, true);
+      villager.addWorkExhaustion(1);
       level.playSound(null, castTarget, SoundEvents.FISHING_BOBBER_THROW, villager.getSoundSource(), 1.0F, 1.0F);
    }
 
@@ -186,6 +187,7 @@ public class Fish extends WorkTaskBehaviour {
 
       level.playSound(null, castTarget, SoundEvents.FISHING_BOBBER_SPLASH, villager.getSoundSource(), 1.0F, 1.0F);
       villager.swing(InteractionHand.MAIN_HAND, true);
+      villager.addWorkExhaustion(1);
 
       if (caughtItems.isEmpty())
          return;

@@ -144,6 +144,7 @@ public class CutDownTrees extends WorkTaskBehaviour {
 
          toolHits++;
          villager.swing(InteractionHand.MAIN_HAND, true);
+         villager.addWorkExhaustion(1);
 
          BlockState blockState = level.getBlockState(pos);
          int requiredToolHits = blockState.getTags().anyMatch(t -> t.equals(BlockTags.LOGS)) ? 14 : 4;

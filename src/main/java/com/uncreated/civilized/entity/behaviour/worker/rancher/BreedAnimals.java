@@ -147,6 +147,7 @@ public class BreedAnimals<T extends Animal> extends WorkTaskBehaviour {
          }
 
          villager.swing(InteractionHand.MAIN_HAND, true);
+         villager.addWorkExhaustion(1);
 
          animal.get().setInLove(null);
          villager.getWorkInputInventory().removeItemType(animalFoodItemsInventory.get().getItem(), 1);

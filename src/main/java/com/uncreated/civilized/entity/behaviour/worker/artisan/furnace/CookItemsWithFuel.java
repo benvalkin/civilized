@@ -108,7 +108,8 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
 
             dumpInventoryToChests(villager.getWorkOutputInventory(), getWorksite().chests());
 
-            villager.swing(InteractionHand.MAIN_HAND);
+            villager.swing(InteractionHand.MAIN_HAND, true);
+            villager.addWorkExhaustion(1);
          }
 
          // we cannot produce anything at the moment, so we should try import ingredients from the storehouse
@@ -257,8 +258,10 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
          // nothing more to cook
          doStop(level, villager, gameTime);
 
-         if (useSuccess)
+         if (useSuccess) {
             villager.swing(InteractionHand.MAIN_HAND, true);
+            villager.addWorkExhaustion(1);
+         }
 
          return;
       }
@@ -302,6 +305,7 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
 
       if (useSuccess) {
          villager.swing(InteractionHand.MAIN_HAND, true);
+         villager.addWorkExhaustion(1);
          getBehaviourCooldowns().startCooldown(Cooldowns.START, Duration.of(7, ChronoUnit.SECONDS), gameTime);
       }
 

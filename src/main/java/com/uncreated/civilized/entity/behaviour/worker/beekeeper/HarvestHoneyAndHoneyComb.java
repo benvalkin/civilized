@@ -158,6 +158,7 @@ public class HarvestHoneyAndHoneyComb extends WorkTaskBehaviour {
          ContainerHelper.ItemSearchResult bottle) {
       villager.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.GLASS_BOTTLE));
       villager.swing(InteractionHand.MAIN_HAND, true);
+      villager.addWorkExhaustion(1);
 
       villager.getWorkInputInventory().removeItem(bottle.slot(), 1);
       villager.getWorkOutputInventory().addItem(new ItemStack(Items.HONEY_BOTTLE));
@@ -167,6 +168,7 @@ public class HarvestHoneyAndHoneyComb extends WorkTaskBehaviour {
    private void shearHoneycomb(ServerLevel level, CivilizedVillager villager, ItemStack shears) {
       villager.setItemSlot(EquipmentSlot.MAINHAND, shears);
       villager.swing(InteractionHand.MAIN_HAND, true);
+      villager.addWorkExhaustion(1);
 
       villager.getWorkOutputInventory().addItem(new ItemStack(Items.HONEYCOMB, HONEYCOMB_PER_HIVE));
       level.playSound(null, nextFullBeehive, SoundEvents.BEEHIVE_SHEAR, villager.getSoundSource(), 1.0F, 1.0F);

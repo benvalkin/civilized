@@ -121,6 +121,7 @@ public class MineOres extends WorkTaskBehaviour {
          lastWorkTime = gameTime;
 
          villager.swing(InteractionHand.MAIN_HAND, true);
+         villager.addWorkExhaustion(1);
 
          mineOreVein(level, villager, gameTime);
       }

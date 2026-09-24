@@ -78,7 +78,8 @@ public class MeleeAttackTarget extends StatefulBehaviour {
 
       if (currentTicks > nextAttack) {
          nextAttack = currentTicks + attackSpeed;
-         villager.swing(InteractionHand.MAIN_HAND);
+         villager.swing(InteractionHand.MAIN_HAND, true);
+         villager.addWorkExhaustion(1);
          villager.doHurtTarget(level, target);
       }
    }

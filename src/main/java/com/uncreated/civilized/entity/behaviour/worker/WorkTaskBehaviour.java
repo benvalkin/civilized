@@ -202,7 +202,8 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
 
       if (pickedUpAnything) {
          villager.playSound(SoundEvents.ITEM_PICKUP, 0.2F, 1.0F);
-         villager.swing(InteractionHand.MAIN_HAND);
+         villager.swing(InteractionHand.MAIN_HAND, true);
+         villager.addWorkExhaustion(1);
       }
 
       return pickedUpAnything;

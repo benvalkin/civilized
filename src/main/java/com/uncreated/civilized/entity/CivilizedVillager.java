@@ -37,6 +37,7 @@ import com.uncreated.civilized.core.villagerinfo.VillagerOccupations;
 import com.uncreated.civilized.entity.behaviour.StatefulBehaviourControl;
 import com.uncreated.civilized.entity.behaviour.worker.soldier.ArrowLineOfFire;
 import com.uncreated.civilized.entity.control.CivilizedVillagerLookControl;
+import com.uncreated.civilized.entity.data.VillagerHunger;
 import com.uncreated.civilized.entity.pathfinding.VillagerGroundPathNavigation;
 import com.uncreated.civilized.entity.renderer.CivilizedVillagerRenderer;
 import com.uncreated.civilized.entity.stats.ClothingTextureRegistry;
@@ -89,6 +90,7 @@ import net.minecraft.world.item.ProjectileWeaponItem;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.common.CommonHooks;
 import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
 
 public class CivilizedVillager extends AgeableMob
@@ -105,6 +107,9 @@ public class CivilizedVillager extends AgeableMob
 
    @Getter
    private VillagerInfo info;
+
+   @Getter
+   private VillagerHunger hunger;
 
    @Getter
    private DialogueController dialogueController = DialogueController.noDialogue();
@@ -128,6 +133,7 @@ public class CivilizedVillager extends AgeableMob
       // this.setCanPickUpLoot(true);
       this.lifetimeRandom = RandomSource.create();
       this.setPersistenceRequired(); // prevent auto-despawning
+      this.hunger = new VillagerHunger(this);
    }
 
    public void initBrandNewVillager() {
@@ -169,6 +175,7 @@ public class CivilizedVillager extends AgeableMob
       compound.putUUID(FIELD_VILLAGER_ID, villagerId);
       compound.putLong(FIELD_LIFETIME_SEED, lifetimeSeed);
       compound.putBoolean(FIELD_ROUTED, isRouted());
+      hunger.save(compound);
       this.writeInventoryToTag(compound, this.registryAccess());
    }
 
@@ -182,6 +189,7 @@ public class CivilizedVillager extends AgeableMob
       setLifetimeRandom(compound.getLong(FIELD_LIFETIME_SEED));
       // the brain's activities aren't set up yet, so routing is restored once it is (see serverFinalizeSpawn)
       routedOnLoad = compound.getBoolean(FIELD_ROUTED);
+      hunger.load(compound);
 
       this.readInventoryFromTag(compound, this.registryAccess());
    }
@@ -371,7 +379,7 @@ public class CivilizedVillager extends AgeableMob
    }
 
    // TECHDEBT: since this is called in constructor, registerBrainGoals cannot be called here because it depends on
-   // villagerInfo
+   // villagerInfo. Not sure if this a problem
    @Override
    protected Brain<?> makeBrain(Dynamic<?> dynamic) {
       return this.brainProvider().makeBrain(dynamic);
@@ -460,10 +468,11 @@ public class CivilizedVillager extends AgeableMob
    @Override
    protected void customServerAiStep(ServerLevel serverLevel) {
 
-      updateActivityFromSchedule(serverLevel.getDayTime(), serverLevel.getGameTime());
-      reportNearbyHostiles();
+      updateActivity(serverLevel.getDayTime(), serverLevel.getGameTime());
       regenerateHealth(serverLevel.getGameTime());
+      hunger.serverTickHunger(serverLevel.getGameTime());
 
+      reportNearbyHostiles();
       ProfilerFiller profilerFiller = Profiler.get();
       profilerFiller.push("civilizedVillagerBrain");
       this.getBrain().tick(serverLevel, this);
@@ -471,7 +480,7 @@ public class CivilizedVillager extends AgeableMob
 
       if (CivilizedVillagerRenderer.DEBUG) {
          List<BehaviorControl<? super CivilizedVillager>> runningBehaviours = getBrain().getRunningBehaviors();
-         String activityName = getBrain().getActiveNonCoreActivity().map(a -> a.getName()).orElse("none").toUpperCase();
+         String activityName = getBrain().getActiveNonCoreActivity().map(Activity::getName).orElse("none").toUpperCase();
          String behaviourName =
                runningBehaviours.stream()
                      .filter(b -> b instanceof StatefulBehaviourControl)
@@ -483,6 +492,18 @@ public class CivilizedVillager extends AgeableMob
       }
 
       super.customServerAiStep(serverLevel);
+   }
+
+   public static final EntityDataAccessor<Integer> HUNGER =
+         SynchedEntityData.defineId(CivilizedVillager.class, EntityDataSerializers.INT);
+   public static final EntityDataAccessor<Integer> SATURATION =
+         SynchedEntityData.defineId(CivilizedVillager.class, EntityDataSerializers.INT);
+   public static final EntityDataAccessor<Long> HUNGRY_START_TIME =
+         SynchedEntityData.defineId(CivilizedVillager.class, EntityDataSerializers.LONG);
+
+   public void addWorkExhaustion(float times) {
+      float toAdd = 0.1f * times;
+      hunger.addExhaustion(toAdd);
    }
 
    /** Health regenerated every {@link #REGEN_INTERVAL_TICKS}. */
@@ -537,7 +558,7 @@ public class CivilizedVillager extends AgeableMob
 
    private long lastScheduleUpdate = 0;
 
-   public void updateActivityFromSchedule(long dayTime, long gameTime) {
+   public void updateActivity(long dayTime, long gameTime) {
       if (gameTime < this.lastScheduleUpdate)
          return;
 
@@ -582,7 +603,9 @@ public class CivilizedVillager extends AgeableMob
    @Override
    protected void defineSynchedData(SynchedEntityData.Builder builder) {
       super.defineSynchedData(builder);
-      // Our default value is zero.
+      builder.define(SATURATION, 10);
+      builder.define(HUNGER, 20);
+      builder.define(HUNGRY_START_TIME, -1L);
       builder.define(CURRENT_WORK_BEHAVIOUR, "");
       builder.define(FLOOR_SLEEPING_DIRECTION, NOT_SLEEPING_ON_FLOOR);
    }
@@ -721,10 +744,16 @@ public class CivilizedVillager extends AgeableMob
    public static final float ARROW_VELOCITY = 1.6F;
    private static final float ARROW_INACCURACY = 6.0F;
 
-   /**
-    * Fires an arrow from the bow in hand at the target, the same way skeletons do. Arrows are not consumed, and cannot
-    * be picked up.
-    */
+   @Override
+   public ItemStack getProjectile(ItemStack weapon) {
+      if (!(weapon.getItem() instanceof ProjectileWeaponItem weaponItem))
+         return CommonHooks.getProjectile(this, weapon, ItemStack.EMPTY);
+
+      // need to make this method return a non-empty ItemStack, otherwise fired projectiles throw an exception when the
+      // game saves due to attempting save an empty item stack
+      return CommonHooks.getProjectile(this, weapon, new ItemStack(Items.ARROW));
+   }
+
    @Override
    public void performRangedAttack(LivingEntity target, float velocity) {
       if (!(level() instanceof ServerLevel serverLevel))
@@ -747,6 +776,8 @@ public class CivilizedVillager extends AgeableMob
             ARROW_VELOCITY,
             ARROW_INACCURACY);
       playSound(SoundEvents.ARROW_SHOOT, 1.0F, 1.0F / (getRandom().nextFloat() * 0.4F + 0.8F));
+
+      addWorkExhaustion(1);
    }
 
    @Override

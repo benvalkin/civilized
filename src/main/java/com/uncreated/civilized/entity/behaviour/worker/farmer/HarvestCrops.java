@@ -141,6 +141,7 @@ public class HarvestCrops extends WorkTaskBehaviour {
 
          toolHits++;
          villager.swing(InteractionHand.MAIN_HAND, true);
+         villager.addWorkExhaustion(1);
 
          if (toolHits == 4) {
             List<ItemStack> drops =

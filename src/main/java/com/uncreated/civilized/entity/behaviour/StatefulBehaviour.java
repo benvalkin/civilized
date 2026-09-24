@@ -51,7 +51,7 @@ public abstract class StatefulBehaviour extends Behavior<CivilizedVillager> {
    }
 
    /**
-    * Due to limitations in how Minecraft's AI Behaviors start and stop, {@code StatefulBehaviourControl} does not
+    * Due to limitations in how Minecraft's AI Behaviors start and stop, {@link StatefulBehaviourControl} does not
     * guarantee that a currently running behavior stops before another one starts. This can lead to state management
     * problems when one activity's {code stop} method alters the same state as the {@code start} method of the behavior
     * is queued next. This method is guaranteed to run after the previously running behavior's {@code stop} method is

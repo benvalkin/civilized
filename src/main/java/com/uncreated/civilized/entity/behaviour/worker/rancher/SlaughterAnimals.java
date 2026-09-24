@@ -92,6 +92,7 @@ public class SlaughterAnimals<T extends Animal> extends WorkTaskBehaviour {
          }
 
          villager.swing(InteractionHand.MAIN_HAND, true);
+         villager.addWorkExhaustion(1);
 
          Animal toKill = killableAnimals.getFirst();
 

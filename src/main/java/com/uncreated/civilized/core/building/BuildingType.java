@@ -5,6 +5,8 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import javax.annotation.Nullable;
+
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.entity.behaviour.BuildingBehaviour;
 import com.uncreated.civilized.core.building.production.bills.ProductionType;
@@ -26,8 +28,6 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.animal.Animal;
 
-import javax.annotation.Nullable;
-
 @Getter
 @Accessors(fluent = true)
 @Builder(builderMethodName = "internalBuilder")
@@ -35,6 +35,7 @@ public class BuildingType {
    private final ResourceLocation resourceLocation;
    private final boolean isResidence;
    private final boolean isWorksite;
+   private final boolean isFoodVendor;
    @Nullable
    private final Class<? extends Animal> animalFarmMobType;
    private final boolean shouldSlaughterAnimals;
