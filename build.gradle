@@ -45,6 +45,8 @@ neoForge {
     runs {
         client {
             client()
+            // the default debugging minecraft instance is rather small
+            programArguments.addAll '--width', '1600', '--height', '900'
 
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id

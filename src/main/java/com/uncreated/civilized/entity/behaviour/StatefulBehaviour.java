@@ -62,6 +62,14 @@ public abstract class StatefulBehaviour extends Behavior<CivilizedVillager> {
       villager.getBrain().eraseMemory(MemoryModuleType.LOOK_TARGET);
    }
 
+   /**
+    * Creates a unique reservation party name for the specified villager using its villagerId and this work behaviour's
+    * {@link BehaviourState}. Used for reserving items during logistics.
+    */
+   protected String reservationPartyKey(CivilizedVillager villager) {
+      return villager.getInfo().getVillagerId() + ":" + getState();
+   }
+
    @Override
    protected boolean canStillUse(ServerLevel level, CivilizedVillager entity, long gameTime) {
       return true;

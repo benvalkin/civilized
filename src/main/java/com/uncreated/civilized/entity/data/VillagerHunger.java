@@ -8,19 +8,21 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.phys.Vec3;
 
 @Accessors(fluent = true)
 public class VillagerHunger {
-   public static final float WALK_DISTANCE_PER_EXHAUSTION_STEP = 3F;
-   public static final int HUNGRY_THRESHOLD = 14;
+   public static final int EXHAUSTION_PER_FOOD_POINT = 4;
+   public static final float WALK_DISTANCE_PER_EXHAUSTION_STEP = 1F;
+   public static final float EXHAUSTION_PER_WALKING_STEP = 0.1f;
+   public static final int HUNGRY_THRESHOLD = 15;
+   public static final int MAX_HUNGER = 20;
 
    private static final String FIELD_HUNGER = "hunger";
    private static final String FIELD_SATURATION = "saturation";
    private static final String FIELD_EXHAUSTION = "exhaustion";
    private static final String FIELD_HUNGRY_START_TIME = "hungry_start_time";
-   public static final int EXHAUSTION_PER_FOOD_POINT = 4;
-   public static final float EXHAUSTION_PER_WALKING_STEP = 0.1f;
    private final CivilizedVillager villager;
    @Nullable
    private Vec3 lastPos;
@@ -70,6 +72,14 @@ public class VillagerHunger {
       villager.getEntityData().set(CivilizedVillager.SATURATION, tag.getInt(FIELD_SATURATION));
       exhaustion = tag.getFloat(FIELD_EXHAUSTION);
       villager.getEntityData().set(CivilizedVillager.HUNGRY_START_TIME, tag.getLong(FIELD_HUNGRY_START_TIME));
+   }
+
+   public void eat(FoodProperties food) {
+      int hunger = Math.min(hunger() + food.nutrition(), MAX_HUNGER);
+      int saturation = Math.min(saturation() + Math.round(food.saturation()), hunger);
+
+      villager.getEntityData().set(CivilizedVillager.HUNGER, hunger);
+      villager.getEntityData().set(CivilizedVillager.SATURATION, saturation);
    }
 
    public void addExhaustion(float exhaustionToAdd) {

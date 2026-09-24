@@ -345,5 +345,6 @@
   "menu.building.management.requirements.count.description.smokers": "Smoker",
   "menu.building.management.requirements.count.description.blast_furnaces": "Blast Furnace",
   "menu.building.management.requirements.beehives_with_campfire.description": "Beehives",
-  "menu.building.town_hall.population.count": "Population: %s"
+  "menu.building.town_hall.population.count": "Population: %s",
+  "villager.renderer.title": "%s (%s)"
 }

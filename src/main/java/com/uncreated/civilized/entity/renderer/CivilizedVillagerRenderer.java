@@ -16,7 +16,6 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
-import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
@@ -52,7 +51,8 @@ public class CivilizedVillagerRenderer extends
       if (state.sleepingOnFloor)
          state.bedOrientation = villager.getFloorSleepingDirection();
 
-      // vanilla moves a sleeper back from the centre of its head block by (eyeHeight - 0.1). That suits players, but our
+      // vanilla moves a sleeper back from the centre of its head block by (eyeHeight - 0.1). That suits players, but
+      // our
       // villager has a lower eye height while using the full size player model, which pokes its head out past the end
       // of its bed. Setting it from the model's length instead fits the model exactly into its two blocks.
       if (state.hasPose(Pose.SLEEPING))
@@ -63,10 +63,14 @@ public class CivilizedVillagerRenderer extends
       state.hair = villager.getHair();
       state.clothing = villager.getClothing();
 
-      if (villager.getInfo().getOccupation().is(VillagerOccupations.UNEMPLOYED))
-         state.occupationName = villager.getInfo().getOccupation().translation();
+      if (!villager.getInfo().getOccupation().is(VillagerOccupations.UNEMPLOYED))
+         state.title =
+               Component.translatable(
+                     "villager.renderer.title",
+                     villager.getInfo().getOccupation().translation(),
+                     villager.getHunger().hunger());
       else
-         state.occupationName = null;
+         state.title = null;
 
       if (DEBUG) {
          state.debugBehavioursList = villager.getEntityData().get(CivilizedVillager.CURRENT_WORK_BEHAVIOUR);
@@ -121,10 +125,8 @@ public class CivilizedVillagerRenderer extends
          int packedLight) {
       super.render(renderState, pose, bufferSource, packedLight);
 
-      if (renderState.villagerName != null)
-         renderNameTag(renderState, renderState.villagerName, pose, bufferSource, packedLight);
-      if (renderState.occupationName != null)
-         renderJobTag(renderState, renderState.occupationName, pose, bufferSource, packedLight);
+      renderNameTag(renderState, pose, bufferSource, packedLight);
+      renderJobTag(renderState, pose, bufferSource, packedLight);
 
       if (DEBUG)
          renderDebugInfo(renderState, pose, bufferSource, packedLight);
@@ -132,23 +134,27 @@ public class CivilizedVillagerRenderer extends
 
    protected void renderNameTag(
          CivilizedVillagerRenderState renderState,
-         Component displayName,
          PoseStack poseStack,
          MultiBufferSource bufferSource,
          int packedLight) {
+      if (renderState.villagerName == null)
+         return;
+
+      Component villagerName = renderState.villagerName;
+
       Vec3 vec3 = new Vec3(0, 2.1, 0);
       boolean flag = !renderState.isDiscrete;
-      int i = "deadmau5".equals(displayName.getString()) ? -10 : 0;
+      int i = "deadmau5".equals(renderState.villagerName.getString()) ? -10 : 0;
       poseStack.pushPose();
       poseStack.translate(vec3.x, vec3.y + (double) 0.5F, vec3.z);
       poseStack.mulPose(this.entityRenderDispatcher.cameraOrientation());
       poseStack.scale(0.021F, -0.021F, 0.021F);
       Matrix4f matrix4f = poseStack.last().pose();
       Font font = this.getFont();
-      float f = (float) (-font.width(displayName)) / 2.0F;
+      float f = (float) (-font.width(villagerName)) / 2.0F;
       int j = (int) (Minecraft.getInstance().options.getBackgroundOpacity(0.25F) * 255.0F) << 24;
       font.drawInBatch(
-            displayName,
+            villagerName,
             f,
             (float) i,
             -2130706433,
@@ -160,7 +166,7 @@ public class CivilizedVillagerRenderer extends
             packedLight);
       if (flag) {
          font.drawInBatch(
-               displayName,
+               villagerName,
                f,
                (float) i,
                -1,
@@ -178,10 +184,14 @@ public class CivilizedVillagerRenderer extends
 
    protected void renderJobTag(
          CivilizedVillagerRenderState renderState,
-         Component displayName,
          PoseStack poseStack,
          MultiBufferSource bufferSource,
          int packedLight) {
+      if (renderState.title == null)
+         return;
+
+      Component occupationName = renderState.title;
+
       Vec3 vec3 = new Vec3(0, 1.8, 0);
       boolean flag = !renderState.isDiscrete;
       poseStack.pushPose();
@@ -190,10 +200,10 @@ public class CivilizedVillagerRenderer extends
       poseStack.scale(0.018F, -0.018F, 0.018F);
       Matrix4f matrix4f = poseStack.last().pose();
       Font font = this.getFont();
-      float width = (float) (-font.width(displayName)) / 2.0F;
+      float width = (float) (-font.width(occupationName)) / 2.0F;
       int backgroundColor = (int) (Minecraft.getInstance().options.getBackgroundOpacity(0.25F) * 255.0F) << 24;
       font.drawInBatch(
-            displayName,
+            occupationName,
             width,
             0,
             0xcccccc,

@@ -115,14 +115,6 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
       super.stop(level, villager, gameTime);
    }
 
-   /**
-    * Creates a unique reservation party name for the specified villager using its villagerId and this work behaviour's
-    * {@link BehaviourState}. Used for reserving items during logistics.
-    */
-   protected String reservationPartyKey(CivilizedVillager villager) {
-      return villager.getInfo().getVillagerId() + ":" + getState();
-   }
-
    protected @NotNull List<LoadedBuilding> homeAndStorehouseIfPresent() {
       List<LoadedBuilding> sourceBuildings = new ArrayList<>();
       sourceBuildings.add(getHome());

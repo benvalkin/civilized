@@ -4,20 +4,17 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.mojang.datafixers.util.Pair;
 import com.uncreated.civilized.entity.CivilizedVillager;
+import com.uncreated.civilized.entity.behaviour.worker.common.logistics.TakeItemsToInventory;
 import com.uncreated.civilized.neoforge.registration.entity.EntityRegistry;
 
-import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.ai.behavior.BehaviorControl;
 import net.minecraft.world.entity.ai.behavior.DoNothing;
-import net.minecraft.world.entity.ai.behavior.InteractWith;
 import net.minecraft.world.entity.ai.behavior.LookAtTargetSink;
 import net.minecraft.world.entity.ai.behavior.MoveToTargetSink;
 import net.minecraft.world.entity.ai.behavior.RunOne;
 import net.minecraft.world.entity.ai.behavior.SetEntityLookTarget;
-import net.minecraft.world.entity.ai.behavior.SetLookAndInteract;
-import net.minecraft.world.entity.ai.behavior.SetWalkTargetFromLookTarget;
 import net.minecraft.world.entity.ai.behavior.Swim;
 import net.minecraft.world.entity.ai.behavior.WakeUp;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
@@ -57,54 +54,16 @@ public class CivilizedVillagerActivities {
    public static ImmutableList<Pair<Integer, ? extends BehaviorControl<? super CivilizedVillager>>> getIdlePackage(
          float speedModifier) {
       return ImmutableList.of(
+            getFullLookBehavior(),
             Pair.of(
-                  3,
-                  new RunOne(
+                  1,
+                  new IdleBehaviourControl(
                         ImmutableList.of(
-                              Pair.of(
-                                    InteractWith.of(
-                                          EntityRegistry.CIVILIZED_VILLAGER.get(),
-                                          8,
-                                          MemoryModuleType.INTERACTION_TARGET,
-                                          speedModifier,
-                                          2),
-                                    2),
-                              Pair.of(
-                                    InteractWith.of(
-                                          EntityRegistry.CIVILIZED_VILLAGER.get(),
-                                          8,
-                                          AgeableMob::canBreed,
-                                          AgeableMob::canBreed,
-                                          MemoryModuleType.BREED_TARGET,
-                                          speedModifier,
-                                          2),
-                                    1),
-                              Pair.of(
-                                    InteractWith
-                                          .of(EntityType.CAT, 8, MemoryModuleType.INTERACTION_TARGET, speedModifier, 2),
-                                    1),
-                              Pair.of(new IdleStrollAroundSettlement(5, 3, 0.25f), 2),
-                              Pair.of(SetWalkTargetFromLookTarget.create(speedModifier, 2), 1),
-                              // Pair.of(new JumpOnBed(speedModifier), 1),
-                              Pair.of(new DoNothing(30, 60), 1)))),
-            Pair.of(3, SetLookAndInteract.create(EntityType.PLAYER, 4)),
-            // Pair.of(
-            // 3,
-            // new GateBehavior(
-            // ImmutableMap.of(),
-            // ImmutableSet.of(MemoryModuleType.INTERACTION_TARGET),
-            // GateBehavior.OrderPolicy.ORDERED,
-            // GateBehavior.RunningPolicy.RUN_ONE,
-            // ImmutableList.of(Pair.of(new TradeWithVillager(), 1)))),
-            // Pair.of(
-            // 3,
-            // new GateBehavior(
-            // ImmutableMap.of(),
-            // ImmutableSet.of(MemoryModuleType.BREED_TARGET),
-            // GateBehavior.OrderPolicy.ORDERED,
-            // GateBehavior.RunningPolicy.RUN_ONE,
-            // ImmutableList.of(Pair.of(new VillagerMakeLove(), 1)))),
-            getFullLookBehavior());
+                              new EatFood(BehaviourStates.EATING_FOOD),
+                              new TakeItemsToInventory(),
+                              new IdleStrollAroundSettlement(5, 3, speedModifier)),
+                        ImmutableList.of(BehaviourStates.EATING_FOOD),
+                        ImmutableList.of(BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT))));
    }
 
    public static ImmutableList<Pair<Integer, ? extends BehaviorControl<? super CivilizedVillager>>> getPanicPackage(

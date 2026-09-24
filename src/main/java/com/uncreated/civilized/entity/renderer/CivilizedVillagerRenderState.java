@@ -13,14 +13,14 @@ public class CivilizedVillagerRenderState extends HumanoidRenderState {
    public VillagerOccupation occupation;
    @Nullable
    public Component villagerName;
-   public Component occupationName;
+   public Component title;
    public ResourceLocation skin;
    public ResourceLocation hair;
    public ResourceLocation clothing;
    public String debugBehavioursList;
    public boolean sleepingOnFloor;
 
-   public CivilizedVillagerRenderState() {
+    public CivilizedVillagerRenderState() {
 
    }
 }

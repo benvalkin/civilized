@@ -480,7 +480,8 @@ public class CivilizedVillager extends AgeableMob
 
       if (CivilizedVillagerRenderer.DEBUG) {
          List<BehaviorControl<? super CivilizedVillager>> runningBehaviours = getBrain().getRunningBehaviors();
-         String activityName = getBrain().getActiveNonCoreActivity().map(Activity::getName).orElse("none").toUpperCase();
+         String activityName =
+               getBrain().getActiveNonCoreActivity().map(Activity::getName).orElse("none").toUpperCase();
          String behaviourName =
                runningBehaviours.stream()
                      .filter(b -> b instanceof StatefulBehaviourControl)
@@ -502,7 +503,7 @@ public class CivilizedVillager extends AgeableMob
          SynchedEntityData.defineId(CivilizedVillager.class, EntityDataSerializers.LONG);
 
    public void addWorkExhaustion(float times) {
-      float toAdd = 0.1f * times;
+      float toAdd = 0.4f * times;
       hunger.addExhaustion(toAdd);
    }
 
@@ -571,10 +572,10 @@ public class CivilizedVillager extends AgeableMob
 
       if (todayTime >= 1000 && todayTime < 9000) { // 7am-3pm
          getBrain().setActiveActivityIfPossible(Activity.WORK);
-      } else if (todayTime >= 9000 && todayTime < 16000) { // 3pm-10pm
-         getBrain().setActiveActivityIfPossible(Activity.IDLE);
-      } else { // after 10pm
+      } else if (todayTime >= 16000) { // 10pm-6am
          getBrain().setActiveActivityIfPossible(Activity.REST);
+      } else { // 6-7am, 3-10pm
+         getBrain().setActiveActivityIfPossible(Activity.IDLE);
       }
    }
 
@@ -603,7 +604,7 @@ public class CivilizedVillager extends AgeableMob
    @Override
    protected void defineSynchedData(SynchedEntityData.Builder builder) {
       super.defineSynchedData(builder);
-      builder.define(SATURATION, 10);
+      builder.define(SATURATION, 0);
       builder.define(HUNGER, 20);
       builder.define(HUNGRY_START_TIME, -1L);
       builder.define(CURRENT_WORK_BEHAVIOUR, "");
@@ -615,7 +616,7 @@ public class CivilizedVillager extends AgeableMob
 
    public void draft(ICombatCommand combatCommand) {
 
-      if (this.combatCommand == combatCommand) {
+      if (this.combatCommand != combatCommand) {
          // event maybe
       }
 
