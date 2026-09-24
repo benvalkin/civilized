@@ -24,6 +24,9 @@ import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.animal.Animal;
+
+import javax.annotation.Nullable;
 
 @Getter
 @Accessors(fluent = true)
@@ -32,7 +35,9 @@ public class BuildingType {
    private final ResourceLocation resourceLocation;
    private final boolean isResidence;
    private final boolean isWorksite;
-   private final boolean isAnimalFarm;
+   @Nullable
+   private final Class<? extends Animal> animalFarmMobType;
+   private final boolean shouldSlaughterAnimals;
    @Builder.Default
    private final Function<Building, BuildingState> createState = BuildingState::new;
    @Builder.Default
@@ -68,6 +73,10 @@ public class BuildingType {
 
    public boolean isArtisanHouse() {
       return !supportedProductionTypes.isEmpty();
+   }
+
+   public boolean isAnimalFarm() {
+      return animalFarmMobType != null;
    }
 
    public String translationKey() {

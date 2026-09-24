@@ -1,6 +1,7 @@
 package com.uncreated.civilized.entity.behaviour.worker.rancher;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.slf4j.Logger;
 
@@ -22,16 +23,16 @@ public class SlaughterAnimals<T extends Animal> extends WorkTaskBehaviour {
    private long lastWorkTime;
    private MediumDistanceTravelTask travelHelper;
 
-   private final Class<T> animalMobType;
-
-   public SlaughterAnimals(Class<T> animalMobType) {
+   public SlaughterAnimals() {
       super(WorkStates.SLAUGHTERING_ANIMALS, true, true, 120 * 20, 30 * 20);
-      this.animalMobType = animalMobType;
    }
 
    @Override
    protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
       if (!super.checkExtraStartConditions(level, villager))
+         return false;
+
+      if (!getWorksite().getBuilding().getBuildingType().shouldSlaughterAnimals())
          return false;
 
       killableAnimals = getKillableAdultAnimals(level);
@@ -111,9 +112,12 @@ public class SlaughterAnimals<T extends Animal> extends WorkTaskBehaviour {
    }
 
    protected List<Animal> getKillableAdultAnimals(ServerLevel level) {
+      Class<? extends Animal> animalFarmMobType = getWorksite().getBuilding().getBuildingType().animalFarmMobType();
+      Objects.requireNonNull(animalFarmMobType, "worksite is expected to be an animal farm");
+
       return level.getEntitiesOfClass(
             Animal.class,
             getWorksite().getBuilding().getBounds().getEncapsulatingAABB(),
-            a -> !a.isBaby() && animalMobType.isInstance(a) && !a.isInLove());
+            a -> !a.isBaby() && animalFarmMobType.isInstance(a) && !a.isInLove());
    }
 }

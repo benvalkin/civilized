@@ -115,7 +115,9 @@ public class ServerVillagerStore extends VillagerStore {
    }
 
    public void replicateChange(VillagerInfo villagerInfo, StoreOperation operation) {
-      assert villagers.exists(villagerInfo.getVillagerId());
+      villagers.reindex(villagerInfo.getVillagerId());
+
+      assert operation == StoreOperation.DELETE || villagers.exists(villagerInfo.getVillagerId());
       PacketDistributor.sendToAllPlayers(villagerInfo.toPacket(operation));
       NeoForge.EVENT_BUS.post(new VillagerInfoUpdatedEvent(villagerInfo, false));
    }

@@ -44,6 +44,11 @@ import com.uncreated.civilized.ui.menu.building.worksite.grove.GroveBuildingScre
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.animal.Bee;
+import net.minecraft.world.entity.animal.Chicken;
+import net.minecraft.world.entity.animal.Cow;
+import net.minecraft.world.entity.animal.Pig;
+import net.minecraft.world.entity.animal.Sheep;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -306,7 +311,8 @@ public class BuildingTypes {
    public static BuildingType COW_FARM =
          declare(BuildingType.builder(createResourceKey("cow_farm"))
                .isWorksite(true)
-               .isAnimalFarm(true)
+               .animalFarmMobType(Cow.class)
+                 .shouldSlaughterAnimals(true)
                .createState(CowFarmState::new)
                .buildingMenuScreenSupplier(AnimalFarmBuildingScreen::new)
                .occupation(() -> VillagerOccupations.RANCHER)
@@ -315,7 +321,8 @@ public class BuildingTypes {
    public static BuildingType SHEEP_FARM =
          declare(BuildingType.builder(createResourceKey("sheep_farm"))
                .isWorksite(true)
-               .isAnimalFarm(true)
+               .animalFarmMobType(Sheep.class)
+                 .shouldSlaughterAnimals(true)
                .createState(SheepFarmState::new)
                .buildingMenuScreenSupplier(AnimalFarmBuildingScreen::new)
                .occupation(() -> VillagerOccupations.RANCHER)
@@ -324,7 +331,8 @@ public class BuildingTypes {
    public static BuildingType PIG_FARM =
          declare(BuildingType.builder(createResourceKey("pig_farm"))
                .isWorksite(true)
-               .isAnimalFarm(true)
+               .animalFarmMobType(Pig.class)
+                 .shouldSlaughterAnimals(true)
                .createState(PigFarmState::new)
                .buildingMenuScreenSupplier(AnimalFarmBuildingScreen::new)
                .occupation(() -> VillagerOccupations.RANCHER)
@@ -333,7 +341,8 @@ public class BuildingTypes {
    public static BuildingType CHICKEN_FARM =
          declare(BuildingType.builder(createResourceKey("chicken_farm"))
                .isWorksite(true)
-               .isAnimalFarm(true)
+               .animalFarmMobType(Chicken.class)
+               .shouldSlaughterAnimals(true)
                .createState(ChickenFarmState::new)
                .buildingMenuScreenSupplier(AnimalFarmBuildingScreen::new)
                .occupation(() -> VillagerOccupations.RANCHER)
@@ -342,7 +351,7 @@ public class BuildingTypes {
    public static BuildingType BEE_FARM =
          declare(BuildingType.builder(createResourceKey("bee_farm"))
                .isWorksite(true)
-               .isAnimalFarm(true)
+               .animalFarmMobType(Bee.class)
                .createState(BeeFarmState::new)
                .buildingMenuScreenSupplier(AnimalFarmBuildingScreen::new)
                .occupation(() -> VillagerOccupations.BEEKEEPER)

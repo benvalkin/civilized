@@ -59,8 +59,10 @@ public class SummonResident {
       }
 
       villager.getInfo().getNpcRoles().add(VillagerNpcRole.WORKER);
+      villager.getInfo().setOccupation(building.get().getBuildingType().occupation());
       villager.getInfo().setSettlementId(building.get().getSettlementId());
       villager.getInfo().setHomeBuildingId(building.get().getBuildingId());
+      building.get().getOccupantIds().add(villager.getInfo().getVillagerId());
       ServerVillagerStore.INSTANCE.setDirty();
       ServerVillagerStore.INSTANCE.replicateChange(villager.getInfo(), StoreOperation.ADD_OR_OVERWRITE);
       ServerBuildingsStore.INSTANCE.setDirty();

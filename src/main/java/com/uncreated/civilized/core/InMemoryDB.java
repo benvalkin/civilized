@@ -23,7 +23,18 @@ public abstract class InMemoryDB<K, V> {
 
    public final void add(V obj) {
       K key = getKey(obj);
-      data.put(key, obj);
+      V replaced = data.put(key, obj);
+      if (replaced != null)
+         unindex(replaced);
+      index(obj);
+   }
+
+   public final void reindex(K key) {
+      V obj = data.get(key);
+      if (obj == null)
+         return;
+
+      unindex(obj);
       index(obj);
    }
 

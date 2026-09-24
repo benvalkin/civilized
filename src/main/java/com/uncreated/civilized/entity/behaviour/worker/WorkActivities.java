@@ -108,7 +108,7 @@ public class WorkActivities {
                         ImmutableList.of(
                               new BreedAnimals<>(),
                               new ShearSheep(),
-                              new SlaughterAnimals<>(Cow.class),
+                              new SlaughterAnimals<>(),
                               new CheckLogisticsOpportunities(),
                               new TakeItemsToInventory(),
                               new DropOffItemsAtBuilding(),

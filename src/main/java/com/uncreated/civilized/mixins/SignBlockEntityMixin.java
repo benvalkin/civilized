@@ -17,6 +17,8 @@ import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.ClientBuildingStore;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.signs.SignHelper;
+import com.uncreated.civilized.core.settlement.ClientSettlementsStore;
+import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
 import com.uncreated.civilized.neoforge.registration.attachments.DataAttachments;
 
 import net.minecraft.core.BlockPos;
@@ -78,7 +80,9 @@ public abstract class SignBlockEntityMixin extends BlockEntity {
       if (building.isEmpty())
          return;
 
-      frontText = SignHelper.getBuildingSignText(building.orElse(null));
+      frontText =
+            SignHelper
+                  .getBuildingSignText(building.get(), ClientVillagerStore.INSTANCE, ClientSettlementsStore.INSTANCE);
    }
 
    @Unique

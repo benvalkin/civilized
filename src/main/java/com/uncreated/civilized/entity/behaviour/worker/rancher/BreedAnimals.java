@@ -1,6 +1,7 @@
 package com.uncreated.civilized.entity.behaviour.worker.rancher;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -30,6 +31,7 @@ public class BreedAnimals<T extends Animal> extends WorkTaskBehaviour {
    private long lastWorkTime;
    private MediumDistanceTravelTask travelHelper;
    private ItemStack handHeld;
+   private Class<? extends Animal> animalFarmMobType;
 
    public BreedAnimals() {
       super(WorkStates.BREEDING_ANIMALS, true, true, 120 * 20, 30 * 20);
@@ -40,7 +42,10 @@ public class BreedAnimals<T extends Animal> extends WorkTaskBehaviour {
       if (!super.checkExtraStartConditions(level, villager))
          return false;
 
-      List<Animal> totalAnimals = getTotalAnimals(level);
+      animalFarmMobType = getWorksite().getBuilding().getBuildingType().animalFarmMobType();
+      Objects.requireNonNull(animalFarmMobType, "worksite is expected to be an animal farm");
+
+      List<Animal> totalAnimals = getTotalAnimals(level, animalFarmMobType);
       if (totalAnimals.size() > 8)
          return false;
 
@@ -59,7 +64,7 @@ public class BreedAnimals<T extends Animal> extends WorkTaskBehaviour {
          });
       }
 
-      List<Animal> breedableAnimals = getBreedableAnimals(level);
+      List<Animal> breedableAnimals = getBreedableAnimals(level, animalFarmMobType);
       if (breedableAnimals.size() < 2) {
          return false;
       }
@@ -128,7 +133,7 @@ public class BreedAnimals<T extends Animal> extends WorkTaskBehaviour {
 
          lastWorkTime = gameTime;
 
-         Optional<Animal> animal = getBreedableAnimals(level).stream().findAny();
+         Optional<Animal> animal = getBreedableAnimals(level, animalFarmMobType).stream().findAny();
          if (animal.isEmpty()) {
             doStop(level, villager, gameTime);
             return;
@@ -148,15 +153,19 @@ public class BreedAnimals<T extends Animal> extends WorkTaskBehaviour {
       }
    }
 
-   protected List<Animal> getBreedableAnimals(ServerLevel level) {
+   protected List<Animal> getBreedableAnimals(ServerLevel level, Class<? extends Animal> animalFarmMobType) {
       return level.getEntitiesOfClass(
             Animal.class,
             getWorksite().getBuilding().getBounds().getEncapsulatingAABB(),
-            a -> !a.isBaby() && !a.isInLove() && a.canFallInLove() && a.getAge() == 0);
+            a -> animalFarmMobType.isInstance(a) && !a.isBaby() && !a.isInLove() && a.canFallInLove()
+                  && a.getAge() == 0);
    }
 
-   protected List<Animal> getTotalAnimals(ServerLevel level) {
-      return level.getEntitiesOfClass(Animal.class, getWorksite().getBuilding().getBounds().getEncapsulatingAABB());
+   protected List<Animal> getTotalAnimals(ServerLevel level, Class<? extends Animal> animalFarmMobType) {
+      return level.getEntitiesOfClass(
+            Animal.class,
+            getWorksite().getBuilding().getBounds().getEncapsulatingAABB(),
+            animalFarmMobType::isInstance);
    }
 
    private List<ItemStack> getAnimalFoodItemsInventory(CivilizedVillager villager, Animal animal) {
