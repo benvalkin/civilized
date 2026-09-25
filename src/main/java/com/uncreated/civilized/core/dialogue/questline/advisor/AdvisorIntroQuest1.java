@@ -2,7 +2,7 @@ package com.uncreated.civilized.core.dialogue.questline.advisor;
 
 import static com.uncreated.civilized.core.dialogue.Dialogue.*;
 import static com.uncreated.civilized.core.dialogue.DialogueWithPages.dialogueWithpages;
-import static com.uncreated.civilized.core.dialogue.RandomSpeech.oneOf;
+import static com.uncreated.civilized.core.dialogue.RandomSpeech.randomOneOf;
 import static com.uncreated.civilized.core.dialogue.ResponseOption.closeDialogue;
 import static com.uncreated.civilized.core.dialogue.ResponseOption.option;
 import static com.uncreated.civilized.core.dialogue.actions.SoundActions.playerVillagerSound;
@@ -90,7 +90,7 @@ public class AdvisorIntroQuest1 extends DialogueFlow {
 
    private static Dialogue questCannotComplete() {
       return dialogue(
-            oneOf(
+            randomOneOf(
                   translatable("villager.dialogue.quest.advisor_intro_1.incomplete.o1"),
                   translatable("villager.dialogue.quest.advisor_intro_1.incomplete.o2"),
                   translatable("villager.dialogue.quest.advisor_intro_1.incomplete.o3"),

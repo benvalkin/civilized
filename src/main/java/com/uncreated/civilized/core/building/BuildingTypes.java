@@ -8,6 +8,7 @@ import java.util.List;
 
 import com.uncreated.civilized.CivilizedMod;
 import com.uncreated.civilized.core.building.entity.behaviour.ArtisanHouseBehaviour;
+import com.uncreated.civilized.core.building.entity.behaviour.TownSquareBehaviour;
 import com.uncreated.civilized.core.building.production.bills.ProductionTypes;
 import com.uncreated.civilized.core.building.state.CropFarmState;
 import com.uncreated.civilized.core.building.state.GroveState;
@@ -111,7 +112,11 @@ public class BuildingTypes {
                      .isResidence(true)
                      .buildingMenuScreenSupplier(InnBuildingScreen::new)
                      .build());
-   public static BuildingType TOWN_SQUARE = declare(BuildingType.builder(createResourceKey("town_square")).build());
+   public static BuildingType TOWN_SQUARE =
+         declare(
+               BuildingType.builder(createResourceKey("town_square"))
+                     .createBehaviour(TownSquareBehaviour::new)
+                     .build());
    public static BuildingType STOREHOUSE = declare(BuildingType.builder(createResourceKey("storehouse")).build());
    public static BuildingType CHURCH =
          declare(
