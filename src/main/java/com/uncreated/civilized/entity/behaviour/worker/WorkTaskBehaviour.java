@@ -67,7 +67,17 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
          boolean requiresHome,
          int duration,
          int cooldownDuration) {
-      super(state, duration, cooldownDuration);
+      this(state, requiresWorksite, requiresHome, duration, duration, cooldownDuration);
+   }
+
+   public WorkTaskBehaviour(
+         BehaviourState state,
+         boolean requiresWorksite,
+         boolean requiresHome,
+         int minDuration,
+         int maxDuration,
+         int cooldownDuration) {
+      super(state, minDuration, maxDuration, cooldownDuration);
       this.requiresWorksite = requiresWorksite;
       this.requiresHome = requiresHome;
    }

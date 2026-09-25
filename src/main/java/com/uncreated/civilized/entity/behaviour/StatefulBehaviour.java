@@ -30,12 +30,20 @@ public abstract class StatefulBehaviour extends Behavior<CivilizedVillager> {
    @Setter(AccessLevel.PACKAGE)
    private CooldownTracker<Cooldown> sharedCooldowns;
 
-   public StatefulBehaviour(BehaviourState state, int duration, int cooldownDuration) {
-      super(Map.of(), duration);
+   public StatefulBehaviour(BehaviourState state, int minDuration, int maxDuration, int cooldownDuration) {
+      super(Map.of(), minDuration, maxDuration);
+      if (minDuration > maxDuration)
+         throw new IllegalArgumentException(
+               String.format("Behaviour %s's min duration (%d) is over its max (%d)", state, minDuration, maxDuration));
+
       this.state = state;
       this.cooldownDuration = cooldownDuration;
       this.behaviourCooldowns = new CooldownTracker<>();
       this.sharedCooldowns = new CooldownTracker<>();
+   }
+
+   public StatefulBehaviour(BehaviourState state, int duration, int cooldownDuration) {
+      this(state, duration, duration, cooldownDuration);
    }
 
    public StatefulBehaviour(BehaviourState state) {

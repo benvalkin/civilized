@@ -25,7 +25,7 @@ public class IdleStrollAroundSettlement extends StatefulBehaviour {
    private long nextStrollTime;
 
    public IdleStrollAroundSettlement(int maxHorizontalDist, int maxVerticalDist, float strollSpeedModifier) {
-      super(BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT, 20 * 5, 0);
+      super(BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT, 5 * 20, 10 * 20, 0);
       this.maxHorizontalDist = maxHorizontalDist;
       this.maxVerticalDist = maxVerticalDist;
       this.speedModifier = strollSpeedModifier;
