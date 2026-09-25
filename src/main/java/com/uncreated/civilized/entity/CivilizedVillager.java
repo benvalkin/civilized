@@ -503,7 +503,7 @@ public class CivilizedVillager extends AgeableMob
          SynchedEntityData.defineId(CivilizedVillager.class, EntityDataSerializers.LONG);
 
    public void addWorkExhaustion(float times) {
-      float toAdd = 0.4f * times;
+      float toAdd = VillagerHunger.EXHAUSTION_PER_WORK_UNIT * times;
       hunger.addExhaustion(toAdd);
    }
 

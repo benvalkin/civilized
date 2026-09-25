@@ -14,10 +14,11 @@ import net.minecraft.world.phys.Vec3;
 @Accessors(fluent = true)
 public class VillagerHunger {
    public static final int EXHAUSTION_PER_FOOD_POINT = 4;
-   public static final float WALK_DISTANCE_PER_EXHAUSTION_STEP = 1F;
+   public static final float WALK_DISTANCE_PER_EXHAUSTION_STEP = 2F;
    public static final float EXHAUSTION_PER_WALKING_STEP = 0.1f;
    public static final int HUNGRY_THRESHOLD = 15;
    public static final int MAX_HUNGER = 20;
+   public static final float EXHAUSTION_PER_WORK_UNIT = 0.4f;
 
    private static final String FIELD_HUNGER = "hunger";
    private static final String FIELD_SATURATION = "saturation";

@@ -1,13 +1,17 @@
 package com.uncreated.civilized.entity.renderer;
 
+import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
+
 import org.joml.Matrix4f;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.uncreated.civilized.core.villagerinfo.VillagerOccupations;
 import com.uncreated.civilized.entity.CivilizedVillager;
+import com.uncreated.civilized.entity.data.VillagerHunger;
 import com.uncreated.civilized.entity.renderer.layer.ClothingLayer;
 import com.uncreated.civilized.entity.renderer.layer.HairLayer;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.model.HumanoidModel;
@@ -18,11 +22,11 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ARGB;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.item.BowItem;
-import net.minecraft.world.phys.Vec3;
 
 public class CivilizedVillagerRenderer extends
       HumanoidMobRenderer<CivilizedVillager, CivilizedVillagerRenderState, HumanoidModel<CivilizedVillagerRenderState>> {
@@ -62,19 +66,105 @@ public class CivilizedVillagerRenderer extends
       state.skin = villager.getSkin();
       state.hair = villager.getHair();
       state.clothing = villager.getClothing();
-
-      if (!villager.getInfo().getOccupation().is(VillagerOccupations.UNEMPLOYED))
-         state.title =
-               Component.translatable(
-                     "villager.renderer.title",
-                     villager.getInfo().getOccupation().translation(),
-                     villager.getHunger().hunger());
-      else
+      state.health = villager.getHealth();
+      state.maxHealth = villager.getMaxHealth();
+      int hunger = villager.getHunger().hunger();
+      if (!villager.getInfo().getOccupation().is(VillagerOccupations.UNEMPLOYED)) {
+         if (DEBUG) {
+            state.title =
+                  Component.translatable(
+                        "villager.renderer.title.extended",
+                        villager.getInfo().getOccupation().translation(),
+                        healthIcon(state.health, state.maxHealth),
+                        Math.ceil(state.health),
+                        hungerIcon(hunger),
+                        hunger);
+         } else {
+            Component healthC =
+                  state.health < state.maxHealth ? healthIcon(state.health, state.maxHealth) : Component.empty();
+            Component hungerC = hunger <= VillagerHunger.HUNGRY_THRESHOLD ? hungerIcon(hunger) : Component.empty();
+            state.title =
+                  Component.translatable(
+                        "villager.renderer.title",
+                        villager.getInfo().getOccupation().translation(),
+                        healthC,
+                        hungerC,
+                        hungerIcon(hunger));
+         }
+      } else
          state.title = null;
 
       if (DEBUG) {
          state.debugBehavioursList = villager.getEntityData().get(CivilizedVillager.CURRENT_WORK_BEHAVIOUR);
       }
+   }
+
+   /**
+    * Custom fonts for drawing icons in the villager's name tags {@code assets/civilized/font/icons.json}) Hunger and
+    * Health icons are drawn as they are in vanilla, that's why we have so many different icons - each one is for an
+    * overlay of some sort
+    */
+   private static final ResourceLocation ICON_FONT = ResourceLocation.fromNamespaceAndPath(CIVILIZED_MOD_ID, "icons");
+   private static final String FOOD_FULL_GLYPH = "\uE000";
+   private static final String FOOD_HALF_GLYPH = "\uE001";
+   private static final String FOOD_EMPTY_GLYPH = "\uE002";
+   private static final String HEART_CONTAINER_GLYPH = "\uE003";
+   private static final String HEART_FULL_GLYPH = "\uE004";
+   private static final String HEART_HALF_GLYPH = "\uE005";
+   /**
+    * Steps back over an icon's container, so the icon is drawn on top of it the way vanilla's health and hunger bars
+    * are. Every container is 9 pixels wide.
+    */
+   private static final String BACK_OVER_CONTAINER = "\uE00F";
+   /**
+    * Pads an icon out to its container's width, so the text after it lines up the same whichever icon was drawn. The
+    * font trims empty columns off each sprite, which leaves the icons narrower than their containers.
+    */
+   private static final String PADDING_1 = "\uE00E";
+   private static final String PADDING_4 = "\uE00D";
+
+   /** An icon drawn over its container, then padded so it takes up exactly the container's width. */
+   private static String overContainer(String container, String icon, String padding) {
+      return container + BACK_OVER_CONTAINER + icon + padding;
+   }
+
+   private static Component healthIcon(float health, float maxHealth) {
+      String glyphs;
+      if (health >= maxHealth)
+         glyphs = overContainer(HEART_CONTAINER_GLYPH, HEART_FULL_GLYPH, PADDING_1);
+      else if (health > 0)
+         glyphs = overContainer(HEART_CONTAINER_GLYPH, HEART_HALF_GLYPH, PADDING_4);
+      else
+         glyphs = HEART_CONTAINER_GLYPH;
+
+      return appendedIcon(glyphs);
+   }
+
+   private static Component hungerIcon(int hunger) {
+      // like hearts, vanilla draws the empty food icon as the outline behind the full and half ones
+      String glyphs;
+      if (hunger > VillagerHunger.HUNGRY_THRESHOLD)
+         glyphs = overContainer(FOOD_EMPTY_GLYPH, FOOD_FULL_GLYPH, PADDING_1);
+      else if (hunger > 0)
+         glyphs = overContainer(FOOD_EMPTY_GLYPH, FOOD_HALF_GLYPH, PADDING_1);
+      else
+         glyphs = FOOD_EMPTY_GLYPH;
+
+      return appendedIcon(glyphs);
+   }
+
+   private static Component icon(String glyphs) {
+      return Component.literal(glyphs).withStyle(style -> style.withFont(ICON_FONT).withColor(ChatFormatting.WHITE));
+   }
+
+   private static Component appendedIcon(String glyphs) {
+      Component icon = icon(glyphs);
+      return Component.translatable("villager.renderer.icon", icon);
+   }
+
+   private static Component appendIconWithValue(String glyphs, int value) {
+      Component icon = icon(glyphs);
+      return Component.translatable("villager.renderer.icon_with_value", icon, value);
    }
 
    /** The player model villagers are drawn with is 32 pixels long, i.e. 2 blocks, the same as a bed. */
@@ -132,54 +222,24 @@ public class CivilizedVillagerRenderer extends
          renderDebugInfo(renderState, pose, bufferSource, packedLight);
    }
 
+   private static final int NAME_TAG_COLOUR = 0xFFFFFF;
+   private static final int TAG_COLOUR = 0xCCCCCC;
+
    protected void renderNameTag(
          CivilizedVillagerRenderState renderState,
          PoseStack poseStack,
          MultiBufferSource bufferSource,
          int packedLight) {
-      if (renderState.villagerName == null)
-         return;
-
-      Component villagerName = renderState.villagerName;
-
-      Vec3 vec3 = new Vec3(0, 2.1, 0);
-      boolean flag = !renderState.isDiscrete;
-      int i = "deadmau5".equals(renderState.villagerName.getString()) ? -10 : 0;
-      poseStack.pushPose();
-      poseStack.translate(vec3.x, vec3.y + (double) 0.5F, vec3.z);
-      poseStack.mulPose(this.entityRenderDispatcher.cameraOrientation());
-      poseStack.scale(0.021F, -0.021F, 0.021F);
-      Matrix4f matrix4f = poseStack.last().pose();
-      Font font = this.getFont();
-      float f = (float) (-font.width(villagerName)) / 2.0F;
-      int j = (int) (Minecraft.getInstance().options.getBackgroundOpacity(0.25F) * 255.0F) << 24;
-      font.drawInBatch(
-            villagerName,
-            f,
-            (float) i,
-            -2130706433,
-            false,
-            matrix4f,
-            bufferSource,
-            flag ? Font.DisplayMode.SEE_THROUGH : Font.DisplayMode.NORMAL,
-            j,
-            packedLight);
-      if (flag) {
-         font.drawInBatch(
-               villagerName,
-               f,
-               (float) i,
-               -1,
-               false,
-               matrix4f,
+      if (renderState.villagerName != null)
+         renderTag(
+               renderState.villagerName,
+               2.1,
+               0.021F,
+               NAME_TAG_COLOUR,
+               renderState,
+               poseStack,
                bufferSource,
-               Font.DisplayMode.NORMAL,
-               0,
-               LightTexture.lightCoordsWithEmission(packedLight, 2));
-      }
-
-      poseStack.popPose();
-
+               packedLight);
    }
 
    protected void renderJobTag(
@@ -187,34 +247,8 @@ public class CivilizedVillagerRenderer extends
          PoseStack poseStack,
          MultiBufferSource bufferSource,
          int packedLight) {
-      if (renderState.title == null)
-         return;
-
-      Component occupationName = renderState.title;
-
-      Vec3 vec3 = new Vec3(0, 1.8, 0);
-      boolean flag = !renderState.isDiscrete;
-      poseStack.pushPose();
-      poseStack.translate(vec3.x, vec3.y + (double) 0.5F, vec3.z);
-      poseStack.mulPose(this.entityRenderDispatcher.cameraOrientation());
-      poseStack.scale(0.018F, -0.018F, 0.018F);
-      Matrix4f matrix4f = poseStack.last().pose();
-      Font font = this.getFont();
-      float width = (float) (-font.width(occupationName)) / 2.0F;
-      int backgroundColor = (int) (Minecraft.getInstance().options.getBackgroundOpacity(0.25F) * 255.0F) << 24;
-      font.drawInBatch(
-            occupationName,
-            width,
-            0,
-            0xcccccc,
-            false,
-            matrix4f,
-            bufferSource,
-            flag ? Font.DisplayMode.SEE_THROUGH : Font.DisplayMode.NORMAL,
-            backgroundColor,
-            packedLight);
-
-      poseStack.popPose();
+      if (renderState.title != null)
+         renderTag(renderState.title, 1.8, 0.018F, TAG_COLOUR, renderState, poseStack, bufferSource, packedLight);
    }
 
    protected void renderDebugInfo(
@@ -222,28 +256,78 @@ public class CivilizedVillagerRenderer extends
          PoseStack poseStack,
          MultiBufferSource bufferSource,
          int packedLight) {
+      if (renderState.debugBehavioursList != null)
+         renderTag(
+               Component.literal(renderState.debugBehavioursList),
+               2.4,
+               0.018F,
+               TAG_COLOUR,
+               renderState,
+               poseStack,
+               bufferSource,
+               packedLight);
+   }
 
-      Vec3 vec3 = new Vec3(0, 2.4, 0);
-      boolean flag = !renderState.isDiscrete;
+   /**
+    * Draws a line of text above the villager's head in the same way vanilla draws name tags. Due to rendering issues
+    * when transparent stuff is in the background (e.g. water), the tag text is drawn twice:
+    * <ol>
+    * <li>First: see-through + with translucent background. This draw is usually what you'll see when there is a normal
+    * (solid) background behind the tag. It shows through walls and writes no depth - this is so that translucent things
+    * (e.g. water in the background) are always drawn behind it. However, even if transparent things are drawn behind,
+    * they will still alter the tag text color, which arises the need for the second draw.</li>
+    * <li>Secondary: fully opaque solid text. This pass does write depth such that it is always draws in front no matter
+    * the circumstance.</li>
+    * </ol>
+    *
+    * @param height
+    *           how far above the villager's feet, in blocks, before vanilla's usual half block
+    */
+   private void renderTag(
+         Component text,
+         double height,
+         float scale,
+         int colour,
+         CivilizedVillagerRenderState renderState,
+         PoseStack poseStack,
+         MultiBufferSource bufferSource,
+         int packedLight) {
+      boolean seeThrough = !renderState.isDiscrete;
+
       poseStack.pushPose();
-      poseStack.translate(vec3.x, vec3.y + (double) 0.5F, vec3.z);
+      poseStack.translate(0, height + 0.5, 0);
       poseStack.mulPose(this.entityRenderDispatcher.cameraOrientation());
-      poseStack.scale(0.018F, -0.018F, 0.018F);
-      Matrix4f matrix4f = poseStack.last().pose();
+      poseStack.scale(scale, -scale, scale);
+      Matrix4f matrix = poseStack.last().pose();
+
       Font font = this.getFont();
-      float width = (float) (-font.width(renderState.debugBehavioursList)) / 2.0F;
-      int backgroundColor = (int) (Minecraft.getInstance().options.getBackgroundOpacity(0.25F) * 255.0F) << 24;
+      float x = -font.width(text) / 2.0F;
+      int backgroundColour = (int) (Minecraft.getInstance().options.getBackgroundOpacity(0.25F) * 255.0F) << 24;
+
       font.drawInBatch(
-            renderState.debugBehavioursList,
-            width,
+            text,
+            x,
             0,
-            0xcccccc,
+            ARGB.color(0x80, colour),
             false,
-            matrix4f,
+            matrix,
             bufferSource,
-            flag ? Font.DisplayMode.SEE_THROUGH : Font.DisplayMode.NORMAL,
-            backgroundColor,
+            seeThrough ? Font.DisplayMode.SEE_THROUGH : Font.DisplayMode.NORMAL,
+            backgroundColour,
             packedLight);
+
+      if (seeThrough)
+         font.drawInBatch(
+               text,
+               x,
+               0,
+               ARGB.opaque(colour),
+               false,
+               matrix,
+               bufferSource,
+               Font.DisplayMode.NORMAL,
+               0,
+               LightTexture.lightCoordsWithEmission(packedLight, 2));
 
       poseStack.popPose();
    }

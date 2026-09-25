@@ -346,5 +346,8 @@
   "menu.building.management.requirements.count.description.blast_furnaces": "Blast Furnace",
   "menu.building.management.requirements.beehives_with_campfire.description": "Beehives",
   "menu.building.town_hall.population.count": "Population: %s",
-  "villager.renderer.title": "%s (%s)"
+  "villager.renderer.icon": " %s",
+  "villager.renderer.icon_with_value": " %s%s",
+  "villager.renderer.title": "%s%s%s",
+  "villager.renderer.title.extended": "%s%s%s%s%s"
 }
