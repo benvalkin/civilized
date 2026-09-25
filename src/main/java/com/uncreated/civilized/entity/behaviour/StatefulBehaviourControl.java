@@ -13,13 +13,16 @@ import com.uncreated.civilized.entity.behaviour.worker.CooldownTracker;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.behavior.Behavior;
 import net.minecraft.world.entity.ai.behavior.BehaviorControl;
+import net.minecraft.world.entity.ai.behavior.GateBehavior;
+import net.minecraft.world.entity.ai.behavior.ShufflingList;
 
 public abstract class StatefulBehaviourControl<StateMachine extends BehaviourStateMachine>
       implements BehaviorControl<CivilizedVillager> {
 
    private final Map<BehaviourState, StatefulBehaviour> tasks;
    private final ImmutableList<BehaviourState> coreTasks;
-   private final ImmutableList<BehaviourState> idleTasks;
+   private final ShufflingList<BehaviourState> idleTasks;
+   private final GateBehavior.OrderPolicy idleTaskOrder;
    StatefulBehaviour currentBehaviour;
    private Behavior.Status status = Behavior.Status.STOPPED;
 
@@ -31,9 +34,18 @@ public abstract class StatefulBehaviourControl<StateMachine extends BehaviourSta
          ImmutableList<StatefulBehaviour> tasks,
          ImmutableList<BehaviourState> coreTasks,
          ImmutableList<BehaviourState> idleTasks) {
+      this(tasks, coreTasks, equallyWeighted(idleTasks), GateBehavior.OrderPolicy.ORDERED);
+   }
+
+   public StatefulBehaviourControl(
+         ImmutableList<StatefulBehaviour> tasks,
+         ImmutableList<BehaviourState> coreTasks,
+         ShufflingList<BehaviourState> idleTasks,
+         GateBehavior.OrderPolicy idleTaskOrder) {
       this.tasks = tasks.stream().collect(Collectors.toMap(StatefulBehaviour::getState, t -> t));
       this.coreTasks = coreTasks;
       this.idleTasks = idleTasks;
+      this.idleTaskOrder = idleTaskOrder;
       stateMachine = createStateMachine();
       sharedCooldowns = new CooldownTracker<>();
 
@@ -41,6 +53,12 @@ public abstract class StatefulBehaviourControl<StateMachine extends BehaviourSta
          task.setStateMachine(stateMachine);
          task.setSharedCooldowns(sharedCooldowns);
       }
+   }
+
+   private static ShufflingList<BehaviourState> equallyWeighted(ImmutableList<BehaviourState> states) {
+      ShufflingList<BehaviourState> weighted = new ShufflingList<>();
+      states.forEach(state -> weighted.add(state, 1));
+      return weighted;
    }
 
    protected abstract StateMachine createStateMachine();
@@ -125,6 +143,12 @@ public abstract class StatefulBehaviourControl<StateMachine extends BehaviourSta
    }
 
    private void startNextIdleTask(ServerLevel serverLevel, CivilizedVillager civilizedVillager, long currentTicks) {
+      // if the order policy is SHUFFLED, apply() randomizes the list of idle tasks in-place.
+      // if the order policy is ORDERED, apply() does absolutely nothing, leaving it in the same order that it was
+      // supplied in the constructor.
+      idleTaskOrder.apply(idleTasks);
+      // after this, the next section simply tries to start each activity in the list, which may have been randomized,
+      // ultimately resulting in a legitimately random next behaviour
       for (BehaviourState state : idleTasks) {
          StatefulBehaviour task = getTask(state);
          if (task.tryStart(serverLevel, civilizedVillager, currentTicks)) {

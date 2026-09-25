@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableList;
 import com.uncreated.civilized.entity.CivilizedVillager;
 
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.behavior.GateBehavior;
+import net.minecraft.world.entity.ai.behavior.ShufflingList;
 import net.minecraft.world.entity.schedule.Activity;
 
 public class IdleBehaviourControl extends StatefulBehaviourControl<BehaviourStateMachine> {
@@ -11,8 +13,8 @@ public class IdleBehaviourControl extends StatefulBehaviourControl<BehaviourStat
    public IdleBehaviourControl(
          ImmutableList<StatefulBehaviour> tasks,
          ImmutableList<BehaviourState> coreTasks,
-         ImmutableList<BehaviourState> idleTasks) {
-      super(tasks, coreTasks, idleTasks);
+         ShufflingList<BehaviourState> idleTasks) {
+      super(tasks, coreTasks, idleTasks, GateBehavior.OrderPolicy.SHUFFLED);
    }
 
    @Override

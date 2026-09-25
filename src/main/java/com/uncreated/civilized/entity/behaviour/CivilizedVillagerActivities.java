@@ -15,6 +15,7 @@ import net.minecraft.world.entity.ai.behavior.LookAtTargetSink;
 import net.minecraft.world.entity.ai.behavior.MoveToTargetSink;
 import net.minecraft.world.entity.ai.behavior.RunOne;
 import net.minecraft.world.entity.ai.behavior.SetEntityLookTarget;
+import net.minecraft.world.entity.ai.behavior.ShufflingList;
 import net.minecraft.world.entity.ai.behavior.Swim;
 import net.minecraft.world.entity.ai.behavior.WakeUp;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
@@ -63,7 +64,7 @@ public class CivilizedVillagerActivities {
                               new TakeItemsToInventory(),
                               new IdleStrollAroundSettlement(5, 3, speedModifier)),
                         ImmutableList.of(BehaviourStates.EATING_FOOD),
-                        ImmutableList.of(BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT))));
+                        new ShufflingList<BehaviourState>().add(BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT, 1))));
    }
 
    public static ImmutableList<Pair<Integer, ? extends BehaviorControl<? super CivilizedVillager>>> getPanicPackage(
