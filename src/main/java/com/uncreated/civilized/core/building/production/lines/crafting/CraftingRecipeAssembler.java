@@ -56,7 +56,7 @@ public class CraftingRecipeAssembler extends RecipeAssembler<CraftingRecipe, Cra
                 if (!ingredientsFilter.acceptsItem(itemStack))
                     continue;
 
-                // copy the candidate ingredient's item stack because we will decrement it later as we "add it" to the
+                // copy the candidate ingredient's item because we will decrement it later as we "add it" to the
                 // "crafting window"
                 ItemStack candidateIngredient = container.getItem(s).copy();
 
@@ -78,7 +78,7 @@ public class CraftingRecipeAssembler extends RecipeAssembler<CraftingRecipe, Cra
                         // if this item is a valid ingredient for this slot, move it to the "crafting window"
                         craftingWindow[i] = candidateIngredient.copyWithCount(1);
                         ingredientsSatisfied++;
-                        // mark that we have successfully moved 1 of this stack's item into the "crafting window"
+                        // mark that we have successfully moved 1 of this item into the "crafting window"
                         candidateIngredient.shrink(1);
 
                         // if we have satisfied all the required ingredients, we have successfully satisfied this recipe :)

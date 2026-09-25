@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import org.jetbrains.annotations.NotNull;
+
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.BuildingTypes;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
@@ -43,7 +45,17 @@ public class EatFood extends StatefulBehaviour {
 
    /** Fetching one item at a time keeps villagers from hoarding food that others in the settlement could eat. */
    private static final InventoryStockRequirement FOOD_REQUIREMENT =
-         new InventoryStockRequirement("food", EatFood::isViableFood, 1, 1, VillagerInventoryType.LOGISTICS);
+         new InventoryStockRequirement(
+               "food",
+               EatFood::isViableFood,
+               bestFoodFirst(),
+               1,
+               1,
+               VillagerInventoryType.LOGISTICS);
+
+   private static @NotNull Comparator<ItemStack> bestFoodFirst() {
+      return (i1, i2) -> -compareFood(i1, i2);
+   }
 
    /** The logistics inventory slot of the food being eaten, or -1 when the villager is between items. */
    private int eatingSlot = -1;
@@ -59,7 +71,7 @@ public class EatFood extends StatefulBehaviour {
       if (!villager.getHunger().isHungry())
          return false;
 
-      if (findMostSatiatingFood(villager.getLogisticsInventory()) != -1)
+      if (findSlotOfMostSatiatingFood(villager.getLogisticsInventory()) != -1)
          return true;
 
       tryFetchFood(villager);
@@ -89,7 +101,6 @@ public class EatFood extends StatefulBehaviour {
       if (foodSources.isEmpty())
          return; // can't fetch food if there is nowhere to fetch it from
 
-      // note: there isn't a way to prefer more satiating foods here yet. A "preference" system will probably come next.
       Optional<TakeToInventoryInstruction> instruction =
             TakeToInventoryInstruction.createIfMetFromSourceBuildings(
                   new ReservationKey(reservationPartyKey(villager), FOOD_RESERVATION_NAME),
@@ -108,27 +119,43 @@ public class EatFood extends StatefulBehaviour {
       return i.is(Tags.Items.FOODS) && !i.is(Tags.Items.FOODS_RAW_FISH) && !i.is(Tags.Items.FOODS_RAW_MEAT);
    }
 
-   private static int findMostSatiatingFood(SimpleContainer inventory) {
+   private static int findSlotOfMostSatiatingFood(SimpleContainer inventory) {
       int bestSlot = -1;
-      FoodProperties bestFood = null;
 
       for (int i = 0; i < inventory.getContainerSize(); i++) {
          ItemStack stack = inventory.getItem(i);
-         if (!isViableFood(stack))
+         if (!isViableFood(stack) || stack.get(DataComponents.FOOD) == null)
             continue;
 
-         FoodProperties food = stack.get(DataComponents.FOOD);
-         if (food == null)
-            continue;
-
-         if (bestFood == null || food.nutrition() > bestFood.nutrition()
-               || (food.nutrition() == bestFood.nutrition() && food.saturation() > bestFood.saturation())) {
+         if (bestSlot == -1 || compareFood(stack, inventory.getItem(bestSlot)) > 0)
             bestSlot = i;
-            bestFood = food;
-         }
       }
 
       return bestSlot;
+   }
+
+   public static int compareFood(ItemStack item1, ItemStack item2) {
+      FoodProperties food1 = item1.get(DataComponents.FOOD);
+      FoodProperties food2 = item2.get(DataComponents.FOOD);
+      if (food1 == null && food2 == null)
+         return 0; // both items are not food - don't bother with extra checks
+
+      int nutrition1 = food1 != null ? food1.nutrition() : -1;
+      int nutrition2 = food2 != null ? food2.nutrition() : -1;
+
+      // first compare nutrition
+      int nutritionComparison = Integer.compare(nutrition1, nutrition2);
+
+      // if nutrition values are different, return the result immediately
+      if (nutritionComparison != 0) {
+         return nutritionComparison;
+      }
+
+      // otherwise, if nutrition values are identical, compare saturation
+      float saturation1 = food1 != null ? food1.saturation() : -1;
+      float saturation2 = food2 != null ? food2.saturation() : -1;
+
+      return Float.compare(saturation1, saturation2);
    }
 
    @Override
@@ -175,7 +202,7 @@ public class EatFood extends StatefulBehaviour {
    }
 
    private boolean startEatingNextFood(CivilizedVillager villager, SimpleContainer inventory) {
-      int slot = findMostSatiatingFood(inventory);
+      int slot = findSlotOfMostSatiatingFood(inventory);
       if (slot == -1)
          return false;
 

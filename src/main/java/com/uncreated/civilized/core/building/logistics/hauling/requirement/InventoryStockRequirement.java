@@ -1,5 +1,6 @@
 package com.uncreated.civilized.core.building.logistics.hauling.requirement;
 
+import java.util.Comparator;
 import java.util.function.Predicate;
 
 import org.jetbrains.annotations.NotNull;
@@ -23,11 +24,21 @@ public class InventoryStockRequirement extends ItemStockRequirement {
    public InventoryStockRequirement(
          String key,
          Predicate<ItemStack> test,
+         Comparator<ItemStack> preference,
          int minimumAcceptableAmount,
          int idealAmount,
          VillagerInventoryType inventoryType) {
-      super(key, test, minimumAcceptableAmount, idealAmount);
+      super(key, test, preference, minimumAcceptableAmount, idealAmount);
       this.inventoryType = inventoryType;
+   }
+
+   public InventoryStockRequirement(
+         String key,
+         Predicate<ItemStack> test,
+         int minimumAcceptableAmount,
+         int idealAmount,
+         VillagerInventoryType inventoryType) {
+      this(key, test, ContainerHelper.NO_PREFERENCE, minimumAcceptableAmount, idealAmount, inventoryType);
    }
 
    public StockResult evaluate(CivilizedVillager villager) {

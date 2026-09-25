@@ -139,7 +139,7 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
             ItemStack remainder = ContainerHelper.addItemNicely(chest, item);
             villagerInventory.removeItem(i, item.getCount() - remainder.getCount());
 
-            // if there is no remainder, we successfully inserted the stack
+            // if there is no remainder, we successfully inserted the item
             if (remainder.isEmpty()) {
                itemTypesDumped.add(itemType);
                break;

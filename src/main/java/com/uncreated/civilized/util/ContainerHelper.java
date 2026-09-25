@@ -1,5 +1,7 @@
 package com.uncreated.civilized.util;
 
+import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -69,24 +71,55 @@ public class ContainerHelper {
       }
    }
 
+   @Deprecated
    public static int transferNicely(
          Container fromContainer,
          Container toContainer,
          Predicate<ItemStack> searchFunction,
          int upTo) {
+      return transferNicely(fromContainer, toContainer, searchFunction, NO_PREFERENCE, upTo);
+   }
+
+   public static final Comparator<ItemStack> NO_PREFERENCE = (item1, item2) -> 0;
+
+   public static int transferNicely(
+         Container fromContainer,
+         Container toContainer,
+         Predicate<ItemStack> searchFunction,
+         Comparator<ItemStack> preferenceFunction,
+         int upTo) {
+      return transferNicely(List.of(fromContainer), toContainer, searchFunction, preferenceFunction, upTo);
+   }
+
+   public static int transferNicely(
+         List<Container> fromContainers,
+         Container toContainer,
+         Predicate<ItemStack> searchFunction,
+         Comparator<ItemStack> preferenceFunction,
+         int upTo) {
 
       if (upTo <= 0)
          return 0;
 
-      int containerSize = fromContainer.getContainerSize();
+      List<ContainerItemReference> items = new LinkedList<>();
+      for (int c = 0; c < fromContainers.size(); c++) {
+         Container container = fromContainers.get(c);
+         for (int i = 0; i < container.getContainerSize(); i++) {
+            ItemStack item = container.getItem(i);
+            if (!searchFunction.test(item))
+               continue;
+
+            items.add(new ContainerItemReference(item, c, i));
+         }
+      }
+
+      if (preferenceFunction != NO_PREFERENCE)
+         items.sort((i1, i2) -> preferenceFunction.compare(i1.item(), i2.item()));
+
       int addedSoFar = 0;
 
-      for (int i = 0; i < containerSize; i++) {
-         ItemStack item = fromContainer.getItem(i);
-         if (!searchFunction.test(item))
-            continue;
-
-         ItemStack toAdd = item.copy();
+      for (ContainerItemReference containerItem : items) {
+         ItemStack toAdd = containerItem.item().copy();
          if (addedSoFar + toAdd.getCount() > upTo)
             toAdd.shrink(addedSoFar + toAdd.getCount() - upTo);
 
@@ -94,8 +127,13 @@ public class ContainerHelper {
          ItemStack actuallyAdded = toAdd.copyWithCount(toAdd.getCount() - remainder.getCount());
          addedSoFar += actuallyAdded.getCount();
 
-         item.shrink(actuallyAdded.getCount());
-         fromContainer.setItem(i, item);
+         containerItem.item().shrink(actuallyAdded.getCount());
+         int container = containerItem.container();
+         int slot = containerItem.slot();
+         fromContainers.get(container).setItem(slot, containerItem.item());
+
+         if (addedSoFar >= upTo)
+            break;
       }
 
       return addedSoFar;

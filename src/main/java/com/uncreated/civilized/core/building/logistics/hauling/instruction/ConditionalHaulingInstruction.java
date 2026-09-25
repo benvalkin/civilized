@@ -41,9 +41,7 @@ public abstract class ConditionalHaulingInstruction<T extends ItemStockRequireme
       }
    }
 
-   public abstract HaulDecision takeItemsUntilSatisfied(
-         CivilizedVillager villager,
-         LoadedBuilding sourceBuilding);
+   public abstract HaulDecision takeItemsUntilSatisfied(CivilizedVillager villager, LoadedBuilding sourceBuilding);
 
    /**
     * How many more items of this requirement the villager still wants to pick up. 0 once it needs no more.
@@ -65,7 +63,8 @@ public abstract class ConditionalHaulingInstruction<T extends ItemStockRequireme
          if (outstandingAmount(villager, requirement) <= 0)
             continue;
 
-         if (requirement.calculateBuildingStock(chests, building.getReservationsExcluding(reservationKey.party())).hasItems())
+         if (requirement.calculateBuildingStock(chests, building.getReservationsExcluding(reservationKey.party()))
+               .hasItems())
             return true;
       }
 
@@ -95,17 +94,9 @@ public abstract class ConditionalHaulingInstruction<T extends ItemStockRequireme
       quota = adjustQuotaForReservedItems(quota, itemReservations, requirement, sourceChests);
 
       Container haulInventory = requirement.getHaulInventory(villager);
-      int taken = 0;
 
-      for (Container source : sourceChests) {
-         int transferred = ContainerHelper.transferNicely(source, haulInventory, requirement.filter(), quota - taken);
-         taken += transferred;
-
-         if (taken >= quota)
-            break;
-      }
-
-      return taken;
+      return ContainerHelper
+            .transferNicely(sourceChests, haulInventory, requirement.filter(), requirement.preference(), quota);
    }
 
    protected static int adjustQuotaForReservedItems(

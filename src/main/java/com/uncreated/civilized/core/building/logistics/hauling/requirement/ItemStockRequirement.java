@@ -1,5 +1,6 @@
 package com.uncreated.civilized.core.building.logistics.hauling.requirement;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,7 @@ import net.minecraft.world.item.ItemStack;
 public abstract class ItemStockRequirement {
    private final String key;
    protected final Predicate<ItemStack> filter;
+   protected final Comparator<ItemStack> preference;
    protected final int minimumAcceptableAmount;
    protected final int idealAmount;
    @Setter
@@ -31,9 +33,14 @@ public abstract class ItemStockRequirement {
 
    public static final int UNLIMITED = Integer.MAX_VALUE;
 
-   public ItemStockRequirement(String key, Predicate<ItemStack> filter, int minimumAcceptableAmount, int idealAmount) {
+   public ItemStockRequirement(
+         String key,
+         Predicate<ItemStack> filter,
+         Comparator<ItemStack> preference,
+         int minimumAcceptableAmount, int idealAmount) {
       this.key = key;
       this.filter = filter;
+      this.preference = preference;
       this.minimumAcceptableAmount = minimumAcceptableAmount;
       this.idealAmount = idealAmount;
       this.disregardExistingCarriedStock = false;

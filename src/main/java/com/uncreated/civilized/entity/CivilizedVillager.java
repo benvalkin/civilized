@@ -751,7 +751,7 @@ public class CivilizedVillager extends AgeableMob
          return CommonHooks.getProjectile(this, weapon, ItemStack.EMPTY);
 
       // need to make this method return a non-empty ItemStack, otherwise fired projectiles throw an exception when the
-      // game saves due to attempting save an empty item stack
+      // game saves due to attempting save an empty item
       return CommonHooks.getProjectile(this, weapon, new ItemStack(Items.ARROW));
    }
 

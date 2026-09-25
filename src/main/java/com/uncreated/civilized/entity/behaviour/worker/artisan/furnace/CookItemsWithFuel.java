@@ -3,6 +3,7 @@ package com.uncreated.civilized.entity.behaviour.worker.artisan.furnace;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -42,6 +43,7 @@ import net.minecraft.world.entity.ai.behavior.BlockPosTracker;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.MemoryStatus;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
@@ -170,9 +172,11 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
          int amount,
          ServerLevel level) {
 
+      RecipeType<?> recipeType = productionOrder.getBill().getProductionType().recipeType();
       RecipeSlotType fuelSlot = productionOrder.getBill().getProductionType().recipeSlots().get(recipeSlot);
 
       ItemFilter itemFilter = productionOrder.getBill().getItemFilters().getFilter(recipeSlot);
+      Comparator<ItemStack> preference = Comparator.comparingInt(i -> -i.getBurnTime(recipeType, level.fuelValues()));
 
       BuildingStockRequirement requirement =
             new BuildingStockRequirement(
@@ -181,6 +185,7 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
                         productionOrder.getBill().getProductionType(),
                         productionOrder.getBill().getMinecraftRecipeName()),
                   i -> fuelSlot.isItemAllowed(i, level) && itemFilter.acceptsItem(i),
+                  preference,
                   1,
                   amount);
       // makes it so that duplicate ingredients are still taken
@@ -282,7 +287,7 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
          }
       }
 
-      // try place cooking ingredients, either by adding to the existing stack, or replacing it
+      // try place cooking ingredients, either by adding to the existing item, or replacing it
       if (!toSmelt.isEmpty()) {
          ItemStack newInput = toSmelt.getFirst().aggregateStack();
          ItemStack currentlyInFurnace = furnaceBlockEntity.getItem(0).copy();

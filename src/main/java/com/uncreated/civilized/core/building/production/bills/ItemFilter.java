@@ -15,6 +15,7 @@ import net.neoforged.neoforge.network.codec.NeoForgeStreamCodecs;
 @Accessors(fluent = true)
 @Getter
 public class ItemFilter {
+
    private final ItemFilterMode mode;
    private final List<ItemStack> items;
 
