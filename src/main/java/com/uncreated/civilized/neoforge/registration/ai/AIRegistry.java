@@ -9,6 +9,7 @@ import com.uncreated.civilized.core.building.logistics.hauling.instruction.Condi
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.DropOffItemsInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.ItemStockRequirement;
 import com.uncreated.civilized.core.villagerinfo.VillagerOccupation;
+import com.uncreated.civilized.entity.behaviour.social.Conversation;
 import com.uncreated.civilized.entity.sensor.CivilizedVillagerEnemySensor;
 
 import net.minecraft.core.BlockPos;
@@ -63,6 +64,8 @@ public class AIRegistry {
          MEMORY_MODULES.register("take_items_instruction", () -> new MemoryModuleType<>(Optional.empty()));
    public static final Supplier<MemoryModuleType<DropOffItemsInstruction>> MM_DROP_OFF_ITEMS_INSTRUCTION =
          MEMORY_MODULES.register("drop_off_items_instruction", () -> new MemoryModuleType<>(Optional.empty()));
+   public static final Supplier<MemoryModuleType<Conversation>> MM_CONVERSATION =
+         MEMORY_MODULES.register("conversation", () -> new MemoryModuleType<>(Optional.empty()));
 
    public static DeferredRegister<SensorType<?>> SENSORS =
          DeferredRegister.create(BuiltInRegistries.SENSOR_TYPE, CIVILIZED_MOD_ID);

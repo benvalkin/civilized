@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.mojang.datafixers.util.Pair;
 import com.uncreated.civilized.entity.CivilizedVillager;
+import com.uncreated.civilized.entity.behaviour.social.Socialize;
 import com.uncreated.civilized.entity.behaviour.worker.common.logistics.TakeItemsToInventory;
 import com.uncreated.civilized.neoforge.registration.entity.EntityRegistry;
 
@@ -52,19 +53,22 @@ public class CivilizedVillagerActivities {
             Pair.of(0, WakeUp.create()));
    }
 
+   public static IdleBehaviourControl createIdleBehaviourControl(float speedModifier) {
+      return new IdleBehaviourControl(
+            ImmutableList.of(
+                  new EatFood(BehaviourStates.EATING_FOOD),
+                  new TakeItemsToInventory(),
+                  new IdleStrollAroundSettlement(5, 3, speedModifier),
+                  new Socialize(speedModifier)),
+            ImmutableList.of(BehaviourStates.EATING_FOOD),
+            new ShufflingList<BehaviourState>()
+                  .add(BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT, 3)
+                  .add(BehaviourStates.SOCIALISING, 1));
+   }
+
    public static ImmutableList<Pair<Integer, ? extends BehaviorControl<? super CivilizedVillager>>> getIdlePackage(
-         float speedModifier) {
-      return ImmutableList.of(
-            getFullLookBehavior(),
-            Pair.of(
-                  1,
-                  new IdleBehaviourControl(
-                        ImmutableList.of(
-                              new EatFood(BehaviourStates.EATING_FOOD),
-                              new TakeItemsToInventory(),
-                              new IdleStrollAroundSettlement(5, 3, speedModifier)),
-                        ImmutableList.of(BehaviourStates.EATING_FOOD),
-                        new ShufflingList<BehaviourState>().add(BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT, 1))));
+         IdleBehaviourControl idleBehaviourControl) {
+      return ImmutableList.of(getFullLookBehavior(), Pair.of(1, idleBehaviourControl));
    }
 
    public static ImmutableList<Pair<Integer, ? extends BehaviorControl<? super CivilizedVillager>>> getPanicPackage(

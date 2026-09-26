@@ -34,7 +34,10 @@ import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.core.villagerinfo.VillagerOccupations;
+import com.uncreated.civilized.entity.behaviour.BehaviourStates;
+import com.uncreated.civilized.entity.behaviour.IdleBehaviourControl;
 import com.uncreated.civilized.entity.behaviour.StatefulBehaviourControl;
+import com.uncreated.civilized.entity.behaviour.social.Conversation;
 import com.uncreated.civilized.entity.behaviour.worker.soldier.ArrowLineOfFire;
 import com.uncreated.civilized.entity.control.CivilizedVillagerLookControl;
 import com.uncreated.civilized.entity.data.VillagerHunger;
@@ -110,6 +113,30 @@ public class CivilizedVillager extends AgeableMob
 
    @Getter
    private VillagerHunger hunger;
+
+   @Nullable
+   private IdleBehaviourControl idleBehaviourControl; // we're keeping this as a field so that other villagers can
+                                                      // socialize with each other
+
+   public boolean tryJoinConversation(Conversation conversation) {
+      if (!isAlive() || isSleeping() || idleBehaviourControl == null)
+         return false;
+
+      if (!getBrain().isActive(Activity.IDLE) || !idleBehaviourControl.isRunningIdleTask())
+         return false;
+
+      if (!idleBehaviourControl.hasTask(BehaviourStates.SOCIALISING))
+         return false;
+
+      boolean alreadyTalking =
+            getBrain().getMemory(AIRegistry.MM_CONVERSATION.get()).filter(c -> !c.isEnded()).isPresent();
+      if (alreadyTalking || !conversation.join(this))
+         return false;
+
+      getBrain().setMemory(AIRegistry.MM_CONVERSATION.get(), conversation);
+      idleBehaviourControl.queueImmediately(BehaviourStates.SOCIALISING);
+      return true;
+   }
 
    @Getter
    private DialogueController dialogueController = DialogueController.noDialogue();
@@ -355,6 +382,7 @@ public class CivilizedVillager extends AgeableMob
                   AIRegistry.MM_DIALOGUE_TARGET.get(),
                   AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(),
                   AIRegistry.MM_DROP_OFF_ITEMS_INSTRUCTION.get(),
+                  AIRegistry.MM_CONVERSATION.get(),
                   MemoryModuleType.JOB_SITE,
                   MemoryModuleType.HOME,
                   MemoryModuleType.PATH,
@@ -407,7 +435,14 @@ public class CivilizedVillager extends AgeableMob
             Set.of(Pair.of(AIRegistry.MM_DIALOGUE_TARGET.get(), MemoryStatus.VALUE_PRESENT)),
             Set.of(AIRegistry.MM_DIALOGUE_TARGET.get()));
       brain.addActivity(Activity.PANIC, getPanicPackage(0.7f));
-      brain.addActivity(Activity.IDLE, getIdlePackage(0.25f));
+      idleBehaviourControl = createIdleBehaviourControl(0.25f);
+      // a villager whose idle time ends (e.g. it's time to work) drops out of any conversation it was invited to, which
+      // its partner notices
+      brain.addActivityAndRemoveMemoriesWhenStopped(
+            Activity.IDLE,
+            getIdlePackage(idleBehaviourControl),
+            Set.of(),
+            Set.of(AIRegistry.MM_CONVERSATION.get()));
       brain.setCoreActivities(ImmutableSet.of(Activity.CORE));
       brain.setDefaultActivity(Activity.IDLE);
       brain.setActiveActivityIfPossible(Activity.IDLE);

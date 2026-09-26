@@ -99,6 +99,10 @@ public abstract class StatefulBehaviourControl<StateMachine extends BehaviourSta
 
             StatefulBehaviour task = getTask(nextState.get());
             if (task.tryStart(serverLevel, civilizedVillager, currentTicks)) {
+               // a queued action interrupts whatever idle task is running, which then has to be stopped like any task
+               // being replaced. Otherwise, its stop() never runs and it is left marked as running
+               if (currentBehaviour != task && currentBehaviour.getStatus() != Behavior.Status.STOPPED)
+                  currentBehaviour.doStop(serverLevel, civilizedVillager, currentTicks);
                task.lateStart(serverLevel, civilizedVillager, currentTicks);
                stateMachine.currentState(nextState.get());
                currentBehaviour = task;
@@ -165,6 +169,18 @@ public abstract class StatefulBehaviourControl<StateMachine extends BehaviourSta
       }
       throw new IllegalStateException(
             "Villager became idle, but was not able to start any idle task. Villagers need at least one idle work state to fall back to.");
+   }
+
+   public boolean isRunningIdleTask() {
+      return status == Behavior.Status.RUNNING && stateMachine.isIdle();
+   }
+
+   public boolean hasTask(BehaviourState state) {
+      return tasks.containsKey(state);
+   }
+
+   public void queueImmediately(BehaviourState state) {
+      stateMachine.queueImmediately(state);
    }
 
    private StatefulBehaviour getTask(BehaviourState state) {
