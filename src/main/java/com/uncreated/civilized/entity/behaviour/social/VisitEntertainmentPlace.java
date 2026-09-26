@@ -8,7 +8,6 @@ import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.BuildingType;
 import com.uncreated.civilized.core.building.BuildingTypes;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
-import com.uncreated.civilized.core.building.bounds.BuildingBounds;
 import com.uncreated.civilized.core.building.entity.LoadedBuildings;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.BehaviourStates;
@@ -64,7 +63,8 @@ public class VisitEntertainmentPlace extends StatefulBehaviour {
       }
 
       for (Building place : places.shuffle()) {
-         Optional<BlockPos> spot = findSpotInside(level, place.getBounds(), villager);
+         Optional<BlockPos> spot =
+               place.getBounds().findRandomStandableSpot(level, villager.getRandom(), DESTINATION_ATTEMPTS);
          if (spot.isPresent())
             return spot;
       }
@@ -81,42 +81,6 @@ public class VisitEntertainmentPlace extends StatefulBehaviour {
       if (type.isFoodVendor())
          return OTHER_FOOD_VENDOR_WEIGHT;
       return 0;
-   }
-
-   /**
-    * A random spot a villager can stand on inside the bounds. Works for open-air places like the town square too,
-    * unlike {@link BuildingBounds#findRandomInsideFloorBlock}, which only finds floor under a roof. Each try picks a
-    * random column and takes its lowest standable block, i.e. the ground floor.
-    */
-   private static Optional<BlockPos> findSpotInside(
-         ServerLevel level,
-         BuildingBounds bounds,
-         CivilizedVillager villager) {
-      BlockPos lower = bounds.getLowerCorner();
-      BlockPos upper = bounds.getUpperCorner();
-
-      for (int attempt = 0; attempt < DESTINATION_ATTEMPTS; attempt++) {
-         int x = villager.getRandom().nextIntBetweenInclusive(lower.getX(), upper.getX());
-         int z = villager.getRandom().nextIntBetweenInclusive(lower.getZ(), upper.getZ());
-
-         // looking up blocks in an unloaded chunk would load it
-         if (!level.hasChunkAt(new BlockPos(x, lower.getY(), z)))
-            continue;
-
-         for (int y = lower.getY(); y <= upper.getY(); y++) {
-            BlockPos pos = new BlockPos(x, y, z);
-            if (isStandable(level, pos))
-               return Optional.of(pos);
-         }
-      }
-
-      return Optional.empty();
-   }
-
-   /** Air with room for a villager's head, above solid ground rather than a liquid. */
-   private static boolean isStandable(ServerLevel level, BlockPos pos) {
-      return BuildingBounds.blockIsAirAboveFloor(pos, level) && level.getBlockState(pos.above()).isAir()
-            && level.getFluidState(pos.below()).isEmpty();
    }
 
    @Override

@@ -61,7 +61,7 @@ public class CivilizedVillagerActivities {
                   new TakeItemsToInventory(),
                   new IdleStrollAroundSettlement(5, 3, speedModifier),
                   new Socialize(speedModifier),
-                  new VisitEntertainmentPlace(0.4f)),
+                  new VisitEntertainmentPlace(0.4F)),
             ImmutableList.of(BehaviourStates.EATING_FOOD),
             new ShufflingList<BehaviourState>().add(BehaviourStates.SOCIALISING, 7)
                   .add(BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT, 3)

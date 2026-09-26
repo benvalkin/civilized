@@ -1,10 +1,5 @@
 package com.uncreated.civilized.core.villagerinfo.events;
 
-import java.util.Optional;
-
-import com.uncreated.civilized.core.StoreOperation;
-import com.uncreated.civilized.core.building.Building;
-import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.entity.CivilizedVillager;
@@ -49,20 +44,6 @@ public class VillagerStoreEvents {
       if (!(event.getEntity() instanceof CivilizedVillager villager))
          return;
 
-      if (!event.getEntity().level().isClientSide()) {
-         ServerVillagerStore.INSTANCE.delete(villager).ifPresent(v -> v.setDeceased(true));
-         ServerVillagerStore.INSTANCE.setDirty();
-         ServerVillagerStore.INSTANCE.replicateChange(villager.getInfo(), StoreOperation.DELETE);
-
-         Optional<Building> home = ServerBuildingsStore.INSTANCE.find(villager.getInfo().getHomeBuildingId());
-         home.ifPresent(h -> h.getOccupantIds().remove(villager.getInfo().getVillagerId()));
-
-         Optional<Building> worksite = ServerBuildingsStore.INSTANCE.find(villager.getInfo().getPrimaryWorksiteId());
-         worksite.ifPresent(w -> w.getOccupantIds().remove(villager.getInfo().getPrimaryWorksiteId()));
-
-         ServerBuildingsStore.INSTANCE.find(villager.getInfo().getHomeBuildingId()).ifPresent(b -> {
-            ServerBuildingsStore.INSTANCE.replicateChange(b, StoreOperation.UPDATE);
-         });
-      }
+      ServerVillagerStore.INSTANCE.removeVillager(villager.getInfo(), true);
    }
 }

@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -15,6 +16,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.chunk.LevelChunk;
@@ -149,6 +151,30 @@ public class BuildingBounds {
 
       int randomIndex = random.nextInt(floorBlocks.size());
       return floorBlocks.get(randomIndex);
+   }
+
+   public Optional<BlockPos> findRandomStandableSpot(Level level, RandomSource random, int attempts) {
+      for (int attempt = 0; attempt < attempts; attempt++) {
+         int x = random.nextIntBetweenInclusive(lowerCorner.getX(), upperCorner.getX());
+         int z = random.nextIntBetweenInclusive(lowerCorner.getZ(), upperCorner.getZ());
+
+         // avoid loading chunks that are not loaded
+         if (!level.hasChunkAt(new BlockPos(x, lowerCorner.getY(), z)))
+            continue;
+
+         for (int y = lowerCorner.getY(); y <= upperCorner.getY(); y++) {
+            BlockPos pos = new BlockPos(x, y, z);
+            if (isStandable(level, pos))
+               return Optional.of(pos);
+         }
+      }
+
+      return Optional.empty();
+   }
+
+   private static boolean isStandable(Level level, BlockPos pos) {
+      return blockIsAirAboveFloor(pos, level) && level.getBlockState(pos.above()).isAir()
+            && level.getFluidState(pos.below()).isEmpty();
    }
 
    public static boolean blockIsAirAboveFloor(BlockPos pos, Level level) {

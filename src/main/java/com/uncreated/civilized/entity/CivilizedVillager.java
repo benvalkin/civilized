@@ -11,11 +11,9 @@ import java.util.UUID;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
 
 import com.google.common.collect.ImmutableSet;
 import com.mojang.datafixers.util.Pair;
-import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Dynamic;
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventoryType;
@@ -50,6 +48,8 @@ import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 import com.uncreated.civilized.ui.menu.dialogue.VillagerDialogueScreen;
 
 import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.log4j.Log4j2;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -96,13 +96,14 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.CommonHooks;
 import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
 
+@Log4j2
 public class CivilizedVillager extends AgeableMob
       implements InventoryCarrier, IEntityWithComplexSpawn, RangedAttackMob {
 
-   private static final Logger LOGGER = LogUtils.getLogger();
    public static final String FIELD_VILLAGER_ID = "villager_id";
    public static final String FIELD_LIFETIME_SEED = "lifetime_seed";
    public static final String FIELD_ROUTED = "routed";
+   public static final String FIELD_DEPART_AT = "depart_at";
    private static final float DEFAULT_RALLY_HEALTH_FRACTION = 0.8F;
 
    @Getter
@@ -148,6 +149,13 @@ public class CivilizedVillager extends AgeableMob
 
    private long lifetimeSeed;
 
+   /**
+    * The day time at which the villager leaves the world. Only used for villagers who are visitors (i.e. they are
+    * occupants of a building but have no settlementId)
+    */
+   @Setter
+   private long departAt;
+
    @Getter
    private final RandomSource lifetimeRandom;
 
@@ -161,6 +169,7 @@ public class CivilizedVillager extends AgeableMob
       this.lifetimeRandom = RandomSource.create();
       this.setPersistenceRequired(); // prevent auto-despawning
       this.hunger = new VillagerHunger(this);
+      this.departAt = -1;
    }
 
    public void initBrandNewVillager() {
@@ -202,6 +211,7 @@ public class CivilizedVillager extends AgeableMob
       compound.putUUID(FIELD_VILLAGER_ID, villagerId);
       compound.putLong(FIELD_LIFETIME_SEED, lifetimeSeed);
       compound.putBoolean(FIELD_ROUTED, isRouted());
+      compound.putLong(FIELD_DEPART_AT, departAt);
       hunger.save(compound);
       this.writeInventoryToTag(compound, this.registryAccess());
    }
@@ -216,6 +226,7 @@ public class CivilizedVillager extends AgeableMob
       setLifetimeRandom(compound.getLong(FIELD_LIFETIME_SEED));
       // the brain's activities aren't set up yet, so routing is restored once it is (see serverFinalizeSpawn)
       routedOnLoad = compound.getBoolean(FIELD_ROUTED);
+      departAt = compound.getLong(FIELD_DEPART_AT);
       hunger.load(compound);
 
       this.readInventoryFromTag(compound, this.registryAccess());
@@ -503,6 +514,11 @@ public class CivilizedVillager extends AgeableMob
    @Override
    protected void customServerAiStep(ServerLevel serverLevel) {
 
+      if (isTimeToDepart(serverLevel.getDayTime())) {
+         depart();
+         return;
+      }
+
       updateActivity(serverLevel.getDayTime(), serverLevel.getGameTime());
       regenerateHealth(serverLevel.getGameTime());
       hunger.serverTickHunger(serverLevel.getGameTime());
@@ -677,6 +693,20 @@ public class CivilizedVillager extends AgeableMob
 
    public @Nullable ICombatCommand getCombatCommand() {
       return combatCommand;
+   }
+
+   private boolean isTimeToDepart(long dayTime) {
+      if (departAt == -1)
+         return false;
+
+      // the second check catches the clock being set back (e.g. with /time set), which would otherwise leave the
+      // visitor waiting for days
+      return dayTime >= departAt || departAt - dayTime > 24000;
+   }
+
+   public void depart() {
+      ServerVillagerStore.INSTANCE.removeVillager(info, false);
+      discard();
    }
 
    private boolean routedOnLoad;

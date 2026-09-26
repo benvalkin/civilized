@@ -1,11 +1,14 @@
 package com.uncreated.civilized.core.villagerinfo;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.mojang.datafixers.util.Pair;
 import com.uncreated.civilized.core.StoreOperation;
+import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.villagerinfo.events.model.VillagerInfoUpdatedEvent;
 import com.uncreated.civilized.entity.CivilizedVillager;
 
@@ -183,7 +186,21 @@ public class ServerVillagerStore extends VillagerStore {
       return info;
    }
 
-   public Optional<VillagerInfo> delete(CivilizedVillager villager) {
-      return villagers.remove(villager.getVillagerId());
+   public void removeVillager(VillagerInfo info, boolean deceased) {
+      villagers.remove(info.getVillagerId());
+      info.setDeceased(deceased);
+      setDirty();
+      replicateChange(info, StoreOperation.DELETE);
+
+      Stream.of(info.getHomeBuildingId(), info.getPrimaryWorksiteId())
+            .filter(Objects::nonNull)
+            .distinct()
+            .map(ServerBuildingsStore.INSTANCE::find)
+            .flatMap(Optional::stream)
+            .forEach(building -> {
+               if (building.getOccupantIds().remove(info.getVillagerId()))
+                  ServerBuildingsStore.INSTANCE.setDirty();
+               ServerBuildingsStore.INSTANCE.replicateChange(building, StoreOperation.UPDATE);
+            });
    }
 }

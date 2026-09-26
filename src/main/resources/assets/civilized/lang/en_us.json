@@ -287,6 +287,7 @@
   "villager.dialogue.quest.migrant_worker.generic_8": "I heard that they've been building lots of new homes here lately.",
   "villager.dialogue.quest.migrant_worker.generic_9": "I've been between jobs and villages for a while now. Would be nice to finally settle somewhere...",
   "villager.dialogue.quest.migrant_worker.generic_10": "Someday, I'd like to have my own house. Do you know if there's anything available around here?",
+  "villager.dialogue.quest.migrant_worker.generic.response.accept.tooltip.option_enabled": "This villager will join your settlement as a worker.",
   "villager.dialogue.quest.migrant_worker.farmer_1.accepted.page_1": "Thank you kindly.",
   "villager.dialogue.quest.migrant_worker.farmer_1.page_1": "Please, do you know of any work for a farmhand around here? I'm looking to start a new homestead.",
   "villager.dialogue.quest.migrant_worker.farmer_1.page_1.response.accept": "We could use some extra hands.",
