@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.mojang.datafixers.util.Pair;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.social.Socialize;
+import com.uncreated.civilized.entity.behaviour.social.VisitEntertainmentPlace;
 import com.uncreated.civilized.entity.behaviour.worker.common.logistics.TakeItemsToInventory;
 import com.uncreated.civilized.neoforge.registration.entity.EntityRegistry;
 
@@ -59,11 +60,12 @@ public class CivilizedVillagerActivities {
                   new EatFood(BehaviourStates.EATING_FOOD),
                   new TakeItemsToInventory(),
                   new IdleStrollAroundSettlement(5, 3, speedModifier),
-                  new Socialize(speedModifier)),
+                  new Socialize(speedModifier),
+                  new VisitEntertainmentPlace(speedModifier)),
             ImmutableList.of(BehaviourStates.EATING_FOOD),
-            new ShufflingList<BehaviourState>()
+            new ShufflingList<BehaviourState>().add(BehaviourStates.SOCIALISING, 7)
                   .add(BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT, 3)
-                  .add(BehaviourStates.SOCIALISING, 1));
+                  .add(BehaviourStates.VISITING_ENTERTAINMENT, 1));
    }
 
    public static ImmutableList<Pair<Integer, ? extends BehaviorControl<? super CivilizedVillager>>> getIdlePackage(

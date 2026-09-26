@@ -11,6 +11,7 @@ import org.apache.commons.compress.utils.Lists;
 import com.uncreated.civilized.client.renderer.BuildingBoundsDragTool;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.BuildingType;
+import com.uncreated.civilized.core.building.BuildingTypes;
 import com.uncreated.civilized.core.building.ClientBuildingStore;
 import com.uncreated.civilized.core.building.requirement.EnclosedRoomRequirement;
 import com.uncreated.civilized.core.building.requirement.FishingSiteWaterRequirement;
@@ -172,7 +173,7 @@ public class BuildingDeedItem extends Item {
             return false;
          }
 
-         if (!boundsResult.centerIsInside()) {
+         if (!buildingType.is(BuildingTypes.TOWN_SQUARE) && !boundsResult.centerIsInside()) {
             player.displayClientMessage(
                   Component
                         .translatable(
