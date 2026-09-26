@@ -1,4 +1,4 @@
-package com.uncreated.civilized.entity.behaviour.worker;
+package com.uncreated.civilized.util;
 
 import java.time.Duration;
 import java.util.HashMap;

@@ -92,8 +92,24 @@ public class SleepInBed extends Behavior<CivilizedVillager> {
          return false;
 
       home = loadedHome.get().getBuilding();
+
+      // a villager loaded in asleep, e.g. after rejoining the world at night, keeps the spot it's already in. Searching
+      // would skip its own bed, since that's occupied, and claim another one that a housemate then can't use
+      Optional<BlockPos> currentSleepingPos = villager.getSleepingPos();
+      if (currentSleepingPos.isPresent()) {
+         sleepingSpot = currentSpot(villager, currentSleepingPos.get());
+         return true;
+      }
+
       sleepingSpot = findSleepingSpot(level, villager).orElse(null);
       return sleepingSpot != null;
+   }
+
+   private static SleepingSpot currentSpot(CivilizedVillager villager, BlockPos sleepingPos) {
+      Direction floorHeadDirection = villager.getFloorSleepingDirection();
+      if (floorHeadDirection != null)
+         return SleepingSpot.floor(sleepingPos, floorHeadDirection);
+      return SleepingSpot.bed(sleepingPos);
    }
 
    @Override

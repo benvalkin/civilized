@@ -157,7 +157,7 @@ public class CivilizedVillager extends AgeableMob
    private long departAt;
 
    @Getter
-   private final RandomSource lifetimeRandom;
+   private final RandomSource arbitraryRandom;
 
    public CivilizedVillager(EntityType<? extends AgeableMob> entityType, Level level) {
       super(entityType, level);
@@ -166,7 +166,7 @@ public class CivilizedVillager extends AgeableMob
       this.getNavigation().setCanFloat(true);
       this.getNavigation().setRequiredPathLength(48.0F);
       // this.setCanPickUpLoot(true);
-      this.lifetimeRandom = RandomSource.create();
+      this.arbitraryRandom = RandomSource.create();
       this.setPersistenceRequired(); // prevent auto-despawning
       this.hunger = new VillagerHunger(this);
       this.departAt = -1;
@@ -177,7 +177,7 @@ public class CivilizedVillager extends AgeableMob
       ServerVillagerStore.INSTANCE.replicateChange(info, StoreOperation.ADD_OR_OVERWRITE);
       ServerVillagerStore.INSTANCE.setDirty();
       villagerId = info.getVillagerId();
-      setLifetimeRandom(getRandom().nextLong());
+      setArbitraryRandom(getRandom().nextLong());
    }
 
    public void initVillagerFromSave() {
@@ -195,12 +195,12 @@ public class CivilizedVillager extends AgeableMob
       dialogueController = DialogueController.selectDialogueController(this);
    }
 
-   private void setLifetimeRandom(long seed) {
+   private void setArbitraryRandom(long seed) {
       lifetimeSeed = seed;
-      lifetimeRandom.setSeed(seed);
+      arbitraryRandom.setSeed(seed);
    }
 
-   public RandomSource getConsistentLifetimeRandom() {
+   public RandomSource perLifetimeRandom() {
       return RandomSource.create(lifetimeSeed);
    }
 
@@ -223,7 +223,7 @@ public class CivilizedVillager extends AgeableMob
       // yet, so we need to check
       if (compound.hasUUID(FIELD_VILLAGER_ID))
          villagerId = compound.getUUID(FIELD_VILLAGER_ID);
-      setLifetimeRandom(compound.getLong(FIELD_LIFETIME_SEED));
+      setArbitraryRandom(compound.getLong(FIELD_LIFETIME_SEED));
       // the brain's activities aren't set up yet, so routing is restored once it is (see serverFinalizeSpawn)
       routedOnLoad = compound.getBoolean(FIELD_ROUTED);
       departAt = compound.getLong(FIELD_DEPART_AT);
@@ -280,18 +280,14 @@ public class CivilizedVillager extends AgeableMob
    }
 
    public void updateSkin() {
-      skin = SkinTextureRegistry.getRandomSkin(getConsistentLifetimeRandom(), "default", info.getGender()).getValue();
-      hair = HairTextureRegistry.getRandomSkin(getConsistentLifetimeRandom(), "default", info.getGender()).getValue();
+      skin = SkinTextureRegistry.getRandomSkin(perLifetimeRandom(), "default", info.getGender()).getValue();
+      hair = HairTextureRegistry.getRandomSkin(perLifetimeRandom(), "default", info.getGender()).getValue();
    }
 
    public void updateClothing() {
       clothing =
             ClothingTextureRegistry
-                  .getRandomClothingTexture(
-                        getConsistentLifetimeRandom(),
-                        "default",
-                        info.getOccupation(),
-                        info.getGender())
+                  .getRandomClothingTexture(perLifetimeRandom(), "default", info.getOccupation(), info.getGender())
                   .getValue();
    }
 
@@ -338,13 +334,18 @@ public class CivilizedVillager extends AgeableMob
    @Override
    public InteractionResult mobInteract(Player player, InteractionHand hand) {
 
+      if (isSleeping())
+         return InteractionResult.FAIL;
+
       dialogueController = DialogueController.selectDialogueController(this);
       DialogueFlow dialogueFlow = dialogueController.getDialogueFlow(this, player, hand);
 
       if (dialogueFlow == null)
          return InteractionResult.PASS;
 
-      DialogueContext context = dialogueFlow.buildDialogueContext(this, player, hand);
+      long gameTime = player.level().getGameTime();
+      long dayTime = player.level().getDayTime();
+      DialogueContext context = dialogueFlow.buildDialogueContext(this, player, hand, gameTime, dayTime);
       IVillageDialogue dialogue = dialogueFlow.getOpeningDialogue(context);
 
       while (dialogue != null && !dialogue.isAvailableToPlayer(context)) {
@@ -640,8 +641,7 @@ public class CivilizedVillager extends AgeableMob
 
    public void stopSpeakingToPlayer() {
       getBrain().eraseMemory(AIRegistry.MM_DIALOGUE_TARGET.get());
-      if (!isRouted())
-         brain.setActiveActivityIfPossible(Activity.IDLE);
+      brain.setActiveActivityIfPossible(Activity.IDLE);
    }
 
    // The generic type must match the one of the second parameter below.

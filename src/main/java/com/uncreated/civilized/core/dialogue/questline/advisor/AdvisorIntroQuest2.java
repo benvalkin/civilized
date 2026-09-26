@@ -10,6 +10,7 @@ import com.uncreated.civilized.core.dialogue.IVillageDialogue;
 import com.uncreated.civilized.core.dialogue.context.DialogueContext;
 import com.uncreated.civilized.core.dialogue.controller.DialogueFlow;
 import com.uncreated.civilized.core.quest.Quests;
+import com.uncreated.civilized.core.quest.attachments.PlayerDialogueCooldowns;
 import com.uncreated.civilized.core.quest.attachments.PlayerQuests;
 import com.uncreated.civilized.entity.CivilizedVillager;
 
@@ -22,7 +23,8 @@ public class AdvisorIntroQuest2 extends DialogueFlow {
          DialogueContext context,
          CivilizedVillager villager,
          Player player,
-         PlayerQuests playerQuests) {
+         PlayerQuests playerQuests,
+         PlayerDialogueCooldowns cooldowns) {
 
       return opening(villager);
    }

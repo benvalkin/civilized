@@ -26,7 +26,7 @@ public class TownSquareBehaviour extends BuildingBehaviour {
 
    public TownSquareBehaviour(LoadedBuilding entity) {
       super(entity);
-      eventScheduler = new DailyEventScheduler(7, 0, 6000, 0.1f);
+      eventScheduler = new DailyEventScheduler(7, 0, 6000, 0.2f);
    }
 
    private static final int MAX_VISITORS = 12;

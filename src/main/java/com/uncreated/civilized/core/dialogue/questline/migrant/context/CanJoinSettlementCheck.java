@@ -30,11 +30,19 @@ public class CanJoinSettlementCheck implements ResponseOption.IResponseOptionEna
                            joinSettlement.getRequiredBuildingType().translation()).withColor(Colors.VALIDATION_ERROR)));
       }
 
-      return ResponseOption.EnabledCheckResult.success(
-            Tooltip.create(
-                  translatable(
-                        "villager.dialogue.quest.migrant_worker.misc.response.accept.tooltip.option_enabled",
-                        joinSettlement.getRequiredBuildingType().occupation().translation())
-                        .withColor(Colors.VALIDATION_SUCCESS)));
+      if (joinSettlement.getRequiredBuildingType() == null) {
+         return ResponseOption.EnabledCheckResult.success(
+               Tooltip.create(
+                     translatable(
+                           "villager.dialogue.quest.migrant_worker.generic.any_occupation.response.accept.tooltip.option_enabled")
+                           .withColor(Colors.VALIDATION_SUCCESS)));
+      } else {
+         return ResponseOption.EnabledCheckResult.success(
+               Tooltip.create(
+                     translatable(
+                           "villager.dialogue.quest.migrant_worker.generic.response.accept.tooltip.option_enabled",
+                           joinSettlement.getRequiredBuildingType().occupation().translation())
+                           .withColor(Colors.VALIDATION_SUCCESS)));
+      }
    }
 }

@@ -5,7 +5,7 @@ import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 import org.joml.Matrix4f;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.uncreated.civilized.core.villagerinfo.VillagerOccupations;
+import com.uncreated.civilized.core.villagerinfo.VillagerNpcRole;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.data.VillagerHunger;
 import com.uncreated.civilized.entity.renderer.layer.ClothingLayer;
@@ -69,7 +69,7 @@ public class CivilizedVillagerRenderer extends
       state.health = villager.getHealth();
       state.maxHealth = villager.getMaxHealth();
       int hunger = villager.getHunger().hunger();
-      if (!villager.getInfo().getOccupation().is(VillagerOccupations.UNEMPLOYED)) {
+      if (villager.getInfo().getNpcRoles().contains(VillagerNpcRole.WORKER)) {
          if (DEBUG) {
             state.title =
                   Component.translatable(
@@ -91,8 +91,9 @@ public class CivilizedVillagerRenderer extends
                         hungerC,
                         hungerIcon(hunger));
          }
-      } else
-         state.title = null;
+      } else {
+         state.title = villager.getInfo().getNpcRoles().getFirst().translation();
+      }
 
       if (DEBUG) {
          state.debugBehavioursList = villager.getEntityData().get(CivilizedVillager.CURRENT_WORK_BEHAVIOUR);

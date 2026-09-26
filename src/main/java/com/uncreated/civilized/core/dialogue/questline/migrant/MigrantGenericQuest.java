@@ -8,13 +8,13 @@ import static com.uncreated.civilized.core.dialogue.RandomSpeech.randomPerVillag
 import static com.uncreated.civilized.core.dialogue.ResponseOption.option;
 import static net.minecraft.network.chat.Component.translatable;
 
-import com.uncreated.civilized.core.building.BuildingTypes;
 import com.uncreated.civilized.core.dialogue.IVillageDialogue;
 import com.uncreated.civilized.core.dialogue.context.DialogueContext;
 import com.uncreated.civilized.core.dialogue.controller.DialogueFlow;
 import com.uncreated.civilized.core.dialogue.questline.migrant.context.CanJoinSettlementCheck;
 import com.uncreated.civilized.core.dialogue.questline.migrant.context.JoinSettlementAction;
 import com.uncreated.civilized.core.dialogue.questline.migrant.context.JoinSettlementContext;
+import com.uncreated.civilized.core.quest.attachments.PlayerDialogueCooldowns;
 import com.uncreated.civilized.core.quest.attachments.PlayerQuests;
 import com.uncreated.civilized.entity.CivilizedVillager;
 
@@ -24,8 +24,13 @@ import net.minecraft.world.entity.player.Player;
 public class MigrantGenericQuest extends DialogueFlow {
 
    @Override
-   public DialogueContext buildDialogueContext(CivilizedVillager villager, Player player, InteractionHand hand) {
-      return new JoinSettlementContext(villager, player, BuildingTypes.FARMER_HOUSE);
+   public DialogueContext buildDialogueContext(
+         CivilizedVillager villager,
+         Player player,
+         InteractionHand hand,
+         long gameTime,
+         long dayTime) {
+      return new JoinSettlementContext(villager, player, gameTime, dayTime);
    }
 
    @Override
@@ -33,7 +38,8 @@ public class MigrantGenericQuest extends DialogueFlow {
          DialogueContext context,
          CivilizedVillager villager,
          Player player,
-         PlayerQuests playerQuests) {
+         PlayerQuests playerQuests,
+         PlayerDialogueCooldowns cooldowns) {
       return dialogueWithpages().page(
             dialogue(
                   randomPerVillager(

@@ -27,6 +27,7 @@ public class SpeakToPlayer extends Behavior<CivilizedVillager> {
    @Override
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
       Player player = villager.getBrain().getMemory(AIRegistry.MM_DIALOGUE_TARGET.get()).orElseThrow();
+      villager.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
       villager.getBrain().setMemory(MemoryModuleType.WALK_TARGET, new WalkTarget(player, 0.3f, 2));
       villager.getBrain().setMemory(MemoryModuleType.LOOK_TARGET, new EntityTracker(player, true));
       villager.getBrain().setMemory(MemoryModuleType.INTERACTION_TARGET, player);

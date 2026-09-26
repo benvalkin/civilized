@@ -14,7 +14,7 @@ public class PersonalInfo {
    private int skinIndex = 0;
 
    public PersonalInfo(CivilizedVillager villager) {
-      RandomSource consistentRandom = villager.getConsistentLifetimeRandom();
+      RandomSource consistentRandom = villager.perLifetimeRandom();
       skinIndex = consistentRandom.nextInt();
    }
 

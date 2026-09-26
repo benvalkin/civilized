@@ -3,7 +3,6 @@ package com.uncreated.civilized.core.villagerinfo;
 import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
 import com.uncreated.civilized.CivilizedMod;
-import com.uncreated.civilized.core.building.BuildingType;
 import com.uncreated.civilized.core.building.BuildingTypes;
 import com.uncreated.civilized.entity.behaviour.worker.WorkActivities;
 
@@ -90,7 +89,7 @@ public class VillagerOccupations {
    public static final VillagerOccupation RANCHER =
          VillagerOccupation.builder(createResourceKey("rancher"))
                .homeType(BuildingTypes.RANCHER_HOUSE)
-               .validWorksite(BuildingType::isAnimalFarm)
+               .validWorksite(b -> b.isAnimalFarm() && !b.is(BuildingTypes.BEE_FARM))
                .workBehaviourPackage(WorkActivities::getRancherWorkPackage)
                .build();
    public static final VillagerOccupation WOODCUTTER =

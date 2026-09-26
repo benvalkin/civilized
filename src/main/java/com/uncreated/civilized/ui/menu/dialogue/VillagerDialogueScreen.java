@@ -141,9 +141,10 @@ public class VillagerDialogueScreen extends Screen {
          return;
 
       dialogue.getOnEnded().accept(context);
-      if (result == ResponseOption.SelectedAction.CLOSE_DIALOGUE)
+      if (result == ResponseOption.SelectedAction.CLOSE_DIALOGUE) {
          Minecraft.getInstance().setScreen(null);
-      else if (result == ResponseOption.SelectedAction.GO_NEXT) {
+         PacketDistributor.sendToServer(new ScreenToggledPacket(villager.getUUID(), false));
+      } else if (result == ResponseOption.SelectedAction.GO_NEXT) {
          @Nullable
          Dialogue next = null;
          // response option's dialogue takes precedence over pages

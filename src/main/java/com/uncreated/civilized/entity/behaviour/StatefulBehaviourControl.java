@@ -8,7 +8,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.ImmutableList;
 import com.uncreated.civilized.entity.CivilizedVillager;
-import com.uncreated.civilized.entity.behaviour.worker.CooldownTracker;
+import com.uncreated.civilized.util.CooldownTracker;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.behavior.Behavior;

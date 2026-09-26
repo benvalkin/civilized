@@ -6,6 +6,6 @@ public enum VillagerNpcRole {
    WORKER, TRAVELLER, MIGRANT, SKILLED_PROFESSIONAL, MERCENARY, BEGGAR, SCOUNDREL, THIEF, MERCHANT, BANDIT, ADVISOR;
 
    public Component translation() {
-      return Component.translatable("villager.occupation." + name().toLowerCase());
+      return Component.translatable("civilized.villager.role." + name().toLowerCase());
    }
 }

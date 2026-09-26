@@ -3,7 +3,7 @@ package com.uncreated.civilized.entity.behaviour;
 import java.util.Map;
 
 import com.uncreated.civilized.entity.CivilizedVillager;
-import com.uncreated.civilized.entity.behaviour.worker.CooldownTracker;
+import com.uncreated.civilized.util.CooldownTracker;
 
 import lombok.AccessLevel;
 import lombok.Getter;

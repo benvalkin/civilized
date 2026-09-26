@@ -22,6 +22,7 @@ import com.uncreated.civilized.core.dialogue.controller.MissingOpeningDialogueEx
 import com.uncreated.civilized.core.dialogue.specialized.ItemDepotDialogue;
 import com.uncreated.civilized.core.quest.ActivatedQuest;
 import com.uncreated.civilized.core.quest.Quests;
+import com.uncreated.civilized.core.quest.attachments.PlayerDialogueCooldowns;
 import com.uncreated.civilized.core.quest.attachments.PlayerQuests;
 import com.uncreated.civilized.entity.CivilizedVillager;
 
@@ -37,10 +38,11 @@ public class AdvisorIntroQuest1 extends DialogueFlow {
 
    @Override
    protected @Nullable Dialogue getOpeningDialogue(
-         DialogueContext context,
-         CivilizedVillager villager,
-         Player player,
-         PlayerQuests playerQuests) {
+           DialogueContext context,
+           CivilizedVillager villager,
+           Player player,
+           PlayerQuests playerQuests,
+           PlayerDialogueCooldowns cooldowns) {
 
       Optional<ActivatedQuest> activatedQuest =
             playerQuests.tryGetQuest(Quests.ADVISOR_INTRO_1, villager.getVillagerId());

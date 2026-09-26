@@ -13,7 +13,7 @@ public class RandomSpeech {
    }
 
    public static Component randomPerVillager(CivilizedVillager villager, Component... speechOptions) {
-      int randomIndex = villager.getConsistentLifetimeRandom().nextInt(0, speechOptions.length);
+      int randomIndex = villager.perLifetimeRandom().nextInt(0, speechOptions.length);
       return speechOptions[randomIndex];
    }
 

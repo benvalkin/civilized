@@ -20,25 +20,36 @@ import net.minecraft.world.entity.player.Player;
 @Setter
 public class JoinSettlementContext extends DialogueContext {
 
-   private final BuildingType requiredBuildingType;
-   private @Nullable Settlement settlement;
+   private @Nullable final BuildingType requiredBuildingType;
+   private @Nullable final Settlement settlement;
    private @Nullable Building unoccupiedBuilding;
 
-   public JoinSettlementContext(CivilizedVillager villager, Player player, BuildingType requiredBuildingType) {
-      super(villager, player);
+   public JoinSettlementContext(CivilizedVillager villager, Player player, long gameTime, long dayTime) {
+      super(villager, player, gameTime, gameTime);
 
-      this.requiredBuildingType = requiredBuildingType;
+      this.requiredBuildingType = villager.getInfo().getOccupation().homeType();
       settlement = ClientSettlementsStore.INSTANCE.findFromOwner(player.getUUID()).orElse(null);
       if (settlement == null)
          return;
 
-      unoccupiedBuilding =
-            BuildingUtil
-                  .findUnoccupiedHome(
-                        settlement.getSettlementId(),
-                        requiredBuildingType,
-                        ClientBuildingStore.INSTANCE,
-                        ClientVillagerStore.INSTANCE)
-                  .orElse(null);
+      if (requiredBuildingType == null) {
+         unoccupiedBuilding =
+               BuildingUtil
+                     .findUnoccupiedHome(
+                           settlement.getSettlementId(),
+                           ClientBuildingStore.INSTANCE,
+                           ClientVillagerStore.INSTANCE,
+                           false)
+                     .orElse(null);
+      } else {
+         unoccupiedBuilding =
+               BuildingUtil
+                     .findUnoccupiedHome(
+                           settlement.getSettlementId(),
+                           requiredBuildingType,
+                           ClientBuildingStore.INSTANCE,
+                           ClientVillagerStore.INSTANCE)
+                     .orElse(null);
+      }
    }
 }

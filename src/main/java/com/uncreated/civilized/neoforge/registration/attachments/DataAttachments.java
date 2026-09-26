@@ -5,6 +5,7 @@ import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import com.uncreated.civilized.core.quest.attachments.PlayerDialogueCooldowns;
 import org.jetbrains.annotations.Nullable;
 
 import com.mojang.serialization.Codec;
@@ -30,8 +31,14 @@ public class DataAttachments {
    public static final Supplier<AttachmentType<PlayerQuests>> QUESTS =
            ATTACHMENTS.register(
                    "civilized_player_quests",
-                   () -> AttachmentType.serializable(() -> new PlayerQuests())
+                   () -> AttachmentType.serializable(PlayerQuests::new)
                            .copyOnDeath()
+                           .build());
+
+   public static final Supplier<AttachmentType<PlayerDialogueCooldowns>> DIALOGUE_COOLDOWNS =
+           ATTACHMENTS.register(
+                   "civilized_player_dialogue_cooldowns",
+                   () -> AttachmentType.builder(PlayerDialogueCooldowns::new)
                            .build());
 
    public static final Supplier<AttachmentType<Integer>> COIN_VALUE = ATTACHMENTS.register(

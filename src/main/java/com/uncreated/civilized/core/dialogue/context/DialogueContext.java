@@ -15,11 +15,15 @@ import javax.annotation.Nullable;
 public class DialogueContext {
    protected final CivilizedVillager villager;
    protected final Player player;
+    private final long gameTime;
+    private final long dayTime;
 
-   public DialogueContext(CivilizedVillager villager, Player player) {
+    public DialogueContext(CivilizedVillager villager, Player player, long gameTime, long dayTime) {
       this.villager = villager;
       this.player = player;
-   }
+        this.gameTime = gameTime;
+        this.dayTime = dayTime;
+    }
 
    public <T extends DialogueContext> T as() {
       try {
