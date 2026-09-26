@@ -29,6 +29,7 @@ public class TownSquareBehaviour extends BuildingBehaviour {
    @Override
    public void serverTick(ServerLevel level, long gameTime, long dayTime) {
       eventScheduler.tick(level, gameTime, () -> trySpawnVisitor(level));
+      tryDespawnVisitors(level, dayTime);
    }
 
    private static final SimpleWeightedRandomList<VillagerNpcRole> VISITOR_ROLES =
@@ -61,10 +62,26 @@ public class TownSquareBehaviour extends BuildingBehaviour {
       VillagerNpcRole visitorRole =
             VISITOR_ROLES.getRandomValue(villager.getRandom()).orElse(VillagerNpcRole.TRAVELLER);
       villager.getInfo().getNpcRoles().add(visitorRole);
-      villager.getInfo().setHomeBuildingId(getBuilding().getBuildingId());
+      // // visitors "occupy" the town square until further notice
+      // getBuilding().getOccupantIds().add(villager.getVillagerId());
+      // villager.getInfo().setHomeBuildingId(getBuilding().getBuildingId());
       ServerVillagerStore.INSTANCE.setDirty();
       ServerVillagerStore.INSTANCE.replicateChange(villager.getInfo(), StoreOperation.UPDATE);
 
       LOGGER.debug("Villager spawned at Inn: {}", villager.getUUID());
+   }
+
+   private void tryDespawnVisitors(ServerLevel level, long dayTime) {
+
+      long todayTime = dayTime % 24000;
+      boolean onTheHour = todayTime % 1000 == 0;
+
+      if (onTheHour) {
+         if (todayTime >= 11000 && todayTime < 16000) { // between between 5-10pm
+            // todo: every visitor spawned by this town square has a 20% chance of despawning
+         } else {
+            // todo: despawn all visitors that remain spawned by this town square
+         }
+      }
    }
 }

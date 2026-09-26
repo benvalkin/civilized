@@ -14,6 +14,7 @@ import com.google.common.collect.Lists;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.entity.LoadedBuildings;
+import com.uncreated.civilized.core.building.util.BuildingUtil;
 import com.uncreated.civilized.entity.CivilizedVillager;
 
 import net.minecraft.core.BlockPos;
@@ -134,7 +135,7 @@ public class SleepInBed extends Behavior<CivilizedVillager> {
       }
 
       if (hasArrived(villager)) {
-         sleep(villager);
+         sleep(villager, level);
          return;
       }
 
@@ -147,7 +148,7 @@ public class SleepInBed extends Behavior<CivilizedVillager> {
       } else if (gameTime - lastProgressTime >= STUCK_TICKS_BEFORE_TELEPORTING) {
          Vec3 spot = Vec3.atBottomCenterOf(sleepingSpot.pos());
          villager.teleportTo(spot.x, spot.y, spot.z);
-         sleep(villager);
+         sleep(villager, level);
       }
    }
 
@@ -178,15 +179,17 @@ public class SleepInBed extends Behavior<CivilizedVillager> {
             && home.getBounds().contains(villager.blockPosition());
    }
 
-   private void sleep(CivilizedVillager villager) {
+   private void sleep(CivilizedVillager villager, ServerLevel level) {
       villager.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
       villager.getBrain().eraseMemory(MemoryModuleType.LOOK_TARGET);
       villager.getNavigation().stop();
 
-      if (sleepingSpot.isBed())
+      if (sleepingSpot.isBed()) {
          villager.startSleeping(sleepingSpot.pos());
-      else
+      } else
          villager.sleepOnFloor(sleepingSpot.pos(), sleepingSpot.floorHeadDirection());
+
+      BuildingUtil.ensureBuildingDoorsAreClosed(villager, home, level);
    }
 
    /** The closest free bed in the villager's home, or a random spot on the floor if there isn't one. */

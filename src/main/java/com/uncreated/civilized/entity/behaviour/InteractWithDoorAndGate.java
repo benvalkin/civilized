@@ -5,6 +5,9 @@
 
 package com.uncreated.civilized.entity.behaviour;
 
+import static com.uncreated.civilized.core.building.util.BuildingUtil.isFenceGateOpen;
+import static com.uncreated.civilized.core.building.util.BuildingUtil.setOpenFenceGate;
+
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -22,7 +25,6 @@ import com.mojang.datafixers.kinds.OptionalBox;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.Brain;
@@ -30,7 +32,6 @@ import net.minecraft.world.entity.ai.behavior.BehaviorControl;
 import net.minecraft.world.entity.ai.behavior.declarative.BehaviorBuilder;
 import net.minecraft.world.entity.ai.behavior.declarative.MemoryAccessor;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.FenceGateBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -121,30 +122,6 @@ public class InteractWithDoorAndGate {
                         return false;
                      }
                   }));
-   }
-
-   private static boolean isFenceGateOpen(BlockState blockState) {
-      return blockState.getValue(FenceGateBlock.OPEN);
-   }
-
-   private static void setOpenFenceGate(
-         Level level,
-         LivingEntity entity,
-         BlockPos blockPos,
-         BlockState blockState,
-         boolean open) {
-
-      level.setBlockAndUpdate(blockPos, blockState.setValue(FenceGateBlock.OPEN, open));
-
-      FenceGateBlock fenceGateBlock = (FenceGateBlock) blockState.getBlock();
-
-      level.playSound(
-            entity,
-            blockPos,
-            open ? fenceGateBlock.openSound : fenceGateBlock.closeSound,
-            SoundSource.BLOCKS,
-            1.0F,
-            level.getRandom().nextFloat() * 0.1F + 0.9F);
    }
 
    public static void closeDoorsThatIHaveOpenedOrPassedThrough(

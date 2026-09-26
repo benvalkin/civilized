@@ -55,9 +55,9 @@ public class VillagerStoreEvents {
          ServerVillagerStore.INSTANCE.replicateChange(villager.getInfo(), StoreOperation.DELETE);
 
          Optional<Building> home = ServerBuildingsStore.INSTANCE.find(villager.getInfo().getHomeBuildingId());
-         home.ifPresent(h -> h.getOccupantIds().remove(villager.getInfo().getHomeBuildingId()));
+         home.ifPresent(h -> h.getOccupantIds().remove(villager.getInfo().getVillagerId()));
 
-         Optional<Building> worksite = ServerBuildingsStore.INSTANCE.find(villager.getInfo().getHomeBuildingId());
+         Optional<Building> worksite = ServerBuildingsStore.INSTANCE.find(villager.getInfo().getPrimaryWorksiteId());
          worksite.ifPresent(w -> w.getOccupantIds().remove(villager.getInfo().getPrimaryWorksiteId()));
 
          ServerBuildingsStore.INSTANCE.find(villager.getInfo().getHomeBuildingId()).ifPresent(b -> {
