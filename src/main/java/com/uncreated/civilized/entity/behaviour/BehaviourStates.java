@@ -7,4 +7,5 @@ public class BehaviourStates {
    public static final BehaviourState SOCIALISING = new BehaviourState("socialising");
    public static final BehaviourState VISITING_ENTERTAINMENT = new BehaviourState("visiting_entertainment");
    public static final BehaviourState NONE = new BehaviourState("none");
+   public static final BehaviourState FLIRTING = new BehaviourState("flirting");
 }

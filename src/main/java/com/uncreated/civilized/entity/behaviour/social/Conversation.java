@@ -13,15 +13,21 @@ public class Conversation {
 
    @Getter
    private final CivilizedVillager host;
+   @Getter
+   private final ConversationTopic conversationTopic;
    private final int maxMembers;
    private final List<CivilizedVillager> members = new ArrayList<>();
    @Getter
+   private final List<CivilizedVillager> pastMembers = new ArrayList<>();
+   @Getter
    private boolean ended;
 
-   public Conversation(CivilizedVillager host, int maxMembers) {
+   public Conversation(CivilizedVillager host, ConversationTopic conversationTopic, int maxMembers) {
       this.host = host;
+      this.conversationTopic = conversationTopic;
       this.maxMembers = maxMembers;
       members.add(host);
+      pastMembers.add(host);
    }
 
    public boolean join(CivilizedVillager villager) {
@@ -29,6 +35,8 @@ public class Conversation {
          return false;
 
       members.add(villager);
+      if (!pastMembers.contains(villager)) // they might be rejoining
+         pastMembers.add(villager);
       return true;
    }
 

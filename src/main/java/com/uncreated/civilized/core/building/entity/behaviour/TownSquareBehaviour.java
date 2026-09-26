@@ -44,6 +44,7 @@ public class TownSquareBehaviour extends BuildingBehaviour {
    private static final SimpleWeightedRandomList<VillagerNpcRole> VISITOR_ROLES =
          new SimpleWeightedRandomList.Builder<VillagerNpcRole>().add(VillagerNpcRole.TRAVELLER, 0)
                .add(VillagerNpcRole.MIGRANT, 1)
+               .add(VillagerNpcRole.SUITOR, 1)
                .add(VillagerNpcRole.SKILLED_PROFESSIONAL, 0)
                .add(VillagerNpcRole.MERCENARY, 0)
                .add(VillagerNpcRole.BEGGAR, 0)
@@ -82,6 +83,9 @@ public class TownSquareBehaviour extends BuildingBehaviour {
       ServerVillagerStore.INSTANCE.setDirty();
       ServerVillagerStore.INSTANCE.replicateChange(villager.getInfo(), StoreOperation.UPDATE);
       ServerBuildingsStore.INSTANCE.replicateChange(getBuilding(), StoreOperation.UPDATE);
+
+      // villager's activities may have changed with its role so we need refresh its brain
+      villager.refreshBrain(level);
 
       LOGGER.debug("Villager spawned at Town Square: {}", villager.getUUID());
    }

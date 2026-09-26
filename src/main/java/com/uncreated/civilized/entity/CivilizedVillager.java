@@ -31,6 +31,7 @@ import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
 import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
+import com.uncreated.civilized.core.villagerinfo.VillagerNpcRole;
 import com.uncreated.civilized.core.villagerinfo.VillagerOccupations;
 import com.uncreated.civilized.entity.behaviour.BehaviourStates;
 import com.uncreated.civilized.entity.behaviour.IdleBehaviourControl;
@@ -155,6 +156,8 @@ public class CivilizedVillager extends AgeableMob
     */
    @Setter
    private long departAt;
+   @Setter
+   private boolean departurePaused;
 
    @Getter
    private final RandomSource arbitraryRandom;
@@ -170,6 +173,7 @@ public class CivilizedVillager extends AgeableMob
       this.setPersistenceRequired(); // prevent auto-despawning
       this.hunger = new VillagerHunger(this);
       this.departAt = -1;
+      this.departurePaused = false;
    }
 
    public void initBrandNewVillager() {
@@ -447,7 +451,10 @@ public class CivilizedVillager extends AgeableMob
             Set.of(Pair.of(AIRegistry.MM_DIALOGUE_TARGET.get(), MemoryStatus.VALUE_PRESENT)),
             Set.of(AIRegistry.MM_DIALOGUE_TARGET.get()));
       brain.addActivity(Activity.PANIC, getPanicPackage(0.7f));
-      idleBehaviourControl = createIdleBehaviourControl(0.25f);
+      if (info.getNpcRoles().contains(VillagerNpcRole.SUITOR))
+         idleBehaviourControl = createSuitorBehaviourControl(0.25f);
+      else
+         idleBehaviourControl = createIdleBehaviourControl(0.25f);
       // a villager whose idle time ends (e.g. it's time to work) drops out of any conversation it was invited to, which
       // its partner notices
       brain.addActivityAndRemoveMemoriesWhenStopped(
@@ -455,6 +462,7 @@ public class CivilizedVillager extends AgeableMob
             getIdlePackage(idleBehaviourControl),
             Set.of(),
             Set.of(AIRegistry.MM_CONVERSATION.get()));
+
       brain.setCoreActivities(ImmutableSet.of(Activity.CORE));
       brain.setDefaultActivity(Activity.IDLE);
       brain.setActiveActivityIfPossible(Activity.IDLE);
@@ -696,7 +704,7 @@ public class CivilizedVillager extends AgeableMob
    }
 
    private boolean isTimeToDepart(long dayTime) {
-      if (departAt == -1)
+      if (departAt == -1 || departurePaused)
          return false;
 
       // the second check catches the clock being set back (e.g. with /time set), which would otherwise leave the

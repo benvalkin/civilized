@@ -24,4 +24,6 @@ public class Colors {
    public static final int VILLAGER_OWNER_NAME = 0x576eb5;
 
    public final static int COIN = 0xffe680;
+
+   public final static int LOVE = 0xffb8f0;
 }

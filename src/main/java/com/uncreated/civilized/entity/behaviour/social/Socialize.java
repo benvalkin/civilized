@@ -6,12 +6,17 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+import org.jetbrains.annotations.NotNull;
+
 import com.uncreated.civilized.entity.CivilizedVillager;
+import com.uncreated.civilized.entity.behaviour.BehaviourState;
 import com.uncreated.civilized.entity.behaviour.BehaviourStates;
 import com.uncreated.civilized.entity.behaviour.Cooldowns;
 import com.uncreated.civilized.entity.behaviour.StatefulBehaviour;
 import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 
+import lombok.AccessLevel;
+import lombok.Getter;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.behavior.EntityTracker;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
@@ -32,11 +37,21 @@ public class Socialize extends StatefulBehaviour {
    private final float speedModifier;
 
    private long startTime;
+   @Getter(AccessLevel.PROTECTED)
    private boolean met;
 
-   public Socialize(float speedModifier) {
-      super(BehaviourStates.SOCIALISING, 10 * 20, 90 * 20, 0);
+   public Socialize(
+         BehaviourState behaviourState,
+         float speedModifier,
+         int minDuration,
+         int maxDuration,
+         int cooldownDuration) {
+      super(behaviourState, minDuration, maxDuration, cooldownDuration);
       this.speedModifier = speedModifier;
+   }
+
+   public Socialize(float speedModifier) {
+      this(BehaviourStates.SOCIALISING, speedModifier, 10 * 20, 90 * 20, 0);
    }
 
    @Override
@@ -55,18 +70,10 @@ public class Socialize extends StatefulBehaviour {
    /**
     * Invites the closest villager that is free to talk. If nobody accepts, this behaviour doesn't start
     */
-   private boolean tryStartConversation(ServerLevel level, CivilizedVillager villager) {
-      List<CivilizedVillager> candidates =
-            level.getEntitiesOfClass(
-                  CivilizedVillager.class,
-                  villager.getBoundingBox().inflate(INVITE_RANGE),
-                  // TODO: eventually need to filter out hostile villagers
-                  other -> other != villager && other.isAlive() && villager.hasLineOfSight(other))
-                  .stream()
-                  .sorted(Comparator.comparingDouble(villager::distanceToSqr))
-                  .toList();
+   protected boolean tryStartConversation(ServerLevel level, CivilizedVillager villager) {
+      List<CivilizedVillager> candidates = getCandidateConversationMembers(level, villager);
 
-      Conversation conversation = new Conversation(villager, Conversation.PAIR);
+      Conversation conversation = new Conversation(villager, getConversationTopic(), getMaxParticipants());
       for (CivilizedVillager candidate : candidates) {
          if (candidate.tryJoinConversation(conversation)) {
             villager.getBrain().setMemory(AIRegistry.MM_CONVERSATION.get(), conversation);
@@ -77,7 +84,22 @@ public class Socialize extends StatefulBehaviour {
       return false;
    }
 
-   private static Optional<Conversation> currentConversation(CivilizedVillager villager) {
+   protected @NotNull List<CivilizedVillager> getCandidateConversationMembers(
+         ServerLevel level,
+         CivilizedVillager villager) {
+      List<CivilizedVillager> candidates =
+            level.getEntitiesOfClass(
+                  CivilizedVillager.class,
+                  villager.getBoundingBox().inflate(INVITE_RANGE),
+                  // TODO: eventually need to filter out hostile villagers
+                  other -> other != villager && other.isAlive() && villager.hasLineOfSight(other))
+                  .stream()
+                  .sorted(Comparator.comparingDouble(villager::distanceToSqr))
+                  .toList();
+      return candidates;
+   }
+
+   protected static Optional<Conversation> currentConversation(CivilizedVillager villager) {
       return villager.getBrain()
             .getMemory(AIRegistry.MM_CONVERSATION.get())
             .filter(conversation -> conversation.isMember(villager));
@@ -88,6 +110,7 @@ public class Socialize extends StatefulBehaviour {
       super.start(level, villager, gameTime);
       startTime = gameTime;
       met = false;
+      villager.setDeparturePaused(true);
    }
 
    @Override
@@ -124,9 +147,11 @@ public class Socialize extends StatefulBehaviour {
       met = true;
       villager.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
 
-      // // the odd gesture while talking
-      // if (villager.getRandom().nextInt(60) == 0)
-      // villager.swing(InteractionHand.MAIN_HAND);
+      tickDuringConversation(level, villager, gameTime);
+   }
+
+   protected void tickDuringConversation(ServerLevel level, CivilizedVillager villager, long gameTime) {
+
    }
 
    private static Optional<CivilizedVillager> findPartner(CivilizedVillager villager, Conversation conversation) {
@@ -148,5 +173,15 @@ public class Socialize extends StatefulBehaviour {
       villager.getBrain().eraseMemory(MemoryModuleType.LOOK_TARGET);
 
       getBehaviourCooldowns().startCooldown(Cooldowns.START, COOLDOWN, gameTime);
+
+      villager.setDeparturePaused(false);
+   }
+
+   public int getMaxParticipants() {
+      return Conversation.PAIR;
+   }
+
+   public ConversationTopic getConversationTopic() {
+      return ConversationTopic.GENERAL;
    }
 }

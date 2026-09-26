@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.mojang.datafixers.util.Pair;
 import com.uncreated.civilized.entity.CivilizedVillager;
+import com.uncreated.civilized.entity.behaviour.social.Flirt;
 import com.uncreated.civilized.entity.behaviour.social.Socialize;
 import com.uncreated.civilized.entity.behaviour.social.VisitEntertainmentPlace;
 import com.uncreated.civilized.entity.behaviour.worker.common.logistics.TakeItemsToInventory;
@@ -63,8 +64,24 @@ public class CivilizedVillagerActivities {
                   new Socialize(speedModifier),
                   new VisitEntertainmentPlace(0.4F)),
             ImmutableList.of(BehaviourStates.EATING_FOOD),
+            new ShufflingList<BehaviourState>().add(BehaviourStates.SOCIALISING, 10)
+                  .add(BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT, 5)
+                  .add(BehaviourStates.VISITING_ENTERTAINMENT, 1));
+   }
+
+   public static IdleBehaviourControl createSuitorBehaviourControl(float speedModifier) {
+      return new IdleBehaviourControl(
+            ImmutableList.of(
+                  new EatFood(BehaviourStates.EATING_FOOD),
+                  new TakeItemsToInventory(),
+                  new IdleStrollAroundSettlement(5, 3, speedModifier),
+                  new Flirt(speedModifier),
+                  new Socialize(speedModifier),
+                  new VisitEntertainmentPlace(0.4F)),
+            ImmutableList.of(BehaviourStates.EATING_FOOD),
             new ShufflingList<BehaviourState>().add(BehaviourStates.SOCIALISING, 7)
-                  .add(BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT, 3)
+                  .add(BehaviourStates.FLIRTING, 3)
+                  .add(BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT, 5)
                   .add(BehaviourStates.VISITING_ENTERTAINMENT, 1));
    }
 

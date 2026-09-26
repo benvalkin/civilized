@@ -14,6 +14,7 @@ import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.util.BuildingUtil;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
+import com.uncreated.civilized.core.villagerinfo.VillagerNpcRole;
 import com.uncreated.civilized.core.villagerinfo.VillagerOccupation;
 import com.uncreated.civilized.core.villagerinfo.VillagerOccupations;
 import com.uncreated.civilized.entity.CivilizedVillager;
@@ -83,20 +84,43 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
          ServerVillagerStore.INSTANCE.replicateChange(villagerInfo, StoreOperation.UPDATE);
       }
       if (homeChanged) {
-         oldHome.ifPresent(b -> ServerBuildingsStore.INSTANCE.replicateChange(b, StoreOperation.UPDATE));
-         home.ifPresent(b -> ServerBuildingsStore.INSTANCE.replicateChange(b, StoreOperation.UPDATE));
+         oldHome.ifPresent(b -> {
+            b.getOccupantIds().remove(villagerInfo.getVillagerId());
+            ServerBuildingsStore.INSTANCE.replicateChange(b, StoreOperation.UPDATE);
+         });
+         home.ifPresent(b -> {
+            b.getOccupantIds().add(villagerInfo.getVillagerId());
+            ServerBuildingsStore.INSTANCE.replicateChange(b, StoreOperation.UPDATE);
+         });
       }
       if (jobChanged) {
          villager.refreshBrain(level);
          villager.updateClothing();
       }
       if (worksiteChanged) {
-         oldWorksite.ifPresent(b -> ServerBuildingsStore.INSTANCE.replicateChange(b, StoreOperation.UPDATE));
-         worksite.ifPresent(b -> ServerBuildingsStore.INSTANCE.replicateChange(b, StoreOperation.UPDATE));
+         oldWorksite.ifPresent(b -> {
+            b.getOccupantIds().remove(villagerInfo.getVillagerId());
+            ServerBuildingsStore.INSTANCE.replicateChange(b, StoreOperation.UPDATE);
+         });
+         worksite.ifPresent(b -> {
+            b.getOccupantIds().add(villagerInfo.getVillagerId());
+            ServerBuildingsStore.INSTANCE.replicateChange(b, StoreOperation.UPDATE);
+         });
       }
    }
 
    private Optional<Building> invalidateHome(VillagerInfo villagerInfo, ServerLevel level) {
+
+      if (villagerInfo.getNpcRoles().contains(VillagerNpcRole.WORKER)) {
+         return invalidateHomeForWorker(villagerInfo, level);
+      } else if (villagerInfo.getNpcRoles().contains(VillagerNpcRole.SPOUSE)) {
+         return invalidateHomeForPartner(villagerInfo, level);
+      }
+
+      return Optional.empty();
+   }
+
+   private Optional<Building> invalidateHomeForWorker(VillagerInfo villagerInfo, ServerLevel level) {
 
       Optional<Building> currentHome = ServerBuildingsStore.INSTANCE.find(villagerInfo.getHomeBuildingId());
       if (currentHome.isPresent()) {
@@ -121,6 +145,19 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
             ServerBuildingsStore.INSTANCE,
             ServerVillagerStore.INSTANCE,
             true);
+   }
+
+   private Optional<Building> invalidateHomeForPartner(VillagerInfo villagerInfo, ServerLevel level) {
+      Optional<VillagerInfo> mainHomeOwner = ServerVillagerStore.INSTANCE.find(villagerInfo.getPartnerId());
+      if (mainHomeOwner.isEmpty())
+         return Optional.empty();
+
+      Optional<Building> building = ServerBuildingsStore.INSTANCE.find(mainHomeOwner.get().getHomeBuildingId());
+      if (building.isPresent())
+         return building;
+
+      // should eventually be able to find an alternative plain house or something
+      return Optional.empty();
    }
 
    private Optional<Building> invalidateWorksite(VillagerInfo villagerInfo, ServerLevel level) {

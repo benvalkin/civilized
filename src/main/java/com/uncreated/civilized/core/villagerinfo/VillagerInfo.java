@@ -42,7 +42,8 @@ public class VillagerInfo {
                   .homeBuildingId(buffer.readNullable((b -> b.readUUID())))
                   .primaryWorksiteId(buffer.readNullable((b -> b.readUUID())))
                   .npcRoles(buffer.readCollection(ArrayList::new, b -> b.readEnum(VillagerNpcRole.class)))
-                  .gender(buffer.readEnum(Gender.class));
+                  .gender(buffer.readEnum(Gender.class))
+                  .partnerId(buffer.readNullable((b -> b.readUUID())));
 
       return builder.build();
    }
@@ -59,6 +60,7 @@ public class VillagerInfo {
       buffer.writeNullable(primaryWorksiteId, (b, v) -> b.writeUUID(v));
       buffer.writeCollection(npcRoles, FriendlyByteBuf::writeEnum);
       buffer.writeEnum(gender);
+      buffer.writeNullable(partnerId, (b, v) -> b.writeUUID(v));
    }
 
    public static final String FIELD_VILLAGER_ID = "villager_id";
@@ -71,6 +73,7 @@ public class VillagerInfo {
    public static final String FIELD_VILLAGER_NPC_ROLES = "field_villager_npc_roles";
    public static final String FIELD_VILLAGER_NPC_ROLE = "field_villager_npc_role";
    public static final String FIELD_VILLAGER_GENDER = "field_villager_gender";
+   public static final String FIELD_PARTNER_ID = "field_spouse_id";
 
    private UUID villagerId;
    @Setter
@@ -93,9 +96,15 @@ public class VillagerInfo {
    @Setter
    private @Nullable UUID primaryWorksiteId;
    private Gender gender;
+   @Setter
+   private @Nullable UUID partnerId;
 
    public boolean hasName() {
       return !firstName.isEmpty() && !lastName.isEmpty();
+   }
+
+   public boolean isTaken() {
+      return partnerId != null;
    }
 
    public String getFullName() {
@@ -114,14 +123,69 @@ public class VillagerInfo {
       return Component.literal(getFullName());
    }
 
-   public static Pair<String, String> generateRandomName() {
-      return switch (new Random().nextInt(6)) {
-      case 0 -> Pair.of("Ryaan", "van Reynoldus");
-      case 1 -> Pair.of("Koos", "Evans");
-      case 2 -> Pair.of("Brad", "Pietermaritzberg");
-      case 3 -> Pair.of("Daaniel", "Rooikloof");
-      case 4 -> Pair.of("Keanu", "van Riebeeck");
-      default -> Pair.of("Cornelius", "Hemsworth");
+   public static List<String> PLACEHOLDER_FIRST_NAMES_MALE =
+         List.of(
+               "James",
+               "William",
+               "Thomas",
+               "John",
+               "Henry",
+               "Edward",
+               "Richard",
+               "Robert",
+               "Walter",
+               "Geoffrey",
+               "Hugh",
+               "Roger",
+               "Edmund",
+               "Nicholas",
+               "Arthur",
+               "Samuel");
+   public static List<String> PLACEHOLDER_FIRST_NAMES_FEMALE =
+         List.of(
+               "Anne",
+               "Mary",
+               "Elizabeth",
+               "Margaret",
+               "Alice",
+               "Agnes",
+               "Joan",
+               "Matilda",
+               "Eleanor",
+               "Catherine",
+               "Isabel",
+               "Edith",
+               "Beatrice",
+               "Martha",
+               "Emma",
+               "Sarah");
+   public static List<String> PLACEHOLDER_LAST_NAMES =
+         List.of(
+               "Smith",
+               "Cooper",
+               "Fletcher",
+               "Turner",
+               "Hawthorne",
+               "Ashdown",
+               "Whitaker",
+               "Radcliffe",
+               "Holloway",
+               "Pembroke",
+               "Ellsworth",
+               "Blackwood",
+               "Harrington",
+               "Caldwell",
+               "Thornbury",
+               "Pritchard");
+
+   public static Pair<String, String> generateRandomName(Gender gender) {
+      return switch (gender) {
+      case MALE -> Pair.of(
+            PLACEHOLDER_FIRST_NAMES_MALE.get(new Random().nextInt(PLACEHOLDER_FIRST_NAMES_MALE.size())),
+            PLACEHOLDER_LAST_NAMES.get(new Random().nextInt(PLACEHOLDER_LAST_NAMES.size())));
+      case FEMALE -> Pair.of(
+            PLACEHOLDER_FIRST_NAMES_FEMALE.get(new Random().nextInt(PLACEHOLDER_FIRST_NAMES_FEMALE.size())),
+            PLACEHOLDER_LAST_NAMES.get(new Random().nextInt(PLACEHOLDER_LAST_NAMES.size())));
       };
    }
 
@@ -143,6 +207,7 @@ public class VillagerInfo {
       primaryWorksiteId = other.primaryWorksiteId;
       npcRoles = other.npcRoles;
       gender = other.gender;
+      partnerId = other.partnerId;
    }
 
    public String toStringLite() {

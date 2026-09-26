@@ -61,6 +61,8 @@ public class ServerVillagerStore extends VillagerStore {
                VillagerInfo.FIELD_VILLAGER_OCCUPATION,
                villagerInfo.getOccupation().resourceLocation().toString());
          item.putString(VillagerInfo.FIELD_VILLAGER_GENDER, villagerInfo.getGender().name());
+         if (villagerInfo.getPartnerId() != null)
+            item.putUUID(VillagerInfo.FIELD_PARTNER_ID, villagerInfo.getPartnerId());
 
          ListTag npcRoles = new ListTag();
          npcRoles.addAll(villagerInfo.getNpcRoles().stream().map(role -> {
@@ -101,6 +103,8 @@ public class ServerVillagerStore extends VillagerStore {
             builder.settlementId(itemTag.getUUID(VillagerInfo.FIELD_SETTLEMENT_ID));
          if (itemTag.hasUUID(VillagerInfo.FIELD_HOME_BUILDING_ID))
             builder.homeBuildingId(itemTag.getUUID(VillagerInfo.FIELD_HOME_BUILDING_ID));
+         if (itemTag.hasUUID(VillagerInfo.FIELD_PARTNER_ID))
+            builder.partnerId(itemTag.getUUID(VillagerInfo.FIELD_PARTNER_ID));
 
          ListTag npcRoles = itemTag.getList(VillagerInfo.FIELD_VILLAGER_NPC_ROLES, Tag.TAG_COMPOUND);
          builder.npcRoles(
@@ -178,7 +182,7 @@ public class ServerVillagerStore extends VillagerStore {
       VillagerInfo.VillagerInfoBuilder newVillager = VillagerInfo.builder().villagerId(UUID.randomUUID());
       Gender gender = villager.getRandom().nextBoolean() ? Gender.MALE : Gender.FEMALE;
       newVillager.gender(gender);
-      Pair<String, String> names = VillagerInfo.generateRandomName();
+      Pair<String, String> names = VillagerInfo.generateRandomName(gender);
       newVillager.firstName(names.getFirst()).lastName(names.getSecond());
 
       VillagerInfo info = newVillager.build();
@@ -202,5 +206,10 @@ public class ServerVillagerStore extends VillagerStore {
                   ServerBuildingsStore.INSTANCE.setDirty();
                ServerBuildingsStore.INSTANCE.replicateChange(building, StoreOperation.UPDATE);
             });
+
+      find(info.getPartnerId()).ifPresent(partner -> {
+         partner.setPartnerId(null);
+         replicateChange(partner, StoreOperation.UPDATE);
+      });
    }
 }
