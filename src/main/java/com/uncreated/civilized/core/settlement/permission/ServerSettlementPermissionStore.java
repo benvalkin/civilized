@@ -42,6 +42,7 @@ public class ServerSettlementPermissionStore extends SettlementPermissionStore {
       return new ServerSettlementPermissionStore();
    }
 
+   @Override
    public SettlementPermissions getOrCreate(UUID settlementId) {
       Optional<SettlementPermissions> existing = permissions.find(settlementId);
       if (existing.isPresent())

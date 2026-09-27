@@ -23,6 +23,7 @@ public class ClientSettlementPermissionStore extends SettlementPermissionStore {
       INSTANCE = new ClientSettlementPermissionStore();
    }
 
+   @Override
    public SettlementPermissions getOrCreate(UUID settlementId) {
       Optional<SettlementPermissions> existing = find(settlementId);
       if (existing.isPresent())

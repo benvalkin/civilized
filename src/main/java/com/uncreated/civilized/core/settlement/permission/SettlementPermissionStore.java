@@ -20,6 +20,8 @@ public abstract class SettlementPermissionStore extends SavedData {
       return permissions.find(settlementId);
    }
 
+   public abstract SettlementPermissions getOrCreate(UUID settlementId);
+
    public ImmutableList<SettlementPermissions> all() {
       return permissions.all();
    }
