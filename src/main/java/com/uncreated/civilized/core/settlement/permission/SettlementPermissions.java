@@ -53,7 +53,7 @@ public class SettlementPermissions {
             .orElse(false);
    }
 
-   public boolean hasBlockPlacingPermission(UUID playerId) {
+   public boolean hasGeneralBlockPlacingPermission(UUID playerId) {
       return getPermissionForPlayer(playerId).map(p -> p.accessLevel().isAboveOrEqualTo(AccessLevel.CITIZEN))
             .orElse(false);
    }
@@ -69,13 +69,13 @@ public class SettlementPermissions {
             .orElse(false);
    }
 
-   public boolean hasEditBuildingProductionPermission(UUID playerId) {
+   public boolean hasEditBuildingPermission(UUID playerId) {
       return getPermissionForPlayer(playerId)
             .map(p -> p.accessLevel().isAboveOrEqualTo(AccessLevel.ADMINISTRATOR))
             .orElse(false);
    }
 
-   public boolean hasCreateAndEditBuildingsPermission(UUID playerId) {
+   public boolean hasCreateBuildingsPermission(UUID playerId) {
       return getPermissionForPlayer(playerId).map(p -> p.accessLevel().isAboveOrEqualTo(AccessLevel.GOVERNOR))
             .orElse(false);
    }

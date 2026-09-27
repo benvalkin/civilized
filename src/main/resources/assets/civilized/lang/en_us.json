@@ -226,6 +226,7 @@
   "message.building.placement.validation.center_no_roof": "Cannot place - the center of this building at %s seems to have no roof.",
   "message.building.placement.validation.center_obstructed": "Cannot place - the center of this building at %s seems to be covered by a block.",
   "message.building.placement.validation.success": "Successfully built a new %s!",
+  "message.settlement.permission.denied.containers": "You don't have permission to open chests and containers in %s.",
   "message.settlement.permission.denied.blocks": "You don't have permission to build in %s.",
   "message.notification.villager.started_dating": "%s and %s have started dating!",
   "production_bill.description.enabled": "Toggle production",
