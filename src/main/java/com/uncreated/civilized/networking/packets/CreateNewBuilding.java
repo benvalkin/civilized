@@ -104,7 +104,7 @@ public record CreateNewBuilding(BuildingType buildingType,
             if (overlapsOtherSettlement(placer, newBounds, thisDimensionSettlements, null))
                return;
 
-            argumentSettlement = ServerSettlementsStore.INSTANCE.createNew(placer.getUUID(), settlementOrigin);
+            argumentSettlement = ServerSettlementsStore.INSTANCE.createNew(placer.getUUID(), settlementOrigin, serverLevel.dimension());
             ServerSettlementPermissionStore.INSTANCE
                   .setAccessLevel(argumentSettlement.getSettlementId(), placer, AccessLevel.GOVERNOR);
          }

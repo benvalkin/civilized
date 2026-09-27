@@ -19,12 +19,15 @@ import com.uncreated.civilized.ui.style.Colors;
 import lombok.Builder;
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 
 @Getter
 @Builder
@@ -34,6 +37,7 @@ public class Settlement {
    public static Settlement decode(FriendlyByteBuf buffer) {
       return Settlement.builder()
             .settlementId(buffer.readUUID())
+            .dimension(buffer.readResourceKey(Registries.DIMENSION))
             .ownerId(buffer.readUUID())
             .displayName(buffer.readUtf())
             .citizenIds(buffer.readCollection(ArrayList::new, b -> b.readUUID()))
@@ -45,6 +49,7 @@ public class Settlement {
    // The stream encoder reference
    public void encode(FriendlyByteBuf buffer) {
       buffer.writeUUID(settlementId);
+      buffer.writeResourceKey(dimension);
       buffer.writeUUID(ownerId);
       buffer.writeUtf(displayName);
       buffer.writeCollection(citizenIds, (b, i) -> b.writeUUID(i));
@@ -53,6 +58,7 @@ public class Settlement {
    }
 
    public static final String FIELD_SETTLEMENT_ID = "settlement_id";
+   public static final String FIELD_DIMENSION = "dimension";
    public static final String FIELD_OWNER_ID = "owner_id";
    public static final String FIELD_DISPLAY_NAME = "display_name";
    public static final String FIELD_LIST_CITIZENS = "list_citizens";
@@ -63,6 +69,7 @@ public class Settlement {
    public static final String FIELD_UPPER_CORNER_POS = "upper_corner_pos";
 
    private UUID settlementId;
+   private ResourceKey<Level> dimension;
    private UUID ownerId;
    private String displayName;
    @Builder.Default
@@ -81,6 +88,7 @@ public class Settlement {
 
    public void copyFrom(Settlement other) {
       settlementId = other.settlementId;
+      dimension = other.dimension;
       ownerId = other.ownerId;
       displayName = other.displayName;
       citizenIds = other.citizenIds; // TECHDEBT: this is sus if we are saving the list reference anywhere

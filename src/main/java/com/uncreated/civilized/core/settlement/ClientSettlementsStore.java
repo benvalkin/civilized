@@ -47,10 +47,12 @@ public class ClientSettlementsStore extends SettlementsStore {
       if (packet.storeOperation() == StoreOperation.ADD_OR_OVERWRITE
             || packet.storeOperation() == StoreOperation.INIT_NEW_CLIENT) {
 
-         if (existing.isEmpty())
+         if (existing.isEmpty()) {
             INSTANCE.settlements.add(fromPacket);
-         else
+         } else {
             existing.get().copyFrom(fromPacket);
+            INSTANCE.settlements.reindex(key);
+         }
 
          NeoForge.EVENT_BUS.post(new SettlementUpdatedEvent(existing.orElse(fromPacket), true));
          return;
@@ -70,6 +72,8 @@ public class ClientSettlementsStore extends SettlementsStore {
          INSTANCE.settlements.remove(existing.get().getSettlementId());
       } else if (packet.storeOperation() == StoreOperation.UPDATE) {
          existing.get().copyFrom(packet.settlement());
+         // its bounds may have changed, which changes the chunks it's indexed under
+         INSTANCE.settlements.reindex(key);
       }
 
       NeoForge.EVENT_BUS.post(new SettlementUpdatedEvent(existing.orElse(fromPacket), true));

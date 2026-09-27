@@ -7,15 +7,16 @@ import java.util.UUID;
 import org.apache.commons.compress.utils.Lists;
 
 import com.uncreated.civilized.core.StoreOperation;
-import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.settlement.events.SettlementUpdatedEvent;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
@@ -51,6 +52,7 @@ public class ServerSettlementsStore extends SettlementsStore {
       for (Settlement settlement : settlements.all()) {
          CompoundTag item = new CompoundTag();
          item.putUUID(Settlement.FIELD_SETTLEMENT_ID, settlement.getSettlementId());
+         item.putString(Settlement.FIELD_DIMENSION, settlement.getDimension().location().toString());
          item.putUUID(Settlement.FIELD_OWNER_ID, settlement.getOwnerId());
          item.putString(Settlement.FIELD_DISPLAY_NAME, settlement.getDisplayName());
          item.putInt(Settlement.FIELD_SETTLEMENT_LEVEL, settlement.settlementLevel.getLevel());
@@ -82,6 +84,7 @@ public class ServerSettlementsStore extends SettlementsStore {
          }
          Settlement.SettlementBuilder builder =
                new Settlement.SettlementBuilder().settlementId(itemTag.getUUID(Settlement.FIELD_SETTLEMENT_ID))
+                     .dimension(loadDimension(itemTag))
                      .ownerId(itemTag.getUUID(Settlement.FIELD_OWNER_ID))
                      .displayName(itemTag.getString(Settlement.FIELD_DISPLAY_NAME))
                      .settlementLevel(SettlementLevel.valueOf(itemTag.getInt(Settlement.FIELD_SETTLEMENT_LEVEL)))
@@ -108,8 +111,20 @@ public class ServerSettlementsStore extends SettlementsStore {
       return store;
    }
 
+   /** TODO: temporary default for settlements saved without a dimension. can be removed in a few days after this commit */
+   private static ResourceKey<Level> loadDimension(CompoundTag itemTag) {
+      if (!itemTag.contains(Settlement.FIELD_DIMENSION))
+         return Level.OVERWORLD;
+
+      return ResourceKey.create(
+            Registries.DIMENSION,
+            ResourceLocation.parse(itemTag.getString(Settlement.FIELD_DIMENSION)));
+   }
+
    public void replicateChange(Settlement settlement, StoreOperation operation) {
       assert settlements.exists(settlement.getSettlementId());
+      // we have to reindex when replicating a change since its bounds may have changed
+      settlements.reindex(settlement.getSettlementId());
       PacketDistributor.sendToAllPlayers(settlement.toPacket(operation));
       NeoForge.EVENT_BUS.post(new SettlementUpdatedEvent(settlement, false));
    }
@@ -121,13 +136,7 @@ public class ServerSettlementsStore extends SettlementsStore {
    }
 
    public List<Settlement> findInDimension(ResourceKey<Level> dimension) {
-      return settlements.all()
-            .stream()
-            .filter(
-                  settlement -> ServerBuildingsStore.INSTANCE.findForSettlement(settlement.getSettlementId())
-                        .stream()
-                        .anyMatch(building -> building.getDimension() == dimension))
-            .toList();
+      return settlements.all().stream().filter(settlement -> settlement.getDimension() == dimension).toList();
    }
 
    public Optional<Settlement> delete(UUID settlementId) {

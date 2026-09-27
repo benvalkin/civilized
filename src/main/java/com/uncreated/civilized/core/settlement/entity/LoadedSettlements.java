@@ -12,7 +12,6 @@ import com.mojang.logging.LogUtils;
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.settlement.Settlement;
 
-import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 
@@ -53,10 +52,6 @@ public class LoadedSettlements {
 
    public static Optional<LoadedSettlement> checkLoaded(Predicate<LoadedSettlement> settlementSearch) {
       return loadedSettlements.values().stream().filter(settlementSearch).findFirst();
-   }
-
-   public static Optional<LoadedSettlement> findEnclosing(BlockPos pos, Level level) {
-      return checkLoaded(s -> s.getLevel() == level && s.getSettlement().getBounds().contains(pos));
    }
 
    public static void tickLoadedSettlements() {

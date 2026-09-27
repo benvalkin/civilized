@@ -9,6 +9,8 @@ import com.google.common.collect.ImmutableList;
 import com.mojang.logging.LogUtils;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.SavedData;
 
 public abstract class SettlementsStore extends SavedData {
@@ -25,9 +27,10 @@ public abstract class SettlementsStore extends SavedData {
       return ImmutableList.copyOf(settlements.all());
    }
 
-   public Settlement createNew(UUID ownerUUID, BlockPos origin) {
+   public Settlement createNew(UUID ownerUUID, BlockPos origin, ResourceKey<Level> dimension) {
       Settlement settlement =
             new Settlement.SettlementBuilder().settlementId(UUID.randomUUID())
+                  .dimension(dimension)
                   .ownerId(ownerUUID)
                   .displayName(Settlement.generateRandomName())
                   .bounds(new SettlementBounds(origin))
@@ -40,6 +43,10 @@ public abstract class SettlementsStore extends SavedData {
 
    public Optional<Settlement> find(UUID settlementId) {
       return settlements.find(settlementId);
+   }
+
+  public Optional<Settlement> findEnclosing(BlockPos pos, Level level) {
+      return settlements.findEnclosing(pos, level.dimension());
    }
 
    public Settlement get(UUID settlementId) {

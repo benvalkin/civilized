@@ -11,9 +11,8 @@ import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
+import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
-import com.uncreated.civilized.core.settlement.entity.LoadedSettlement;
-import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
 import com.uncreated.civilized.core.settlement.permission.AccessLevel;
 import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermissionStore;
 
@@ -57,8 +56,7 @@ public class SetSettlementAccess {
       ServerPlayer player = EntityArgument.getPlayer(context, ARGUMENT_PLAYER);
 
       Optional<Settlement> settlement =
-            LoadedSettlements.findEnclosing(player.blockPosition(), player.serverLevel())
-                  .map(LoadedSettlement::getSettlement);
+            ServerSettlementsStore.INSTANCE.findEnclosing(player.blockPosition(), player.serverLevel());
       if (settlement.isEmpty())
          throw ERROR_NOT_INSIDE_SETTLEMENT.create(player);
 

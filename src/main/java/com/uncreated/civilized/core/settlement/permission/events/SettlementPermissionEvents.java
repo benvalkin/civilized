@@ -9,9 +9,9 @@ import com.uncreated.civilized.core.building.BuildingStore;
 import com.uncreated.civilized.core.building.ClientBuildingStore;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.settlement.ClientSettlementsStore;
+import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
-import com.uncreated.civilized.core.settlement.entity.LoadedSettlement;
-import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
+import com.uncreated.civilized.core.settlement.SettlementsStore;
 import com.uncreated.civilized.core.settlement.permission.ClientSettlementPermissionStore;
 import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermissionStore;
 import com.uncreated.civilized.core.settlement.permission.SettlementPermissionStore;
@@ -241,19 +241,9 @@ public class SettlementPermissionEvents {
    }
 
    private static Optional<Settlement> findEnclosingSettlement(BlockPos pos, Level level) {
-      if (!level.isClientSide)
-         return LoadedSettlements.findEnclosing(pos, level).map(LoadedSettlement::getSettlement);
-
-      // TODO: clients don't have access to LoadedBuildings, to they have to brute force check every settlement to see
-      // if it overlaps them. This needs to be improved.
-      return ClientSettlementsStore.INSTANCE.all()
-            .stream()
-            .filter(settlement -> settlement.getBounds().contains(pos))
-            .filter(
-                  settlement -> ClientBuildingStore.INSTANCE.findForSettlement(settlement.getSettlementId())
-                        .stream()
-                        .anyMatch(building -> building.getDimension() == level.dimension()))
-            .findFirst();
+      SettlementsStore settlements =
+            level.isClientSide ? ClientSettlementsStore.INSTANCE : ServerSettlementsStore.INSTANCE;
+      return settlements.findEnclosing(pos, level);
    }
 
    private static SettlementPermissionStore permissionStore(Level level) {
@@ -265,7 +255,7 @@ public class SettlementPermissionEvents {
    }
 
    private static void notifyDenied(Player player, Level level, Component message) {
-      // Only the server tells the player, otherwise the message will be sent twice in singleplayer
+      // only the server tells the player, otherwise the message will be sent twice in singleplayer
       if (!level.isClientSide)
          player.displayClientMessage(message, true);
    }
