@@ -23,7 +23,6 @@ import com.uncreated.civilized.core.settlement.SettlementBounds;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
 import com.uncreated.civilized.core.settlement.permission.AccessLevel;
 import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermissionStore;
-import com.uncreated.civilized.core.settlement.permission.SettlementPermissions;
 import com.uncreated.civilized.ui.style.Colors;
 
 import net.minecraft.core.BlockPos;
@@ -106,9 +105,8 @@ public record CreateNewBuilding(BuildingType buildingType,
                return;
 
             argumentSettlement = ServerSettlementsStore.INSTANCE.createNew(placer.getUUID(), settlementOrigin);
-            SettlementPermissions permissions =
-                  ServerSettlementPermissionStore.INSTANCE.getOrCreate(argumentSettlement.getSettlementId());
-            permissions.setAccessLevel(placer, AccessLevel.GOVERNOR);
+            ServerSettlementPermissionStore.INSTANCE
+                  .setAccessLevel(argumentSettlement.getSettlementId(), placer, AccessLevel.GOVERNOR);
          }
       } else {
          if (existingSettlement.isPresent()) {

@@ -3,7 +3,6 @@ package com.uncreated.civilized.core.building;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermissionStore;
 import com.uncreated.civilized.core.settlement.permission.SettlementPermissions;
-import com.uncreated.civilized.ui.context.BuildingScreenContext;
 import com.uncreated.civilized.ui.menu.building.BuildingMenu;
 
 import net.minecraft.nbt.CompoundTag;
@@ -31,15 +30,18 @@ public class BuildingScreenOpener {
 
       CompoundTag additionalData = new CompoundTag();
       building.getState().serverAddToBuildingScreenContext(additionalData, player.serverLevel());
-      BuildingScreenContext.writeSettlementPermissions(additionalData, permissions.entries());
 
       // Opening the menu done next tick.
       // The reason for this is that closing a menu replaces the player's open menu with their
       // inventory afterwards, which would throw this one away if it was opened while a menu was being closed
-      player.server.execute(() -> openBuildingMenu(player, building, additionalData));
+      player.server.execute(() -> openBuildingMenu(player, building, permissions, additionalData));
    }
 
-   private static void openBuildingMenu(ServerPlayer player, Building building, CompoundTag additionalData) {
+   private static void openBuildingMenu(
+         ServerPlayer player,
+         Building building,
+         SettlementPermissions permissions,
+         CompoundTag additionalData) {
       player.openMenu(new MenuProvider() {
 
          @Override
@@ -54,6 +56,7 @@ public class BuildingScreenOpener {
                   inventory,
                   building,
                   ServerSettlementsStore.INSTANCE.get(building.getSettlementId()),
+                  permissions,
                   additionalData);
          }
       }, buffer -> writeMenuData(buffer, building, additionalData));

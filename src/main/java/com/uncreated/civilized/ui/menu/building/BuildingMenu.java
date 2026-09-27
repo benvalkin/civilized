@@ -4,6 +4,8 @@ import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.ClientBuildingStore;
 import com.uncreated.civilized.core.settlement.ClientSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
+import com.uncreated.civilized.core.settlement.permission.ClientSettlementPermissionStore;
+import com.uncreated.civilized.core.settlement.permission.SettlementPermissions;
 import com.uncreated.civilized.neoforge.registration.gui.GuiRegistry;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
 
@@ -48,18 +50,39 @@ public class BuildingMenu extends AbstractContainerMenu {
             extraDataFromServer.readNbt());
    }
 
+   private BuildingMenu(
+         int containerId,
+         Inventory playerInventory,
+         Building building,
+         Settlement settlement,
+         CompoundTag additionalData) {
+      this(
+            containerId,
+            playerInventory,
+            building,
+            settlement,
+            ClientSettlementPermissionStore.INSTANCE.getOrCreate(settlement.getSettlementId()),
+            additionalData);
+   }
+
    public BuildingMenu(
          int containerId,
          Inventory playerInventory,
          Building building,
          Settlement settlement,
+         SettlementPermissions permissions,
          CompoundTag additionalData) {
       super(GuiRegistry.BUILDING_MENU.get(), containerId);
 
       this.building = building;
       this.settlement = settlement;
       this.context =
-            new BuildingScreenContext(building, settlement, additionalData, playerInventory.player.registryAccess());
+            new BuildingScreenContext(
+                  building,
+                  settlement,
+                  permissions,
+                  additionalData,
+                  playerInventory.player.registryAccess());
 
       addPlayerInventorySlots(playerInventory);
    }

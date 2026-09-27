@@ -10,6 +10,8 @@ import com.uncreated.civilized.core.quest.attachments.PlayerQuests;
 import com.uncreated.civilized.core.settlement.ClientSettlementsStore;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
+import com.uncreated.civilized.core.settlement.permission.ClientSettlementPermissionStore;
+import com.uncreated.civilized.core.settlement.permission.SettlementPermissions;
 import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
@@ -19,7 +21,6 @@ import com.uncreated.civilized.networking.packets.ProductionBillPreview;
 import com.uncreated.civilized.networking.packets.SaveProductionBill;
 import com.uncreated.civilized.networking.packets.SetEyeDropperSlotItem;
 import com.uncreated.civilized.networking.packets.SetSettlementAccessLevel;
-import com.uncreated.civilized.networking.packets.SettlementPermissionsSync;
 import com.uncreated.civilized.ui.menu.dialogue.VillagerDialogueScreen;
 
 import net.neoforged.bus.api.SubscribeEvent;
@@ -55,6 +56,11 @@ public class PacketRegistry {
             new DirectionalPayloadHandler<>(
                   ClientVillagerStore::receiveSyncFromServer,
                   ServerVillagerStore::receiveSyncFromClient));
+
+      registrar.playToClient(
+            SettlementPermissions.Packet.SYNC_TYPE,
+            SettlementPermissions.Packet.STREAM_CODEC,
+            ClientSettlementPermissionStore::receiveSyncFromServer);
 
       // quests
       registrar.playBidirectional(
@@ -102,10 +108,5 @@ public class PacketRegistry {
             SetSettlementAccessLevel.TYPE,
             SetSettlementAccessLevel.STREAM_CODEC,
             SetSettlementAccessLevel::serverReceiveSetSettlementAccessLevel);
-
-      registrar.playToClient(
-            SettlementPermissionsSync.TYPE,
-            SettlementPermissionsSync.STREAM_CODEC,
-            SettlementPermissionsSync::clientReceiveSettlementPermissionsSync);
    }
 }

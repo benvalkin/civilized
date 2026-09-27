@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import com.uncreated.civilized.CivilizedMod;
 import com.uncreated.civilized.core.building.events.model.BuildingUpdatedEvent;
+import com.uncreated.civilized.core.settlement.permission.events.SettlementPermissionsUpdatedEvent;
 import com.uncreated.civilized.core.villagerinfo.events.model.VillagerInfoUpdatedEvent;
 import com.uncreated.civilized.ui.menu.building.IBuildingScreen;
 
@@ -26,6 +27,20 @@ public class UIUpdateEvents {
 
       if (!(viewedBuildingId.equals(event.getVillagerInfo().getHomeBuildingId())
             || viewedBuildingId.equals(event.getVillagerInfo().getPrimaryWorksiteId())))
+         return;
+
+      buildingScreen.refresh();
+   }
+
+   @SubscribeEvent
+   public static void onSettlementPermissionsUpdated(SettlementPermissionsUpdatedEvent event) {
+      if (!event.isClientside())
+         return;
+
+      if (!(Minecraft.getInstance().screen instanceof IBuildingScreen buildingScreen))
+         return;
+
+      if (!buildingScreen.getContext().settlement().getSettlementId().equals(event.getPermissions().settlementId()))
          return;
 
       buildingScreen.refresh();

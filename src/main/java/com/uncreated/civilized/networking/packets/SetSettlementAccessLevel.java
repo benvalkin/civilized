@@ -84,8 +84,6 @@ public record SetSettlementAccessLevel(UUID settlementId, UUID playerId, Optiona
 
          store.setAccessLevel(packet.settlementId, packet.playerId, name.get(), newAccessLevel);
       }
-
-      SettlementPermissionsSync.sendToViewers(sender.server, packet.settlementId, permissions.entries());
    }
 
    private static void deny(ServerPlayer sender, String translationKey, Settlement settlement) {

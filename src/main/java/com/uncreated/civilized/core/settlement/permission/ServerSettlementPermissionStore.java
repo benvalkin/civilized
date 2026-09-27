@@ -4,21 +4,21 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.slf4j.Logger;
-
-import com.mojang.logging.LogUtils;
+import com.uncreated.civilized.core.StoreOperation;
+import com.uncreated.civilized.core.settlement.permission.events.SettlementPermissionsUpdatedEvent;
 
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.network.PacketDistributor;
 
-public class ServerSettlementPermissionStore extends SavedData {
-
-   private static final Logger LOGGER = LogUtils.getLogger();
+public class ServerSettlementPermissionStore extends SettlementPermissionStore {
 
    public static ServerSettlementPermissionStore INSTANCE;
 
@@ -42,12 +42,6 @@ public class ServerSettlementPermissionStore extends SavedData {
       return new ServerSettlementPermissionStore();
    }
 
-   private final SettlementPermissionsDB permissions = new SettlementPermissionsDB();
-
-   public Optional<SettlementPermissions> find(UUID settlementId) {
-      return permissions.find(settlementId);
-   }
-
    public SettlementPermissions getOrCreate(UUID settlementId) {
       Optional<SettlementPermissions> existing = permissions.find(settlementId);
       if (existing.isPresent())
@@ -55,30 +49,43 @@ public class ServerSettlementPermissionStore extends SavedData {
 
       SettlementPermissions created = new SettlementPermissions(settlementId, List.of());
       permissions.add(created);
-      setDirty();
+      replicateChange(created, StoreOperation.ADD_OR_OVERWRITE);
       return created;
    }
 
    public void setAccessLevel(UUID settlementId, Player player, AccessLevel accessLevel) {
-      getOrCreate(settlementId).setAccessLevel(player, accessLevel);
-      setDirty();
+      SettlementPermissions settlementPermissions = getOrCreate(settlementId);
+      settlementPermissions.setAccessLevel(player, accessLevel);
+      replicateChange(settlementPermissions, StoreOperation.ADD_OR_OVERWRITE);
    }
 
    public void setAccessLevel(UUID settlementId, UUID playerId, String scoreboardName, AccessLevel accessLevel) {
-      getOrCreate(settlementId).setAccessLevel(playerId, scoreboardName, accessLevel);
-      setDirty();
+      SettlementPermissions settlementPermissions = getOrCreate(settlementId);
+      settlementPermissions.setAccessLevel(playerId, scoreboardName, accessLevel);
+      replicateChange(settlementPermissions, StoreOperation.ADD_OR_OVERWRITE);
    }
 
    public void removeAccess(UUID settlementId, UUID playerId) {
-      find(settlementId).ifPresent(p -> {
-         p.removeAccess(playerId);
-         setDirty();
+      find(settlementId).ifPresent(settlementPermissions -> {
+         settlementPermissions.removeAccess(playerId);
+         replicateChange(settlementPermissions, StoreOperation.ADD_OR_OVERWRITE);
       });
    }
 
    public void delete(UUID settlementId) {
-      if (permissions.remove(settlementId).isPresent())
-         setDirty();
+      permissions.remove(settlementId)
+            .ifPresent(settlementPermissions -> replicateChange(settlementPermissions, StoreOperation.DELETE));
+   }
+
+   private void replicateChange(SettlementPermissions settlementPermissions, StoreOperation operation) {
+      setDirty();
+      PacketDistributor.sendToAllPlayers(settlementPermissions.toPacket(operation));
+      NeoForge.EVENT_BUS.post(new SettlementPermissionsUpdatedEvent(settlementPermissions, false));
+   }
+
+   public void replicateFullToNewClient(ServerPlayer player) {
+      for (SettlementPermissions settlementPermissions : permissions.all())
+         PacketDistributor.sendToPlayer(player, settlementPermissions.toPacket(StoreOperation.INIT_NEW_CLIENT));
    }
 
    @Override
