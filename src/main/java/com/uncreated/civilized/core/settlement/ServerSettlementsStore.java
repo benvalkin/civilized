@@ -7,15 +7,18 @@ import java.util.UUID;
 import org.apache.commons.compress.utils.Lists;
 
 import com.uncreated.civilized.core.StoreOperation;
+import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.settlement.events.SettlementUpdatedEvent;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -115,6 +118,16 @@ public class ServerSettlementsStore extends SettlementsStore {
       for (Settlement settlement : settlements.all()) {
          PacketDistributor.sendToPlayer(player, settlement.toPacket(StoreOperation.INIT_NEW_CLIENT));
       }
+   }
+
+   public List<Settlement> findInDimension(ResourceKey<Level> dimension) {
+      return settlements.all()
+            .stream()
+            .filter(
+                  settlement -> ServerBuildingsStore.INSTANCE.findForSettlement(settlement.getSettlementId())
+                        .stream()
+                        .anyMatch(building -> building.getDimension() == dimension))
+            .toList();
    }
 
    public Optional<Settlement> delete(UUID settlementId) {

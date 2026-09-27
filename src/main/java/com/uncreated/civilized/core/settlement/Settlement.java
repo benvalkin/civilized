@@ -3,6 +3,7 @@ package com.uncreated.civilized.core.settlement;
 import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -12,6 +13,7 @@ import org.apache.commons.compress.utils.Lists;
 
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.Building;
+import com.uncreated.civilized.core.building.bounds.BuildingBounds;
 import com.uncreated.civilized.ui.style.Colors;
 
 import lombok.Builder;
@@ -140,25 +142,35 @@ public class Settlement {
    }
 
    public void recalculateSettlementBounds(BlockPos settlementOrigin, Set<Building> buildings) {
+      bounds = calculateBounds(settlementOrigin, buildings.stream().map(Building::getBounds).toList());
+   }
 
-      if (buildings.isEmpty()) {
-         bounds = new SettlementBounds(settlementOrigin);
-         return;
-      }
+   public static SettlementBounds calculateBounds(BlockPos settlementOrigin, Collection<BuildingBounds> buildings) {
+      if (buildings.isEmpty())
+         return new SettlementBounds(settlementOrigin);
 
       BlockPos minBuildingCorner = null;
       BlockPos maxBuildingCorner = null;
-      for (Building other : buildings) {
-         BlockPos lowerCorner = other.getBounds().getLowerCorner();
-         BlockPos upperCorner = other.getBounds().getUpperCorner();
-         if (minBuildingCorner == null || lowerCorner.getX() < minBuildingCorner.getX()
-               || lowerCorner.getZ() < minBuildingCorner.getZ())
-            minBuildingCorner = lowerCorner;
-         if (maxBuildingCorner == null || upperCorner.getX() > maxBuildingCorner.getX()
-               || upperCorner.getZ() > maxBuildingCorner.getZ())
-            maxBuildingCorner = upperCorner;
+      for (BuildingBounds building : buildings) {
+         if (minBuildingCorner == null)
+            minBuildingCorner = building.getLowerCorner();
+         else
+            minBuildingCorner = min(minBuildingCorner, building.getLowerCorner());
+
+         if (maxBuildingCorner == null)
+            maxBuildingCorner = building.getUpperCorner();
+         else
+            maxBuildingCorner = max(maxBuildingCorner, building.getUpperCorner());
       }
 
-      bounds = SettlementBounds.fromBuildingCorners(settlementOrigin, minBuildingCorner, maxBuildingCorner);
+      return SettlementBounds.fromBuildingCorners(settlementOrigin, minBuildingCorner, maxBuildingCorner);
+   }
+
+   private static BlockPos min(BlockPos a, BlockPos b) {
+      return new BlockPos(Math.min(a.getX(), b.getX()), Math.min(a.getY(), b.getY()), Math.min(a.getZ(), b.getZ()));
+   }
+
+   private static BlockPos max(BlockPos a, BlockPos b) {
+      return new BlockPos(Math.max(a.getX(), b.getX()), Math.max(a.getY(), b.getY()), Math.max(a.getZ(), b.getZ()));
    }
 }

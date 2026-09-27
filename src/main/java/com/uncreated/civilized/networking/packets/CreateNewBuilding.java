@@ -2,8 +2,12 @@ package com.uncreated.civilized.networking.packets;
 
 import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+
+import javax.annotation.Nullable;
 
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.Building;
@@ -15,6 +19,7 @@ import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.entity.LoadedBuildings;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
+import com.uncreated.civilized.core.settlement.SettlementBounds;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
 import com.uncreated.civilized.core.settlement.permission.AccessLevel;
 import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermissionStore;
@@ -61,9 +66,9 @@ public record CreateNewBuilding(BuildingType buildingType,
       ServerPlayer placer = (ServerPlayer) context.player();
       ServerLevel serverLevel = placer.serverLevel();
 
+      List<Settlement> thisDimensionSettlements = ServerSettlementsStore.INSTANCE.findInDimension(serverLevel.dimension());
       Optional<Settlement> existingSettlement =
-            ServerSettlementsStore.INSTANCE.all()
-                  .stream()
+            thisDimensionSettlements.stream()
                   .filter(
                         s -> s.getBounds()
                               .getEncapsulatingAABB()
@@ -95,6 +100,11 @@ public record CreateNewBuilding(BuildingType buildingType,
             }
 
             settlementOrigin = packet.buildingBounds.getCenter();
+
+            SettlementBounds newBounds = Settlement.calculateBounds(settlementOrigin, List.of(packet.buildingBounds()));
+            if (overlapsOtherSettlement(placer, newBounds, thisDimensionSettlements, null))
+               return;
+
             argumentSettlement = ServerSettlementsStore.INSTANCE.createNew(placer.getUUID(), settlementOrigin);
             SettlementPermissions permissions =
                   ServerSettlementPermissionStore.INSTANCE.getOrCreate(argumentSettlement.getSettlementId());
@@ -115,6 +125,16 @@ public record CreateNewBuilding(BuildingType buildingType,
             } else {
                argumentSettlement = existingSettlement.get();
                settlementOrigin = argumentSettlement.getBounds().getOrigin();
+
+               List<BuildingBounds> existingBuildings = new ArrayList<>();
+               ServerBuildingsStore.INSTANCE.findForSettlement(argumentSettlement.getSettlementId())
+                     .forEach(building -> existingBuildings.add(building.getBounds()));
+
+               existingBuildings.add(packet.buildingBounds());
+
+               SettlementBounds newSettlementBounds = Settlement.calculateBounds(settlementOrigin, existingBuildings);
+               if (overlapsOtherSettlement(placer, newSettlementBounds, thisDimensionSettlements, argumentSettlement))
+                  return;
             }
          } else {
             placer.displayClientMessage(
@@ -156,5 +176,32 @@ public record CreateNewBuilding(BuildingType buildingType,
                         building.getBuildingType().translation())
                   .withColor(Colors.VALIDATION_SUCCESS),
             false);
+   }
+
+   private static boolean overlapsOtherSettlement(
+           ServerPlayer placer,
+           SettlementBounds bounds,
+           List<Settlement> settlements,
+           @Nullable Settlement own) {
+      Optional<Settlement> overlapped =
+              Optional.empty();
+      for (Settlement other : settlements) {
+         if (other != own && other.getBounds().isOverlapping(bounds)
+                 && (own == null || !other.getBounds().isOverlapping(own.getBounds()))) {
+            overlapped = Optional.of(other);
+            break;
+         }
+      }
+      if (overlapped.isEmpty())
+         return false;
+
+      placer.displayClientMessage(
+              Component
+                      .translatable(
+                              "message.settlement.create_building.failed.too_close_to_other_settlement",
+                              overlapped.get().displayNameTranslation())
+                      .withColor(Colors.VALIDATION_ERROR),
+              true);
+      return true;
    }
 }
