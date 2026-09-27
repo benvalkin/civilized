@@ -71,7 +71,6 @@ public class LoadedBuildings {
 
    public static void tickLoadedBuildings() {
       for (LoadedBuilding loadedBuilding : loadedBuildings.values()) {
-
             loadedBuilding.getBehaviour()
                   .serverTickInternal(
                         (ServerLevel) loadedBuilding.getLevel(),

@@ -16,6 +16,7 @@ import com.uncreated.civilized.core.building.entity.LoadedBuildings;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
+import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermissionStore;
 import com.uncreated.civilized.ui.style.Colors;
 
 import net.minecraft.core.BlockPos;
@@ -66,6 +67,7 @@ public record CreateNewBuilding(BuildingType buildingType,
       if (settlement.isEmpty()) {
          settlementOrigin = createNewBuilding.buildingBounds.getCenter();
          settlement = Optional.of(ServerSettlementsStore.INSTANCE.createNew(placer.getUUID(), settlementOrigin));
+         ServerSettlementPermissionStore.INSTANCE.getOrCreate(settlement.get().getSettlementId());
       } else
          settlementOrigin = settlement.get().getBounds().getOrigin();
 

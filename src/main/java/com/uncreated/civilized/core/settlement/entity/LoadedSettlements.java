@@ -12,6 +12,7 @@ import com.mojang.logging.LogUtils;
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.settlement.Settlement;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 
@@ -24,10 +25,12 @@ public class LoadedSettlements {
    public static void onBuildingLoaded(Settlement settlement, LoadedBuilding building, Level level) {
 
       Optional<LoadedSettlement> loadedSettlement = checkLoaded(settlement);
-      if (loadedSettlement.isEmpty())
-         loadedSettlements.put(settlement.getSettlementId(), new LoadedSettlement(settlement, level));
-      else
-         loadedSettlement.get().add(building);
+      if (loadedSettlement.isEmpty()) {
+         loadedSettlement = Optional.of(new LoadedSettlement(settlement, level));
+         loadedSettlements.put(settlement.getSettlementId(), loadedSettlement.get());
+      }
+
+      loadedSettlement.get().add(building);
    }
 
    public static void onBuildingUnloaded(LoadedBuilding building) {
@@ -50,6 +53,10 @@ public class LoadedSettlements {
 
    public static Optional<LoadedSettlement> checkLoaded(Predicate<LoadedSettlement> settlementSearch) {
       return loadedSettlements.values().stream().filter(settlementSearch).findFirst();
+   }
+
+   public static Optional<LoadedSettlement> findEnclosing(BlockPos pos, Level level) {
+      return checkLoaded(s -> s.getLevel() == level && s.getSettlement().getBounds().contains(pos));
    }
 
    public static void tickLoadedSettlements() {

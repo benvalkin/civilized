@@ -117,6 +117,12 @@ public class ServerSettlementsStore extends SettlementsStore {
       }
    }
 
+   public Optional<Settlement> delete(UUID settlementId) {
+      Optional<Settlement> remove = settlements.remove(settlementId);
+      setDirty();
+      return remove;
+   }
+
    public static void receiveSyncFromClient(Settlement.Packet packet, IPayloadContext context) {
 
       Settlement fromPacket = packet.settlement();

@@ -1,19 +1,22 @@
 package com.uncreated.civilized.core.settlement.entity.events;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.entity.LoadedBuildings;
 import com.uncreated.civilized.core.building.events.model.BuildingDeletedEvent;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
+import com.uncreated.civilized.core.settlement.Settlement;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
 import com.uncreated.civilized.core.settlement.entity.LoadedVillagers;
+import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermissionStore;
 import com.uncreated.civilized.entity.CivilizedVillager;
 
-import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -24,14 +27,13 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
-import net.neoforged.neoforge.event.entity.player.CanContinueSleepingEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.event.level.ChunkEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 @EventBusSubscriber
-public class EntityEvents {
+public class SettlementLoadingEvents {
 
    @SubscribeEvent
    public static void serverPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
@@ -52,6 +54,15 @@ public class EntityEvents {
 
       LoadedBuildings.checkLoaded(event.getBuilding()).ifPresent(LoadedSettlements::onBuildingUnloaded);
       LoadedBuildings.unload(event.getBuilding().getBuildingId());
+
+      // delete settlement if it has no more buildings
+      Set<Building> buildings = ServerBuildingsStore.INSTANCE.findForSettlement(event.getBuilding().getSettlementId());
+      if (buildings.isEmpty()) {
+         ServerSettlementPermissionStore.INSTANCE.delete(event.getBuilding().getSettlementId());
+         Optional<Settlement> settlement =
+               ServerSettlementsStore.INSTANCE.delete(event.getBuilding().getSettlementId());
+         settlement.ifPresent(value -> ServerSettlementsStore.INSTANCE.replicateChange(value, StoreOperation.DELETE));
+      }
    }
 
    @SubscribeEvent

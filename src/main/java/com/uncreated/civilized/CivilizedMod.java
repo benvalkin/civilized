@@ -7,7 +7,8 @@ import com.uncreated.civilized.core.building.BuildingTypes;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.requirement.registry.BuildingRequirements;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
-import com.uncreated.civilized.core.settlement.entity.events.EntityEvents;
+import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermissionStore;
+import com.uncreated.civilized.core.settlement.entity.events.SettlementLoadingEvents;
 import com.uncreated.civilized.core.settlement.events.SettlementStoreEvents;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.events.VillagerStoreEvents;
@@ -81,7 +82,7 @@ public class CivilizedMod {
       NeoForge.EVENT_BUS.register(this);
 
       NeoForge.EVENT_BUS.register(SettlementStoreEvents.class);
-      NeoForge.EVENT_BUS.register(EntityEvents.class);
+      NeoForge.EVENT_BUS.register(SettlementLoadingEvents.class);
       NeoForge.EVENT_BUS.register(VillagerStoreEvents.class);
       NeoForge.EVENT_BUS.register(UIUpdateEvents.class);
 
@@ -131,6 +132,7 @@ public class CivilizedMod {
       ServerSettlementsStore.loadServer(event.getLevel().getServer());
       ServerBuildingsStore.loadServer(event.getLevel().getServer());
       ServerVillagerStore.loadServer(event.getLevel().getServer());
+      ServerSettlementPermissionStore.loadServer(event.getLevel().getServer());
       LOGGER.info("Loaded settlements");
    }
 
