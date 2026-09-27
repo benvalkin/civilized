@@ -227,6 +227,9 @@
   "message.building.placement.validation.center_obstructed": "Cannot place - the center of this building at %s seems to be covered by a block.",
   "message.building.placement.validation.success": "Successfully built a new %s!",
   "message.settlement.permission.denied.containers": "You don't have permission to open chests and containers in %s.",
+  "message.settlement.create_building.failed.no_permission": "You don't have permission to establish buildings in %s.",
+  "message.settlement.permission.denied.delete_building": "You don't have permission to decommission this %s.",
+  "message.settlement.permission.denied.edit_building": "You don't have permission to manage this building.",
   "message.settlement.permission.denied.blocks": "You don't have permission to build in %s.",
   "message.notification.villager.started_dating": "%s and %s have started dating!",
   "production_bill.description.enabled": "Toggle production",
@@ -386,5 +389,8 @@
   "villager.dialogue.grunt.worker.generic.13": "The tavern is the best place to catch up on the latest gossip. And to lose a few coins, apparently.",
   "villager.dialogue.grunt.worker.generic.14": "Hauling goods back and forth all day is certainly a lot of work.",
   "villager.dialogue.grunt.worker.generic.15": "So many new faces at the town square lately. I can hardly keep track of who actually lives here.",
-  "villager.dialogue.grunt.worker.generic.16": "A good meal and a warm bed. What more could anyone want?"
+  "villager.dialogue.grunt.worker.generic.16": "A good meal and a warm bed. What more could anyone want?",
+  "message.settlement.create_building.failed.building_already_exists": "%s already has a %s.",
+  "message.settlement.create_building.failed.too_far_from_settlement": "This building is too far from any settlement or townhall.",
+  "message.settlement.create_building.failed.player_already_has_another_settlement": "You already have another settlement. It must be fully relinquished before you can create a new one."
 }

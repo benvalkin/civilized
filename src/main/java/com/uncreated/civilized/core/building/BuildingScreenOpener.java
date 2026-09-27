@@ -1,6 +1,8 @@
 package com.uncreated.civilized.core.building;
 
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
+import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermissionStore;
+import com.uncreated.civilized.core.settlement.permission.SettlementPermissions;
 import com.uncreated.civilized.ui.menu.building.BuildingMenu;
 
 import net.minecraft.nbt.CompoundTag;
@@ -12,12 +14,19 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 
-/**
- * Opens a building's screen for a player.
- */
 public class BuildingScreenOpener {
 
    public static void open(ServerPlayer player, Building building) {
+
+      SettlementPermissions permissions =
+            ServerSettlementPermissionStore.INSTANCE.getOrCreate(building.getSettlementId());
+      if (!permissions.hasEditBuildingPermission(player.getUUID())) {
+         player.displayClientMessage(
+               Component.translatable(
+                     "message.settlement.permission.denied.edit_building"),
+               true);
+         return;
+      }
 
       CompoundTag additionalData = new CompoundTag();
       building.getState().serverAddToBuildingScreenContext(additionalData, player.serverLevel());

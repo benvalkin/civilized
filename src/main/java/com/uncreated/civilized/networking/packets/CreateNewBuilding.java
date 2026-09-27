@@ -31,9 +31,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-/**
- * Dedicated client packet to nicely create buildings on the server.
- */
 public record CreateNewBuilding(BuildingType buildingType,
       BuildingBounds buildingBounds) implements CustomPacketPayload {
 
@@ -59,41 +56,95 @@ public record CreateNewBuilding(BuildingType buildingType,
       return TYPE;
    }
 
-   public static void serverReceiveCreateNewBuilding(CreateNewBuilding createNewBuilding, IPayloadContext context) {
+   public static void serverReceiveCreateNewBuilding(CreateNewBuilding packet, IPayloadContext context) {
 
       ServerPlayer placer = (ServerPlayer) context.player();
       ServerLevel serverLevel = placer.serverLevel();
 
-      Optional<Settlement> settlement = ServerSettlementsStore.INSTANCE.findFromOwner(placer.getUUID());
+      Optional<Settlement> existingSettlement =
+            ServerSettlementsStore.INSTANCE.all()
+                  .stream()
+                  .filter(
+                        s -> s.getBounds()
+                              .getEncapsulatingAABB()
+                              .intersects(packet.buildingBounds().getEncapsulatingAABB()))
+                  .findFirst();
+
+      Settlement argumentSettlement;
       BlockPos settlementOrigin;
-      if (settlement.isEmpty()) {
-         settlementOrigin = createNewBuilding.buildingBounds.getCenter();
-         settlement = Optional.of(ServerSettlementsStore.INSTANCE.createNew(placer.getUUID(), settlementOrigin));
-         SettlementPermissions permissions = ServerSettlementPermissionStore.INSTANCE.getOrCreate(settlement.get().getSettlementId());
-         permissions.setAccessLevel(placer, AccessLevel.GOVERNOR);
-      } else
-         settlementOrigin = settlement.get().getBounds().getOrigin();
+      if (packet.buildingType().is(BuildingTypes.TOWN_HALL)) {
+         if (existingSettlement.isPresent()) {
+            placer.displayClientMessage(
+                  Component
+                        .translatable(
+                              "message.settlement.create_building.failed.building_already_exists",
+                              existingSettlement.get().displayNameTranslation(),
+                              packet.buildingType().translation())
+                        .withColor(Colors.VALIDATION_ERROR),
+                  true);
+            return;
+         } else {
+            if (ServerSettlementsStore.INSTANCE.findFromOwner(placer.getUUID()).isPresent()) {
+               placer.displayClientMessage(
+                     Component
+                           .translatable(
+                                 "message.settlement.create_building.failed.player_already_has_another_settlement")
+                           .withColor(Colors.VALIDATION_ERROR),
+                     true);
+               return;
+            }
+
+            settlementOrigin = packet.buildingBounds.getCenter();
+            argumentSettlement = ServerSettlementsStore.INSTANCE.createNew(placer.getUUID(), settlementOrigin);
+            SettlementPermissions permissions =
+                  ServerSettlementPermissionStore.INSTANCE.getOrCreate(argumentSettlement.getSettlementId());
+            permissions.setAccessLevel(placer, AccessLevel.GOVERNOR);
+         }
+      } else {
+         if (existingSettlement.isPresent()) {
+            if (!ServerSettlementPermissionStore.INSTANCE.getOrCreate(existingSettlement.get().getSettlementId())
+                  .hasCreateBuildingsPermission(placer.getUUID())) {
+               placer.displayClientMessage(
+                     Component
+                           .translatable(
+                                 "message.settlement.create_building.failed.no_permission",
+                                 existingSettlement.get().displayNameTranslation())
+                           .withColor(Colors.VALIDATION_ERROR),
+                     true);
+               return;
+            } else {
+               argumentSettlement = existingSettlement.get();
+               settlementOrigin = argumentSettlement.getBounds().getOrigin();
+            }
+         } else {
+            placer.displayClientMessage(
+                  Component.translatable("message.settlement.create_building.failed.too_far_from_settlement")
+                        .withColor(Colors.VALIDATION_ERROR),
+                  true);
+            return;
+         }
+      }
 
       Building building =
             ServerBuildingsStore.INSTANCE.createNew(
                   context.player().registryAccess(),
                   serverLevel.dimension(),
-                  settlement.get().getSettlementId(),
+                  argumentSettlement.getSettlementId(),
                   placer.getUUID(),
-                  createNewBuilding.buildingType(),
-                  createNewBuilding.buildingBounds());
+                  packet.buildingType(),
+                  packet.buildingBounds());
 
       if (serverLevel.isLoaded(building.getBlockPos())) {
          LoadedBuilding loadedBuilding = LoadedBuildings.load(building, serverLevel);
-         LoadedSettlements.onBuildingLoaded(settlement.get(), loadedBuilding, serverLevel);
+         LoadedSettlements.onBuildingLoaded(argumentSettlement, loadedBuilding, serverLevel);
       }
 
       Set<Building> settlementBuildings =
-            ServerBuildingsStore.INSTANCE.findForSettlement(settlement.get().getSettlementId());
-      settlement.get().recalculateSettlementBounds(settlementOrigin, settlementBuildings);
+            ServerBuildingsStore.INSTANCE.findForSettlement(argumentSettlement.getSettlementId());
+      argumentSettlement.recalculateSettlementBounds(settlementOrigin, settlementBuildings);
 
       ServerSettlementsStore.INSTANCE.setDirty();
-      ServerSettlementsStore.INSTANCE.replicateChange(settlement.get(), StoreOperation.ADD_OR_OVERWRITE);
+      ServerSettlementsStore.INSTANCE.replicateChange(argumentSettlement, StoreOperation.ADD_OR_OVERWRITE);
 
       ServerBuildingsStore.INSTANCE.setDirty();
       ServerBuildingsStore.INSTANCE.replicateChange(building, StoreOperation.ADD_OR_OVERWRITE);

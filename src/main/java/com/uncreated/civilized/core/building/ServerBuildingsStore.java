@@ -12,6 +12,8 @@ import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.bounds.BuildingBounds;
 import com.uncreated.civilized.core.building.events.model.BuildingDeletedEvent;
 import com.uncreated.civilized.core.building.events.model.BuildingUpdatedEvent;
+import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermissionStore;
+import com.uncreated.civilized.core.settlement.permission.SettlementPermissions;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -19,11 +21,12 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.Level;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -34,15 +37,12 @@ public class ServerBuildingsStore extends BuildingStore {
    protected static final Logger LOGGER = LogUtils.getLogger();
    public static ServerBuildingsStore INSTANCE;
 
-   private static Level tempLevel;
-
    protected ServerBuildingsStore() {
       super();
    }
 
    public static void loadServer(MinecraftServer server) {
 
-      tempLevel = server.overworld();
       INSTANCE =
             server.overworld()
                   .getDataStorage()
@@ -149,6 +149,20 @@ public class ServerBuildingsStore extends BuildingStore {
       }
    }
 
+   private static boolean allowedToDecommission(Player player, Building building) {
+      SettlementPermissions permissions =
+            ServerSettlementPermissionStore.INSTANCE.getOrCreate(building.getSettlementId());
+      if (permissions.hasCreateBuildingsPermission(player.getUUID()))
+         return true;
+
+      player.displayClientMessage(
+            Component.translatable(
+                  "message.settlement.permission.denied.delete_building",
+                  building.getBuildingType().translation()),
+            true);
+      return false;
+   }
+
    public static void receiveSyncFromClient(Building.Packet packet, IPayloadContext context) {
 
       Building fromPacket = packet.building();
@@ -180,6 +194,9 @@ public class ServerBuildingsStore extends BuildingStore {
       }
 
       if (packet.storeOperation() == StoreOperation.DELETE) {
+         if (!allowedToDecommission(context.player(), existing.get()))
+            return;
+
          Optional<Building> removed = INSTANCE.buildings.remove(existing.get().getBuildingId());
          if (removed.isPresent()) {
             INSTANCE.replicateChange(removed.get(), StoreOperation.DELETE);
