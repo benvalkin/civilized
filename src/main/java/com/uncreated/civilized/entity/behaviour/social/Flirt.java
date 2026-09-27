@@ -23,10 +23,12 @@ import net.minecraft.world.entity.player.Player;
 
 public class Flirt extends Socialize {
 
-   private static final double INVITE_RANGE = 16;
+   private static final double INVITE_RANGE = 30;
    /** On average, how often the suitor shows a heart while flirting. */
    private static final int TICKS_PER_FLIRTING_HEART = 60;
    private static final int HEARTS_WHEN_DATING = 7;
+   /** the odds of a relationship forming after this behaviour ends are 1 in this number. */
+   public static final int RELATIONSHIP_SUCCESS_ODDS = 4;
 
    public Flirt(float speedModifier) {
       super(BehaviourStates.FLIRTING, speedModifier, 30 * 20, 120 * 20, 0);
@@ -44,7 +46,7 @@ public class Flirt extends Socialize {
                   other -> other != villager && other.isAlive()
                         && other.getInfo().getGender() == villager.getInfo().getGender().opposite()
                         && !other.getInfo().isTaken() && !other.getInfo().getNpcRoles().contains(VillagerNpcRole.SUITOR)
-                        && other.getInfo().getSettlementId() != null && villager.hasLineOfSight(other))
+                        && other.getInfo().getSettlementId() != null /* && villager.hasLineOfSight(other) */)
                   .stream()
                   .sorted(Comparator.comparingDouble(villager::distanceToSqr))
                   .toList();
@@ -68,7 +70,7 @@ public class Flirt extends Socialize {
    @Override
    protected void stop(ServerLevel level, CivilizedVillager villager, long gameTime) {
       // check if taken because the partner's behaviour may have already run this part
-      if (!villager.getInfo().isTaken() && isMet() && villager.getRandom().nextInt(10) == 0) {
+      if (!villager.getInfo().isTaken() && isMet() && villager.getRandom().nextInt(RELATIONSHIP_SUCCESS_ODDS) == 0) {
          Optional<Conversation> conversation = villager.getBrain().getMemory(AIRegistry.MM_CONVERSATION.get());
          if (conversation.isPresent() && conversation.get().getPastMembers().size() == 2) {
             CivilizedVillager suitor = conversation.get().getPastMembers().getFirst();

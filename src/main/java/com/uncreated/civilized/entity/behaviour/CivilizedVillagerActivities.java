@@ -79,9 +79,9 @@ public class CivilizedVillagerActivities {
                   new Socialize(speedModifier),
                   new VisitEntertainmentPlace(0.4F)),
             ImmutableList.of(BehaviourStates.EATING_FOOD),
-            new ShufflingList<BehaviourState>().add(BehaviourStates.SOCIALISING, 7)
-                  .add(BehaviourStates.FLIRTING, 3)
-                  .add(BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT, 5)
+            new ShufflingList<BehaviourState>().add(BehaviourStates.FLIRTING, 8)
+                  .add(BehaviourStates.SOCIALISING, 8)
+                  .add(BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT, 3)
                   .add(BehaviourStates.VISITING_ENTERTAINMENT, 1));
    }
 
