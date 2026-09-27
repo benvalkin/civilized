@@ -3,6 +3,7 @@ package com.uncreated.civilized.ui.menu.building.townhall.tabs;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -11,6 +12,7 @@ import javax.annotation.Nullable;
 
 import com.uncreated.civilized.core.settlement.permission.AccessLevel;
 import com.uncreated.civilized.core.settlement.permission.PlayerPermission;
+import com.uncreated.civilized.networking.packets.SetSettlementAccessLevel;
 import com.uncreated.civilized.ui.components.IListViewBuilder;
 import com.uncreated.civilized.ui.components.ScrollListView;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
@@ -25,17 +27,21 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.network.chat.Component;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 public class ManagePermissionsTab extends ABuildingScreenTab {
 
    private static final int LIST_TOP = 30;
    private static final int ELEMENT_HEIGHT = 20;
+   private static final int ERROR_MESSAGE_HEIGHT = 20;
 
    private record PlayerRow(UUID playerId, String name, @Nullable AccessLevel accessLevel) {
    }
 
    private ScrollListView<PlayerRow, ManagePermissionWidget> scrollView;
+   private UUID viewerId;
    private boolean canManage;
+   private @Nullable Component error;
 
    public ManagePermissionsTab(ITabHost tabHost, Font font, BuildingScreenContext context) {
       super(tabHost, font, Component.translatable("menu.building.town_hall.permissions.tab.heading"), context);
@@ -48,12 +54,34 @@ public class ManagePermissionsTab extends ABuildingScreenTab {
 
       Component subHeading =
             Component.translatable(
-                  canManage
-                        ? "menu.building.town_hall.permissions.heading"
+                  canManage ? "menu.building.town_hall.permissions.heading"
                         : "menu.building.town_hall.permissions.heading.governors_only");
       graphics.drawWordWrap(font, subHeading, getX(), getY() + 15, width, Colors.MENU_TEXT_DARK, false);
 
       scrollView.render(graphics, mouseX, mouseY, partialTicks);
+
+      if (error != null)
+         graphics.drawWordWrap(
+               font,
+               error,
+               getX(),
+               getY() + height - ERROR_MESSAGE_HEIGHT + 2,
+               width,
+               Colors.VALIDATION_ERROR,
+               false);
+   }
+
+   public void showError(Component error) {
+      this.error = error;
+   }
+
+   private void requestAccessLevel(UUID playerId, @Nullable AccessLevel accessLevel) {
+      error = null;
+      PacketDistributor.sendToServer(
+            new SetSettlementAccessLevel(
+                  context.settlement().getSettlementId(),
+                  playerId,
+                  Optional.ofNullable(accessLevel)));
    }
 
    @Override
@@ -68,22 +96,20 @@ public class ManagePermissionsTab extends ABuildingScreenTab {
    public void refresh() {
       List<PlayerPermission> permissions = List.copyOf(context.permissions().entries());
 
-      UUID viewerId = Minecraft.getInstance().player.getUUID();
+      viewerId = Minecraft.getInstance().player.getUUID();
       canManage =
             permissions.stream()
-                  .anyMatch(p -> p.playerId().equals(viewerId) && p.accessLevel().isAboveOrEqualTo(AccessLevel.GOVERNOR));
+                  .anyMatch(
+                        p -> p.playerId().equals(viewerId) && p.accessLevel().isAboveOrEqualTo(AccessLevel.GOVERNOR));
 
       scrollView = createScrollView(createRows(permissions));
    }
 
-   /** Players with access come first, highest access level first, then online players who have none. */
    private static List<PlayerRow> createRows(List<PlayerPermission> permissions) {
       List<PlayerRow> rows = new ArrayList<>();
       permissions.stream()
-            .sorted(
-                  Comparator.comparing(PlayerPermission::accessLevel)
-                        .reversed()
-                        .thenComparing(PlayerPermission::scoreboardName, String.CASE_INSENSITIVE_ORDER))
+            // sort by name to that names don't jump around when state changes
+            .sorted(Comparator.comparing(PlayerPermission::scoreboardName, String.CASE_INSENSITIVE_ORDER))
             .forEach(p -> rows.add(new PlayerRow(p.playerId(), p.scoreboardName(), p.accessLevel())));
 
       // only online players appear in list at the moment - the client doesn't know who else has ever joined
@@ -105,7 +131,7 @@ public class ManagePermissionsTab extends ABuildingScreenTab {
             getX(),
             getY() + LIST_TOP,
             width,
-            height - LIST_TOP,
+            height - LIST_TOP - ERROR_MESSAGE_HEIGHT,
             ELEMENT_HEIGHT,
             new IListViewBuilder<>() {
                @Override
@@ -128,11 +154,11 @@ public class ManagePermissionsTab extends ABuildingScreenTab {
                         elementWidth,
                         elementHeight,
                         font,
-                        context.settlement().getSettlementId(),
-                        row.playerId(),
                         row.name(),
                         row.accessLevel(),
-                        canManage);
+                        canManage,
+                        row.playerId().equals(viewerId),
+                        accessLevel -> requestAccessLevel(row.playerId(), accessLevel));
                }
             });
    }

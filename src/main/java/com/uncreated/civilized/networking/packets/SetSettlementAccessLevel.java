@@ -11,7 +11,6 @@ import com.uncreated.civilized.core.settlement.permission.AccessLevel;
 import com.uncreated.civilized.core.settlement.permission.PlayerPermission;
 import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermissionStore;
 import com.uncreated.civilized.core.settlement.permission.SettlementPermissions;
-import com.uncreated.civilized.ui.style.Colors;
 
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.FriendlyByteBuf;
@@ -22,11 +21,12 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
+import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.codec.NeoForgeStreamCodecs;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-public record SetSettlementAccessLevel(UUID settlementId, UUID playerId, Optional<AccessLevel> accessLevel)
-      implements CustomPacketPayload {
+public record SetSettlementAccessLevel(UUID settlementId, UUID playerId,
+      Optional<AccessLevel> accessLevel) implements CustomPacketPayload {
 
    public static final Type<SetSettlementAccessLevel> TYPE =
          new Type<>(ResourceLocation.fromNamespaceAndPath(CIVILIZED_MOD_ID, "set_settlement_access_level"));
@@ -62,7 +62,14 @@ public record SetSettlementAccessLevel(UUID settlementId, UUID playerId, Optiona
          return;
       }
 
-      // lockout protection: there always has to be someone left who can manage the settlement's permissions
+      // you cannot change your own role otherwise you could accidentally fully revoke your access to your own
+      // settlement (including your ability to fix the mistake)
+      if (packet.playerId.equals(sender.getUUID())) {
+         deny(sender, "message.settlement.permission.denied.own_access_level", settlement.get());
+         return;
+      }
+
+      // lockout protection - there always has to be someone left who can manage the settlement's permissions
       AccessLevel newAccessLevel = packet.accessLevel.orElse(null);
       if (permissions.wouldLeaveNoGovernors(packet.playerId, newAccessLevel)) {
          deny(sender, "message.settlement.permission.denied.no_governors_left", settlement.get());
@@ -87,9 +94,9 @@ public record SetSettlementAccessLevel(UUID settlementId, UUID playerId, Optiona
    }
 
    private static void deny(ServerPlayer sender, String translationKey, Settlement settlement) {
-      sender.displayClientMessage(
-            Component.translatable(translationKey, settlement.displayNameTranslation())
-                  .withColor(Colors.VALIDATION_ERROR),
-            true);
+      PacketDistributor.sendToPlayer(
+            sender,
+            new SettlementAccessLevelDenied(
+                  Component.translatable(translationKey, settlement.displayNameTranslation())));
    }
 }

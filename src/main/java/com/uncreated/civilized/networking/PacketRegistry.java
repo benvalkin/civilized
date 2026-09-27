@@ -22,6 +22,7 @@ import com.uncreated.civilized.networking.packets.ProductionBillPreview;
 import com.uncreated.civilized.networking.packets.SaveProductionBill;
 import com.uncreated.civilized.networking.packets.SetEyeDropperSlotItem;
 import com.uncreated.civilized.networking.packets.SetSettlementAccessLevel;
+import com.uncreated.civilized.networking.packets.SettlementAccessLevelDenied;
 import com.uncreated.civilized.networking.packets.VillagerDialogueScreenToggled;
 
 import net.neoforged.bus.api.SubscribeEvent;
@@ -109,5 +110,10 @@ public class PacketRegistry {
             SetSettlementAccessLevel.TYPE,
             SetSettlementAccessLevel.STREAM_CODEC,
             SetSettlementAccessLevel::serverReceiveSetSettlementAccessLevel);
+
+      registrar.playToClient(
+            SettlementAccessLevelDenied.TYPE,
+            SettlementAccessLevelDenied.STREAM_CODEC,
+            ClientPacketHandlers::receiveSettlementAccessLevelDenied);
    }
 }

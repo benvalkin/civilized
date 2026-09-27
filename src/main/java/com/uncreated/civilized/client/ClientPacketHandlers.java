@@ -1,18 +1,31 @@
 package com.uncreated.civilized.client;
 
 import com.uncreated.civilized.networking.packets.ProductionBillPreview;
+import com.uncreated.civilized.networking.packets.SettlementAccessLevelDenied;
 import com.uncreated.civilized.ui.menu.building.ABuildingMenuScreen;
 import com.uncreated.civilized.ui.menu.building.residence.artisan.EditProductionBillTab;
+import com.uncreated.civilized.ui.menu.building.townhall.tabs.ManagePermissionsTab;
 
 import net.minecraft.client.Minecraft;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
- * Handlers for packets that reach into the client's screens. Client-only class - Avoid loading this class on dedicated servers.
+ * Handlers for packets that reach into the client's screens. We have to have a client-only class to avoid crashing
+ * dedicated servers since these handlers commonly reference client-only types.
  */
 public final class ClientPacketHandlers {
 
    private ClientPacketHandlers() {
+   }
+
+   public static void receiveSettlementAccessLevelDenied(SettlementAccessLevelDenied packet, IPayloadContext context) {
+      Minecraft minecraft = Minecraft.getInstance();
+      if (minecraft.screen instanceof ABuildingMenuScreen screen
+            && screen.getCurrentTab() instanceof ManagePermissionsTab permissionsTab)
+         permissionsTab.showError(packet.reason());
+      // the player closed the screen or left the tab while the server was answering
+      else if (minecraft.player != null)
+         minecraft.player.displayClientMessage(packet.reason(), true);
    }
 
    public static void receiveProductionBillPreview(ProductionBillPreview packet, IPayloadContext context) {

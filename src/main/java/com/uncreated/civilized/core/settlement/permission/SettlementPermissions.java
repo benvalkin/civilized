@@ -96,15 +96,15 @@ public class SettlementPermissions {
       permissions.remove(playerId);
    }
 
-   public boolean hasItemPickUpPermission(UUID playerId) {
-      return getPermissionForPlayer(playerId).map(p -> p.accessLevel().isAboveOrEqualTo(AccessLevel.FRIEND))
-              .orElse(false);
-   }
-
-   public boolean hasOpenDoorsPermission(UUID playerId) {
-      return getPermissionForPlayer(playerId).map(p -> p.accessLevel().isAboveOrEqualTo(AccessLevel.FRIEND))
-            .orElse(false);
-   }
+//   public boolean hasItemPickUpPermission(UUID playerId) {
+//      return getPermissionForPlayer(playerId).map(p -> p.accessLevel().isAboveOrEqualTo(AccessLevel.FRIEND))
+//              .orElse(false);
+//   }
+//
+//   public boolean hasOpenDoorsPermission(UUID playerId) {
+//      return getPermissionForPlayer(playerId).map(p -> p.accessLevel().isAboveOrEqualTo(AccessLevel.FRIEND))
+//            .orElse(false);
+//   }
 
    public boolean hasGeneralBlockPlacingPermission(UUID playerId) {
       return getPermissionForPlayer(playerId).map(p -> p.accessLevel().isAboveOrEqualTo(AccessLevel.CITIZEN))
