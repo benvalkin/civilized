@@ -13,16 +13,12 @@ import com.uncreated.civilized.core.building.production.bills.ProductionType;
 import com.uncreated.civilized.core.building.state.BuildingState;
 import com.uncreated.civilized.core.villagerinfo.VillagerOccupation;
 import com.uncreated.civilized.core.villagerinfo.VillagerOccupations;
-import com.uncreated.civilized.ui.menu.building.ABuildingMenuScreen;
-import com.uncreated.civilized.ui.menu.building.BuildingMenu;
-import com.uncreated.civilized.ui.menu.building.residence.ResidenceBuildingScreen;
 import com.uncreated.civilized.ui.style.Colors;
 
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.experimental.Accessors;
-import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -48,13 +44,6 @@ public class BuildingType {
    @Getter(AccessLevel.NONE)
    @Builder.Default
    private final Supplier<VillagerOccupation> occupation = () -> VillagerOccupations.UNEMPLOYED;
-   /** Creates this building's screen, which is backed by a {@link BuildingMenu}. */
-   // TODO: on dedicated servers, there are no GUI files, so we can't reference the class `ABuildingMenuScreen` at all
-   // because Java's classloader won't find the class. A better solution is a building type to screen table, which also
-   // benefits different mod loaders.
-   @Builder.Default
-   private final MenuScreens.ScreenConstructor<BuildingMenu, ABuildingMenuScreen> buildingMenuScreenSupplier =
-         ResidenceBuildingScreen::new;
 
    public static BuildingTypeBuilder builder(ResourceLocation key) {
       return internalBuilder().resourceLocation(key);

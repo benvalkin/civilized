@@ -31,17 +31,6 @@ import com.uncreated.civilized.core.building.state.artisan.ToolsmithHouseState;
 import com.uncreated.civilized.core.building.state.artisan.WeaponsmithHouseState;
 import com.uncreated.civilized.core.building.state.artisan.WeaverHouseState;
 import com.uncreated.civilized.core.villagerinfo.VillagerOccupations;
-import com.uncreated.civilized.ui.menu.building.inn.InnBuildingScreen;
-import com.uncreated.civilized.ui.menu.building.townhall.TownHallBuildingScreen;
-import com.uncreated.civilized.ui.menu.building.residence.artisan.BakeryBuildingScreen;
-import com.uncreated.civilized.ui.menu.building.residence.artisan.BlacksmithBuildingScreen;
-import com.uncreated.civilized.ui.menu.building.residence.artisan.ButcheryBuildingScreen;
-import com.uncreated.civilized.ui.menu.building.residence.artisan.CraftsmanHouseBuildingScreen;
-import com.uncreated.civilized.ui.menu.building.residence.artisan.MasonBuildingScreen;
-import com.uncreated.civilized.ui.menu.building.worksite.WorksiteBuildingScreen;
-import com.uncreated.civilized.ui.menu.building.worksite.animalfarm.AnimalFarmBuildingScreen;
-import com.uncreated.civilized.ui.menu.building.worksite.cropfarm.CropFarmBuildingScreen;
-import com.uncreated.civilized.ui.menu.building.worksite.grove.GroveBuildingScreen;
 
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
@@ -109,13 +98,11 @@ public class BuildingTypes {
    public static BuildingType TOWN_HALL =
          declare(
                BuildingType.builder(createResourceKey("town_hall"))
-                     .buildingMenuScreenSupplier(TownHallBuildingScreen::new)
                      .build());
    public static BuildingType INN =
          declare(
                BuildingType.builder(createResourceKey("inn"))
                      .isResidence(true)
-                     .buildingMenuScreenSupplier(InnBuildingScreen::new)
                      .build());
    public static BuildingType TOWN_SQUARE =
          declare(
@@ -201,7 +188,6 @@ public class BuildingTypes {
                      .supportedProductionTypes(List.of(ProductionTypes.CRAFTING, ProductionTypes.SMELTING))
                      .createState(BakeryState::new)
                      .createBehaviour(ArtisanHouseBehaviour::new)
-                     .buildingMenuScreenSupplier(BakeryBuildingScreen::new)
                      .occupation(() -> VillagerOccupations.BAKER)
                      .build());
 
@@ -212,7 +198,6 @@ public class BuildingTypes {
                      .supportedProductionTypes(List.of(ProductionTypes.CRAFTING, ProductionTypes.SMOKING))
                      .createState(ButcheryState::new)
                      .createBehaviour(ArtisanHouseBehaviour::new)
-                     .buildingMenuScreenSupplier(ButcheryBuildingScreen::new)
                      .occupation(() -> VillagerOccupations.BUTCHER)
                      .build());
 
@@ -223,7 +208,6 @@ public class BuildingTypes {
                      .supportedProductionTypes(List.of(ProductionTypes.CRAFTING, ProductionTypes.BLASTING))
                      .createState(BlacksmithHouseState::new)
                      .createBehaviour(ArtisanHouseBehaviour::new)
-                     .buildingMenuScreenSupplier(BlacksmithBuildingScreen::new)
                      .occupation(() -> VillagerOccupations.BLACKSMITH)
                      .build());
 
@@ -234,7 +218,6 @@ public class BuildingTypes {
                      .supportedProductionTypes(List.of(ProductionTypes.CRAFTING, ProductionTypes.SMELTING))
                      .createState(MasonHouseState::new)
                      .createBehaviour(ArtisanHouseBehaviour::new)
-                     .buildingMenuScreenSupplier(MasonBuildingScreen::new)
                      .occupation(() -> VillagerOccupations.MASON)
                      .build());
 
@@ -245,7 +228,6 @@ public class BuildingTypes {
                      .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                      .createState(CarpenterHouseState::new)
                      .createBehaviour(ArtisanHouseBehaviour::new)
-                     .buildingMenuScreenSupplier(CraftsmanHouseBuildingScreen::new)
                      .occupation(() -> VillagerOccupations.CARPENTER)
                      .build());
 
@@ -256,7 +238,6 @@ public class BuildingTypes {
                      .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                      .createState(ToolsmithHouseState::new)
                      .createBehaviour(ArtisanHouseBehaviour::new)
-                     .buildingMenuScreenSupplier(CraftsmanHouseBuildingScreen::new)
                      .occupation(() -> VillagerOccupations.TOOLSMITH)
                      .build());
 
@@ -267,7 +248,6 @@ public class BuildingTypes {
                      .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                      .createState(WeaponsmithHouseState::new)
                      .createBehaviour(ArtisanHouseBehaviour::new)
-                     .buildingMenuScreenSupplier(CraftsmanHouseBuildingScreen::new)
                      .occupation(() -> VillagerOccupations.WEAPONSMITH)
                      .build());
 
@@ -278,7 +258,6 @@ public class BuildingTypes {
                      .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                      .createState(ArmorerHouseState::new)
                      .createBehaviour(ArtisanHouseBehaviour::new)
-                     .buildingMenuScreenSupplier(CraftsmanHouseBuildingScreen::new)
                      .occupation(() -> VillagerOccupations.ARMORER)
                      .build());
 
@@ -289,7 +268,6 @@ public class BuildingTypes {
                      .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                      .createState(LeatherworkerHouseState::new)
                      .createBehaviour(ArtisanHouseBehaviour::new)
-                     .buildingMenuScreenSupplier(CraftsmanHouseBuildingScreen::new)
                      .occupation(() -> VillagerOccupations.LEATHERWORKER)
                      .build());
    public static BuildingType WEAVER_HOUSE =
@@ -299,7 +277,6 @@ public class BuildingTypes {
                      .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                      .createState(WeaverHouseState::new)
                      .createBehaviour(ArtisanHouseBehaviour::new)
-                     .buildingMenuScreenSupplier(CraftsmanHouseBuildingScreen::new)
                      .occupation(() -> VillagerOccupations.WEAVER)
                      .build());
 
@@ -310,7 +287,6 @@ public class BuildingTypes {
                      .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                      .createState(FletcherHouseState::new)
                      .createBehaviour(ArtisanHouseBehaviour::new)
-                     .buildingMenuScreenSupplier(CraftsmanHouseBuildingScreen::new)
                      .occupation(() -> VillagerOccupations.FLETCHER)
                      .build());
 
@@ -321,7 +297,6 @@ public class BuildingTypes {
                      .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                      .createState(CartographerHouseState::new)
                      .createBehaviour(ArtisanHouseBehaviour::new)
-                     .buildingMenuScreenSupplier(CraftsmanHouseBuildingScreen::new)
                      .occupation(() -> VillagerOccupations.CARTOGRAPHER)
                      .build());
 
@@ -332,7 +307,6 @@ public class BuildingTypes {
                      .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                      .createState(ArtistHouseState::new)
                      .createBehaviour(ArtisanHouseBehaviour::new)
-                     .buildingMenuScreenSupplier(CraftsmanHouseBuildingScreen::new)
                      .occupation(() -> VillagerOccupations.ARTIST)
                      .build());
 
@@ -341,7 +315,6 @@ public class BuildingTypes {
                BuildingType.builder(createResourceKey("crop_farm"))
                      .isWorksite(true)
                      .createState(CropFarmState::new)
-                     .buildingMenuScreenSupplier(CropFarmBuildingScreen::new)
                      .occupation(() -> VillagerOccupations.FARMER)
                      .build());
 
@@ -352,7 +325,6 @@ public class BuildingTypes {
                      .animalFarmMobType(Cow.class)
                      .shouldSlaughterAnimals(true)
                      .createState(CowFarmState::new)
-                     .buildingMenuScreenSupplier(AnimalFarmBuildingScreen::new)
                      .occupation(() -> VillagerOccupations.RANCHER)
                      .build());
 
@@ -363,7 +335,6 @@ public class BuildingTypes {
                      .animalFarmMobType(Sheep.class)
                      .shouldSlaughterAnimals(true)
                      .createState(SheepFarmState::new)
-                     .buildingMenuScreenSupplier(AnimalFarmBuildingScreen::new)
                      .occupation(() -> VillagerOccupations.RANCHER)
                      .build());
 
@@ -374,7 +345,6 @@ public class BuildingTypes {
                      .animalFarmMobType(Pig.class)
                      .shouldSlaughterAnimals(true)
                      .createState(PigFarmState::new)
-                     .buildingMenuScreenSupplier(AnimalFarmBuildingScreen::new)
                      .occupation(() -> VillagerOccupations.RANCHER)
                      .build());
 
@@ -385,7 +355,6 @@ public class BuildingTypes {
                      .animalFarmMobType(Chicken.class)
                      .shouldSlaughterAnimals(true)
                      .createState(ChickenFarmState::new)
-                     .buildingMenuScreenSupplier(AnimalFarmBuildingScreen::new)
                      .occupation(() -> VillagerOccupations.RANCHER)
                      .build());
 
@@ -395,28 +364,24 @@ public class BuildingTypes {
                      .isWorksite(true)
                      .animalFarmMobType(Bee.class)
                      .createState(BeeFarmState::new)
-                     .buildingMenuScreenSupplier(AnimalFarmBuildingScreen::new)
                      .occupation(() -> VillagerOccupations.BEEKEEPER)
                      .build());
    public static BuildingType FISHING_SPOT =
          declare(
                BuildingType.builder(createResourceKey("fishing_spot"))
                      .isWorksite(true)
-                     .buildingMenuScreenSupplier(WorksiteBuildingScreen::new)
                      .occupation(() -> VillagerOccupations.FISHERMAN)
                      .build());
    public static BuildingType MINE =
          declare(
                BuildingType.builder(createResourceKey("mine"))
                      .isWorksite(true)
-                     .buildingMenuScreenSupplier(WorksiteBuildingScreen::new)
                      .occupation(() -> VillagerOccupations.MINER)
                      .build());
    public static BuildingType QUARRY =
          declare(
                BuildingType.builder(createResourceKey("quarry"))
                      .isWorksite(true)
-                     .buildingMenuScreenSupplier(WorksiteBuildingScreen::new)
                      .occupation(() -> VillagerOccupations.STONECUTTER)
                      .build());
    public static BuildingType GROVE =
@@ -424,7 +389,6 @@ public class BuildingTypes {
                BuildingType.builder(createResourceKey("grove"))
                      .isWorksite(true)
                      .createState(GroveState::new)
-                     .buildingMenuScreenSupplier(GroveBuildingScreen::new)
                      .occupation(() -> VillagerOccupations.WOODCUTTER)
                      .build());
 }

@@ -7,9 +7,9 @@ import com.uncreated.civilized.core.building.BuildingTypes;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.requirement.registry.BuildingRequirements;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
-import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermissionStore;
 import com.uncreated.civilized.core.settlement.entity.events.SettlementLoadingEvents;
 import com.uncreated.civilized.core.settlement.events.SettlementStoreEvents;
+import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermissionStore;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.events.VillagerStoreEvents;
 import com.uncreated.civilized.neoforge.registration.BlockRegistry;
@@ -24,7 +24,6 @@ import com.uncreated.civilized.neoforge.registration.entity.EntitySetupEventsCom
 import com.uncreated.civilized.neoforge.registration.gui.GuiRegistry;
 import com.uncreated.civilized.neoforge.registration.gui.GuiSetupEvents;
 import com.uncreated.civilized.networking.PacketRegistry;
-import com.uncreated.civilized.ui.events.UIUpdateEvents;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -38,6 +37,7 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
@@ -84,15 +84,19 @@ public class CivilizedMod {
       NeoForge.EVENT_BUS.register(SettlementStoreEvents.class);
       NeoForge.EVENT_BUS.register(SettlementLoadingEvents.class);
       NeoForge.EVENT_BUS.register(VillagerStoreEvents.class);
-      NeoForge.EVENT_BUS.register(UIUpdateEvents.class);
 
       // Register the item to a creative tab
       modEventBus.addListener(this::addCreative);
 
-      modEventBus.register(EntitySetupEventsClient.class);
       modEventBus.register(EntitySetupEventsCommon.class);
-      modEventBus.register(GuiSetupEvents.class);
       modEventBus.register(PacketRegistry.class);
+
+      // Client only events. This check is necessary because registering these client-only events on a server would
+      // crash it
+      if (FMLEnvironment.dist.isClient()) {
+         modEventBus.register(EntitySetupEventsClient.class);
+         modEventBus.register(GuiSetupEvents.class);
+      }
 
       // Register our mod's ModConfigSpec so that FML can create and load the config file for us
       modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);

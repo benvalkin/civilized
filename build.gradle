@@ -52,6 +52,13 @@ neoForge {
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
 
+        client2 { // second client for multiplayer testing. Can be start with the gradle task `runClient2`
+            client()
+            gameDirectory = project.file('run-client2') // different folder to the first client
+            programArguments.addAll '--width', '1400', '--height', '800', '--username', 'Dev2'
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+
         server {
             server()
             programArgument '--nogui'

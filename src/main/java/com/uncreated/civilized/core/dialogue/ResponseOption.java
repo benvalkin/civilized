@@ -6,7 +6,6 @@ import com.uncreated.civilized.core.dialogue.context.ResponseOptionContext;
 import com.uncreated.civilized.ui.style.Colors;
 
 import lombok.Getter;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 
 @Getter
@@ -18,7 +17,7 @@ public class ResponseOption {
    private IOnResponseSelectedAction onPress;
    private @Nullable Dialogue nextDialogue;
    @Nullable
-   private Tooltip tooltip;
+   private Component tooltip;
 
    private ResponseOption(Component playerSpeech) {
       this.playerSpeech = playerSpeech;
@@ -71,7 +70,7 @@ public class ResponseOption {
       return new ResponseOption(playerSpeech).onSelectGoNextPage();
    }
 
-   public ResponseOption withTooltip(Tooltip tooltip) {
+   public ResponseOption withTooltip(Component tooltip) {
       this.tooltip = tooltip;
       return this;
    }
@@ -124,14 +123,14 @@ public class ResponseOption {
    @Getter
    public static class EnabledCheckResult {
       private final boolean isEnabled;
-      private final @Nullable Tooltip tooltip;
+      private final @Nullable Component tooltip;
 
-      private EnabledCheckResult(boolean isEnabled, @Nullable Tooltip tooltip) {
+      private EnabledCheckResult(boolean isEnabled, @Nullable Component tooltip) {
          this.isEnabled = isEnabled;
          this.tooltip = tooltip;
       }
 
-      public static EnabledCheckResult success(Tooltip tooltip) {
+      public static EnabledCheckResult success(Component tooltip) {
          return new EnabledCheckResult(true, tooltip);
       }
 
@@ -139,7 +138,7 @@ public class ResponseOption {
          return new EnabledCheckResult(true, null);
       }
 
-      public static EnabledCheckResult failed(Tooltip tooltip) {
+      public static EnabledCheckResult failed(Component tooltip) {
          return new EnabledCheckResult(false, tooltip);
       }
 

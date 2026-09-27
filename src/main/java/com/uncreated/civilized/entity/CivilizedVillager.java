@@ -15,6 +15,7 @@ import org.jetbrains.annotations.Nullable;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Dynamic;
+import com.uncreated.civilized.client.VillagerDialogueClientHandler;
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventoryType;
 import com.uncreated.civilized.core.dialogue.IVillageDialogue;
@@ -46,12 +47,10 @@ import com.uncreated.civilized.entity.stats.ClothingTextureRegistry;
 import com.uncreated.civilized.entity.stats.HairTextureRegistry;
 import com.uncreated.civilized.entity.stats.SkinTextureRegistry;
 import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
-import com.uncreated.civilized.ui.menu.dialogue.VillagerDialogueScreen;
 
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -372,10 +371,8 @@ public class CivilizedVillager extends AgeableMob
          return InteractionResult.CONSUME.heldItemTransformedTo(consumed);
       }
 
-      if (player.level().isClientSide) {
-         VillagerDialogueScreen screen = new VillagerDialogueScreen(this, dialogue, context);
-         Minecraft.getInstance().setScreen(screen);
-      }
+      if (player.level().isClientSide)
+         VillagerDialogueClientHandler.openDialogue(this, dialogue, context);
       return InteractionResult.SUCCESS;
    }
 

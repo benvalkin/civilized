@@ -8,7 +8,6 @@ import com.uncreated.civilized.core.building.production.bills.ProductionBill;
 import com.uncreated.civilized.core.building.production.bills.ProductionType;
 import com.uncreated.civilized.core.building.production.bills.ProductionTypes;
 
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.ItemTags;
@@ -55,9 +54,8 @@ public class WeaverHouseState extends ArtisanHouseState {
    }
 
    @Override
-   public Tooltip getAllowedRecipeHelpTooltip() {
-      return Tooltip.create(
-            Component.translatable(
-                  "menu.building.residence.production_bills.edit_recipe.tooltip.allowed_recipe_help.weaver"));
+   public Component getAllowedRecipeHelp() {
+      return Component.translatable(
+                  "menu.building.residence.production_bills.edit_recipe.tooltip.allowed_recipe_help.weaver");
    }
 }

@@ -2,10 +2,8 @@ package com.uncreated.civilized.ui.menu.dialogue;
 
 import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
-import io.netty.buffer.ByteBuf;
 
 import java.util.List;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -18,6 +16,7 @@ import com.uncreated.civilized.core.dialogue.ResponseOption;
 import com.uncreated.civilized.core.dialogue.context.DialogueContext;
 import com.uncreated.civilized.core.dialogue.context.ResponseOptionContext;
 import com.uncreated.civilized.entity.CivilizedVillager;
+import com.uncreated.civilized.networking.packets.VillagerDialogueScreenToggled;
 import com.uncreated.civilized.ui.StringRenderHelper;
 import com.uncreated.civilized.ui.components.buttons.ModernButton;
 import com.uncreated.civilized.ui.style.Colors;
@@ -25,20 +24,14 @@ import com.uncreated.civilized.ui.style.Colors;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.Entity;
 import net.neoforged.neoforge.network.PacketDistributor;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public class VillagerDialogueScreen extends Screen {
    private static final ResourceLocation BACKGROUND_TEXTURE =
@@ -118,9 +111,9 @@ public class VillagerDialogueScreen extends Screen {
 
          // tooltip from option enabled check takes precedence over option's preset tooltip
          if (enabledResult.getTooltip() != null)
-            button.setTooltip(enabledResult.getTooltip());
+            button.setTooltip(Tooltip.create(enabledResult.getTooltip()));
          else if (responseOption.getTooltip() != null)
-            button.setTooltip(responseOption.getTooltip());
+            button.setTooltip(Tooltip.create(responseOption.getTooltip()));
 
          responseButtons.add(button);
          addRenderableWidget(button);
@@ -143,7 +136,7 @@ public class VillagerDialogueScreen extends Screen {
       dialogue.getOnEnded().accept(context);
       if (result == ResponseOption.SelectedAction.CLOSE_DIALOGUE) {
          Minecraft.getInstance().setScreen(null);
-         PacketDistributor.sendToServer(new ScreenToggledPacket(villager.getUUID(), false));
+         PacketDistributor.sendToServer(new VillagerDialogueScreenToggled(villager.getUUID(), false));
       } else if (result == ResponseOption.SelectedAction.GO_NEXT) {
          @Nullable
          Dialogue next = null;
@@ -261,41 +254,6 @@ public class VillagerDialogueScreen extends Screen {
             512);
    }
 
-   public record ScreenToggledPacket(UUID entityId, boolean showDialogueScreen) implements CustomPacketPayload {
-
-      public static final Type<ScreenToggledPacket> TYPE =
-            new CustomPacketPayload.Type<>(
-                  ResourceLocation.fromNamespaceAndPath(CIVILIZED_MOD_ID, "villager_dialogue_screen_toggled"));
-
-      public static final StreamCodec<ByteBuf, ScreenToggledPacket> STREAM_CODEC =
-            StreamCodec.composite(
-                  UUIDUtil.STREAM_CODEC,
-                  ScreenToggledPacket::entityId,
-                  ByteBufCodecs.BOOL,
-                  ScreenToggledPacket::showDialogueScreen,
-                  ScreenToggledPacket::new);
-
-      @Override
-      public Type<? extends CustomPacketPayload> type() {
-         return TYPE;
-      }
-   }
-
-   public static void serverReceiveShowScreen(ScreenToggledPacket packet, IPayloadContext context) {
-
-      if (!(context.player().level() instanceof ServerLevel serverLevel))
-         return;
-
-      Entity entity = serverLevel.getEntity(packet.entityId());
-      if (!(entity instanceof CivilizedVillager villager))
-         return;
-
-      if (packet.showDialogueScreen)
-         villager.goSpeakToPlayer(context.player());
-      else
-         villager.stopSpeakingToPlayer();
-   }
-
    @Override
    public void onClose() {
       super.onClose();
@@ -303,10 +261,10 @@ public class VillagerDialogueScreen extends Screen {
    }
 
    private void clientNotifyServerScreenOpen(CivilizedVillager villager) {
-      PacketDistributor.sendToServer(new ScreenToggledPacket(villager.getUUID(), true));
+      PacketDistributor.sendToServer(new VillagerDialogueScreenToggled(villager.getUUID(), true));
    }
 
    private void clientNotifyServerScreenClosed(CivilizedVillager villager) {
-      PacketDistributor.sendToServer(new ScreenToggledPacket(villager.getUUID(), false));
+      PacketDistributor.sendToServer(new VillagerDialogueScreenToggled(villager.getUUID(), false));
    }
 }

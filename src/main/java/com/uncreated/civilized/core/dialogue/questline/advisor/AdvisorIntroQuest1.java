@@ -26,7 +26,6 @@ import com.uncreated.civilized.core.quest.attachments.PlayerDialogueCooldowns;
 import com.uncreated.civilized.core.quest.attachments.PlayerQuests;
 import com.uncreated.civilized.entity.CivilizedVillager;
 
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
@@ -99,9 +98,8 @@ public class AdvisorIntroQuest1 extends DialogueFlow {
                   translatable("villager.dialogue.quest.advisor_intro_1.incomplete.o4")))
             .response(
                   closeDialogue().withTooltip(
-                        Tooltip.create(
-                              Component.translatable(
-                                    "villager.dialogue.quest.advisor_intro_1.incomplete.response.disabled.tooltip"))));
+                        Component.translatable(
+                                    "villager.dialogue.quest.advisor_intro_1.incomplete.response.disabled.tooltip")));
    }
 
    private static ItemDepotDialogue consumeFood() {

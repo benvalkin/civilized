@@ -19,11 +19,11 @@ import com.uncreated.civilized.core.building.production.bills.strategy.Productio
 import com.uncreated.civilized.core.building.production.orders.ProductionOrder;
 import com.uncreated.civilized.core.building.state.BuildingState;
 
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.TagKey;
@@ -237,7 +237,7 @@ public abstract class ArtisanHouseState extends BuildingState {
          ItemStack resultItem,
          ServerLevel level);
 
-   public abstract Tooltip getAllowedRecipeHelpTooltip();
+   public abstract Component getAllowedRecipeHelp();
 
    protected static boolean recipeHasAtLeastOneIngredientWithMatchingTag(
          RecipeInput recipeInput,

@@ -287,7 +287,7 @@ public class EditProductionBillTab extends ABuildingScreenTab {
    private void setRecipeAllowed(RecipeAllowed recipeAllowed) {
       this.recipeAllowed = recipeAllowed;
 
-      Tooltip helpTooltip = artisanHouseState().getAllowedRecipeHelpTooltip();
+      Tooltip helpTooltip = Tooltip.create(artisanHouseState().getAllowedRecipeHelp());
 
       switch (recipeAllowed) {
       case ALLOWED:

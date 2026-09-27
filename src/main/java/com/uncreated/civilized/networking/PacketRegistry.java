@@ -1,5 +1,6 @@
 package com.uncreated.civilized.networking;
 
+import com.uncreated.civilized.client.ClientPacketHandlers;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.ClientBuildingStore;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
@@ -21,7 +22,7 @@ import com.uncreated.civilized.networking.packets.ProductionBillPreview;
 import com.uncreated.civilized.networking.packets.SaveProductionBill;
 import com.uncreated.civilized.networking.packets.SetEyeDropperSlotItem;
 import com.uncreated.civilized.networking.packets.SetSettlementAccessLevel;
-import com.uncreated.civilized.ui.menu.dialogue.VillagerDialogueScreen;
+import com.uncreated.civilized.networking.packets.VillagerDialogueScreenToggled;
 
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
@@ -85,9 +86,9 @@ public class PacketRegistry {
             RewardActions::serverGiveItemsToPlayer);
 
       registrar.playToServer(
-            VillagerDialogueScreen.ScreenToggledPacket.TYPE,
-            VillagerDialogueScreen.ScreenToggledPacket.STREAM_CODEC,
-            VillagerDialogueScreen::serverReceiveShowScreen);
+            VillagerDialogueScreenToggled.TYPE,
+            VillagerDialogueScreenToggled.STREAM_CODEC,
+            VillagerDialogueScreenToggled::serverReceiveVillagerDialogueScreenToggled);
 
       registrar.playToServer(
             PreviewProductionBill.TYPE,
@@ -97,7 +98,7 @@ public class PacketRegistry {
       registrar.playToClient(
             ProductionBillPreview.TYPE,
             ProductionBillPreview.STREAM_CODEC,
-            ProductionBillPreview::clientReceiveProductionBillPreview);
+            ClientPacketHandlers::receiveProductionBillPreview);
 
       registrar.playToServer(
             SaveProductionBill.TYPE,
