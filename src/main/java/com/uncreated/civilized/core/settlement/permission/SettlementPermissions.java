@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import net.minecraft.world.entity.player.Player;
@@ -35,8 +37,30 @@ public class SettlementPermissions {
    }
 
    public void setAccessLevel(Player player, AccessLevel accessLevel) {
-      PlayerPermission playerPermission = new PlayerPermission(player.getUUID(), player.getScoreboardName(), accessLevel);
-      permissions.put(player.getUUID(), playerPermission);
+      setAccessLevel(player.getUUID(), player.getScoreboardName(), accessLevel);
+   }
+
+   /** For players who may be offline, the scoreboard name has to specified. */
+   public void setAccessLevel(UUID playerId, String scoreboardName, AccessLevel accessLevel) {
+      permissions.put(playerId, new PlayerPermission(playerId, scoreboardName, accessLevel));
+   }
+
+   public Optional<PlayerPermission> find(UUID playerId) {
+      return getPermissionForPlayer(playerId);
+   }
+
+   public boolean wouldLeaveNoGovernors(UUID playerId, @Nullable AccessLevel newAccessLevel) {
+      if (newAccessLevel == AccessLevel.GOVERNOR)
+         return false;
+
+      return permissions.values()
+            .stream()
+            .noneMatch(p -> !p.playerId().equals(playerId) && p.accessLevel() == AccessLevel.GOVERNOR);
+   }
+
+   public boolean hasManagePermissionsPermission(UUID playerId) {
+      return getPermissionForPlayer(playerId).map(p -> p.accessLevel().isAboveOrEqualTo(AccessLevel.GOVERNOR))
+            .orElse(false);
    }
 
    public void removeAccess(UUID playerId) {

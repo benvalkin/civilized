@@ -1,6 +1,5 @@
 package com.uncreated.civilized.core.settlement.permission;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -38,9 +37,6 @@ public class ServerSettlementPermissionStore extends SavedData {
 
    private static final String FIELD_SETTLEMENT_ID = "settlement_id";
    private static final String FIELD_LIST_PLAYERS = "list_players";
-   private static final String FIELD_PLAYER_ID = "player_id";
-   private static final String FIELD_SCOREBOARD_NAME = "scoreboard_name";
-   private static final String FIELD_ACCESS_LEVEL = "access_level";
 
    private static ServerSettlementPermissionStore createDefault() {
       return new ServerSettlementPermissionStore();
@@ -68,6 +64,11 @@ public class ServerSettlementPermissionStore extends SavedData {
       setDirty();
    }
 
+   public void setAccessLevel(UUID settlementId, UUID playerId, String scoreboardName, AccessLevel accessLevel) {
+      getOrCreate(settlementId).setAccessLevel(playerId, scoreboardName, accessLevel);
+      setDirty();
+   }
+
    public void removeAccess(UUID settlementId, UUID playerId) {
       find(settlementId).ifPresent(p -> {
          p.removeAccess(playerId);
@@ -87,15 +88,7 @@ public class ServerSettlementPermissionStore extends SavedData {
          CompoundTag settlementTag = new CompoundTag();
          settlementTag.putUUID(FIELD_SETTLEMENT_ID, settlementPermissions.settlementId());
 
-         ListTag players = new ListTag();
-         for (PlayerPermission permission : settlementPermissions.entries()) {
-            CompoundTag playerTag = new CompoundTag();
-            playerTag.putUUID(FIELD_PLAYER_ID, permission.playerId());
-            playerTag.putString(FIELD_SCOREBOARD_NAME, permission.scoreboardName());
-            playerTag.putString(FIELD_ACCESS_LEVEL, permission.accessLevel().name());
-            players.add(playerTag);
-         }
-         settlementTag.put(FIELD_LIST_PLAYERS, players);
+         settlementTag.put(FIELD_LIST_PLAYERS, PlayerPermission.toNbtList(settlementPermissions.entries()));
 
          settlements.add(settlementTag);
       }
@@ -111,31 +104,11 @@ public class ServerSettlementPermissionStore extends SavedData {
          if (!(t instanceof CompoundTag settlementTag))
             continue;
 
-         List<PlayerPermission> players = new ArrayList<>();
-         for (Tag p : settlementTag.getList(FIELD_LIST_PLAYERS, Tag.TAG_COMPOUND)) {
-            if (!(p instanceof CompoundTag playerTag))
-               continue;
-
-            loadAccessLevel(playerTag.getString(FIELD_ACCESS_LEVEL)).ifPresent(
-                  accessLevel -> players.add(
-                        new PlayerPermission(
-                              playerTag.getUUID(FIELD_PLAYER_ID),
-                              playerTag.getString(FIELD_SCOREBOARD_NAME),
-                              accessLevel)));
-         }
-
+         List<PlayerPermission> players =
+               PlayerPermission.fromNbtList(settlementTag.getList(FIELD_LIST_PLAYERS, Tag.TAG_COMPOUND));
          store.permissions.add(new SettlementPermissions(settlementTag.getUUID(FIELD_SETTLEMENT_ID), players));
       }
 
       return store;
-   }
-
-   private static Optional<AccessLevel> loadAccessLevel(String name) {
-      try {
-         return Optional.of(AccessLevel.valueOf(name));
-      } catch (IllegalArgumentException ex) {
-         LOGGER.warn("Ignoring unknown settlement access level '{}'", name);
-         return Optional.empty();
-      }
    }
 }

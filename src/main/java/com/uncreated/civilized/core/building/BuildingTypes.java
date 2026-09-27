@@ -32,6 +32,7 @@ import com.uncreated.civilized.core.building.state.artisan.WeaponsmithHouseState
 import com.uncreated.civilized.core.building.state.artisan.WeaverHouseState;
 import com.uncreated.civilized.core.villagerinfo.VillagerOccupations;
 import com.uncreated.civilized.ui.menu.building.inn.InnBuildingScreen;
+import com.uncreated.civilized.ui.menu.building.townhall.TownHallBuildingScreen;
 import com.uncreated.civilized.ui.menu.building.residence.artisan.BakeryBuildingScreen;
 import com.uncreated.civilized.ui.menu.building.residence.artisan.BlacksmithBuildingScreen;
 import com.uncreated.civilized.ui.menu.building.residence.artisan.ButcheryBuildingScreen;
@@ -105,7 +106,11 @@ public class BuildingTypes {
             registry -> ALL.forEach(buildingType -> registerBuildingType(registry, buildingType)));
    }
 
-   public static BuildingType TOWN_HALL = declare(BuildingType.builder(createResourceKey("town_hall")).build());
+   public static BuildingType TOWN_HALL =
+         declare(
+               BuildingType.builder(createResourceKey("town_hall"))
+                     .buildingMenuScreenSupplier(TownHallBuildingScreen::new)
+                     .build());
    public static BuildingType INN =
          declare(
                BuildingType.builder(createResourceKey("inn"))

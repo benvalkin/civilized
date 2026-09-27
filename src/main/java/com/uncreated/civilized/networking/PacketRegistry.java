@@ -18,6 +18,8 @@ import com.uncreated.civilized.networking.packets.PreviewProductionBill;
 import com.uncreated.civilized.networking.packets.ProductionBillPreview;
 import com.uncreated.civilized.networking.packets.SaveProductionBill;
 import com.uncreated.civilized.networking.packets.SetEyeDropperSlotItem;
+import com.uncreated.civilized.networking.packets.SetSettlementAccessLevel;
+import com.uncreated.civilized.networking.packets.SettlementPermissionsSync;
 import com.uncreated.civilized.ui.menu.dialogue.VillagerDialogueScreen;
 
 import net.neoforged.bus.api.SubscribeEvent;
@@ -95,5 +97,15 @@ public class PacketRegistry {
             SaveProductionBill.TYPE,
             SaveProductionBill.STREAM_CODEC,
             SaveProductionBill::serverReceiveSaveProductionBill);
+
+      registrar.playToServer(
+            SetSettlementAccessLevel.TYPE,
+            SetSettlementAccessLevel.STREAM_CODEC,
+            SetSettlementAccessLevel::serverReceiveSetSettlementAccessLevel);
+
+      registrar.playToClient(
+            SettlementPermissionsSync.TYPE,
+            SettlementPermissionsSync.STREAM_CODEC,
+            SettlementPermissionsSync::clientReceiveSettlementPermissionsSync);
    }
 }

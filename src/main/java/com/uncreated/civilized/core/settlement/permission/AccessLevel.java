@@ -1,5 +1,9 @@
 package com.uncreated.civilized.core.settlement.permission;
 
+import java.util.Locale;
+
+import net.minecraft.network.chat.Component;
+
 public enum AccessLevel {
    FRIEND(1), // can open building doors and pickup items
    CITIZEN(2), // can place/destroy blocks and open only food vendor chests
@@ -18,5 +22,13 @@ public enum AccessLevel {
 
    public boolean isBelow(AccessLevel exclusive) {
       return this.level < exclusive.level;
+   }
+
+   public Component translation() {
+      return Component.translatable("settlement.access_level." + name().toLowerCase(Locale.ROOT));
+   }
+
+   public static Component noAccessTranslation() {
+      return Component.translatable("settlement.access_level.none");
    }
 }

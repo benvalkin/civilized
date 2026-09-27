@@ -3,6 +3,7 @@ package com.uncreated.civilized.core.building;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermissionStore;
 import com.uncreated.civilized.core.settlement.permission.SettlementPermissions;
+import com.uncreated.civilized.ui.context.BuildingScreenContext;
 import com.uncreated.civilized.ui.menu.building.BuildingMenu;
 
 import net.minecraft.nbt.CompoundTag;
@@ -30,6 +31,7 @@ public class BuildingScreenOpener {
 
       CompoundTag additionalData = new CompoundTag();
       building.getState().serverAddToBuildingScreenContext(additionalData, player.serverLevel());
+      BuildingScreenContext.writeSettlementPermissions(additionalData, permissions.entries());
 
       // Opening the menu done next tick.
       // The reason for this is that closing a menu replaces the player's open menu with their
