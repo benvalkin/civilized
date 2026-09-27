@@ -2,12 +2,11 @@ package com.uncreated.civilized.ui.menu.dialogue;
 
 import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
-
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nullable;
 
-import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
 import com.uncreated.civilized.core.dialogue.Dialogue;
@@ -88,7 +87,7 @@ public class VillagerDialogueScreen extends Screen {
 
       villagerName = Component.literal(villager.getInfo().getFullName()).withStyle(ChatFormatting.UNDERLINE);
 
-      responseButtons = Lists.newArrayList();
+      responseButtons = new ArrayList<>();
       int currentButtonHeight = topPos + buttonStartY;
       for (ResponseOption responseOption : dialogue.getResponseOptions()) {
          ResponseOptionContext optionContext = new ResponseOptionContext(responseOption, context);

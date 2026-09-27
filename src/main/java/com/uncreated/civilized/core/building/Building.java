@@ -9,8 +9,6 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.apache.commons.compress.utils.Lists;
-
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.bounds.BuildingBounds;
 import com.uncreated.civilized.core.building.state.BuildingState;
@@ -85,7 +83,7 @@ public class Building {
    private BuildingType buildingType;
    private BuildingBounds bounds;
    @Builder.Default
-   private List<UUID> occupantIds = Lists.newArrayList();
+   private List<UUID> occupantIds = new ArrayList<>();
    private BuildingState state;
    @Setter
    private @Nullable BlockPos primarySignPos;

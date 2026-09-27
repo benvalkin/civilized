@@ -1,8 +1,7 @@
 package com.uncreated.civilized.ui.menu.building.residence.tabs;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.commons.compress.utils.Lists;
 
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.util.BuildingUtil;
@@ -65,7 +64,7 @@ public class ManageResidentsTab extends ABuildingScreenTab {
 
    @Override
    public List<? extends GuiEventListener> children() {
-      List<GuiEventListener> children = Lists.newArrayList();
+      List<GuiEventListener> children = new ArrayList<>();
       children.add(scrollView);
       children.addAll(scrollView.children());
       return children;

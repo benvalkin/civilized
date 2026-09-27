@@ -1,10 +1,9 @@
 package com.uncreated.civilized.ui.menu.building.residence.artisan;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nullable;
-
-import org.apache.commons.compress.utils.Lists;
 
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.ClientBuildingStore;
@@ -107,7 +106,7 @@ public class ManageProductionBillsTab extends ABuildingScreenTab {
 
    @Override
    public List<? extends GuiEventListener> children() {
-      List<GuiEventListener> children = Lists.newArrayList();
+      List<GuiEventListener> children = new ArrayList<>();
       children.add(addProductionBill);
       children.add(scrollView);
       children.addAll(scrollView.children());

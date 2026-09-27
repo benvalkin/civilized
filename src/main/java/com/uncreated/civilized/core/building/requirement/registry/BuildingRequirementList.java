@@ -1,10 +1,10 @@
 package com.uncreated.civilized.core.building.requirement.registry;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
 import com.uncreated.civilized.core.building.requirement.IBuildingRequirement;
@@ -26,7 +26,7 @@ public class BuildingRequirementList implements Iterable<IBuildingRequirement> {
    }
 
    public static class BuildingRequirementListBuilder {
-      private List<IBuildingRequirement> requirements = Lists.newArrayList();
+      private List<IBuildingRequirement> requirements = new ArrayList<>();
 
       public BuildingRequirementListBuilder add(IBuildingRequirement requirement) {
          requirements.add(requirement);

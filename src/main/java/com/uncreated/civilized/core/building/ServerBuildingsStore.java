@@ -1,10 +1,10 @@
 package com.uncreated.civilized.core.building;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.apache.commons.compress.utils.Lists;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -117,7 +117,7 @@ public class ServerBuildingsStore extends BuildingStore {
                                  BlockPos.of(itemTag.getLong(Building.FIELD_UPPER_CORNER_POS))));
 
          ListTag occupantIdsTag = itemTag.getList(Building.FIELD_LIST_OCCUPANTS, Tag.TAG_COMPOUND);
-         List<UUID> occupantIds = Lists.newArrayList();
+         List<UUID> occupantIds = new ArrayList<>();
          for (Tag o : occupantIdsTag) {
             if (!(o instanceof CompoundTag co))
                continue;

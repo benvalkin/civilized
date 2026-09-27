@@ -1,9 +1,8 @@
 package com.uncreated.civilized.item;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
-import org.apache.commons.compress.utils.Lists;
 
 import com.uncreated.civilized.neoforge.registration.ItemRegistry;
 import com.uncreated.civilized.ui.style.Colors;
@@ -160,7 +159,7 @@ public class CurrencyItem extends Item {
 
    public static List<ItemStack> payoutIntoItemStacks(int amount) {
 
-      List<ItemStack> payoutItems = Lists.newArrayList();
+      List<ItemStack> payoutItems = new ArrayList<>();
 
       CurrencyItem currentDenomination = CurrencyItem.getLargestFittingDenominationForAmount(amount);
       ItemStack currentStack = new ItemStack(currentDenomination, 0);

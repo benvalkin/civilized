@@ -1,10 +1,9 @@
 package com.uncreated.civilized.core.settlement;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import org.apache.commons.compress.utils.Lists;
 
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.settlement.events.SettlementUpdatedEvent;
@@ -95,7 +94,7 @@ public class ServerSettlementsStore extends SettlementsStore {
                                  BlockPos.of(itemTag.getLong(Settlement.FIELD_UPPER_CORNER_POS))));
 
          ListTag citizenIdsTag = itemTag.getList(Settlement.FIELD_LIST_CITIZENS, Tag.TAG_COMPOUND);
-         List<UUID> citizenIds = Lists.newArrayList();
+         List<UUID> citizenIds = new ArrayList<>();
          for (Tag c : citizenIdsTag) {
             if (!(c instanceof CompoundTag cc))
                continue;

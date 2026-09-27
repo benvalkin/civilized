@@ -9,8 +9,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
-import org.apache.commons.compress.utils.Lists;
-
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.bounds.BuildingBounds;
@@ -73,7 +71,7 @@ public class Settlement {
    private UUID ownerId;
    private String displayName;
    @Builder.Default
-   private List<UUID> citizenIds = Lists.newArrayList();
+   private List<UUID> citizenIds = new ArrayList<>();
    @Builder.Default
    public SettlementLevel settlementLevel = SettlementLevel.OUTPOST;
    private SettlementBounds bounds;

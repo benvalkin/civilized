@@ -1,10 +1,9 @@
 package com.uncreated.civilized.core.building.logistics;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-
-import org.apache.commons.compress.utils.Lists;
 
 import lombok.Getter;
 import net.minecraft.world.item.ItemStack;
@@ -27,7 +26,7 @@ public class AggregateItemStack {
 
    public AggregateItemStack(boolean mutable) {
       this.mutable = mutable;
-      this.itemStacks = Lists.newArrayList();
+      this.itemStacks = new ArrayList<>();
       this.count = 0;
    }
 
@@ -37,7 +36,7 @@ public class AggregateItemStack {
 
    public AggregateItemStack(boolean mutable, AggregateItemStack... aggregateItemStacks) {
       this.mutable = mutable;
-      this.itemStacks = Lists.newArrayList();
+      this.itemStacks = new ArrayList<>();
       for (AggregateItemStack other : aggregateItemStacks)
          for (ItemStack itemStack : other.itemStacks)
             this.itemStacks.add(mutable ? itemStack : itemStack.copy());

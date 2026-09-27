@@ -1,12 +1,11 @@
 package com.uncreated.civilized.client;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.Nullable;
-
-import org.apache.commons.compress.utils.Lists;
 
 import com.uncreated.civilized.client.renderer.BuildingBoundsDragTool;
 import com.uncreated.civilized.core.building.Building;
@@ -80,7 +79,7 @@ public final class BuildingDeedClientHandler {
             int buildingLevel = 1;
             BuildingRequirementList requirements =
                   BuildingRequirements.getBuildingRequirements(buildingType, buildingLevel);
-            List<IBuildingRequirementResult> requirementResults = Lists.newArrayList();
+            List<IBuildingRequirementResult> requirementResults = new ArrayList<>();
 
             Set<BlockPos> validFloorBlocks = Set.of();
             for (IBuildingRequirement requirement : requirements) {
