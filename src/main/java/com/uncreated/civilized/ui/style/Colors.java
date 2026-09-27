@@ -22,6 +22,8 @@ public class Colors {
 
    public static final int SETTLEMENT_NAME = 0x8a86b5;
    public static final int VILLAGER_OWNER_NAME = 0x576eb5;
+   public static final int PLAYER_NAME = 0x3c4d52;
+   public static final int PLAYER_NAME_HIGHLIGHTED = 0x5ea0b5;
 
    public final static int COIN = 0xffe680;
 

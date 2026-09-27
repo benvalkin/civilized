@@ -25,7 +25,7 @@ public class ManagePermissionWidget extends AbstractContainerWidget {
    private static final int BUTTON_HEIGHT = 14;
 
    private final Font font;
-   private final String playerName;
+   private final Component playerName;
    private final Button button;
 
    public ManagePermissionWidget(
@@ -41,7 +41,8 @@ public class ManagePermissionWidget extends AbstractContainerWidget {
          Consumer<AccessLevel> onChangeRequested) {
       super(x, y, width, height, Component.literal("ManagePermissionWidget"));
       this.font = font;
-      this.playerName = playerName;
+      this.playerName =
+            Component.literal(playerName).withColor(isViewer ? Colors.PLAYER_NAME_HIGHLIGHTED : Colors.PLAYER_NAME);
 
       @Nullable
       AccessLevel nextAccessLevel = next(accessLevel);
@@ -73,7 +74,9 @@ public class ManagePermissionWidget extends AbstractContainerWidget {
          tooltip.append("\n\n")
                .append(
                      Component
-                           .translatable("menu.building.town_hall.permissions.click_to_change", translation(nextAccessLevel))
+                           .translatable(
+                                 "menu.building.town_hall.permissions.click_to_change",
+                                 translation(nextAccessLevel))
                            .withStyle(ChatFormatting.GRAY));
 
       return tooltip;
@@ -107,7 +110,7 @@ public class ManagePermissionWidget extends AbstractContainerWidget {
       guiGraphics.drawString(
             font,
             playerName,
-            getX(),
+            getX() + 8,
             getY() + (height - font.lineHeight) / 2,
             Colors.MENU_TEXT_DARK,
             false);
