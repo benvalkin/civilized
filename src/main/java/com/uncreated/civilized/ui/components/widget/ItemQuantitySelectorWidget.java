@@ -2,9 +2,7 @@ package com.uncreated.civilized.ui.components.widget;
 
 import java.util.function.Consumer;
 
-import com.mojang.blaze3d.platform.InputConstants;
-
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.world.item.ItemStack;
 
 public class ItemQuantitySelectorWidget extends ItemDisplayWidget {
@@ -31,9 +29,8 @@ public class ItemQuantitySelectorWidget extends ItemDisplayWidget {
    @Override
    public boolean mouseClicked(double mouseX, double mouseY, int button) {
 
-      long window = Minecraft.getInstance().getWindow().getWindow();
-      boolean isShiftKeyPressed = InputConstants.isKeyDown(window, InputConstants.KEY_LSHIFT);
-      boolean isCtrlPressed = InputConstants.isKeyDown(window, InputConstants.KEY_LCONTROL);
+      boolean isShiftKeyPressed = Screen.hasShiftDown();
+      boolean isCtrlPressed = Screen.hasControlDown();
 
       int change = 1;
       if (isShiftKeyPressed)

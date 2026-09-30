@@ -5,6 +5,7 @@ import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 import java.util.function.Supplier;
 
 import com.uncreated.civilized.ui.menu.building.BuildingMenu;
+import com.uncreated.civilized.ui.menu.trading.TradingMenu;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.inventory.MenuType;
@@ -17,4 +18,7 @@ public class GuiRegistry {
 
    public static final Supplier<MenuType<BuildingMenu>> BUILDING_MENU =
          MENUS.register("building_menu", () -> IMenuTypeExtension.create(BuildingMenu::new));
+
+   public static final Supplier<MenuType<TradingMenu>> TRADING_MENU =
+         MENUS.register("trading_menu", () -> IMenuTypeExtension.create(TradingMenu::new));
 }

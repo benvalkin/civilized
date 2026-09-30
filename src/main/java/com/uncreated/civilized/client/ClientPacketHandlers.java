@@ -2,10 +2,12 @@ package com.uncreated.civilized.client;
 
 import com.uncreated.civilized.networking.packets.ProductionBillPreview;
 import com.uncreated.civilized.networking.packets.SettlementAccessLevelDenied;
+import com.uncreated.civilized.networking.packets.TradeSlotUpdated;
 import com.uncreated.civilized.ui.menu.building.ABuildingMenuScreen;
 import com.uncreated.civilized.ui.menu.building.residence.artisan.EditProductionBillTab;
 import com.uncreated.civilized.ui.menu.building.townhall.tabs.ManagePermissionsTab;
 
+import com.uncreated.civilized.ui.menu.trading.TradingMenuScreen;
 import net.minecraft.client.Minecraft;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
@@ -33,5 +35,10 @@ public final class ClientPacketHandlers {
       if (Minecraft.getInstance().screen instanceof ABuildingMenuScreen screen
             && screen.getCurrentTab() instanceof EditProductionBillTab editTab)
          editTab.receivePreview(packet.sequence(), packet.resultItem(), packet.recipeAllowed());
+   }
+
+   public static void receiveTradeSlotUpdated(TradeSlotUpdated packet, IPayloadContext context) {
+      if (Minecraft.getInstance().screen instanceof TradingMenuScreen screen)
+         screen.receiveTradeSlotUpdated(packet.sequence(), packet.slot(), packet.newStock(), packet.newAvailableVendorCurrency());
    }
 }

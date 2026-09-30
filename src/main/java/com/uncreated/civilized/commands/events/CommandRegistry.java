@@ -1,6 +1,7 @@
 package com.uncreated.civilized.commands.events;
 
 import com.uncreated.civilized.CivilizedMod;
+import com.uncreated.civilized.commands.OpenTradingMenu;
 import com.uncreated.civilized.commands.SetSettlementAccess;
 import com.uncreated.civilized.commands.SummonResident;
 import com.uncreated.civilized.core.building.events.model.BuildingUpdatedEvent;
@@ -15,5 +16,6 @@ public class CommandRegistry {
     public static void registerCommands(RegisterCommandsEvent event) {
         SummonResident.register(event.getDispatcher());
         SetSettlementAccess.register(event.getDispatcher());
+        OpenTradingMenu.register(event.getDispatcher());
     }
 }

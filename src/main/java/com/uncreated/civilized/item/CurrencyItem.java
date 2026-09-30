@@ -1,17 +1,20 @@
 package com.uncreated.civilized.item;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
 import com.uncreated.civilized.neoforge.registration.ItemRegistry;
 import com.uncreated.civilized.ui.style.Colors;
+import com.uncreated.civilized.util.ContainerHelper;
 
 import lombok.Getter;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.world.Container;
 import net.minecraft.world.entity.SlotAccess;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ClickAction;
@@ -157,31 +160,96 @@ public class CurrencyItem extends Item {
       return (CurrencyItem) ItemRegistry.COIN.get();
    }
 
-   public static List<ItemStack> payoutIntoItemStacks(int amount) {
+   public static int credit(List<Container> creditorContainers, int amount) {
+      List<ItemStack> coins = CurrencyItem.credit(amount);
 
-      List<ItemStack> payoutItems = new ArrayList<>();
-
-      CurrencyItem currentDenomination = CurrencyItem.getLargestFittingDenominationForAmount(amount);
-      ItemStack currentStack = new ItemStack(currentDenomination, 0);
-
-      while (amount >= currentDenomination.getUnitValue()) {
-
-         amount -= currentDenomination.getUnitValue();
-         currentStack.grow(1);
-
-         if (amount < currentDenomination.getUnitValue()) {
-            payoutItems.add(currentStack);
-
-            Optional<CurrencyItem> nextSmallerDenomination =
-                  CurrencyItem.getNextSmallerDenomination(currentDenomination);
-
-            if (nextSmallerDenomination.isEmpty())
-               break;
-
-            currentDenomination = nextSmallerDenomination.get();
-            currentStack = new ItemStack(currentDenomination, 0);
-         }
+      List<ItemStack> coinsFailedToTransfer = new LinkedList<>();
+      for (ItemStack coin : coins) {
+         // todo: need alternative add method for player inventory, otherwise it can insert into armor slots
+         ItemStack remainder = ContainerHelper.addItemNicely(creditorContainers, coin);
+         if (!remainder.isEmpty())
+            coinsFailedToTransfer.add(remainder);
       }
-      return payoutItems;
+
+      return CurrencyItem.countCoins(coinsFailedToTransfer);
+   }
+
+   public static List<ItemStack> credit(int amount) {
+      List<ItemStack> payout = new ArrayList<>();
+      int remainingAmount = amount;
+      CurrencyItem currentDenomination = CurrencyItem.maxDenomination();
+      do {
+         int unitValue = currentDenomination.getUnitValue();
+         int necessaryStackSize = remainingAmount / unitValue;
+         necessaryStackSize = Math.clamp(necessaryStackSize, 0, currentDenomination.getDefaultMaxStackSize());
+         if (necessaryStackSize > 0) {
+            payout.add(new ItemStack(currentDenomination, necessaryStackSize));
+            remainingAmount -= necessaryStackSize * unitValue;
+         }
+         if (remainingAmount < unitValue)
+            currentDenomination = CurrencyItem.getNextSmallerDenomination(currentDenomination).orElse(null);
+      } while (remainingAmount > 0 && currentDenomination != null);
+
+      return payout;
+   }
+
+   public static int debit(List<Container> containers, int quotaCurrencyValue) {
+      if (quotaCurrencyValue <= 0)
+         return 0;
+
+      CurrencyItem denomination = minDenomination();
+      int taken = 0;
+      takeCoins: do {
+         for (Container container : containers) {
+            for (int i = 0; i < container.getContainerSize(); i++) {
+
+               ItemStack item = container.getItem(i);
+
+               if (!(item.getItem() instanceof CurrencyItem d && d.unitValue == denomination.unitValue))
+                  continue;
+
+               int valueStillMissing = quotaCurrencyValue - taken;
+
+               // the number of coins of this denomination we'd need to take in order satisfy the remaining debit
+               // quota.
+
+               // Why the funny math? We have to ceil the division result (i.e. add 1 to the result if there's a
+               // remainder) because any
+               // 'remainder' means that there was a gap that smaller coins couldn't cover that we need to now cover
+               // by adding 1 larger coin + paying out the excess in change.
+               int requiredCoinCount = Math.ceilDiv(valueStillMissing, denomination.unitValue);
+
+               // we can't take more than what is in the stack already
+               int ableToTakeCount = Math.min(requiredCoinCount, item.getCount());
+
+               // finally, take from this stack
+               item.shrink(ableToTakeCount);
+               int takenStackValue = ableToTakeCount * denomination.unitValue;
+               taken += takenStackValue;
+
+               if (taken >= quotaCurrencyValue)
+                  break takeCoins;
+            }
+         }
+
+         denomination = CurrencyItem.getNextLargerDenomination(denomination).orElse(null);
+      } while (denomination != null);
+
+      int change = taken - quotaCurrencyValue;
+      if (change > 0) {
+         credit(containers, change);
+         return taken - change;
+      }
+
+      return taken;
+   }
+
+   public static int countCoins(List<ItemStack> coinStacks) {
+      return coinStacks.stream().mapToInt(i -> {
+         if (i.getItem() instanceof CurrencyItem currencyItem)
+            return i.getCount() * currencyItem.unitValue;
+
+         return 0;
+      }).sum();
    }
 }

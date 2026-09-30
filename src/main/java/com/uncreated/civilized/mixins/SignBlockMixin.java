@@ -69,7 +69,7 @@ public abstract class SignBlockMixin extends BaseEntityBlock implements SimpleWa
       // int[] p_143451_) {
       // serverPlayer.connection.send(
       // new ClientboundContainerSetContentPacket(
-      // p_143448_.containerId,
+      // p_143448_.sequence,
       // p_143448_.incrementStateId(),
       // p_143449_,
       // p_143450_));
@@ -83,7 +83,7 @@ public abstract class SignBlockMixin extends BaseEntityBlock implements SimpleWa
       // public void sendSlotChange(AbstractContainerMenu p_143441_, int p_143442_, ItemStack p_143443_) {
       // serverPlayer.connection.send(
       // new ClientboundContainerSetSlotPacket(
-      // p_143441_.containerId,
+      // p_143441_.sequence,
       // p_143441_.incrementStateId(),
       // p_143442_,
       // p_143443_));
@@ -100,9 +100,9 @@ public abstract class SignBlockMixin extends BaseEntityBlock implements SimpleWa
       // private void broadcastDataValue(AbstractContainerMenu container, int id, int value) {
       // if (serverPlayer.connection.hasChannel(AdvancedContainerSetDataPayload.TYPE)) {
       // serverPlayer.connection
-      // .send(new AdvancedContainerSetDataPayload((byte) container.containerId, (short) id, value));
+      // .send(new AdvancedContainerSetDataPayload((byte) container.sequence, (short) id, value));
       // } else {
-      // serverPlayer.connection.send(new ClientboundContainerSetDataPacket(container.containerId, id, value));
+      // serverPlayer.connection.send(new ClientboundContainerSetDataPacket(container.sequence, id, value));
       // }
       // }
       // };

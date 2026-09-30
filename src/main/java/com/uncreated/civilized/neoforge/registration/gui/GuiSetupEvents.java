@@ -4,6 +4,8 @@ import com.uncreated.civilized.ui.menu.building.ABuildingMenuScreen;
 import com.uncreated.civilized.ui.menu.building.BuildingMenu;
 import com.uncreated.civilized.ui.menu.building.BuildingScreens;
 
+import com.uncreated.civilized.ui.menu.trading.TradingMenu;
+import com.uncreated.civilized.ui.menu.trading.TradingMenuScreen;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
@@ -17,5 +19,9 @@ public class GuiSetupEvents {
             GuiRegistry.BUILDING_MENU.get(),
             (MenuScreens.ScreenConstructor<BuildingMenu, ABuildingMenuScreen>) (buildingMenu, inventory,
                   component) -> BuildingScreens.create(buildingMenu, inventory));
+
+      event.register(
+              GuiRegistry.TRADING_MENU.get(),
+              (MenuScreens.ScreenConstructor<TradingMenu, TradingMenuScreen>) TradingMenuScreen::new);
    }
 }

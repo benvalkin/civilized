@@ -91,6 +91,53 @@ public class ContainerHelper {
       return transferNicely(List.of(fromContainer), toContainer, searchFunction, preferenceFunction, upTo);
    }
 
+   public static AggregateItemStack takeNicely(
+         List<Container> fromContainers,
+         Predicate<ItemStack> searchFunction,
+         Comparator<ItemStack> preferenceFunction,
+         int upTo) {
+
+      if (upTo <= 0)
+         return new AggregateItemStack();
+
+      List<ContainerItemReference> items = new LinkedList<>();
+      for (int c = 0; c < fromContainers.size(); c++) {
+         Container container = fromContainers.get(c);
+         for (int i = 0; i < container.getContainerSize(); i++) {
+            ItemStack item = container.getItem(i);
+            if (!searchFunction.test(item))
+               continue;
+
+            items.add(new ContainerItemReference(item, c, i));
+         }
+      }
+
+      if (preferenceFunction != NO_PREFERENCE)
+         items.sort((i1, i2) -> preferenceFunction.compare(i1.item(), i2.item()));
+
+      int takenSoFar = 0;
+      AggregateItemStack takenItems = new AggregateItemStack();
+
+      for (ContainerItemReference containerItem : items) {
+         ItemStack toTake = containerItem.item().copy();
+         if (takenSoFar + toTake.getCount() > upTo)
+            toTake.shrink(takenSoFar + toTake.getCount() - upTo);
+
+         containerItem.item().shrink(toTake.getCount());
+         takenSoFar += toTake.getCount();
+         takenItems.add(toTake);
+
+         int container = containerItem.container();
+         int slot = containerItem.slot();
+         fromContainers.get(container).setItem(slot, containerItem.item());
+
+         if (takenSoFar >= upTo)
+            break;
+      }
+
+      return takenItems;
+   }
+
    public static int transferNicely(
          List<Container> fromContainers,
          Container toContainer,

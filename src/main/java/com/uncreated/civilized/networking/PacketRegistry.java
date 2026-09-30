@@ -16,13 +16,16 @@ import com.uncreated.civilized.core.settlement.permission.SettlementPermissions;
 import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
+import com.uncreated.civilized.networking.packets.BuyItem;
 import com.uncreated.civilized.networking.packets.CreateNewBuilding;
 import com.uncreated.civilized.networking.packets.PreviewProductionBill;
 import com.uncreated.civilized.networking.packets.ProductionBillPreview;
 import com.uncreated.civilized.networking.packets.SaveProductionBill;
+import com.uncreated.civilized.networking.packets.SellItem;
 import com.uncreated.civilized.networking.packets.SetEyeDropperSlotItem;
 import com.uncreated.civilized.networking.packets.SetSettlementAccessLevel;
 import com.uncreated.civilized.networking.packets.SettlementAccessLevelDenied;
+import com.uncreated.civilized.networking.packets.TradeSlotUpdated;
 import com.uncreated.civilized.networking.packets.VillagerDialogueScreenToggled;
 
 import net.neoforged.bus.api.SubscribeEvent;
@@ -115,5 +118,20 @@ public class PacketRegistry {
             SettlementAccessLevelDenied.TYPE,
             SettlementAccessLevelDenied.STREAM_CODEC,
             ClientPacketHandlers::receiveSettlementAccessLevelDenied);
+
+      registrar.playToServer(
+            BuyItem.TYPE,
+            BuyItem.STREAM_CODEC,
+            BuyItem::serverReceiveBuyItem);
+
+      registrar.playToServer(
+              SellItem.TYPE,
+              SellItem.STREAM_CODEC,
+              SellItem::serverReceiveSellItem);
+
+      registrar.playToClient(
+              TradeSlotUpdated.TYPE,
+              TradeSlotUpdated.STREAM_CODEC,
+              ClientPacketHandlers::receiveTradeSlotUpdated);
    }
 }

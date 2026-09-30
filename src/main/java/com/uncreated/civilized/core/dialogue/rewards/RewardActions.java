@@ -20,7 +20,7 @@ public class RewardActions {
    }
 
    public static void rewardCurrency(DialogueContext context, int amount) {
-      PacketDistributor.sendToServer(new GiveItemsToPlayer(CurrencyItem.payoutIntoItemStacks(amount)));
+      PacketDistributor.sendToServer(new GiveItemsToPlayer(CurrencyItem.credit(amount)));
    }
 
    // adding items to player's inventory on the client doesn't work (items disappear) so have to tell the server to do
