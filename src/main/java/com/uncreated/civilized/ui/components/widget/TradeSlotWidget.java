@@ -4,20 +4,26 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.jetbrains.annotations.NotNull;
+
+import com.uncreated.civilized.core.trading.TradeDirection;
 import com.uncreated.civilized.core.trading.TradeItem;
+import com.uncreated.civilized.core.trading.TradeQuote;
 import com.uncreated.civilized.item.CurrencyItem;
 import com.uncreated.civilized.ui.components.SlotFrameRenderer;
+import com.uncreated.civilized.ui.menu.trading.TradingMenuScreen;
 import com.uncreated.civilized.ui.style.Colors;
 
 import lombok.Getter;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.ItemStack;
 
 public class TradeSlotWidget extends AbstractWidget {
@@ -26,7 +32,7 @@ public class TradeSlotWidget extends AbstractWidget {
    /** The same white overlay vanilla draws over a hovered slot. */
    private static final int SLOT_HIGHLIGHT_COLOR = 0x80FFFFFF;
 
-   private final AbstractContainerScreen<?> parentScreen;
+   private final TradingMenuScreen parentScreen;
    @Getter
    private final int slot;
    @Getter
@@ -34,7 +40,7 @@ public class TradeSlotWidget extends AbstractWidget {
    private final Consumer<TradeSlotWidget> onClicked;
 
    public TradeSlotWidget(
-         AbstractContainerScreen<?> parentScreen,
+         TradingMenuScreen parentScreen,
          int x,
          int y,
          int slot,
@@ -90,7 +96,7 @@ public class TradeSlotWidget extends AbstractWidget {
                      .withColor(Colors.TEXT_LIGHT_MUTED));
       }
       lines.add(createPriceLine());
-      lines.add(Component.empty());
+      // lines.add(Component.empty());
       lines.add(createStockLine());
 
       // drawn like vanilla draws an item's tooltip, so things like bundle contents and custom tooltip styles still show
@@ -105,7 +111,29 @@ public class TradeSlotWidget extends AbstractWidget {
    }
 
    private Component createPriceLine() {
-      return CurrencyItem.amountTranslation(tradeItem.price()).withColor(Colors.COIN);
+      ItemStack carried = parentScreen.getMenu().getCarried();
+      if (parentScreen.getTradeDirection() == TradeDirection.SELL && !carried.isEmpty()
+            && ItemStack.isSameItemSameComponents(carried, tradeItem.item())) {
+         TradeQuote quote =
+               tradeItem.adjustIfOddOrNotAffordable(
+                     parentScreen.getMenu().getAvailableVendorCurrency(),
+                     carried.getCount());
+         Component quantity = Component.literal(String.valueOf(quote.quanity())).withColor(Colors.VALIDATION_SUCCESS);
+         if (tradeItem.price() <= 0)
+            return Component.translatable("menu.trading.tooltip.sell_stack_for_nothing", quantity);
+
+         int carriedStackValue = quote.quanity() / tradeItem.quantityPerTrade() * tradeItem.price();
+         return Component
+               .translatable("menu.trading.tooltip.sell_stack_for", quantity, coinsTransaction(carriedStackValue))
+               .withColor(Colors.TEXT_LIGHT_MUTED)
+               .withStyle(ChatFormatting.ITALIC);
+      }
+
+      return coinsTransaction(tradeItem.price());
+   }
+
+   private @NotNull MutableComponent coinsTransaction(int amount) {
+      return CurrencyItem.amountTranslation(amount).withColor(Colors.COIN);
    }
 
    private Component createStockLine() {

@@ -60,7 +60,7 @@ public class TradeItem {
    }
 
    /** How many whole trades this many items make up. Whatever is left over isn't part of any trade. */
-   private int wholeTrades(int quantity) {
+   public int wholeTrades(int quantity) {
       return Math.max(0, quantity) / quantityPerTrade;
    }
 
@@ -88,7 +88,7 @@ public class TradeItem {
     */
    public ItemTraded sellToVendor(ItemStack itemStack, Container seller, int vendorAvailableCurrency) {
 
-      TradeQuote quote = adjustIfOffOrNotAffordable(vendorAvailableCurrency, itemStack.getCount());
+      TradeQuote quote = adjustIfOddOrNotAffordable(vendorAvailableCurrency, itemStack.getCount());
       int quantitySold = quote.quanity();
       if (quantitySold <= 0)
          return new ItemTraded(itemStack, vendorAvailableCurrency, 0);
@@ -105,11 +105,11 @@ public class TradeItem {
       return countCurrency(buyer) >= wholeTrades(quantity) * price;
    }
 
-   public TradeQuote adjustIfOffOrNotAffordable(Container buyer, int quantity) {
-      return adjustIfOffOrNotAffordable(countCurrency(buyer), quantity);
+   public TradeQuote adjustIfOddOrNotAffordable(Container buyer, int quantity) {
+      return adjustIfOddOrNotAffordable(countCurrency(buyer), quantity);
    }
 
-   public TradeQuote adjustIfOffOrNotAffordable(int availableCurrency, int quantity) {
+   public TradeQuote adjustIfOddOrNotAffordable(int availableCurrency, int quantity) {
       int requestedTrades = wholeTrades(quantity);
       if (requestedTrades <= 0)
          return new TradeQuote(0, 0, true);

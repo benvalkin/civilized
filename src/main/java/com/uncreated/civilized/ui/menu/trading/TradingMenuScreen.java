@@ -14,7 +14,10 @@ import com.uncreated.civilized.ui.components.SlotFrameRenderer;
 import com.uncreated.civilized.ui.components.widget.TradeSlotWidget;
 import com.uncreated.civilized.ui.style.Colors;
 
+import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.CycleButton;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.RenderType;
@@ -32,8 +35,13 @@ public class TradingMenuScreen extends AbstractContainerScreen<TradingMenu> impl
 
    private static final int CONTENT_MARGIN_X = 25;
    private static final int CONTENT_MARGIN_Y = 20;
+   private static final int TRADE_DIRECTION_BUTTON_WIDTH = 60;
+   private static final int TRADE_DIRECTION_BUTTON_HEIGHT = 16;
+
    private ArrayList<TradeSlotWidget> tradeSlots;
-   private TradeDirection tradeDirection;
+   // kept across init(), which runs again whenever the window is resized
+   @Getter
+   private TradeDirection tradeDirection = TradeDirection.BUY;
 
    public TradingMenuScreen(TradingMenu menu, Inventory playerInventory, Component title) {
       super(menu, playerInventory, title);
@@ -78,7 +86,7 @@ public class TradingMenuScreen extends AbstractContainerScreen<TradingMenu> impl
          if (carried.isEmpty())
             return; // cannot sell an empty item
 
-         if (!ItemStack.isSameItem(carried, tradeItem.item()))
+         if (!ItemStack.isSameItemSameComponents(carried, tradeItem.item()))
             return; // trying to click with the wrong type of item
 
          sequence++;
@@ -115,7 +123,19 @@ public class TradingMenuScreen extends AbstractContainerScreen<TradingMenu> impl
 
       tradeSlots.forEach(this::addRenderableWidget);
 
-      tradeDirection = TradeDirection.BUY;
+      addRenderableWidget(
+            CycleButton.builder(TradeDirection::translation)
+                  .withValues(TradeDirection.values())
+                  .withInitialValue(tradeDirection)
+                  .withTooltip(direction -> Tooltip.create(direction.description()))
+                  .displayOnlyValue()
+                  .create(
+                        leftPos + imageWidth - CONTENT_MARGIN_X - TRADE_DIRECTION_BUTTON_WIDTH,
+                        topPos + CONTENT_MARGIN_Y,
+                        TRADE_DIRECTION_BUTTON_WIDTH,
+                        TRADE_DIRECTION_BUTTON_HEIGHT,
+                        Component.empty(),
+                        (button, direction) -> tradeDirection = direction));
    }
 
    @Override

@@ -162,7 +162,8 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
 
    private Optional<Building> invalidateWorksite(VillagerInfo villagerInfo, ServerLevel level) {
 
-      if (villagerInfo.getOccupation().is(VillagerOccupations.UNEMPLOYED))
+      if (villagerInfo.getOccupation().is(VillagerOccupations.UNEMPLOYED)
+            || !villagerInfo.getNpcRoles().contains(VillagerNpcRole.WORKER))
          return Optional.empty();
 
       Optional<Building> currentWorksite = ServerBuildingsStore.INSTANCE.find(villagerInfo.getPrimaryWorksiteId());

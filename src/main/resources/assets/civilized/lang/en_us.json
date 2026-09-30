@@ -413,8 +413,14 @@
   "message.settlement.create_building.failed.too_close_to_other_settlement": "This building is too close to another settlement: %s.",
   "message.settlement.create_building.failed.too_far_from_settlement": "This building is too far from any settlement or townhall.",
   "message.settlement.create_building.failed.player_already_has_another_settlement": "You already have another settlement. It must be fully relinquished before you can create a new one.",
+  "menu.trading.direction.buy": "Buying",
+  "menu.trading.direction.buy.description": "Click an item to buy it. Shift-click to buy a whole stack.",
+  "menu.trading.direction.sell": "Selling",
+  "menu.trading.direction.sell.description": "Pick up an item from your inventory, then click the matching trade slot to sell it.",
   "menu.trading.tooltip.out_of_stock": "Out of stock",
   "menu.trading.tooltip.stock": "In stock: %s",
+  "menu.trading.tooltip.sell_stack_for": "Sell %s for %s",
+  "menu.trading.tooltip.sell_stack_for_nothing": "Donate %s items",
   "menu.trading_screen": "Trader",
   "menu.trading.tooltip.quantity_and_name": "%sx %s"
 }
