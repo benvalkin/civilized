@@ -21,16 +21,19 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.ItemStack;
 
-public class TradeSlotWidget extends AbstractWidget {
+public class TradeSlotWidget extends AbstractWidget implements ITradeSlot {
 
    public static final int SIZE = 16;
    /** The same white overlay vanilla draws over a hovered slot. */
    private static final int SLOT_HIGHLIGHT_COLOR = 0x80FFFFFF;
+   /** Darkens the slot's background when there's nothing left to buy. */
+   private static final int OUT_OF_STOCK_COLOR = 0x80404040;
 
    private final TradingMenuScreen parentScreen;
    @Getter
@@ -53,17 +56,31 @@ public class TradeSlotWidget extends AbstractWidget {
       this.onClicked = onClicked;
    }
 
+   /** Selling to a vendor doesn't need any stock, so the slot only looks unavailable while buying. */
+   private boolean isOutOfStockToBuy() {
+      return parentScreen.getTradeDirection() == TradeDirection.BUY && tradeItem.stock() <= 0;
+   }
+
    @Override
    public void onClick(double mouseX, double mouseY) {
       onClicked.accept(this);
    }
+
+   /**
+    * The out-of-stock grey overlay needs to be drawn at a custom Z coordinate which is above the item (z ≈ 150) so it
+    * greys it out, but below the tooltip (z = 400) so it doesn't cover it.
+    */
+   private static final int OUT_OF_STOCK_OVERLAY_Z = 180;
 
    @Override
    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
 
       SlotFrameRenderer.render(graphics, getX(), getY());
 
-      if (isHovered())
+      // out of stock grey overlay - take care to draw under the item so that the item can still be seen
+      boolean isOutOfStockToBuy = isOutOfStockToBuy();
+
+      if (isHovered() && !isOutOfStockToBuy)
          graphics.fill(getX(), getY(), getX() + SIZE, getY() + SIZE, SLOT_HIGHLIGHT_COLOR);
 
       if (tradeItem.item().isEmpty())
@@ -78,6 +95,16 @@ public class TradeSlotWidget extends AbstractWidget {
                getY(),
                String.valueOf(tradeItem.quantityPerTrade()));
       }
+
+      if (isOutOfStockToBuy)
+         graphics.fill(
+               RenderType.GUI,
+               getX(),
+               getY(),
+               getX() + SIZE,
+               getY() + SIZE,
+               OUT_OF_STOCK_OVERLAY_Z,
+               OUT_OF_STOCK_COLOR);
 
       if (isHovered())
          renderTradeTooltip(graphics, mouseX, mouseY);

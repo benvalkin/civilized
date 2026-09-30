@@ -11,11 +11,14 @@ import com.uncreated.civilized.networking.packets.BuyItem;
 import com.uncreated.civilized.networking.packets.SellItem;
 import com.uncreated.civilized.ui.components.IRefreshableUI;
 import com.uncreated.civilized.ui.components.SlotFrameRenderer;
+import com.uncreated.civilized.ui.components.widget.EmptyTradeSlotWidget;
+import com.uncreated.civilized.ui.components.widget.ITradeSlot;
 import com.uncreated.civilized.ui.components.widget.TradeSlotWidget;
 import com.uncreated.civilized.ui.style.Colors;
 
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
@@ -38,7 +41,11 @@ public class TradingMenuScreen extends AbstractContainerScreen<TradingMenu> impl
    private static final int TRADE_DIRECTION_BUTTON_WIDTH = 60;
    private static final int TRADE_DIRECTION_BUTTON_HEIGHT = 16;
 
-   private ArrayList<TradeSlotWidget> tradeSlots;
+   private static final int TRADE_SLOT_COLUMNS = 9;
+   private static final int TRADE_SLOT_ROWS = 3;
+   private static final int TRADE_SLOT_SPACING = 18;
+
+   private List<ITradeSlot> tradeSlots;
    // kept across init(), which runs again whenever the window is resized
    @Getter
    private TradeDirection tradeDirection = TradeDirection.BUY;
@@ -101,27 +108,22 @@ public class TradingMenuScreen extends AbstractContainerScreen<TradingMenu> impl
       List<TradeItem> tradeItems = menu.getTradeItems();
       tradeSlots = new ArrayList<>();
 
-      int slotRow = 0;
-      int slotColumn = 0;
-      // todo: probably need to fix up this the slot placement
-      for (int i = 0; i < tradeItems.size(); i++) {
-         TradeItem tradeItem = tradeItems.get(i);
-         tradeSlots.add(
-               new TradeSlotWidget(
-                     this,
-                     leftPos + 20 + slotColumn * 18,
-                     topPos + 20 + slotRow * 18,
-                     i,
-                     tradeItem,
-                     this::getOnClicked));
-         slotColumn++;
-         if (slotColumn % 9 == 0) {
-            slotColumn = 0;
-            slotRow++;
-         }
-      }
+      // a full grid is always shown, with empty slots after the trades, growing by a row if there are more trades
+      int rows = Math.max(TRADE_SLOT_ROWS, Math.ceilDiv(tradeItems.size(), TRADE_SLOT_COLUMNS));
 
-      tradeSlots.forEach(this::addRenderableWidget);
+      int gridWidth = (TRADE_SLOT_COLUMNS - 1) * TRADE_SLOT_SPACING + TradeSlotWidget.SIZE;
+      int gridX = leftPos + (imageWidth - gridWidth) / 2;
+      int gridY = topPos + CONTENT_MARGIN_Y;
+
+      for (int i = 0; i < rows * TRADE_SLOT_COLUMNS; i++) {
+         int x = gridX + (i % TRADE_SLOT_COLUMNS) * TRADE_SLOT_SPACING;
+         int y = gridY + (i / TRADE_SLOT_COLUMNS) * TRADE_SLOT_SPACING;
+
+         if (i < tradeItems.size())
+            addTradeSlot(new TradeSlotWidget(this, x, y, i, tradeItems.get(i), this::getOnClicked));
+         else
+            addTradeSlot(new EmptyTradeSlotWidget(x, y, i));
+      }
 
       addRenderableWidget(
             CycleButton.builder(TradeDirection::translation)
@@ -130,12 +132,17 @@ public class TradingMenuScreen extends AbstractContainerScreen<TradingMenu> impl
                   .withTooltip(direction -> Tooltip.create(direction.description()))
                   .displayOnlyValue()
                   .create(
-                        leftPos + imageWidth - CONTENT_MARGIN_X - TRADE_DIRECTION_BUTTON_WIDTH,
+                        leftPos + CONTENT_MARGIN_X,
                         topPos + CONTENT_MARGIN_Y,
                         TRADE_DIRECTION_BUTTON_WIDTH,
                         TRADE_DIRECTION_BUTTON_HEIGHT,
                         Component.empty(),
                         (button, direction) -> tradeDirection = direction));
+   }
+
+   private <T extends AbstractWidget & ITradeSlot> void addTradeSlot(T tradeSlot) {
+      tradeSlots.add(tradeSlot);
+      addRenderableWidget(tradeSlot);
    }
 
    @Override
@@ -161,7 +168,6 @@ public class TradingMenuScreen extends AbstractContainerScreen<TradingMenu> impl
 
    @Override
    protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
-      // commented out the below line as it might be better for GUI space not to render the the building name at the top
       // graphics.drawString(font, title, titleLabelX, titleLabelY, Colors.MENU_TEXT_DARK, false);
 
       // the inventory heading would otherwise sit on its own above nothing
@@ -188,8 +194,9 @@ public class TradingMenuScreen extends AbstractContainerScreen<TradingMenu> impl
       if (slot < 0 || slot >= tradeSlots.size())
          return;
 
-      TradeSlotWidget tradeSlotWidget = tradeSlots.get(slot);
-      tradeSlotWidget.getTradeItem().stock(newStock);
+      TradeItem tradeItem = tradeSlots.get(slot).getTradeItem();
+      if (tradeItem != null)
+         tradeItem.stock(newStock);
       menu.setAvailableVendorCurrency(newAvailableVendorCurrency);
    }
 }
