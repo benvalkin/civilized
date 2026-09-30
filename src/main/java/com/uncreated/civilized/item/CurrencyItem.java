@@ -47,14 +47,14 @@ public class CurrencyItem extends Item {
          List<Component> tooltipComponents,
          TooltipFlag tooltipFlag) {
 
-      int currencyValue = stack.getCount() * unitValue;
-      MutableComponent component;
-      if (currencyValue == 1)
-         component = Component.translatable("item.civilized.coin.count.singular", currencyValue);
-      else
-         component = Component.translatable("item.civilized.coin.count", currencyValue);
+      tooltipComponents.add(amountTranslation(stack.getCount() * unitValue).withColor(Colors.TEXT_LIGHT_MUTED));
+   }
 
-      tooltipComponents.add(component.withColor(Colors.TEXT_LIGHT_MUTED));
+   /** An amount of currency, e.g. "1 coin" or "24 coins". */
+   public static MutableComponent amountTranslation(int currencyValue) {
+      if (currencyValue == 1)
+         return Component.translatable("item.civilized.coin.count.singular", currencyValue);
+      return Component.translatable("item.civilized.coin.count", currencyValue);
    }
 
    @Override

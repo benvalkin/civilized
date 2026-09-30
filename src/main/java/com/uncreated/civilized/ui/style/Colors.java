@@ -26,6 +26,7 @@ public class Colors {
    public static final int PLAYER_NAME_HIGHLIGHTED = 0x5ea0b5;
 
    public final static int COIN = 0xffe680;
+   public final static int TRADE_STOCK = 0x9ce4ff;
 
    public final static int LOVE = 0xffb8f0;
 }

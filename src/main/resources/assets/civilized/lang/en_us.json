@@ -413,5 +413,8 @@
   "message.settlement.create_building.failed.too_close_to_other_settlement": "This building is too close to another settlement: %s.",
   "message.settlement.create_building.failed.too_far_from_settlement": "This building is too far from any settlement or townhall.",
   "message.settlement.create_building.failed.player_already_has_another_settlement": "You already have another settlement. It must be fully relinquished before you can create a new one.",
-  "menu.trading_screen": "Trader"
+  "menu.trading.tooltip.out_of_stock": "Out of stock",
+  "menu.trading.tooltip.stock": "In stock: %s",
+  "menu.trading_screen": "Trader",
+  "menu.trading.tooltip.quantity_and_name": "%sx %s"
 }
