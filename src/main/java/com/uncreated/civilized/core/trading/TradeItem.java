@@ -37,7 +37,18 @@ public class TradeItem {
    private int stock;
    private final int quantityPerTrade;
 
+   /**
+    * @param price
+    *           what one trade costs
+    * @param stock
+    *           how many of the item the vendor has, in items rather than trades
+    * @param quantityPerTrade
+    *           how many items change hands for the price. Trades only ever happen in whole lots of this many
+    */
    public TradeItem(ItemStack item, int price, int stock, int quantityPerTrade) {
+      if (quantityPerTrade < 1)
+         throw new IllegalArgumentException("A trade has to be for at least one item, not " + quantityPerTrade);
+
       this.item = item.copyWithCount(1);
       this.price = price;
       this.stock = stock;
@@ -48,78 +59,76 @@ public class TradeItem {
       this(item, price, stock, 1);
    }
 
-   public ItemTraded buyFromVendor(int quanity, /* Container vendor, */Container buyer, int vendorAvailableCurrency) {
-
-      if (stock <= 0)
-         return new ItemTraded(ItemStack.EMPTY, vendorAvailableCurrency, 0);
-
-      if (quanity > stock)
-         quanity = stock;
-
-      stock -= quanity;
-      int valueOfActuallySold = quanity * price;
-      int actualAmountDebited = CurrencyItem.debit(List.of(buyer), valueOfActuallySold);
-      vendorAvailableCurrency += actualAmountDebited;
-
-      // note: if actuallyTaken somehow contains items of different types, they will be converted to this trading item,
-      // and their original stack will be lost.
-      // this makes sense and shouldn't ever occur - just use with caution
-      return new ItemTraded(item.copyWithCount(quanity), vendorAvailableCurrency, 0);
+   /** How many whole trades this many items make up. Whatever is left over isn't part of any trade. */
+   private int wholeTrades(int quantity) {
+      return Math.max(0, quantity) / quantityPerTrade;
    }
 
-   public ItemTraded sellToVendor(
-         ItemStack itemStack,
-         /* Container vendor, */Container seller,
-         int vendorAvailableCurrency) {
+   /**
+    * @param maxDesiredQuantity
+    *           the most items the buyer wants, which is rounded down to whole trades
+    */
+   public ItemTraded buyFromVendor(int maxDesiredQuantity, Container buyer, int vendorAvailableCurrency) {
+      // the vendor can only sell whole trades of what it has in stock
+      int trades = wholeTrades(Math.min(maxDesiredQuantity, stock));
+      if (trades <= 0)
+         return new ItemTraded(ItemStack.EMPTY, vendorAvailableCurrency, 0);
 
-      if (itemStack.getCount() <= 0)
+      int quantity = trades * quantityPerTrade;
+      int valueOfTrades = trades * price;
+      stock -= quantity;
+      vendorAvailableCurrency += CurrencyItem.debit(List.of(buyer), valueOfTrades);
+
+      return new ItemTraded(item.copyWithCount(quantity), vendorAvailableCurrency, 0);
+   }
+
+   /**
+    * Sells as many whole trades of the stack as the vendor can afford. Whatever isn't sold, including any items that
+    * don't make up a whole trade, is handed back.
+    */
+   public ItemTraded sellToVendor(ItemStack itemStack, Container seller, int vendorAvailableCurrency) {
+
+      TradeQuote quote = adjustIfOffOrNotAffordable(vendorAvailableCurrency, itemStack.getCount());
+      int quantitySold = quote.quanity();
+      if (quantitySold <= 0)
          return new ItemTraded(itemStack, vendorAvailableCurrency, 0);
 
-      int quantity = itemStack.getCount();
+      stock += quantitySold;
+      vendorAvailableCurrency -= quote.totalCurrencyCost();
+      int valueOfCoinsFailedToTransfer = CurrencyItem.credit(List.of(seller), quote.totalCurrencyCost());
 
-      TradeQuote quote = adjustIfNotAffordable(vendorAvailableCurrency, quantity);
-
-      int quantityActuallySold = quote.quanity();
-      stock += quantityActuallySold;
-      int valueOfActuallySold = quantityActuallySold * price;
-
-      vendorAvailableCurrency -= valueOfActuallySold;
-      int valueOfCoinsFailedToTransfer = CurrencyItem.credit(List.of(seller), valueOfActuallySold);
-
-      ItemStack remainderNotSold = itemStack.copyWithCount(quantity - quantityActuallySold);
-
+      ItemStack remainderNotSold = itemStack.copyWithCount(itemStack.getCount() - quantitySold);
       return new ItemTraded(remainderNotSold, vendorAvailableCurrency, valueOfCoinsFailedToTransfer);
    }
 
    public boolean canAfford(Container buyer, int quantity) {
-      AggregateItemStack coins = ContainerHelper.countItems(buyer, i -> i.getItem() instanceof CurrencyItem);
-      int requiredTotalCurrency = quantity * price;
-      int availableCurrency = 0;
-      for (ItemStack coinStack : coins.getItemStacks()) {
-         availableCurrency += coinStack.getCount() * ((CurrencyItem) coinStack.getItem()).getUnitValue();
-      }
-      return availableCurrency >= requiredTotalCurrency;
+      return countCurrency(buyer) >= wholeTrades(quantity) * price;
    }
 
-   public TradeQuote adjustIfNotAffordable(Container buyer, int quantity) {
-      AggregateItemStack coins = ContainerHelper.countItems(buyer, i -> i.getItem() instanceof CurrencyItem);
-      int availableCurrency = 0;
-      for (ItemStack coinStack : coins.getItemStacks()) {
-         availableCurrency += coinStack.getCount() * ((CurrencyItem) coinStack.getItem()).getUnitValue();
-      }
-      return adjustIfNotAffordable(availableCurrency, quantity);
+   public TradeQuote adjustIfOffOrNotAffordable(Container buyer, int quantity) {
+      return adjustIfOffOrNotAffordable(countCurrency(buyer), quantity);
    }
 
-   public TradeQuote adjustIfNotAffordable(int availableCurrency, int quantity) {
-      if (quantity <= 0 || availableCurrency <= 0)
+   public TradeQuote adjustIfOffOrNotAffordable(int availableCurrency, int quantity) {
+      int requestedTrades = wholeTrades(quantity);
+      if (requestedTrades <= 0)
          return new TradeQuote(0, 0, true);
 
-      int requiredTotalCurrency = quantity * price;
-      if (availableCurrency >= requiredTotalCurrency)
-         return new TradeQuote(quantity, requiredTotalCurrency, false);
+      // free trades are always affordable (would otherwise divide by zero)
+      int affordableTrades;
+      if (price <= 0)
+         affordableTrades = requestedTrades;
+      else
+         affordableTrades = Math.clamp(availableCurrency / price, 0, requestedTrades);
 
-      int adjustedQuantity = availableCurrency / price;
-      int adjustedRequiredTotalCurrency = adjustedQuantity * price;
-      return new TradeQuote(adjustedQuantity, adjustedRequiredTotalCurrency, true);
+      return new TradeQuote(
+            affordableTrades * quantityPerTrade,
+            affordableTrades * price,
+            affordableTrades < requestedTrades);
+   }
+
+   private static int countCurrency(Container container) {
+      AggregateItemStack coins = ContainerHelper.countItems(container, i -> i.getItem() instanceof CurrencyItem);
+      return CurrencyItem.countCoins(coins.getItemStacks());
    }
 }

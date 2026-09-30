@@ -57,12 +57,14 @@ public class TradeSlotWidget extends AbstractWidget {
          return;
 
       graphics.renderItem(tradeItem.item(), getX(), getY());
-      graphics.renderItemDecorations(
-            parentScreen.getFont(),
-            tradeItem.item(),
-            getX(),
-            getY(),
-            String.valueOf(tradeItem.stock()));
+      if (tradeItem.quantityPerTrade() > 1) {
+         graphics.renderItemDecorations(
+               parentScreen.getFont(),
+               tradeItem.item(),
+               getX(),
+               getY(),
+               String.valueOf(tradeItem.quantityPerTrade()));
+      }
 
       if (isHovered())
          graphics.renderTooltip(Minecraft.getInstance().font, tradeItem.item(), mouseX, mouseY);

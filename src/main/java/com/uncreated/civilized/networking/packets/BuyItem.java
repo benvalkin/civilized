@@ -66,7 +66,7 @@ public record BuyItem(int sequence, int slot, int quantity) implements CustomPac
 
       Container buyer = tradingMenu.getCustomer();
 
-      TradeQuote tradeQuote = tradeItem.adjustIfNotAffordable(buyer, quantity);
+      TradeQuote tradeQuote = tradeItem.adjustIfOffOrNotAffordable(buyer, quantity);
       ItemTraded bought =
             tradeItem.buyFromVendor(tradeQuote.quanity(), buyer, tradingMenu.getAvailableVendorCurrency());
 

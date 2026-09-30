@@ -65,13 +65,12 @@ public class TradingMenuScreen extends AbstractContainerScreen<TradingMenu> impl
          if (!carried.isEmpty() && !ItemStack.isSameItemSameComponents(carried, tradeItem.item()))
             return; // you can only buy an item from a slot if your hand is empty or you are carrying the same item
 
+         // one trade at a time, or as many as fit in a stack with shift. The server rounds down to whole trades
          int quantityToBuy;
          if (!isShiftKeyPressed)
-            quantityToBuy = 1;
-         else if (tradeItem.stock() < tradeItem.item().getMaxStackSize())
-            quantityToBuy = tradeItem.stock();
+            quantityToBuy = tradeItem.quantityPerTrade();
          else
-            quantityToBuy = tradeItem.item().getMaxStackSize();
+            quantityToBuy = Math.min(tradeItem.stock(), tradeItem.item().getMaxStackSize());
 
          sequence++;
          PacketDistributor.sendToServer(new BuyItem(sequence, slot, quantityToBuy));
