@@ -110,7 +110,12 @@ public abstract class StatefulBehaviourControl<StateMachine extends BehaviourSta
                return;
             }
          }
-         startNextIdleTask(serverLevel, civilizedVillager, currentTicks);
+
+         // we only try start the next idle activity if there is no other task running.
+         // otherwise, chains of queued actions that fail to start keep resetting the idle task's duration such that it
+         // never gets to stop, which ends up blocking other activities.
+         if (currentBehaviour.getStatus() == Behavior.Status.STOPPED)
+            startNextIdleTask(serverLevel, civilizedVillager, currentTicks);
          return;
       }
 

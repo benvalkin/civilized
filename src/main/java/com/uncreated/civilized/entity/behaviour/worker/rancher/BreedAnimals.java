@@ -73,6 +73,7 @@ public class BreedAnimals<T extends Animal> extends WorkTaskBehaviour {
       if (!carrying.satisfied()) {
          Optional<TakeToInventoryInstruction> instruction =
                TakeToInventoryInstruction.createIfMetFromSourceBuildings(
+                     villager,
                      new ReservationKey(party, animalFoodRequirement.key()),
                      animalFoodRequirement,
                      homeAndStorehouseIfPresent());

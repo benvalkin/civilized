@@ -7,7 +7,6 @@ import java.util.Set;
 
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.logistics.AggregateItemStack;
-import com.uncreated.civilized.core.building.logistics.hauling.ItemReservation;
 import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventoryType;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.ConditionalHaulingInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.DropOffItemsInstruction;
@@ -90,8 +89,7 @@ public class TakeItemsToInventory extends WorkTaskBehaviour {
 
       // cancel any reservations we've made in case this activity stops early
       if (currentSourceBuilding != null)
-         currentSourceBuilding
-               .cancelReservation(haulingInstruction.reservationKey());
+         currentSourceBuilding.cancelReservation(haulingInstruction.reservationKey());
    }
 
    @Override
@@ -145,7 +143,8 @@ public class TakeItemsToInventory extends WorkTaskBehaviour {
          DropOffItemsInstruction dropOffItemsInstruction =
                new DropOffItemsInstruction(
                      takeToBuildingInstruction.destinationBuilding(),
-                     List.of(VillagerInventoryType.LOGISTICS));
+                     List.of(VillagerInventoryType.LOGISTICS)
+               );
          villager.getBrain().setMemory(AIRegistry.MM_DROP_OFF_ITEMS_INSTRUCTION.get(), dropOffItemsInstruction);
          getStateMachine().queueImmediately(WorkStates.DROPPING_OFF_ITEMS_AT_BUILDING);
       } else
@@ -156,19 +155,12 @@ public class TakeItemsToInventory extends WorkTaskBehaviour {
 
    private void acceptNextTargetBuilding(CivilizedVillager villager, LoadedBuilding nextBuildingWithStock) {
       currentSourceBuilding = nextBuildingWithStock;
-      placeReservationsOnBuilding(currentSourceBuilding);
+      reserveRequiredItems(
+            haulingInstruction.reservationKey(),
+            currentSourceBuilding,
+            haulingInstruction.requirements());
       BlockEntity chest = currentSourceBuilding.anyChest().orElseThrow();
       travelHelper = new MediumDistanceTravelTask(villager, chest.getBlockPos(), 2);
-   }
-
-   private void placeReservationsOnBuilding(LoadedBuilding building) {
-      List<ItemReservation.Entry> entries =
-            haulingInstruction.requirements()
-                  .stream()
-                  .map(requirement -> new ItemReservation.Entry(requirement.filter(), requirement.idealAmount()))
-                  .toList();
-
-      building.placeReservation(haulingInstruction.reservationKey(), entries);
    }
 
    private void eraseMemory(CivilizedVillager villager) {

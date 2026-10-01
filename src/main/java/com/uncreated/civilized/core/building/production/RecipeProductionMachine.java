@@ -5,7 +5,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
-import com.mojang.datafixers.util.Pair;
 import com.uncreated.civilized.core.building.production.bills.ProductionBill;
 import com.uncreated.civilized.core.building.production.bills.ProductionType;
 import com.uncreated.civilized.core.building.production.bills.strategy.ProductionStrategyType;
@@ -60,9 +59,20 @@ public abstract class RecipeProductionMachine<Order extends ProductionOrder> {
          productionTokens = 0;
    }
 
-   public Optional<Pair<ProductionOrder, PendingProductionOutput>> tryGetNextOrder(
+   /** If empty, it means that there 0 bills. */
+   public Optional<ProductionOrder> currentlyProcessing() {
+      if (currentOrderIndex >= orders.size())
+         currentOrderIndex = orders.size() - 1;
+
+      if (currentOrderIndex < 0)
+         return Optional.empty();
+
+      return Optional.ofNullable(orders.get(currentOrderIndex));
+   }
+
+   public Optional<PendingProduction> tryAdvanceToProcessableOrder(
          List<Container> ingredientsChests,
-         List<Container> stockChests) {
+         List<Container> outputChests) {
 
       if (orders.isEmpty())
          return Optional.empty();
@@ -78,9 +88,11 @@ public abstract class RecipeProductionMachine<Order extends ProductionOrder> {
 
          if (productionTokens > 0) {
             Optional<PendingProductionOutput> possibleOutput =
-                  checkProductionPossible(currentlyProcessing, ingredientsChests, stockChests);
-            if (possibleOutput.isPresent())
-               return Optional.of(Pair.of(currentlyProcessing, possibleOutput.get()));
+                  checkProductionPossible(currentlyProcessing, ingredientsChests, outputChests);
+
+            if (possibleOutput.isPresent()) {
+               return Optional.of(new PendingProduction(currentlyProcessing, possibleOutput.get()));
+            }
          }
 
          // if it is not possible to produce the current order, either because it has no ingredients or no more tokens,

@@ -64,6 +64,7 @@ public class MineOres extends WorkTaskBehaviour {
          String party = reservationPartyKey(villager);
          Optional<TakeToInventoryInstruction> instruction =
                TakeToInventoryInstruction.createIfMetFromSourceBuildings(
+                     villager,
                      new ReservationKey(party, PICKAXE_REQUIREMENT.key()),
                      PICKAXE_REQUIREMENT,
                      homeAndStorehouseIfPresent());

@@ -61,6 +61,7 @@ public class HarvestCrops extends WorkTaskBehaviour {
 
          Optional<TakeToInventoryInstruction> instruction =
                TakeToInventoryInstruction.createIfMetFromSourceBuildings(
+                     villager,
                      new ReservationKey(party, HOE_REQUIREMENT.key()),
                      HOE_REQUIREMENT,
                      homeAndStorehouseIfPresent());

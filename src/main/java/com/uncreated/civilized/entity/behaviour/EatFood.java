@@ -103,6 +103,7 @@ public class EatFood extends StatefulBehaviour {
 
       Optional<TakeToInventoryInstruction> instruction =
             TakeToInventoryInstruction.createIfMetFromSourceBuildings(
+                  villager,
                   new ReservationKey(reservationPartyKey(villager), FOOD_RESERVATION_NAME),
                   FOOD_REQUIREMENT,
                   foodSources);

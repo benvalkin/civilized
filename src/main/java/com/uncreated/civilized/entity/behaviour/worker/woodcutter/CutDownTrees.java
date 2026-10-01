@@ -59,6 +59,7 @@ public class CutDownTrees extends WorkTaskBehaviour {
          String party = reservationPartyKey(villager);
          Optional<TakeToInventoryInstruction> instruction =
                TakeToInventoryInstruction.createIfMetFromSourceBuildings(
+                     villager,
                      new ReservationKey(party, AXE_REQUIREMENT.key()),
                      AXE_REQUIREMENT,
                      homeAndStorehouseIfPresent());

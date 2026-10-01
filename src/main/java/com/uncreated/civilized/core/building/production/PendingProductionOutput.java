@@ -136,9 +136,13 @@ public record PendingProductionOutput(Recipe<?> recipe, AssembledRecipe<?> assem
          if (aggregateStack.isEmpty())
             aggregateStack = subStack.itemStack().copy();
          else
-            aggregateStack.shrink(subStack.itemStack().getCount());
+            aggregateStack.grow(subStack.itemStack().getCount());
 
          subStacks.add(subStack);
+      }
+
+      public boolean isEmpty() {
+         return subStacks.isEmpty();
       }
 
       public ItemStack aggregateStack() {

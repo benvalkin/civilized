@@ -53,6 +53,30 @@ public abstract class ConditionalHaulingInstruction<T extends ItemStockRequireme
    }
 
    /**
+    * Whether the villager still needs items for the requirement, and the source buildings have at least its minimum
+    * acceptable amount of them. Uses the same idea of "still needed" as {@link #hasUsefulStock}, so an instruction
+    * that passes this is one the villager can actually act on.
+    */
+   private boolean isAvailable(CivilizedVillager villager, T requirement) {
+      return outstandingAmount(villager, requirement) > 0
+            && requirement.evaluate(reservationKey.party(), sourceBuildings).satisfied();
+   }
+
+   /** Whether the villager can fetch something for at least one requirement. */
+   public boolean anyRequirementAvailable(CivilizedVillager villager) {
+      return requirements.stream().anyMatch(r -> isAvailable(villager, r));
+   }
+
+   /**
+    * Whether the villager can fetch something for every requirement that still needs items, as long as at least one
+    * does. Requirements that already have enough don't stand in the way.
+    */
+   public boolean allOutstandingRequirementsAvailable(CivilizedVillager villager) {
+      List<T> outstanding = requirements.stream().filter(r -> outstandingAmount(villager, r) > 0).toList();
+      return !outstanding.isEmpty() && outstanding.stream().allMatch(r -> isAvailable(villager, r));
+   }
+
+   /**
     * Whether the building holds anything for a requirement that still needs items, i.e. whether it is worth the
     * villager walking over there.
     */

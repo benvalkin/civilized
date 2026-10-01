@@ -13,8 +13,11 @@ import org.jetbrains.annotations.NotNull;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.entity.LoadedBuildings;
+import com.uncreated.civilized.core.building.logistics.hauling.ItemReservation;
+import com.uncreated.civilized.core.building.logistics.hauling.ReservationKey;
 import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventoryType;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.DropOffItemsInstruction;
+import com.uncreated.civilized.core.building.logistics.hauling.requirement.ItemStockRequirement;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlement;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
 import com.uncreated.civilized.entity.CivilizedVillager;
@@ -209,5 +212,31 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
       }
 
       return pickedUpAnything;
+   }
+
+   protected void reserveRequiredItems(
+         CivilizedVillager villager,
+         String reservationName,
+         LoadedBuilding building,
+         List<? extends ItemStockRequirement> requirements) {
+
+      ReservationKey reservationKey = new ReservationKey(reservationPartyKey(villager), reservationName);
+      reserveRequiredItems(reservationKey, building, requirements);
+   }
+
+   protected void reserveRequiredItems(
+         ReservationKey reservationKey,
+         LoadedBuilding building,
+         List<? extends ItemStockRequirement> requirements) {
+
+      if (requirements.isEmpty())
+         return;
+
+      List<ItemReservation.Entry> entries =
+            requirements.stream()
+                  .map(requirement -> new ItemReservation.Entry(requirement.filter(), requirement.idealAmount()))
+                  .toList();
+
+      building.placeReservation(reservationKey, entries);
    }
 }

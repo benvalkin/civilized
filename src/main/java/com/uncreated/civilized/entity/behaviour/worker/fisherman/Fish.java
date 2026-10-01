@@ -90,6 +90,7 @@ public class Fish extends WorkTaskBehaviour {
          String party = reservationPartyKey(villager);
          Optional<TakeToInventoryInstruction> instruction =
                TakeToInventoryInstruction.createIfMetFromSourceBuildings(
+                     villager,
                      new ReservationKey(party, fishingRodRequirement.key()),
                      fishingRodRequirement,
                      homeAndStorehouseIfPresent());

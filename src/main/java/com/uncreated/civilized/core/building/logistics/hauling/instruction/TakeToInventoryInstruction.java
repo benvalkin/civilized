@@ -27,62 +27,68 @@ public class TakeToInventoryInstruction extends ConditionalHaulingInstruction<In
    }
 
    /**
-    * Creates an instruction as long as the requirement can be met from the source buildings. When fulfilling this
-    * instruction, the villager will take whatever it can get from each source building. items.
+    * Creates an instruction as long as the villager can fetch something for the requirement from the source buildings.
+    * When fulfilling this instruction, the villager will take whatever it can get from each source building.
     */
    public static Optional<TakeToInventoryInstruction> createIfMetFromSourceBuildings(
+         CivilizedVillager villager,
          ReservationKey reservationKey,
          InventoryStockRequirement requirement,
          List<LoadedBuilding> candidateSourceBuildings) {
       return createIfAnyMetFromSourceBuildings(
+            villager,
             reservationKey,
             List.of(requirement),
             candidateSourceBuildings);
    }
 
    /**
-    * Creates an instruction as long as AT LEAST ONE of the requirements can be met from the source buildings. When
-    * fulfilling this instruction, the villager will take whatever it can get from each source building - i.e. when one
-    * requirement is satisfied and another isn't, the villager will still continue to other buildings in search of other
-    * items.
+    * Creates an instruction as long as the villager can fetch something for AT LEAST ONE of the requirements, i.e. one
+    * it still needs and the source buildings have. When fulfilling this instruction, the villager will take whatever it
+    * can get from each source building - i.e. when one requirement is satisfied and another isn't, the villager will
+    * still continue to other buildings in search of other items.
     */
    public static Optional<TakeToInventoryInstruction> createIfAnyMetFromSourceBuildings(
+         CivilizedVillager villager,
          ReservationKey reservationKey,
          List<InventoryStockRequirement> requirements,
          List<LoadedBuilding> candidateSourceBuildings) {
 
-      boolean anyRequirementSatisfied =
-            requirements.stream().anyMatch(r -> r.evaluate(reservationKey.party(), candidateSourceBuildings).satisfied());
-      if (!anyRequirementSatisfied)
+      // the instruction can't be made from nothing, and there would be nothing to fetch anyway
+      if (requirements.isEmpty() || candidateSourceBuildings.isEmpty())
          return Optional.empty();
 
-      return Optional.of(
-            new TakeToInventoryInstruction(requirements, candidateSourceBuildings, reservationKey));
+      TakeToInventoryInstruction instruction =
+            new TakeToInventoryInstruction(requirements, candidateSourceBuildings, reservationKey);
+      if (instruction.anyRequirementAvailable(villager))
+         return Optional.of(instruction);
+
+      return Optional.empty();
    }
 
    /**
-    * Creates an instruction only if ALL the requirements can be met from the source buildings. When fulfilling this
-    * instruction, the villager will take whatever it can get from each source building - i.e. when one requirement is
-    * satisfied and another isn't, the villager will still continue to other buildings in search of other items.
+    * Creates an instruction only if the villager can fetch something for ALL the requirements it still needs. When
+    * fulfilling this instruction, the villager will take whatever it can get from each source building - i.e. when one
+    * requirement is satisfied and another isn't, the villager will still continue to other buildings in search of other
+    * items.
     */
    public static Optional<TakeToInventoryInstruction> createIfAllMetFromSourceBuildings(
+         CivilizedVillager villager,
          ReservationKey reservationKey,
          List<InventoryStockRequirement> requirements,
          List<LoadedBuilding> sourceBuildings) {
 
-      boolean allRequirementAvailable =
-            requirements.stream().allMatch(r -> r.evaluate(reservationKey.party(), sourceBuildings).satisfied());
-      if (!allRequirementAvailable)
+      // the instruction can't be made from nothing, and there would be nothing to fetch anyway
+      if (requirements.isEmpty() || sourceBuildings.isEmpty())
          return Optional.empty();
 
-      return Optional
-            .of(new TakeToInventoryInstruction(requirements, sourceBuildings, reservationKey));
+      TakeToInventoryInstruction instruction =
+            new TakeToInventoryInstruction(requirements, sourceBuildings, reservationKey);
+      return instruction.allOutstandingRequirementsAvailable(villager) ? Optional.of(instruction) : Optional.empty();
    }
 
    @Override
-   public HaulDecision takeItemsUntilSatisfied(
-         CivilizedVillager villager,
-         LoadedBuilding sourceBuilding) {
+   public HaulDecision takeItemsUntilSatisfied(CivilizedVillager villager, LoadedBuilding sourceBuilding) {
 
       List<Container> chests = sourceBuilding.chests();
 

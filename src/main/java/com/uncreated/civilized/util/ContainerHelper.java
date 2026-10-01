@@ -198,13 +198,19 @@ public class ContainerHelper {
    }
 
    public static AggregateItemStack countItems(Container container, Predicate<ItemStack> itemSearch) {
+      return countItems(List.of(container), itemSearch);
+   }
+
+   public static AggregateItemStack countItems(List<Container> containers, Predicate<ItemStack> itemSearch) {
 
       AggregateItemStack result = new AggregateItemStack();
 
-      for (int i = 0; i < container.getContainerSize(); i++) {
-         ItemStack item = container.getItem(i);
-         if (itemSearch.test(item))
-            result.add(item);
+      for (Container container : containers) {
+         for (int i = 0; i < container.getContainerSize(); i++) {
+            ItemStack item = container.getItem(i);
+            if (itemSearch.test(item))
+               result.add(item);
+         }
       }
 
       return result;

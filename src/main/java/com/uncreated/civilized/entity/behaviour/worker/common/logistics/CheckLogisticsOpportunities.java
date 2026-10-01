@@ -53,7 +53,7 @@ public class CheckLogisticsOpportunities extends WorkTaskBehaviour {
    @Override
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
 
-      getBehaviourCooldowns().startCooldown(Cooldowns.START, Duration.of(15, ChronoUnit.SECONDS), level.getGameTime());
+      getBehaviourCooldowns().startCooldown(Cooldowns.START, Duration.of(30, ChronoUnit.SECONDS), level.getGameTime());
 
       Optional<LoadedBuilding> storehouse = findStorehouse(getSettlement());
       if (storehouse.isEmpty())
@@ -64,7 +64,7 @@ public class CheckLogisticsOpportunities extends WorkTaskBehaviour {
       List<Container> homeChests = LogisticsOrder.findChests(level, getHome().getBuilding());
       List<Container> storehouseChests = LogisticsOrder.findChests(level, this.storehouse.getBuilding());
       List<LoadedBuilding> home = List.of(getHome());
-      if (!getSharedCooldowns().hasCooldown(Cooldowns.EXPORT_RUN, level.getGameTime()) && checkForExportOrders()) {
+      if (!getBehaviourCooldowns().hasCooldown(Cooldowns.EXPORT_RUN, level.getGameTime()) && checkForExportOrders()) {
 
          String party = reservationPartyKey(villager);
          // note that this instruction reserved every single item in the chest since it takes everything to the
@@ -72,18 +72,21 @@ public class CheckLogisticsOpportunities extends WorkTaskBehaviour {
          // this seems okay, but maybe double check in future
          Optional<TransferToBuildingInstruction> transferToBuildingInstruction =
                TransferToBuildingInstruction.createIfMetFromSourceBuildings(
+                     villager,
                      new ReservationKey(party, "everything"),
                      everything,
                      this.storehouse,
                      home);
 
          if (transferToBuildingInstruction.isPresent()) {
+            getBehaviourCooldowns()
+                  .startCooldown(Cooldowns.EXPORT_RUN, Duration.of(2, ChronoUnit.MINUTES), level.getGameTime());
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), transferToBuildingInstruction);
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
          }
       } else if (!getSharedCooldowns().hasCooldown(Cooldowns.IMPORT_RUN, level.getGameTime())
             && checkForImportOrders(storehouseChests, homeChests)) {
-         // todo: import runs still need a hauling instruction for pulling stock from the storehouse into the home.
+         // todo: do we still need an import system?
          // checkForImportOrders always returns false until then, so this branch never runs
       }
    }

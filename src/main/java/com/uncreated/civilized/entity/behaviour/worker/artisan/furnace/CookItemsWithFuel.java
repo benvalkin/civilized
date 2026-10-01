@@ -11,7 +11,6 @@ import java.util.stream.Stream;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
-import com.mojang.datafixers.util.Pair;
 import com.mojang.logging.LogUtils;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
@@ -19,13 +18,15 @@ import com.uncreated.civilized.core.building.entity.behaviour.ArtisanHouseBehavi
 import com.uncreated.civilized.core.building.logistics.hauling.ReservationKey;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.TransferToBuildingInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.BuildingStockRequirement;
+import com.uncreated.civilized.core.building.production.PendingProduction;
 import com.uncreated.civilized.core.building.production.PendingProductionOutput;
 import com.uncreated.civilized.core.building.production.RecipeProductionSystem;
 import com.uncreated.civilized.core.building.production.bills.ItemFilter;
 import com.uncreated.civilized.core.building.production.bills.RecipeSlotType;
 import com.uncreated.civilized.core.building.production.lines.singleitem.SingleItemRecipeOrder;
 import com.uncreated.civilized.core.building.production.lines.singleitem.cooking.CookingMachine;
-import com.uncreated.civilized.core.building.production.orders.ProductionOrder;
+import com.uncreated.civilized.core.notifications.Notification;
+import com.uncreated.civilized.core.notifications.NotificationService;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.BehaviourState;
 import com.uncreated.civilized.entity.behaviour.Cooldowns;
@@ -33,17 +34,22 @@ import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
 import com.uncreated.civilized.entity.behaviour.worker.WorkTaskBehaviour;
 import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
-import com.uncreated.civilized.util.ContainerHelper;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.behavior.BlockPosTracker;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.MemoryStatus;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.AbstractCookingRecipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.SingleRecipeInput;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.AbstractFurnaceBlock;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
@@ -53,10 +59,26 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
    private MediumDistanceTravelTask travelHelper;
 
    private CookingMachine cookingMachine;
+   private Notification missingIngredientsNotification;
 
    public CookItemsWithFuel(BehaviourState state) {
       super(state, true, false, 60 * 20, 20);
    }
+
+   private enum FurnaceUsageDecision {
+      LET_THEM_COOK, EXTRACT_COOKED_GOODS, EXTRACT_EVERYTHING, PLACE_NEW_ITEMS, IMPORT_MISSING_ITEMS
+   }
+
+   private FurnaceUsageDecision decision;
+
+   /**
+    * A furnace's slots hold up to a stack each.
+    */
+   private static final int FUEL_SLOT_CAPACITY = 64;
+   /**
+    * How long a furnace takes per item, used if the ingredient's recipe can't be found.
+    */
+   private static final int DEFAULT_COOKING_TIME = 200;
 
    @Override
    protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
@@ -72,11 +94,11 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
       worksite.getBounds().traverseBlocksWithin(traversal -> {
          BlockEntity blockEntity = level.getBlockEntity(traversal.getCurrentBlockPos());
 
-         if (!(blockEntity instanceof AbstractFurnaceBlockEntity furnaceBlockEntity))
+         if (!(blockEntity instanceof AbstractFurnaceBlockEntity f))
             return;
 
-         if (isCorrectFurnaceBlock(furnaceBlockEntity)) {
-            this.furnaceBlockEntity = furnaceBlockEntity;
+         if (isCorrectFurnaceBlock(f)) {
+            this.furnaceBlockEntity = f;
             traversal.terminate();
          }
 
@@ -87,7 +109,8 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
       if (furnaceBlockEntity == null)
          return false;
 
-      ArtisanHouseBehaviour behaviour = (ArtisanHouseBehaviour) getWorksite().getBehaviour();
+      if (!(getWorksite().getBehaviour() instanceof ArtisanHouseBehaviour behaviour))
+         return false;
 
       cookingMachine = getProductionMachine(behaviour.getRecipeProductionSystem());
 
@@ -96,49 +119,90 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
       List<Container> storehouseAndWorksiteChests =
             Stream.concat(worksiteChests.stream(), storehouseChests.stream()).toList();
 
-      if (cookingMachine.tryGetNextOrder(worksiteChests, storehouseAndWorksiteChests).isEmpty()) {
+      // ItemStack currentIngredient = currentIngredientInFurnace();
+      // ItemStack proposedIngredient =
+      // nextOrder.map(o -> o.output().getConsumableIngredients().getFirst().aggregateStack())
+      // .orElse(ItemStack.EMPTY);
 
-         // there is nothing to put into the furnace
-         // we can still take cooked items out though
-         ItemStack cookedGoods = furnaceBlockEntity.getItem(2).copy();
-         if (!cookedGoods.isEmpty()
-               && furnaceBlockEntity.canTakeItem(villager.getWorkOutputInventory(), 3, cookedGoods)) {
-            villager.getWorkOutputInventory().addItem(cookedGoods);
-            furnaceBlockEntity.setItem(2, ItemStack.EMPTY);
+      // boolean ingredientSlotEmpty = currentIngredient.isEmpty();
+      // boolean furnaceRequiresIngredientChange =
+      // ingredientSlotEmpty || ItemStack.isSameItem(currentIngredient, proposedIngredient);
 
-            cookingMachine.consumeTokens(cookedGoods.getCount());
+      if (isCooking(level)/* && !furnaceRequiresIngredientChange */) {
 
-            dumpInventoryToChests(villager.getWorkOutputInventory(), getWorksite().chests());
-
-            villager.swing(InteractionHand.MAIN_HAND, true);
-            villager.addWorkExhaustion(1);
+         if (canTakeFromSlot(villager.getWorkOutputInventory(), 2)) {
+            decision = FurnaceUsageDecision.EXTRACT_COOKED_GOODS;
+            return true;
          }
 
-         // we cannot produce anything at the moment, so we should try import ingredients from the storehouse
-         if (storehouse.isEmpty())
-            return false; // cannot import anything if the storehouse doesn't exist
-
-         List<BuildingStockRequirement> allRecipeStockRequirements =
-               createIngredientsRequirementsForAllRecipes(storehouseAndWorksiteChests, level);
-
-         String party = reservationPartyKey(villager);
-
-         Optional<TransferToBuildingInstruction> fetchFromStorehouse =
-               TransferToBuildingInstruction.createIfAnyMetFromSourceBuildings(
-                     new ReservationKey(party, "cooking_ingredients"),
-                     allRecipeStockRequirements,
-                     getWorksite(),
-                     List.of(storehouse.get()));
-         if (fetchFromStorehouse.isPresent()) {
-            villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), fetchFromStorehouse.get());
-            getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
-            getStateMachine().queueActionOnce(this.getState());
-         }
-
-         return false;
+         decision = FurnaceUsageDecision.LET_THEM_COOK;
+         return false; // the current order is cooking. there is nothing take out yet. let it cook.
+      } else if (!furnaceIsCompletelyEmpty()) {
+         // we are no longer cooking, or it's time for another production bill.
+         // go to the furnace and extract everything so that we can decide what to next
+         decision = FurnaceUsageDecision.EXTRACT_EVERYTHING;
+         return true;
       }
 
-      return true;
+      Optional<PendingProduction> nextOrder =
+            cookingMachine.tryAdvanceToProcessableOrder(worksiteChests, storehouseAndWorksiteChests);
+
+      boolean atLeast1FuelItemPresent = false;
+      if (nextOrder.isPresent())
+         atLeast1FuelItemPresent =
+               !nextOrder.get().output().getConsumableFuel(1, nextOrder.get().order(), 1, level).isEmpty();
+
+      if (nextOrder.isPresent() && atLeast1FuelItemPresent) {
+         decision = FurnaceUsageDecision.PLACE_NEW_ITEMS;
+         return true; // the next order already has ingredients in worksite chests. We can go ahead and start processing
+         // it.
+      }
+
+      decision = FurnaceUsageDecision.IMPORT_MISSING_ITEMS;
+
+      // if we are here, we are either missing ingredients or fuel.
+      // we need to import them from the storehouse
+      if (storehouse.isEmpty())
+         return false; // cannot import anything if the storehouse doesn't exist
+
+      List<BuildingStockRequirement> allRecipeStockRequirements =
+            createIngredientsRequirementsForAllRecipes(storehouseAndWorksiteChests, level);
+      // ensure that no-one can take away ingredients from this building, including this villager when taking items
+      // for other activities (e.g. offloading home items at the storehouse)
+      reserveRequiredItems(villager, "smelting_production", getWorksite(), allRecipeStockRequirements);
+
+      String party = reservationPartyKey(villager);
+
+      Optional<TransferToBuildingInstruction> fetchFromStorehouse =
+            TransferToBuildingInstruction.createIfAnyMetFromSourceBuildings(
+                  villager,
+                  new ReservationKey(party, "cooking_ingredients"),
+                  allRecipeStockRequirements,
+                  getWorksite(),
+                  List.of(storehouse.get()));
+      if (fetchFromStorehouse.isPresent()) {
+         villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), fetchFromStorehouse.get());
+         getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
+         getStateMachine().queueActionOnce(this.getState());
+      } else if (!allRecipeStockRequirements.isEmpty()) {
+         // there are requirements for bills that we aren't able to fetch from anywhere at the moment
+         int randomIndex = villager.getRandom().nextInt(allRecipeStockRequirements.size());
+         ItemStack icon = allRecipeStockRequirements.get(randomIndex).getDisplayItem();
+         missingIngredientsNotification =
+               Notification.missingIngredients("missing_cooking_ingredients", villager.getInfo(), icon.getItem())
+                     .build();
+         NotificationService.INSTANCE.sendNotification(missingIngredientsNotification);
+      }
+
+      return false;
+   }
+
+   private boolean canTakeFromSlot(SimpleContainer villagerInventory, int slot) {
+      ItemStack cookedGoods = furnaceBlockEntity.getItem(slot);
+      if (cookedGoods.isEmpty())
+         return false;
+
+      return furnaceBlockEntity.canTakeItem(villagerInventory, slot, cookedGoods);
    }
 
    private @NotNull List<BuildingStockRequirement> createIngredientsRequirementsForAllRecipes(
@@ -197,11 +261,18 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
 
    protected abstract CookingMachine getProductionMachine(RecipeProductionSystem recipeProductionSystem);
 
+   protected abstract RecipeType<? extends AbstractCookingRecipe> getRecipeType();
+
    protected abstract boolean isCorrectFurnaceBlock(AbstractFurnaceBlockEntity furnaceBlockEntity);
 
    @Override
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.start(level, villager, gameTime);
+
+      if (getRecipeType() != cookingMachine.getProductionType().recipeType())
+         throw new IllegalStateException("getRecipeType and CookingMachine's recipeType do not match.");
+
+      NotificationService.INSTANCE.resolveNotification(missingIngredientsNotification);
       travelHelper = new MediumDistanceTravelTask(villager, furnaceBlockEntity.getBlockPos(), 2);
    }
 
@@ -224,97 +295,180 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
          return;
       }
 
+      if (furnaceBlockEntity.isRemoved())
+         return;
+
       villager.getBrain()
             .setMemory(MemoryModuleType.LOOK_TARGET, new BlockPosTracker(furnaceBlockEntity.getBlockPos()));
 
-      boolean useSuccess = false;
-      boolean changeItemsNeeded = false;
-
-      // take cooked stuff out first
-
-      ItemStack cookedGoods = furnaceBlockEntity.getItem(2).copy();
-      if (!cookedGoods.isEmpty() && furnaceBlockEntity.canTakeItem(villager.getWorkOutputInventory(), 3, cookedGoods)) {
-         villager.getWorkOutputInventory().addItem(cookedGoods);
-         furnaceBlockEntity.setItem(2, ItemStack.EMPTY);
-
-         villager.setItemSlot(EquipmentSlot.MAINHAND, cookedGoods);
-
-         cookingMachine.consumeTokens(cookedGoods.getCount());
-         changeItemsNeeded = cookingMachine.getProductionTokens() == 0;
-
+      if (decision == FurnaceUsageDecision.EXTRACT_COOKED_GOODS) {
+         extractFurnaceItems(villager, 2);
          dumpInventoryToChests(villager.getWorkOutputInventory(), getWorksite().chests());
+         startUsageCooldown(gameTime);
+      } else if (decision == FurnaceUsageDecision.EXTRACT_EVERYTHING) {
+         extractFurnaceItems(villager, 0);
+         extractFurnaceItems(villager, 1);
+         extractFurnaceItems(villager, 2);
+         dumpInventoryToChests(villager.getWorkOutputInventory(), getWorksite().chests());
+      } else if (decision == FurnaceUsageDecision.PLACE_NEW_ITEMS) {
 
-         useSuccess = true;
-      }
-
-      Optional<LoadedBuilding> storehouse = findStorehouse(getSettlement());
-      if (storehouse.isEmpty()) {
-         doStop(level, villager, gameTime);
-         return;
-      }
-
-      List<Container> worksiteChests = getWorksite().chests();
-      List<Container> storehouseChests = storehouse.map(LoadedBuilding::chests).orElse(List.of());
-      List<Container> storehouseAndWorksiteChests =
-            Stream.concat(worksiteChests.stream(), storehouseChests.stream()).toList();
-
-      Optional<Pair<ProductionOrder, PendingProductionOutput>> currentOrder =
-            cookingMachine.tryGetNextOrder(worksiteChests, storehouseAndWorksiteChests);
-      if (currentOrder.isEmpty()) {
-         // nothing more to cook
-         doStop(level, villager, gameTime);
-
-         if (useSuccess) {
-            villager.swing(InteractionHand.MAIN_HAND, true);
-            villager.addWorkExhaustion(1);
+         Optional<LoadedBuilding> storehouse = findStorehouse(getSettlement());
+         if (storehouse.isEmpty()) {
+            doStop(level, villager, gameTime);
+            return;
          }
 
-         return;
-      }
+         List<Container> worksiteChests = getWorksite().chests();
+         List<Container> storehouseChests = storehouse.map(LoadedBuilding::chests).orElse(List.of());
+         List<Container> storehouseAndWorksiteChests =
+               Stream.concat(worksiteChests.stream(), storehouseChests.stream()).toList();
 
-      ProductionOrder order = currentOrder.get().getFirst();
-      PendingProductionOutput pendingOutput = currentOrder.get().getSecond();
-      List<PendingProductionOutput.ConsumableIngredientStack> toSmelt = pendingOutput.getConsumableIngredients();
-
-      PendingProductionOutput.ConsumableIngredientStack fuel = pendingOutput.getConsumableFuel(1, order, 8, level);
-
-      // try place fuel, or leave alone if there is already fuel
-      if (!fuel.subStacks().isEmpty()) {
-         ItemStack newInput = fuel.aggregateStack();
-         if (furnaceBlockEntity.getItem(1).isEmpty() && furnaceBlockEntity.canPlaceItem(1, newInput)) {
-            furnaceBlockEntity.setItem(1, newInput);
-            pendingOutput.consumeIngredients(List.of(fuel));
-            useSuccess = true;
+         Optional<PendingProduction> nextOrder =
+               cookingMachine.tryAdvanceToProcessableOrder(worksiteChests, storehouseAndWorksiteChests);
+         if (nextOrder.isEmpty()) {
+            // for some reason, there was nothing to cook, yet there was when we started this behaviour.
+            // startVisitCooldown(gameTime);
+            doStop(level, villager, gameTime);
+            return;
          }
+
+         PendingProductionOutput pending = nextOrder.get().output();
+         PendingProductionOutput.ConsumableIngredientStack ingredient = pending.getConsumableIngredients().getFirst();
+
+         // asking for a whole stack shows which fuel would be used, then only as much of it as the batch needs is kept.
+         // Asking for fewer could pick a worse fuel, since the search stops as soon as it has found enough
+         PendingProductionOutput.ConsumableIngredientStack availableFuel =
+               pending.getConsumableFuel(1, nextOrder.get().order(), FUEL_SLOT_CAPACITY, level);
+         int fuelNeeded = fuelNeededToCook(ingredient.aggregateStack(), availableFuel.aggregateStack(), level);
+         PendingProductionOutput.ConsumableIngredientStack fuel = limitTo(availableFuel, fuelNeeded);
+
+         // there shouldn't be anything in the furnace here, remove it just in case
+         extractFurnaceItems(villager, 0);
+         extractFurnaceItems(villager, 1);
+         extractFurnaceItems(villager, 2);
+
+         furnaceBlockEntity.setItem(0, ingredient.aggregateStack());
+         furnaceBlockEntity.setItem(1, fuel.aggregateStack());
+
+         pending.consumeIngredients(List.of(ingredient, fuel));
+
+         startUsageCooldown(gameTime);
       }
 
-      // try place cooking ingredients, either by adding to the existing item, or replacing it
-      if (!toSmelt.isEmpty()) {
-         ItemStack newInput = toSmelt.getFirst().aggregateStack();
-         ItemStack currentlyInFurnace = furnaceBlockEntity.getItem(0).copy();
-
-         if (currentlyInFurnace.isEmpty()) {
-            furnaceBlockEntity.setItem(0, newInput);
-            pendingOutput.consumeIngredients(toSmelt);
-            useSuccess = true;
-         } else if (!currentlyInFurnace.is(newInput.getItem()) && changeItemsNeeded) {
-            // replace items if order's items are different to what's already in the furnace, adding the old items back
-            // to building chests
-            if (ContainerHelper.addItemNicely(worksiteChests, currentlyInFurnace).isEmpty()) {
-               furnaceBlockEntity.setItem(0, newInput);
-               pendingOutput.consumeIngredients(toSmelt);
-               useSuccess = true;
-            }
-         }
-         // leave alone if it's the same item type already in the furnace
-      }
-
-      if (useSuccess) {
-         villager.swing(InteractionHand.MAIN_HAND, true);
-         villager.addWorkExhaustion(1);
-         getBehaviourCooldowns().startCooldown(Cooldowns.START, Duration.of(7, ChronoUnit.SECONDS), gameTime);
-      }
+      villager.swing(InteractionHand.MAIN_HAND, true);
+      villager.addWorkExhaustion(1);
 
       doStop(level, villager, gameTime);
+   }
+
+   private int fuelNeededToCook(ItemStack ingredients, ItemStack fuel, ServerLevel level) {
+      int burnDuration = getFuelBurnDuration(fuel, level);
+      if (fuel.isEmpty() || burnDuration <= 0)
+         return 1;
+
+      int cookingTime =
+            findCookingRecipe(getRecipeType(), new SingleRecipeInput(ingredients), level)
+                  .map(recipe -> recipe.value().cookingTime())
+                  .orElse(DEFAULT_COOKING_TIME);
+
+      // use ceilDiv to avoid losing the remainder which may result in choosing a fuel count that's slightly below what
+      // we actually to cook the full stack
+      int fuelNeeded = Math.ceilDiv(ingredients.getCount() * cookingTime, burnDuration);
+      int fuelSlotLimit = Math.min(FUEL_SLOT_CAPACITY, fuel.getMaxStackSize());
+      return Math.clamp(fuelNeeded, 1, fuelSlotLimit);
+   }
+
+   protected int getFuelBurnDuration(ItemStack fuel, ServerLevel level) {
+      return fuel.getBurnTime(getRecipeType(), level.fuelValues());
+   }
+
+   /**
+    * The first {@code count} items of the stack, taken from its sub-stacks in order.
+    */
+   private static PendingProductionOutput.ConsumableIngredientStack limitTo(
+         PendingProductionOutput.ConsumableIngredientStack stack,
+         int count) {
+      PendingProductionOutput.ConsumableIngredientStack limited =
+            new PendingProductionOutput.ConsumableIngredientStack();
+
+      int remaining = count;
+      for (PendingProductionOutput.SourceIngredientSubStack subStack : stack.subStacks()) {
+         if (remaining <= 0)
+            break;
+
+         int taken = Math.min(remaining, subStack.itemStack().getCount());
+         limited.add(
+               new PendingProductionOutput.SourceIngredientSubStack(
+                     subStack.itemStack().copyWithCount(taken),
+                     subStack.sourceContainer(),
+                     subStack.sourceContainerSlot()));
+         remaining -= taken;
+      }
+
+      return limited;
+   }
+
+   private static <T extends AbstractCookingRecipe> Optional<RecipeHolder<T>> findCookingRecipe(
+         RecipeType<T> recipeType,
+         SingleRecipeInput input,
+         ServerLevel level) {
+      return level.recipeAccess().getRecipeFor(recipeType, input, level);
+   }
+
+   public boolean isCooking(ServerLevel level) {
+      if (!isBurning(level))
+         return false;
+
+      ItemStack input = furnaceBlockEntity.getItem(0);
+      if (input.isEmpty())
+         return false;
+
+      SingleRecipeInput recipeInput = new SingleRecipeInput(input);
+      Optional<? extends RecipeHolder<? extends AbstractCookingRecipe>> recipe =
+            findCookingRecipe(getRecipeType(), recipeInput, level);
+      if (recipe.isEmpty())
+         return false;
+
+      // the result has to fit in the output slot, or the furnace stalls
+      ItemStack result = recipe.get().value().assemble(recipeInput, level.registryAccess());
+      ItemStack output = furnaceBlockEntity.getItem(2);
+      if (output.isEmpty())
+         return true;
+
+      int maxStackSize = Math.min(furnaceBlockEntity.getMaxStackSize(), output.getMaxStackSize());
+      return ItemStack.isSameItemSameComponents(output, result)
+            && output.getCount() + result.getCount() <= maxStackSize;
+   }
+
+   public boolean isBurning(Level level) {
+      return level.getBlockState(furnaceBlockEntity.getBlockPos()).getValue(AbstractFurnaceBlock.LIT);
+   }
+
+   private void startUsageCooldown(long gameTime) {
+      getBehaviourCooldowns().startCooldown(Cooldowns.START, Duration.of(15, ChronoUnit.SECONDS), gameTime);
+   }
+
+   protected boolean furnaceIsCompletelyEmpty() {
+      return furnaceBlockEntity.isEmpty();
+   }
+
+   protected boolean extractFurnaceItems(CivilizedVillager villager, int furnaceSlot) {
+      ItemStack item = furnaceBlockEntity.getItem(furnaceSlot);
+      if (item.isEmpty())
+         return false;
+      if (!furnaceBlockEntity.canTakeItem(villager.getWorkOutputInventory(), furnaceSlot, item))
+         return false;
+
+      ItemStack remainder = villager.getWorkOutputInventory().addItem(item);
+      furnaceBlockEntity.setItem(furnaceSlot, remainder);
+      int taken = item.getCount() - remainder.getCount();
+
+      if (furnaceSlot == 2) {
+         villager.addWorkExhaustion(taken);
+         cookingMachine.consumeTokens(taken);
+      } else if (taken > 0)
+         villager.addWorkExhaustion(1);
+
+      return true;
    }
 }

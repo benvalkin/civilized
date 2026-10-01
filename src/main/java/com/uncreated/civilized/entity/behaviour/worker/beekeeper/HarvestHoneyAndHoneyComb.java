@@ -77,6 +77,7 @@ public class HarvestHoneyAndHoneyComb extends WorkTaskBehaviour {
 
          Optional<TakeToInventoryInstruction> instruction =
                TakeToInventoryInstruction.createIfAnyMetFromSourceBuildings(
+                     villager,
                      new ReservationKey(party, "shears_and_honeycomb"),
                      List.of(shearsRequirement, glassBottlesRequirement),
                      homeAndStorehouseIfPresent());

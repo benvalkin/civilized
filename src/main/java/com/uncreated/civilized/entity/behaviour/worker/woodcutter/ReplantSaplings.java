@@ -57,6 +57,7 @@ public class ReplantSaplings extends WorkTaskBehaviour {
          String party = reservationPartyKey(villager);
          Optional<TakeToInventoryInstruction> instruction =
                TakeToInventoryInstruction.createIfMetFromSourceBuildings(
+                     villager,
                      new ReservationKey(party, groveState.getSaplingRequirement().key()),
                      groveState.getSaplingRequirement(),
                      homeAndStorehouseIfPresent());

@@ -76,6 +76,7 @@ public class ShearSheep extends WorkTaskBehaviour {
          String party = reservationPartyKey(villager);
          Optional<TakeToInventoryInstruction> instruction =
                TakeToInventoryInstruction.createIfMetFromSourceBuildings(
+                     villager,
                      new ReservationKey(party, shearsRequirement.key()),
                      shearsRequirement,
                      homeAndStorehouseIfPresent());

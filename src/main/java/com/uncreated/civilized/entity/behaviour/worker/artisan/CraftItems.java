@@ -5,11 +5,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import com.uncreated.civilized.core.building.production.PendingProduction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
-import com.mojang.datafixers.util.Pair;
 import com.mojang.logging.LogUtils;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
@@ -20,7 +20,6 @@ import com.uncreated.civilized.core.building.logistics.hauling.requirement.Build
 import com.uncreated.civilized.core.building.production.PendingProductionOutput;
 import com.uncreated.civilized.core.building.production.lines.crafting.CraftingMachine;
 import com.uncreated.civilized.core.building.production.lines.crafting.CraftingOrder;
-import com.uncreated.civilized.core.building.production.orders.ProductionOrder;
 import com.uncreated.civilized.core.notifications.Notification;
 import com.uncreated.civilized.core.notifications.NotificationService;
 import com.uncreated.civilized.entity.CivilizedVillager;
@@ -79,7 +78,8 @@ public class CraftItems extends WorkTaskBehaviour {
       if (workBlock == null)
          return false;
 
-      ArtisanHouseBehaviour behaviour = (ArtisanHouseBehaviour) getWorksite().getBehaviour();
+      if (!(getWorksite().getBehaviour() instanceof ArtisanHouseBehaviour behaviour))
+         return false;
 
       craftingMachine = behaviour.getRecipeProductionSystem().getMachine(CraftingMachine.class);
 
@@ -88,7 +88,7 @@ public class CraftItems extends WorkTaskBehaviour {
       List<Container> storehouseAndWorksiteChests =
             Stream.concat(worksiteChests.stream(), storehouseChests.stream()).toList();
 
-      if (craftingMachine.tryGetNextOrder(worksiteChests, storehouseAndWorksiteChests).isEmpty()) {
+      if (craftingMachine.tryAdvanceToProcessableOrder(worksiteChests, storehouseAndWorksiteChests).isEmpty()) {
          // there is a bill that should be produced right now
 
          // we cannot produce anything at the moment, so we should try import ingredients from the storehouse
@@ -98,10 +98,15 @@ public class CraftItems extends WorkTaskBehaviour {
          List<BuildingStockRequirement> allRecipeStockRequirements =
                createIngredientsRequirementsForAllRecipes(storehouseAndWorksiteChests);
 
+         // ensure that no-one can take away ingredients from this building, including this villager when taking items
+         // for other activities (e.g. offloading home items at the storehouse)
+         reserveRequiredItems(villager, "crafting_production", getWorksite(), allRecipeStockRequirements);
+
          String party = reservationPartyKey(villager);
 
          Optional<TransferToBuildingInstruction> fetchFromStorehouse =
                TransferToBuildingInstruction.createIfAnyMetFromSourceBuildings(
+                     villager,
                      new ReservationKey(party, "crafting_ingredients"),
                      allRecipeStockRequirements,
                      getWorksite(),
@@ -191,15 +196,15 @@ public class CraftItems extends WorkTaskBehaviour {
          List<Container> storehouseAndWorksiteChests =
                Stream.concat(worksiteChests.stream(), storehouseChests.stream()).toList();
 
-         Optional<Pair<ProductionOrder, PendingProductionOutput>> nextOrder =
-               craftingMachine.tryGetNextOrder(worksiteChests, storehouseAndWorksiteChests);
+         Optional<PendingProduction> nextOrder =
+               craftingMachine.tryAdvanceToProcessableOrder(worksiteChests, storehouseAndWorksiteChests);
          if (nextOrder.isEmpty()) {
             // nothing more to craft
             doStop(level, villager, gameTime);
             return;
          }
 
-         PendingProductionOutput pendingOutput = nextOrder.get().getSecond();
+         PendingProductionOutput pendingOutput = nextOrder.get().output();
          ItemStack resultItem = pendingOutput.assembledRecipe().resultItem();
          if (!villager.getWorkOutputInventory().canAddItem(resultItem)) {
             // cannot craft recipe because villager's inventory is full

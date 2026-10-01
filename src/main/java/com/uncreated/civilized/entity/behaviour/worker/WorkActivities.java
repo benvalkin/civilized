@@ -10,6 +10,7 @@ import com.uncreated.civilized.entity.behaviour.BehaviourStates;
 import com.uncreated.civilized.entity.behaviour.IdleStrollAroundSettlement;
 import com.uncreated.civilized.entity.behaviour.worker.artisan.CraftItems;
 import com.uncreated.civilized.entity.behaviour.worker.artisan.furnace.SmeltItems;
+import com.uncreated.civilized.entity.behaviour.worker.artisan.furnace.SmokeItems;
 import com.uncreated.civilized.entity.behaviour.worker.beekeeper.HarvestHoneyAndHoneyComb;
 import com.uncreated.civilized.entity.behaviour.worker.common.MonitorWorksite;
 import com.uncreated.civilized.entity.behaviour.worker.common.logistics.CheckLogisticsOpportunities;
@@ -26,7 +27,6 @@ import com.uncreated.civilized.entity.behaviour.worker.woodcutter.CutDownTrees;
 import com.uncreated.civilized.entity.behaviour.worker.woodcutter.ReplantSaplings;
 
 import net.minecraft.world.entity.ai.behavior.BehaviorControl;
-import net.minecraft.world.entity.animal.Cow;
 
 public class WorkActivities {
 
@@ -129,7 +129,7 @@ public class WorkActivities {
                   1,
                   new WorkBehaviourControl(
                         ImmutableList.of(
-                              new BreedAnimals<>(),
+                              // new BreedAnimals<>(),
                               new HarvestHoneyAndHoneyComb(),
                               new CheckLogisticsOpportunities(),
                               new TakeItemsToInventory(),
@@ -168,6 +168,7 @@ public class WorkActivities {
                   new WorkBehaviourControl(
                         ImmutableList.of(
                               new SmeltItems(),
+                              new SmokeItems(),
                               new CraftItems(),
                               new CheckLogisticsOpportunities(),
                               new TakeItemsToInventory(),
@@ -177,6 +178,7 @@ public class WorkActivities {
                         ImmutableList.of(
                               WorkStates.CHECK_LOGISTICS_OPPORTUNITIES,
                               WorkStates.SMELTING_ITEMS,
+                              WorkStates.SMOKING_ITEMS,
                               WorkStates.CRAFTING_ITEMS),
                         ImmutableList.of(WorkStates.MONITOR_WORKSITE, BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT))));
    }
