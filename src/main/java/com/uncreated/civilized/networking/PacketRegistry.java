@@ -23,6 +23,7 @@ import com.uncreated.civilized.networking.packets.ProductionBillPreview;
 import com.uncreated.civilized.networking.packets.SaveProductionBill;
 import com.uncreated.civilized.networking.packets.SellItem;
 import com.uncreated.civilized.networking.packets.SetEyeDropperSlotItem;
+import com.uncreated.civilized.networking.packets.NotificationToast;
 import com.uncreated.civilized.networking.packets.SetSettlementAccessLevel;
 import com.uncreated.civilized.networking.packets.SettlementAccessLevelDenied;
 import com.uncreated.civilized.networking.packets.TradeSlotUpdated;
@@ -113,6 +114,11 @@ public class PacketRegistry {
             SetSettlementAccessLevel.TYPE,
             SetSettlementAccessLevel.STREAM_CODEC,
             SetSettlementAccessLevel::serverReceiveSetSettlementAccessLevel);
+
+      registrar.playToClient(
+            NotificationToast.TYPE,
+            NotificationToast.STREAM_CODEC,
+            ClientPacketHandlers::receiveNotificationToast);
 
       registrar.playToClient(
             SettlementAccessLevelDenied.TYPE,

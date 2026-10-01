@@ -10,6 +10,8 @@ import com.uncreated.civilized.core.building.logistics.hauling.ReservationKey;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.TakeToInventoryInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.ToolRequirement;
+import com.uncreated.civilized.core.notifications.Notification;
+import com.uncreated.civilized.core.notifications.NotificationService;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
@@ -58,6 +60,8 @@ public class Fish extends WorkTaskBehaviour {
 
    private static final ToolRequirement fishingRodRequirement =
          new ToolRequirement("fishingRod", i -> i.is(Items.FISHING_ROD));
+   @Nullable
+   private Notification missingToolNotification;
 
    /**
     * @param minCatchTicks
@@ -93,12 +97,16 @@ public class Fish extends WorkTaskBehaviour {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
             getStateMachine().queueActionOnce(this.getState());
-            // todo: send notification that the villager is missing shears
+         } else {
+            missingToolNotification =
+                  Notification.missingTool("missing_fishing_rod", villager.getInfo(), Items.FISHING_ROD).build();
+            NotificationService.INSTANCE.sendNotification(missingToolNotification);
          }
          return false;
       }
 
       fishingRod = carrying.stock().getItemStacks().getFirst();
+      NotificationService.INSTANCE.resolveNotification(missingToolNotification);
 
       // fishing from dry land looks a lot better than wading in, but a spot that is all water still gets fished from
       fishingStand = findFishingStand(level, villager, waterBlocks).orElse(getWorksite().getBuilding().getBlockPos());

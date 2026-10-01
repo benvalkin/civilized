@@ -9,6 +9,7 @@ import com.uncreated.civilized.core.building.requirement.registry.BuildingRequir
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.entity.events.SettlementLoadingEvents;
 import com.uncreated.civilized.core.settlement.events.SettlementStoreEvents;
+import com.uncreated.civilized.core.notifications.NotificationService;
 import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermissionStore;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.events.VillagerStoreEvents;
@@ -137,6 +138,7 @@ public class CivilizedMod {
       ServerBuildingsStore.loadServer(event.getLevel().getServer());
       ServerVillagerStore.loadServer(event.getLevel().getServer());
       ServerSettlementPermissionStore.loadServer(event.getLevel().getServer());
+      NotificationService.loadServer(event.getLevel().getServer());
       LOGGER.info("Loaded settlements");
    }
 

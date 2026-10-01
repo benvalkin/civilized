@@ -14,6 +14,7 @@ import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
 import com.uncreated.civilized.core.settlement.entity.LoadedVillagers;
+import com.uncreated.civilized.core.notifications.NotificationService;
 import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermissionStore;
 import com.uncreated.civilized.entity.CivilizedVillager;
 
@@ -45,6 +46,7 @@ public class SettlementLoadingEvents {
    public static void onServerTick(final ServerTickEvent.Post event) {
       LoadedBuildings.tickLoadedBuildings();
       LoadedSettlements.tickLoadedSettlements();
+      NotificationService.INSTANCE.tick(event.getServer().overworld().getGameTime());
    }
 
    @SubscribeEvent
