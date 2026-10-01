@@ -119,16 +119,7 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
       List<Container> storehouseAndWorksiteChests =
             Stream.concat(worksiteChests.stream(), storehouseChests.stream()).toList();
 
-      // ItemStack currentIngredient = currentIngredientInFurnace();
-      // ItemStack proposedIngredient =
-      // nextOrder.map(o -> o.output().getConsumableIngredients().getFirst().aggregateStack())
-      // .orElse(ItemStack.EMPTY);
-
-      // boolean ingredientSlotEmpty = currentIngredient.isEmpty();
-      // boolean furnaceRequiresIngredientChange =
-      // ingredientSlotEmpty || ItemStack.isSameItem(currentIngredient, proposedIngredient);
-
-      if (isCooking(level)/* && !furnaceRequiresIngredientChange */) {
+      if (isCooking(level)) {
 
          if (canTakeFromSlot(villager.getWorkOutputInventory(), 2)) {
             decision = FurnaceUsageDecision.EXTRACT_COOKED_GOODS;
@@ -295,8 +286,10 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
          return;
       }
 
-      if (furnaceBlockEntity.isRemoved())
+      if (furnaceBlockEntity.isRemoved()) {
+         doStop(level, villager, gameTime);
          return;
+      }
 
       villager.getBrain()
             .setMemory(MemoryModuleType.LOOK_TARGET, new BlockPosTracker(furnaceBlockEntity.getBlockPos()));
@@ -346,6 +339,11 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
          extractFurnaceItems(villager, 0);
          extractFurnaceItems(villager, 1);
          extractFurnaceItems(villager, 2);
+
+         if (!furnaceIsCompletelyEmpty()) { // just in case the villager's inventory is full
+            doStop(level, villager, gameTime);
+            return;
+         }
 
          furnaceBlockEntity.setItem(0, ingredient.aggregateStack());
          furnaceBlockEntity.setItem(1, fuel.aggregateStack());
