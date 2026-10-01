@@ -19,6 +19,7 @@ import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
 
 public class CheckLogisticsOpportunities extends WorkTaskBehaviour {
 
@@ -46,7 +47,8 @@ public class CheckLogisticsOpportunities extends WorkTaskBehaviour {
                "export_home_goods_to_storehouse",
                i -> !i.isEmpty(),
                1,
-               ItemStockRequirement.UNLIMITED);
+               ItemStockRequirement.UNLIMITED,
+               ItemStack.EMPTY);
 
    @Override
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {

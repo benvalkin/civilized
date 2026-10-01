@@ -20,6 +20,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 @Accessors(fluent = true)
 @Getter
@@ -33,6 +34,8 @@ public class Notification {
    private static final String FIELD_EXPIRE_AFTER_SECONDS = "expire_after_seconds";
    private static final String FIELD_HEADLINE = "headline";
    private static final String FIELD_DETAIL = "detail";
+   private static final String FIELD_DELIVER_AFTER_SECONDS = "deliver_after_seconds";
+   private static final String FIELD_ICON = "icon";
 
    private final String type;
    private final UUID settlementId;
@@ -43,6 +46,7 @@ public class Notification {
    private final @Nullable Duration deliverAfter;
    private final Component headline;
    private final Component detail;
+   private final ItemStack icon;
 
    @Builder
    private Notification(
@@ -52,9 +56,10 @@ public class Notification {
          Receiver receiver,
          Severity severity,
          Duration expireAfter,
-         Duration deliverAfter,
+         @Nullable Duration deliverAfter,
          Component headline,
-         Component detail) {
+         Component detail,
+         @Nullable ItemStack icon) {
       this.type = type;
       this.settlementId = settlementId;
       this.villagerId = villagerId;
@@ -64,6 +69,8 @@ public class Notification {
       this.deliverAfter = deliverAfter;
       this.headline = headline;
       this.detail = detail;
+      // copied, so that changes to the stack it was made from don't show up in the notification
+      this.icon = icon == null ? ItemStack.EMPTY : icon.copy();
    }
 
    public String key() {
@@ -78,11 +85,7 @@ public class Notification {
       if (info.getSettlementId() == null)
          throw new IllegalArgumentException("Villager's settlementId must not be null");
 
-      Component headline =
-            Component.translatable(
-                  "notification.worker.missing_tool.generic",
-                  info.getOccupation().translation(),
-                  item.getName());
+      Component headline = Component.translatable("notification.worker.missing_tool.generic", item.getName());
 
       Component detail =
             Component.translatable(
@@ -98,28 +101,37 @@ public class Notification {
             .receiver(Receiver.ADMINISTRATION)
             .severity(Severity.MINOR)
             .headline(headline)
-            // TODO: make the exipiry value longer - it's been reduced for testing
+            // TODO: make the expiry value longer - it's been reduced for testing
             .expireAfter(Duration.of(30, ChronoUnit.SECONDS))
-            .detail(detail);
+            .detail(detail)
+            .icon(new ItemStack(item));
    }
 
-   public static Notification.NotificationBuilder missingRecipeInput(
-         String type,
-         UUID settlementId,
-         UUID villagerId,
-         Component headline,
-         Component detail) {
+   public static Notification.NotificationBuilder missingIngredients(String type, VillagerInfo info, Item item) {
+
+      if (info.getSettlementId() == null)
+         throw new IllegalArgumentException("Villager's settlementId must not be null");
+
+      Component headline = Component.translatable("notification.worker.missing_ingredients.generic", item.getName());
+
+      Component detail =
+            Component.translatable(
+                  "notification.worker.missing_ingredients.generic.detail",
+                  info.getFirstName(),
+                  info.getOccupation().translation(),
+                  item.getName());
 
       return Notification.builder()
             .type(type)
-            .settlementId(settlementId)
-            .villagerId(villagerId)
+            .settlementId(info.getSettlementId())
+            .villagerId(info.getVillagerId())
             .receiver(Receiver.ADMINISTRATION)
             .severity(Severity.MINOR)
             .headline(headline)
-            .deliverAfter(Duration.of(3, ChronoUnit.MINUTES))
-            .expireAfter(Duration.of(10, ChronoUnit.MINUTES))
-            .detail(detail);
+            .deliverAfter(Duration.of(30, ChronoUnit.SECONDS))
+            .expireAfter(Duration.of(1, ChronoUnit.MINUTES))
+            .detail(detail)
+            .icon(new ItemStack(item));
    }
 
    public CompoundTag toNbt(HolderLookup.Provider registries) {
@@ -135,6 +147,10 @@ public class Notification {
       tag.putLong(FIELD_EXPIRE_AFTER_SECONDS, expireAfter.toSeconds());
       tag.put(FIELD_HEADLINE, ComponentSerialization.CODEC.encodeStart(ops, headline).getOrThrow());
       tag.put(FIELD_DETAIL, ComponentSerialization.CODEC.encodeStart(ops, detail).getOrThrow());
+      if (deliverAfter != null)
+         tag.putLong(FIELD_DELIVER_AFTER_SECONDS, deliverAfter.toSeconds());
+      if (!icon.isEmpty())
+         tag.put(FIELD_ICON, ItemStack.CODEC.encodeStart(ops, icon).getOrThrow());
       return tag;
    }
 
@@ -153,6 +169,14 @@ public class Notification {
                      .expireAfter(Duration.ofSeconds(tag.getLong(FIELD_EXPIRE_AFTER_SECONDS)))
                      .headline(ComponentSerialization.CODEC.parse(ops, tag.get(FIELD_HEADLINE)).getOrThrow())
                      .detail(ComponentSerialization.CODEC.parse(ops, tag.get(FIELD_DETAIL)).getOrThrow())
+                     .deliverAfter(
+                           tag.contains(FIELD_DELIVER_AFTER_SECONDS)
+                                 ? Duration.ofSeconds(tag.getLong(FIELD_DELIVER_AFTER_SECONDS))
+                                 : null)
+                     .icon(
+                           tag.contains(FIELD_ICON)
+                                 ? ItemStack.CODEC.parse(ops, tag.get(FIELD_ICON)).result().orElse(ItemStack.EMPTY)
+                                 : ItemStack.EMPTY)
                      .build());
       } catch (IllegalArgumentException | IllegalStateException ex) {
          return Optional.empty();

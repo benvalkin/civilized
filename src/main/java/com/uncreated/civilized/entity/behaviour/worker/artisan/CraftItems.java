@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import com.uncreated.civilized.core.building.logistics.hauling.ReservationKey;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
 import com.mojang.datafixers.util.Pair;
@@ -14,12 +14,15 @@ import com.mojang.logging.LogUtils;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.entity.behaviour.ArtisanHouseBehaviour;
+import com.uncreated.civilized.core.building.logistics.hauling.ReservationKey;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.TransferToBuildingInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.BuildingStockRequirement;
 import com.uncreated.civilized.core.building.production.PendingProductionOutput;
 import com.uncreated.civilized.core.building.production.lines.crafting.CraftingMachine;
 import com.uncreated.civilized.core.building.production.lines.crafting.CraftingOrder;
 import com.uncreated.civilized.core.building.production.orders.ProductionOrder;
+import com.uncreated.civilized.core.notifications.Notification;
+import com.uncreated.civilized.core.notifications.NotificationService;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
@@ -46,6 +49,8 @@ public class CraftItems extends WorkTaskBehaviour {
 
    int workSpeedMultiplier = 2;
    private CraftingMachine craftingMachine;
+   @Nullable
+   private Notification missingIngredientsNotification;
 
    public CraftItems() {
       super(WorkStates.CRAFTING_ITEMS, true, false, 90 * 20, 10 * 20);
@@ -84,6 +89,7 @@ public class CraftItems extends WorkTaskBehaviour {
             Stream.concat(worksiteChests.stream(), storehouseChests.stream()).toList();
 
       if (craftingMachine.tryGetNextOrder(worksiteChests, storehouseAndWorksiteChests).isEmpty()) {
+         // there is a bill that should be produced right now
 
          // we cannot produce anything at the moment, so we should try import ingredients from the storehouse
          if (storehouse.isEmpty())
@@ -104,10 +110,20 @@ public class CraftItems extends WorkTaskBehaviour {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), fetchFromStorehouse.get());
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
             getStateMachine().queueActionOnce(this.getState());
+         } else if (!allRecipeStockRequirements.isEmpty()) {
+            // there are requirements for bills that we aren't able to fetch from anywhere at the moment
+            int randomIndex = villager.getRandom().nextInt(allRecipeStockRequirements.size());
+            ItemStack icon = allRecipeStockRequirements.get(randomIndex).getDisplayItem();
+            missingIngredientsNotification =
+                  Notification.missingIngredients("missing_crafting_ingredients", villager.getInfo(), icon.getItem())
+                        .build();
+            NotificationService.INSTANCE.sendNotification(missingIngredientsNotification);
          }
 
          return false;
       }
+
+      NotificationService.INSTANCE.resolveNotification(missingIngredientsNotification);
 
       return true;
    }

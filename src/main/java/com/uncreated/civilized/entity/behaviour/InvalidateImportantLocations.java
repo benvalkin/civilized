@@ -48,7 +48,12 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
 
       Optional<Building> home = invalidateHome(villagerInfo, level);
       if (home.isPresent()) {
-         villagerInfo.setOccupation(home.get().getBuildingType().occupation());
+
+         if (villagerInfo.getNpcRoles().contains(VillagerNpcRole.WORKER))
+            villagerInfo.setOccupation(home.get().getBuildingType().occupation());
+         else
+            villagerInfo.setOccupation(VillagerOccupations.UNEMPLOYED);
+
          villagerInfo.setHomeBuildingId(home.get().getBuildingId());
          villager.getBrain()
                .setMemory(MemoryModuleType.HOME, new GlobalPos(level.dimension(), home.get().getBlockPos()));

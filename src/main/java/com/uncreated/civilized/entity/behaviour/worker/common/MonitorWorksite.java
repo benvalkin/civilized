@@ -37,7 +37,7 @@ public class MonitorWorksite extends WorkTaskBehaviour {
          int maxVerticalDist,
          float strollSpeedModifier,
          boolean strollOutside) {
-      super(WorkStates.MONITOR_WORKSITE, true, false, 120 * 15, 0);
+      super(WorkStates.MONITOR_WORKSITE, true, false, 5 * 20, 0);
       this.maxHorizontalDist = maxHorizontalDist;
       this.maxVerticalDist = maxVerticalDist;
       this.speedModifier = strollSpeedModifier;

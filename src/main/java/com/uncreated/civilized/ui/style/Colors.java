@@ -12,7 +12,9 @@ public class Colors {
    public final static int VALIDATION_SUCCESS = 0xc5edcc;
    public final static int VALIDATION_PARTIAL_SUCCESS = 0xa5d4e8;
 
-   public final static int WARNING = 0xff8269;
+   public final static int INFO = 0xdbdbdb;
+   public final static int WARNING_MINOR = 0xffeca8;
+   public final static int WARNING_MAJOR = 0xff8269;
 
    public final static int BUILDING_LIGHT = 0xffeac7;
    public final static int BUILDING_DARK = 0x8f7340;

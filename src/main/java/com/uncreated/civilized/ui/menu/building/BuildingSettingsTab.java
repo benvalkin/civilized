@@ -78,7 +78,7 @@ public class BuildingSettingsTab extends ABuildingScreenTab {
       if (decommissionRequested) {
 
          MutableComponent titleDecommission =
-               Component.translatable("menu.building.settings.option.delete_building").withColor(Colors.WARNING);
+               Component.translatable("menu.building.settings.option.delete_building").withColor(Colors.WARNING_MINOR);
          graphics.drawWordWrap(
                font,
                titleDecommission,

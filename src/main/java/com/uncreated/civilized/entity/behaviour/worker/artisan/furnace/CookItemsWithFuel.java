@@ -187,7 +187,8 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
                   i -> fuelSlot.isItemAllowed(i, level) && itemFilter.acceptsItem(i),
                   preference,
                   1,
-                  amount);
+                  amount,
+                  productionOrder.getBill().getDisplayItem());
       // makes it so that duplicate ingredients are still taken
       requirement.disregardExistingCarriedStock(true);
 

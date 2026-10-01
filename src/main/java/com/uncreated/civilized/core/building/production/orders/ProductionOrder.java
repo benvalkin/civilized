@@ -62,14 +62,12 @@ public abstract class ProductionOrder {
       for (Ingredient ingredient : ingredients) {
 
          BuildingStockRequirement requirement =
-               new BuildingStockRequirement(String.format(
-                       "%s:%s",
-                       bill.getProductionType(),
-                       bill.getMinecraftRecipeName()
-               ),
+               new BuildingStockRequirement(
+                     String.format("%s:%s", bill.getProductionType(), bill.getMinecraftRecipeName()),
                      i -> isAcceptableIngredient(i, ingredient, itemFilter),
                      1,
-                     batchSize);
+                     batchSize,
+                     bill.getDisplayItem());
          // makes it so that duplicate ingredients are still taken
          requirement.disregardExistingCarriedStock(true);
          requirements.add(requirement);
