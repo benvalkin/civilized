@@ -126,6 +126,7 @@ public class MerchantVisitorBehaviour extends VisitorBehaviour implements IMerch
       stocked = true;
       merchantType = type.key();
       int startingCurrency = type.value().startingCurrency().sample(villager.getArbitraryRandom());
+      startingCurrency = Math.round(startingCurrency / 10f) * 10; // round to nearest 10
       availableCurrency = new CurrencyStock(startingCurrency);
       tradeItems = new ArrayList<>(type.value().rollTrades(villager.getArbitraryRandom()));
    }

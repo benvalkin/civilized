@@ -7,6 +7,8 @@ import java.util.List;
 
 import com.uncreated.civilized.core.trading.TradeDirection;
 import com.uncreated.civilized.core.trading.TradeItem;
+import com.uncreated.civilized.item.CurrencyItem;
+import com.uncreated.civilized.neoforge.registration.ItemRegistry;
 import com.uncreated.civilized.networking.packets.BuyItem;
 import com.uncreated.civilized.networking.packets.SellItem;
 import com.uncreated.civilized.ui.components.IRefreshableUI;
@@ -44,7 +46,12 @@ public class TradingMenuScreen extends AbstractContainerScreen<TradingMenu> impl
    private static final int TRADE_SLOT_COLUMNS = 9;
    private static final int TRADE_SLOT_ROWS = 3;
    private static final int TRADE_SLOT_SPACING = 18;
+   private static final int CURRENCY_ICON_SIZE = 16;
+   private static final int CURRENCY_ICON_TEXT_GAP = 2;
+   private static final int VENDOR_CURRENCY_RIGHT_MARGIN = 8;
+   private int gridRight;
 
+   private final ItemStack currencyIcon = new ItemStack(ItemRegistry.COIN_STACK.get());
    private List<ITradeSlot> tradeSlots;
    // kept across init(), which runs again whenever the window is resized
    @Getter
@@ -112,7 +119,9 @@ public class TradingMenuScreen extends AbstractContainerScreen<TradingMenu> impl
       int rows = Math.max(TRADE_SLOT_ROWS, Math.ceilDiv(tradeItems.size(), TRADE_SLOT_COLUMNS));
 
       int gridWidth = (TRADE_SLOT_COLUMNS - 1) * TRADE_SLOT_SPACING + TradeSlotWidget.SIZE;
-      int gridX = leftPos + (imageWidth - gridWidth) / 2;
+      int gridLeft = (imageWidth - gridWidth) / 2; // relative to the menu
+      gridRight = gridLeft + gridWidth;
+      int gridX = leftPos + gridLeft;
       int gridY = topPos + CONTENT_MARGIN_Y;
 
       for (int i = 0; i < rows * TRADE_SLOT_COLUMNS; i++) {
@@ -172,6 +181,32 @@ public class TradingMenuScreen extends AbstractContainerScreen<TradingMenu> impl
 
       // the inventory heading would otherwise sit on its own above nothing
       graphics.drawString(font, playerInventoryTitle, inventoryLabelX, inventoryLabelY, Colors.MENU_TEXT_DARK, false);
+
+      renderVendorCurrency(graphics);
+   }
+
+   private void renderVendorCurrency(GuiGraphics graphics) {
+      String amount = String.valueOf(menu.getVendorCurrency().availableCurrency());
+
+      graphics.renderItem(currencyIcon, vendorCurrencyIconX(), CONTENT_MARGIN_Y);
+      // centred on the icon
+      int textY = CONTENT_MARGIN_Y + (CURRENCY_ICON_SIZE - font.lineHeight) / 2 + 1;
+      graphics.drawString(font, amount, vendorCurrencyAmountX(), textY, Colors.MENU_TEXT_DARK, false);
+   }
+
+   private int vendorCurrencyIconX() {
+      return gridRight + VENDOR_CURRENCY_RIGHT_MARGIN;
+   }
+
+   private int vendorCurrencyAmountX() {
+      return gridRight + VENDOR_CURRENCY_RIGHT_MARGIN + CURRENCY_ICON_SIZE + CURRENCY_ICON_TEXT_GAP;
+   }
+
+   private boolean isHoveringVendorCurrency(int mouseX, int mouseY) {
+      int width =
+            CURRENCY_ICON_SIZE + CURRENCY_ICON_TEXT_GAP
+                  + this.font.width(String.valueOf(menu.getVendorCurrency().availableCurrency()));
+      return isHovering(vendorCurrencyIconX(), CONTENT_MARGIN_Y, width, CURRENCY_ICON_SIZE, mouseX, mouseY);
    }
 
    @Override
@@ -179,6 +214,13 @@ public class TradingMenuScreen extends AbstractContainerScreen<TradingMenu> impl
       super.render(graphics, mouseX, mouseY, partialTick);
 
       renderTooltip(graphics, mouseX, mouseY);
+
+      if (isHoveringVendorCurrency(mouseX, mouseY)) {
+         Component amount =
+               CurrencyItem.amountTranslation(menu.getVendorCurrency().availableCurrency()).withColor(Colors.COIN);
+         Component tooltip = Component.translatable("menu.trading.tooltip.vendor_currency", amount);
+         graphics.renderTooltip(font, tooltip, mouseX, mouseY);
+      }
    }
 
    @Override

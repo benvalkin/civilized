@@ -423,6 +423,7 @@
   "menu.trading.tooltip.sell_stack_for": "Sell %s for %s",
   "menu.trading.tooltip.sell_stack_for_nothing": "Donate %s items",
   "menu.trading_screen": "Trader",
+  "menu.trading.tooltip.vendor_currency": "This vendor has %s to spend on purchases.",
   "menu.trading.tooltip.quantity_and_name": "%sx %s",
   "notification.worker.missing_tool.generic": "Missing %s",
   "notification.worker.missing_tool.generic.detail": "%s the %s cannot find any %s to start their work task.\n\nPlace one in the Storehouse or their home chests to unblock them.",

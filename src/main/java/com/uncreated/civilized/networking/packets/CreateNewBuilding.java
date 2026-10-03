@@ -65,12 +65,14 @@ public record CreateNewBuilding(BuildingType buildingType,
       ServerPlayer placer = (ServerPlayer) context.player();
       ServerLevel serverLevel = placer.serverLevel();
 
-      List<Settlement> thisDimensionSettlements = ServerSettlementsStore.INSTANCE.findInDimension(serverLevel.dimension());
+      List<Settlement> thisDimensionSettlements =
+            ServerSettlementsStore.INSTANCE.findInDimension(serverLevel.dimension());
       Optional<Settlement> existingSettlement =
             thisDimensionSettlements.stream()
                   .filter(
                         s -> s.getBounds()
                               .getEncapsulatingAABB()
+                              .inflate(32)
                               .intersects(packet.buildingBounds().getEncapsulatingAABB()))
                   .findFirst();
 
@@ -104,7 +106,9 @@ public record CreateNewBuilding(BuildingType buildingType,
             if (overlapsOtherSettlement(placer, newBounds, thisDimensionSettlements, null))
                return;
 
-            argumentSettlement = ServerSettlementsStore.INSTANCE.createNew(placer.getUUID(), settlementOrigin, serverLevel.dimension());
+            argumentSettlement =
+                  ServerSettlementsStore.INSTANCE
+                        .createNew(placer.getUUID(), settlementOrigin, serverLevel.dimension());
             ServerSettlementPermissionStore.INSTANCE
                   .setAccessLevel(argumentSettlement.getSettlementId(), placer, AccessLevel.GOVERNOR);
          }
@@ -177,15 +181,14 @@ public record CreateNewBuilding(BuildingType buildingType,
    }
 
    private static boolean overlapsOtherSettlement(
-           ServerPlayer placer,
-           SettlementBounds bounds,
-           List<Settlement> settlements,
-           @Nullable Settlement own) {
-      Optional<Settlement> overlapped =
-              Optional.empty();
+         ServerPlayer placer,
+         SettlementBounds bounds,
+         List<Settlement> settlements,
+         @Nullable Settlement own) {
+      Optional<Settlement> overlapped = Optional.empty();
       for (Settlement other : settlements) {
          if (other != own && other.getBounds().isOverlapping(bounds)
-                 && (own == null || !other.getBounds().isOverlapping(own.getBounds()))) {
+               && (own == null || !other.getBounds().isOverlapping(own.getBounds()))) {
             overlapped = Optional.of(other);
             break;
          }
@@ -194,12 +197,12 @@ public record CreateNewBuilding(BuildingType buildingType,
          return false;
 
       placer.displayClientMessage(
-              Component
-                      .translatable(
-                              "message.settlement.create_building.failed.too_close_to_other_settlement",
-                              overlapped.get().displayNameTranslation())
-                      .withColor(Colors.VALIDATION_ERROR),
-              true);
+            Component
+                  .translatable(
+                        "message.settlement.create_building.failed.too_close_to_other_settlement",
+                        overlapped.get().displayNameTranslation())
+                  .withColor(Colors.VALIDATION_ERROR),
+            true);
       return true;
    }
 }
