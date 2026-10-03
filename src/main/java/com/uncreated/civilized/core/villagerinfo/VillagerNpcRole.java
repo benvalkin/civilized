@@ -6,8 +6,8 @@ import java.util.function.Supplier;
 
 import com.uncreated.civilized.core.dialogue.controller.DialogueController;
 import com.uncreated.civilized.entity.CivilizedVillager;
-import com.uncreated.civilized.entity.DefaultVillagerState;
-import com.uncreated.civilized.entity.VillagerState;
+import com.uncreated.civilized.entity.DefaultRoleBehaviour;
+import com.uncreated.civilized.entity.VillagerRoleBehaviour;
 
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -25,7 +25,7 @@ public class VillagerNpcRole {
    private final ResourceLocation resourceLocation;
    private final boolean genderedTitle;
    @Builder.Default
-   private final Function<CivilizedVillager, VillagerState> createState = DefaultVillagerState::new;
+   private final Function<CivilizedVillager, VillagerRoleBehaviour> createRoleBehaviour = DefaultRoleBehaviour::new;
    @Getter(AccessLevel.NONE)
    @Builder.Default
    private final Supplier<DialogueController> dialogueController = DialogueController::noDialogue;

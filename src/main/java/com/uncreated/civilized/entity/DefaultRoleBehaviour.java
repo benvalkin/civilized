@@ -3,8 +3,8 @@ package com.uncreated.civilized.entity;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 
-public class DefaultVillagerState extends VillagerState {
-   public DefaultVillagerState(CivilizedVillager villager) {
+public class DefaultRoleBehaviour extends VillagerRoleBehaviour {
+   public DefaultRoleBehaviour(CivilizedVillager villager) {
       super(villager);
    }
 

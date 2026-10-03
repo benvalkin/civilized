@@ -6,7 +6,7 @@ import lombok.Setter;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 
-public class VisitorState extends VillagerState {
+public class VisitorRoleBehaviour extends VillagerRoleBehaviour {
 
    public static final String FIELD_DEPART_AT = "depart_at";
    public static final long NO_DEPARTURE = -1;
@@ -16,12 +16,15 @@ public class VisitorState extends VillagerState {
    @Setter
    private boolean departurePaused;
 
-   public VisitorState(CivilizedVillager villager) {
+   public VisitorRoleBehaviour(CivilizedVillager villager) {
       super(villager);
    }
 
-   public static Optional<VisitorState> of(CivilizedVillager villager) {
-      return villager.getState() instanceof VisitorState visitor ? Optional.of(visitor) : Optional.empty();
+   public static Optional<VisitorRoleBehaviour> of(CivilizedVillager villager) {
+      if (villager.getRoleBehaviour() instanceof VisitorRoleBehaviour visitor)
+         return Optional.of(visitor);
+
+      return Optional.empty();
    }
 
    @Override

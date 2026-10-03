@@ -52,7 +52,6 @@ import com.uncreated.civilized.entity.stats.SkinTextureRegistry;
 import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -118,9 +117,9 @@ public class CivilizedVillager extends AgeableMob
    private VillagerHunger hunger;
 
    @Getter
-   private VillagerState state;
-   /** The role {@link #state} belongs to. */
-   private VillagerNpcRole stateRole;
+   private VillagerRoleBehaviour roleBehaviour;
+   /** The role {@link #roleBehaviour} belongs to. */
+   private VillagerNpcRole role;
 
    @Nullable
    private IdleBehaviourControl idleBehaviourControl; // we're keeping this as a field so that other villagers can
@@ -150,9 +149,6 @@ public class CivilizedVillager extends AgeableMob
       idleBehaviourControl.queueImmediately(conversationBehaviourState);
       return true;
    }
-
-   @Getter
-   private DialogueController dialogueController = DialogueController.noDialogue();
 
    private final SimpleContainer workInputInventory = new SimpleContainer(8);
    private final SimpleContainer workOutputInventory = new SimpleContainer(8);
@@ -204,26 +200,26 @@ public class CivilizedVillager extends AgeableMob
 
    public void changeNpcRole(VillagerNpcRole role) {
       info.setNpcRole(role);
-      ensureStateMatchesRole();
+      ensureRoleBehaviourMatchesRole();
    }
 
-   private void ensureStateMatchesRole() {
-      if (state != null && stateRole.is(info.getNpcRole()))
+   private void ensureRoleBehaviourMatchesRole() {
+      if (roleBehaviour != null && role.is(info.getNpcRole()))
          return;
 
-      stateRole = info.getNpcRole();
-      state = stateRole.createState().apply(this);
+      role = info.getNpcRole();
+      roleBehaviour = role.createRoleBehaviour().apply(this);
    }
 
-   @Nullable // gets around `state` being null when saved data is read
-   private CompoundTag pendingVillagerStateTag;
+   @Nullable // gets around `roleBehaviour` being null when saved data is read
+   private CompoundTag pendingRoleBehaviourSaveTag;
 
    public void serverFinalizeSpawn() {
 
-      ensureStateMatchesRole();
-      if (pendingVillagerStateTag != null) {
-         state.readAdditionalSaveData(pendingVillagerStateTag);
-         pendingVillagerStateTag = null;
+      ensureRoleBehaviourMatchesRole();
+      if (pendingRoleBehaviourSaveTag != null) {
+         roleBehaviour.readAdditionalSaveData(pendingRoleBehaviourSaveTag);
+         pendingRoleBehaviourSaveTag = null;
       }
 
       refreshBrain((ServerLevel) level());
@@ -232,8 +228,6 @@ public class CivilizedVillager extends AgeableMob
          routedOnLoad = false;
          rout();
       }
-
-      dialogueController = DialogueController.selectDialogueController(this);
    }
 
    private void setArbitraryRandom(long seed) {
@@ -252,9 +246,9 @@ public class CivilizedVillager extends AgeableMob
       compound.putUUID(FIELD_VILLAGER_ID, villagerId);
       compound.putLong(FIELD_LIFETIME_SEED, lifetimeSeed);
       compound.putBoolean(FIELD_ROUTED, isRouted());
-      CompoundTag behaviourState = new CompoundTag();
-      state.addAdditionalSaveData(behaviourState);
-      compound.put(VillagerState.FIELD_VILLAGER_STATE, behaviourState);
+      CompoundTag roleBehaviourTag = new CompoundTag();
+      roleBehaviour.addAdditionalSaveData(roleBehaviourTag);
+      compound.put(VillagerRoleBehaviour.FIELD_ROLE_BEHAVIOUR_STATE, roleBehaviourTag);
       hunger.save(compound);
       this.writeInventoryToTag(compound, this.registryAccess());
    }
@@ -269,8 +263,8 @@ public class CivilizedVillager extends AgeableMob
       setArbitraryRandom(compound.getLong(FIELD_LIFETIME_SEED));
       // the brain's activities aren't set up yet, so routing is restored once it is (see serverFinalizeSpawn)
       routedOnLoad = compound.getBoolean(FIELD_ROUTED);
-      if (compound.contains(VillagerState.FIELD_VILLAGER_STATE))
-         pendingVillagerStateTag = compound.getCompound(VillagerState.FIELD_VILLAGER_STATE);
+      if (compound.contains(VillagerRoleBehaviour.FIELD_ROLE_BEHAVIOUR_STATE))
+         pendingRoleBehaviourSaveTag = compound.getCompound(VillagerRoleBehaviour.FIELD_ROLE_BEHAVIOUR_STATE);
       hunger.load(compound);
 
       this.readInventoryFromTag(compound, this.registryAccess());
@@ -280,9 +274,9 @@ public class CivilizedVillager extends AgeableMob
    public void writeSpawnData(RegistryFriendlyByteBuf buf) {
       info.encode(buf);
       buf.writeLong(lifetimeSeed);
-      CompoundTag stateTag = new CompoundTag();
-      state.addAdditionalSaveData(stateTag);
-      buf.writeNbt(stateTag);
+      CompoundTag roleBehaviourTag = new CompoundTag();
+      roleBehaviour.addAdditionalSaveData(roleBehaviourTag);
+      buf.writeNbt(roleBehaviourTag);
    }
 
    public void readInventoryFromTag(CompoundTag tag, HolderLookup.Provider levelRegistry) {
@@ -319,11 +313,10 @@ public class CivilizedVillager extends AgeableMob
    public void readSpawnData(RegistryFriendlyByteBuf buf) {
       info = ClientVillagerStore.INSTANCE.addFromServer(VillagerInfo.decode(buf));
       lifetimeSeed = buf.readLong();
-      ensureStateMatchesRole();
-      CompoundTag stateTag = buf.readNbt();
-      if (stateTag != null)
-         state.readAdditionalSaveData(stateTag);
-      dialogueController = DialogueController.selectDialogueController(this);
+      ensureRoleBehaviourMatchesRole();
+      CompoundTag roleBehaviourTag = buf.readNbt();
+      if (roleBehaviourTag != null)
+         roleBehaviour.readAdditionalSaveData(roleBehaviourTag);
       ClientVillagerStore.INSTANCE.addFromServer(info);
       villagerId = info.getVillagerId();
       updateSkin();
@@ -388,7 +381,7 @@ public class CivilizedVillager extends AgeableMob
       if (isSleeping())
          return InteractionResult.FAIL;
 
-      dialogueController = DialogueController.selectDialogueController(this);
+      DialogueController dialogueController = DialogueController.selectDialogueController(this);
       DialogueFlow dialogueFlow = dialogueController.getDialogueFlow(this, player, hand);
 
       if (dialogueFlow == null)
@@ -568,8 +561,8 @@ public class CivilizedVillager extends AgeableMob
    @Override
    protected void customServerAiStep(ServerLevel serverLevel) {
 
-      ensureStateMatchesRole();
-      state.serverTick(serverLevel, serverLevel.getGameTime());
+      ensureRoleBehaviourMatchesRole();
+      roleBehaviour.serverTick(serverLevel, serverLevel.getGameTime());
       // e.g. a visitor that has just departed
       if (isRemoved())
          return;

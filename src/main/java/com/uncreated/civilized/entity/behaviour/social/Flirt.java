@@ -12,7 +12,7 @@ import com.uncreated.civilized.core.settlement.Settlement;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
 import com.uncreated.civilized.entity.CivilizedVillager;
-import com.uncreated.civilized.entity.VisitorState;
+import com.uncreated.civilized.entity.VisitorRoleBehaviour;
 import com.uncreated.civilized.entity.behaviour.BehaviourStates;
 import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 import com.uncreated.civilized.ui.style.Colors;
@@ -91,8 +91,8 @@ public class Flirt extends Socialize {
       convertToSpouseIfNecessary(villager);
 
       // the suitor stops being a visitor once it's a spouse, but its partner may still be one
-      VisitorState.of(suitor).ifPresent(visitor -> visitor.setDepartAt(VisitorState.NO_DEPARTURE));
-      VisitorState.of(villager).ifPresent(visitor -> visitor.setDepartAt(VisitorState.NO_DEPARTURE));
+      VisitorRoleBehaviour.of(suitor).ifPresent(visitor -> visitor.setDepartAt(VisitorRoleBehaviour.NO_DEPARTURE));
+      VisitorRoleBehaviour.of(villager).ifPresent(visitor -> visitor.setDepartAt(VisitorRoleBehaviour.NO_DEPARTURE));
 
       suitor.refreshBrain(level);
       villager.refreshBrain(level);

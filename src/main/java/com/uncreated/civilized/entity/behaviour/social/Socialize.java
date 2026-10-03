@@ -9,7 +9,7 @@ import java.util.Optional;
 import org.jetbrains.annotations.NotNull;
 
 import com.uncreated.civilized.entity.CivilizedVillager;
-import com.uncreated.civilized.entity.VisitorState;
+import com.uncreated.civilized.entity.VisitorRoleBehaviour;
 import com.uncreated.civilized.entity.behaviour.BehaviourState;
 import com.uncreated.civilized.entity.behaviour.BehaviourStates;
 import com.uncreated.civilized.entity.behaviour.Cooldowns;
@@ -111,7 +111,7 @@ public class Socialize extends StatefulBehaviour {
       super.start(level, villager, gameTime);
       startTime = gameTime;
       met = false;
-      VisitorState.of(villager).ifPresent(visitor -> visitor.setDeparturePaused(true));
+      VisitorRoleBehaviour.of(villager).ifPresent(visitor -> visitor.setDeparturePaused(true));
    }
 
    @Override
@@ -175,7 +175,7 @@ public class Socialize extends StatefulBehaviour {
 
       getBehaviourCooldowns().startCooldown(Cooldowns.START, COOLDOWN, gameTime);
 
-      VisitorState.of(villager).ifPresent(visitor -> visitor.setDeparturePaused(false));
+      VisitorRoleBehaviour.of(villager).ifPresent(visitor -> visitor.setDeparturePaused(false));
    }
 
    public int getMaxParticipants() {
