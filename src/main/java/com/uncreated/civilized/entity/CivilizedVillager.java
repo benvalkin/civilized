@@ -106,7 +106,6 @@ public class CivilizedVillager extends AgeableMob
    public static final String FIELD_VILLAGER_ID = "villager_id";
    public static final String FIELD_LIFETIME_SEED = "lifetime_seed";
    public static final String FIELD_ROUTED = "routed";
-   public static final String FIELD_DEPART_AT = "depart_at";
    private static final float DEFAULT_RALLY_HEALTH_FRACTION = 0.8F;
 
    @Getter
@@ -162,15 +161,6 @@ public class CivilizedVillager extends AgeableMob
 
    private long lifetimeSeed;
 
-   /**
-    * The day time at which the villager leaves the world. Only used for villagers who are visitors (i.e. they are
-    * occupants of a building but have no settlementId)
-    */
-   @Setter
-   private long departAt;
-   @Setter
-   private boolean departurePaused;
-
    @Getter
    private final RandomSource arbitraryRandom;
 
@@ -184,8 +174,6 @@ public class CivilizedVillager extends AgeableMob
       this.arbitraryRandom = RandomSource.create();
       this.setPersistenceRequired(); // prevent auto-despawning
       this.hunger = new VillagerHunger(this);
-      this.departAt = -1;
-      this.departurePaused = false;
    }
 
    public void initBrandNewVillager() {
@@ -264,7 +252,6 @@ public class CivilizedVillager extends AgeableMob
       compound.putUUID(FIELD_VILLAGER_ID, villagerId);
       compound.putLong(FIELD_LIFETIME_SEED, lifetimeSeed);
       compound.putBoolean(FIELD_ROUTED, isRouted());
-      compound.putLong(FIELD_DEPART_AT, departAt);
       CompoundTag behaviourState = new CompoundTag();
       state.addAdditionalSaveData(behaviourState);
       compound.put(VillagerState.FIELD_VILLAGER_STATE, behaviourState);
@@ -282,7 +269,6 @@ public class CivilizedVillager extends AgeableMob
       setArbitraryRandom(compound.getLong(FIELD_LIFETIME_SEED));
       // the brain's activities aren't set up yet, so routing is restored once it is (see serverFinalizeSpawn)
       routedOnLoad = compound.getBoolean(FIELD_ROUTED);
-      departAt = compound.getLong(FIELD_DEPART_AT);
       if (compound.contains(VillagerState.FIELD_VILLAGER_STATE))
          pendingVillagerStateTag = compound.getCompound(VillagerState.FIELD_VILLAGER_STATE);
       hunger.load(compound);
@@ -582,16 +568,15 @@ public class CivilizedVillager extends AgeableMob
    @Override
    protected void customServerAiStep(ServerLevel serverLevel) {
 
-      if (isTimeToDepart(serverLevel.getDayTime())) {
-         depart();
+      ensureStateMatchesRole();
+      state.serverTick(serverLevel, serverLevel.getGameTime());
+      // e.g. a visitor that has just departed
+      if (isRemoved())
          return;
-      }
 
       updateActivity(serverLevel.getDayTime(), serverLevel.getGameTime());
       regenerateHealth(serverLevel.getGameTime());
       hunger.serverTickHunger(serverLevel.getGameTime());
-      ensureStateMatchesRole();
-      state.serverTick(serverLevel, serverLevel.getGameTime());
 
       reportNearbyHostiles();
       ProfilerFiller profilerFiller = Profiler.get();
@@ -762,15 +747,6 @@ public class CivilizedVillager extends AgeableMob
 
    public @Nullable ICombatCommand getCombatCommand() {
       return combatCommand;
-   }
-
-   private boolean isTimeToDepart(long dayTime) {
-      if (departAt == -1 || departurePaused)
-         return false;
-
-      // the second check catches the clock being set back (e.g. with /time set), which would otherwise leave the
-      // visitor waiting for days
-      return dayTime >= departAt || departAt - dayTime > 24000;
    }
 
    public void depart() {

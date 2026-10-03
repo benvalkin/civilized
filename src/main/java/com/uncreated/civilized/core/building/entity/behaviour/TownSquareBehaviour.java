@@ -12,6 +12,7 @@ import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.core.villagerinfo.VillagerNpcRole;
 import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
 import com.uncreated.civilized.entity.CivilizedVillager;
+import com.uncreated.civilized.entity.VisitorState;
 import com.uncreated.civilized.neoforge.registration.entity.EntityRegistry;
 import com.uncreated.civilized.util.random.DailyEventScheduler;
 
@@ -80,7 +81,8 @@ public class TownSquareBehaviour extends BuildingBehaviour {
             VISITOR_ROLES.getRandomValue(villager.getRandom()).orElse(VillagerNpcRoles.TRAVELLER);
       villager.changeNpcRole(visitorRole);
       villager.getInfo().setHomeBuildingId(getBuilding().getBuildingId());
-      villager.setDepartAt(chooseDepartureTime(level.getDayTime(), villager.getRandom()));
+      VisitorState.of(villager)
+            .ifPresent(visitor -> visitor.setDepartAt(chooseDepartureTime(level.getDayTime(), villager.getRandom())));
       ServerVillagerStore.INSTANCE.setDirty();
       ServerVillagerStore.INSTANCE.replicateChange(villager.getInfo(), StoreOperation.UPDATE);
       ServerBuildingsStore.INSTANCE.replicateChange(getBuilding(), StoreOperation.UPDATE);
