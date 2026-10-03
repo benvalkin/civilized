@@ -11,7 +11,8 @@ import com.uncreated.civilized.CivilizedMod;
 import com.uncreated.civilized.core.dialogue.questline.advisor.controller.AdvisorDialogueController;
 import com.uncreated.civilized.core.dialogue.questline.migrant.controller.MigrantDialogueController;
 import com.uncreated.civilized.core.dialogue.questline.worker.controller.WorkerDialogueController;
-import com.uncreated.civilized.entity.VisitorRoleBehaviour;
+import com.uncreated.civilized.entity.MerchantVisitorBehaviour;
+import com.uncreated.civilized.entity.VisitorBehaviour;
 
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
@@ -81,53 +82,53 @@ public class VillagerNpcRoles {
    public static final VillagerNpcRole TRAVELLER =
          declare(
                VillagerNpcRole.builder(createResourceKey("traveller"))
-                     .createRoleBehaviour(VisitorRoleBehaviour::new)
+                     .createRoleBehaviour(VisitorBehaviour::new)
                      .build());
    public static final VillagerNpcRole MIGRANT =
          declare(
                VillagerNpcRole.builder(createResourceKey("migrant"))
-                     .createRoleBehaviour(VisitorRoleBehaviour::new)
+                     .createRoleBehaviour(VisitorBehaviour::new)
                      .dialogueController(MigrantDialogueController::new)
                      .build());
    public static final VillagerNpcRole SUITOR =
          declare(
                VillagerNpcRole.builder(createResourceKey("suitor"))
-                     .createRoleBehaviour(VisitorRoleBehaviour::new)
+                     .createRoleBehaviour(VisitorBehaviour::new)
                      .genderedTitle(true)
                      .build());
    public static final VillagerNpcRole SKILLED_PROFESSIONAL =
          declare(
                VillagerNpcRole.builder(createResourceKey("skilled_professional"))
-                     .createRoleBehaviour(VisitorRoleBehaviour::new)
+                     .createRoleBehaviour(VisitorBehaviour::new)
                      .build());
    public static final VillagerNpcRole MERCENARY =
          declare(
                VillagerNpcRole.builder(createResourceKey("mercenary"))
-                     .createRoleBehaviour(VisitorRoleBehaviour::new)
+                     .createRoleBehaviour(VisitorBehaviour::new)
                      .build());
    public static final VillagerNpcRole BEGGAR =
          declare(
                VillagerNpcRole.builder(createResourceKey("beggar"))
-                     .createRoleBehaviour(VisitorRoleBehaviour::new)
+                     .createRoleBehaviour(VisitorBehaviour::new)
                      .build());
    public static final VillagerNpcRole SCOUNDREL =
          declare(
                VillagerNpcRole.builder(createResourceKey("scoundrel"))
-                     .createRoleBehaviour(VisitorRoleBehaviour::new)
+                     .createRoleBehaviour(VisitorBehaviour::new)
                      .build());
    public static final VillagerNpcRole THIEF =
          declare(
                VillagerNpcRole.builder(createResourceKey("thief"))
-                     .createRoleBehaviour(VisitorRoleBehaviour::new)
+                     .createRoleBehaviour(VisitorBehaviour::new)
                      .build());
    public static final VillagerNpcRole MERCHANT =
          declare(
                VillagerNpcRole.builder(createResourceKey("merchant"))
-                     .createRoleBehaviour(VisitorRoleBehaviour::new)
+                     .createRoleBehaviour(MerchantVisitorBehaviour::new)
                      .build());
    public static final VillagerNpcRole BANDIT =
          declare(
                VillagerNpcRole.builder(createResourceKey("bandit"))
-                     .createRoleBehaviour(VisitorRoleBehaviour::new)
+                     .createRoleBehaviour(VisitorBehaviour::new)
                      .build());
 }

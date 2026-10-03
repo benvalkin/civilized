@@ -1,4 +1,4 @@
-// 1.21.4	2026-09-13T23:19:12.730818	Model Definitions - civilized
+// 1.21.4	2026-10-03T15:35:39.813576	Model Definitions - civilized
 064fb41a1bcbf63c16aa52318b3d7c558ebd9e60 assets/civilized/items/armorer_house.json
 6ce3060289fb5bad6138c447bc3853d25f1931c9 assets/civilized/items/artist_house.json
 95fea70e2da1925b8200a128c3b7b695a7e12911 assets/civilized/items/baker_house.json
@@ -24,6 +24,7 @@ ee298d20f26a40be7d51171e3696cd935dce3ad6 assets/civilized/items/fishing_spot.jso
 837b605d818a6fbc674ac3d49b7a2a7ea24484c5 assets/civilized/items/inn.json
 0fc5b29c1d5f1c74355c182860f992bbe621a4fd assets/civilized/items/leatherworker_house.json
 0dac386c926f116964fece6fbc35db21065dea5a assets/civilized/items/mason_house.json
+e34e45c7a3bf2a4c2ae6673de0983d983c12cb9f assets/civilized/items/military_house.json
 b9ff5f2507e10a3ab0164637b8df85b7fb5331ae assets/civilized/items/mine.json
 b74c90cb007eb2941d6e84e0b463260130217cce assets/civilized/items/miner_house.json
 2a4b77d7b5080bf7a8dfcfb3498e52552b40b9c9 assets/civilized/items/pig_farm.json
@@ -36,6 +37,7 @@ b421f2ef8ca3bd215c0f8983900d569eed372ee4 assets/civilized/items/settlement_manda
 3f9b0e4f087ff8006997b24e748205676a020ba3 assets/civilized/items/tavern.json
 d8ab47a386db5c6b83fd609789dd73dfa46ce5b5 assets/civilized/items/toolsmith_house.json
 23faeb8da4a0e418e1d1a9c491476f08646802c3 assets/civilized/items/town_hall.json
+7439b659de994d9bf30e09ab486db9b06df8918c assets/civilized/items/town_house.json
 514edf056bd36f6c34acd1f184bfc4657eea91dc assets/civilized/items/town_square.json
 e2d519c3d350438c0f2e702c5dcffc78133f440e assets/civilized/items/weaponsmith_house.json
 7b785b1522c7726ef090d48fedb549e585364d9a assets/civilized/items/weaver_house.json
@@ -65,6 +67,7 @@ ec9b8ae6fa1e098dcda99494afe6b9dbb31f1d3c assets/civilized/models/item/grove.json
 f26f7517f221558ec381295adc632a01d948d8f9 assets/civilized/models/item/inn.json
 982af339b772a4d23e5a8266bb8a1bcecda1acbf assets/civilized/models/item/leatherworker_house.json
 abb24ae385c780961fbe7a035843f7455682ee06 assets/civilized/models/item/mason_house.json
+b3199c3596739ddf8a710aa2e65a6aaaa28c372d assets/civilized/models/item/military_house.json
 7d7352cfd887aaba6096c180af5d8da54f1ec733 assets/civilized/models/item/mine.json
 acf2d0d5a7026f6579f99460b9791a1d0fff7177 assets/civilized/models/item/miner_house.json
 447cd1e0f98e3e53ae5f918e9da553a52833bc1a assets/civilized/models/item/pig_farm.json
@@ -77,6 +80,7 @@ acf2d0d5a7026f6579f99460b9791a1d0fff7177 assets/civilized/models/item/miner_hous
 2c611dea679c24a11d01a43126ab3406e5212cc7 assets/civilized/models/item/tavern.json
 390e083994b4b03fa962231ca3b643ae2f76feed assets/civilized/models/item/toolsmith_house.json
 73722964a49a3451d3708b130f0536885543abbc assets/civilized/models/item/town_hall.json
+feffd7bc8480ff74fdb9f35fec7e2600dc522309 assets/civilized/models/item/town_house.json
 0558e9a4a806d0ece21318269a6c184b70968d30 assets/civilized/models/item/town_square.json
 b7baa30ad569c4e7116e99f7be3b00222893b5bf assets/civilized/models/item/weaponsmith_house.json
 bec9771300a4d65cd9f7f3b0955d9ef8666037cb assets/civilized/models/item/weaver_house.json

@@ -51,16 +51,22 @@ public class CivilizedDataMapProvider extends DataMapProvider {
       values.add(Items.CHICKEN, 2);
       values.add(Items.COOKED_CHICKEN, 4);
       values.add(Items.MUTTON, 2);
+      values.add(Items.MUTTON, 2);
       values.add(Items.COOKED_MUTTON, 4);
+      values.add(Items.RABBIT, 2);
+      values.add(Items.COOKED_RABBIT, 4);
 
       // animal products
       values.add(Items.LEATHER, 8);
+      values.add(Items.RABBIT_HIDE, 10);
+      values.add(Items.RABBIT_FOOT, 24);
       values.add(Items.STRING, 1);
       values.add(Items.FEATHER, 1);
 
       // crafted goods
       values.add(Items.PAPER, 1);
       values.add(Items.BOOK, 8);
+      values.add(Items.SUGAR, 5);
 
       // fuel, ores and gems
       values.add(Items.COAL, 2);
@@ -72,6 +78,13 @@ public class CivilizedDataMapProvider extends DataMapProvider {
       values.add(Items.LAPIS_LAZULI, 2);
       values.add(Items.EMERALD, 60);
       values.add(Items.DIAMOND, 160);
+
+      values.add(Items.GLOWSTONE, 3);
+      values.add(Items.NETHER_WART, 5);
+      values.add(Items.BLAZE_ROD, 70);
+      values.add(Items.BLAZE_POWDER, 35);
+      values.add(Items.SLIME_BALL, 5);
+      values.add(Items.MAGMA_CREAM, 35);
    }
 
    private record MarketValueBuilder(Builder<MarketValue, Item> builder) {

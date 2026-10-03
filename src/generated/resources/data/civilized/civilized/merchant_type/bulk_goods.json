@@ -1,0 +1,90 @@
+{
+  "offers": [
+    {
+      "items": "#minecraft:wool",
+      "stock": {
+        "type": "minecraft:uniform",
+        "max_inclusive": 32,
+        "min_inclusive": 8
+      },
+      "weight": 4
+    },
+    {
+      "items": "minecraft:string",
+      "stock": {
+        "type": "minecraft:uniform",
+        "max_inclusive": 32,
+        "min_inclusive": 8
+      },
+      "weight": 3
+    },
+    {
+      "items": "minecraft:leather",
+      "stock": {
+        "type": "minecraft:uniform",
+        "max_inclusive": 24,
+        "min_inclusive": 4
+      },
+      "weight": 3
+    },
+    {
+      "items": "minecraft:sugar",
+      "stock": {
+        "type": "minecraft:uniform",
+        "max_inclusive": 32,
+        "min_inclusive": 4
+      },
+      "weight": 3
+    },
+    {
+      "items": "minecraft:egg",
+      "stock": {
+        "type": "minecraft:uniform",
+        "max_inclusive": 20,
+        "min_inclusive": 4
+      },
+      "weight": 3
+    },
+    {
+      "items": "minecraft:iron_ingot",
+      "stock": {
+        "type": "minecraft:uniform",
+        "max_inclusive": 32,
+        "min_inclusive": 4
+      },
+      "weight": 3
+    },
+    {
+      "items": "#c:dyes",
+      "stock": {
+        "type": "minecraft:uniform",
+        "max_inclusive": 32,
+        "min_inclusive": 4
+      },
+      "weight": 3
+    },
+    {
+      "items": "minecraft:paper",
+      "stock": {
+        "type": "minecraft:uniform",
+        "max_inclusive": 24,
+        "min_inclusive": 8
+      },
+      "weight": 2
+    },
+    {
+      "items": "minecraft:book",
+      "stock": {
+        "type": "minecraft:uniform",
+        "max_inclusive": 4,
+        "min_inclusive": 1
+      }
+    }
+  ],
+  "trade_count": {
+    "type": "minecraft:uniform",
+    "max_inclusive": 4,
+    "min_inclusive": 3
+  },
+  "weight": 6
+}

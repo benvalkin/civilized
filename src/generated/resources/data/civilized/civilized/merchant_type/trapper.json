@@ -1,0 +1,63 @@
+{
+  "offers": [
+    {
+      "items": [
+        "minecraft:beef",
+        "minecraft:leather"
+      ],
+      "select": "all_of",
+      "stock": {
+        "type": "minecraft:uniform",
+        "max_inclusive": 16,
+        "min_inclusive": 4
+      },
+      "weight": 4
+    },
+    {
+      "items": [
+        "minecraft:chicken",
+        "minecraft:feather"
+      ],
+      "select": "all_of",
+      "stock": {
+        "type": "minecraft:uniform",
+        "max_inclusive": 16,
+        "min_inclusive": 4
+      },
+      "weight": 4
+    },
+    {
+      "items": [
+        "minecraft:rabbit",
+        "minecraft:rabbit_hide"
+      ],
+      "select": "all_of",
+      "stock": {
+        "type": "minecraft:uniform",
+        "max_inclusive": 16,
+        "min_inclusive": 4
+      },
+      "weight": 4
+    },
+    {
+      "items": [
+        "minecraft:cooked_beef",
+        "minecraft:cooked_porkchop",
+        "minecraft:cooked_chicken",
+        "minecraft:cooked_mutton"
+      ],
+      "stock": {
+        "type": "minecraft:uniform",
+        "max_inclusive": 12,
+        "min_inclusive": 4
+      },
+      "weight": 3
+    }
+  ],
+  "trade_count": {
+    "type": "minecraft:uniform",
+    "max_inclusive": 5,
+    "min_inclusive": 3
+  },
+  "weight": 8
+}

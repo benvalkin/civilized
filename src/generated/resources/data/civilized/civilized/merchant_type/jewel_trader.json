@@ -1,0 +1,58 @@
+{
+  "offers": [
+    {
+      "items": "minecraft:gold_ingot",
+      "stock": {
+        "type": "minecraft:uniform",
+        "max_inclusive": 8,
+        "min_inclusive": 2
+      },
+      "weight": 2
+    },
+    {
+      "items": "minecraft:redstone",
+      "stock": {
+        "type": "minecraft:uniform",
+        "max_inclusive": 24,
+        "min_inclusive": 8
+      },
+      "weight": 2
+    },
+    {
+      "items": "minecraft:lapis_lazuli",
+      "stock": {
+        "type": "minecraft:uniform",
+        "max_inclusive": 24,
+        "min_inclusive": 8
+      },
+      "weight": 2
+    },
+    {
+      "items": "minecraft:emerald",
+      "stock": {
+        "type": "minecraft:uniform",
+        "max_inclusive": 8,
+        "min_inclusive": 1
+      },
+      "weight": 2
+    },
+    {
+      "items": "minecraft:glowstone",
+      "stock": {
+        "type": "minecraft:uniform",
+        "max_inclusive": 24,
+        "min_inclusive": 1
+      }
+    },
+    {
+      "items": "minecraft:diamond",
+      "stock": 1
+    }
+  ],
+  "trade_count": {
+    "type": "minecraft:uniform",
+    "max_inclusive": 5,
+    "min_inclusive": 3
+  },
+  "weight": 3
+}

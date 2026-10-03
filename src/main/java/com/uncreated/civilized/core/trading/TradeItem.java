@@ -2,6 +2,8 @@ package com.uncreated.civilized.core.trading;
 
 import java.util.List;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.uncreated.civilized.core.building.logistics.AggregateItemStack;
 import com.uncreated.civilized.item.CurrencyItem;
 import com.uncreated.civilized.util.ContainerHelper;
@@ -12,6 +14,7 @@ import lombok.experimental.Accessors;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 
@@ -30,6 +33,16 @@ public class TradeItem {
                ByteBufCodecs.VAR_INT,
                TradeItem::quantityPerTrade,
                TradeItem::new);
+
+   public static final Codec<TradeItem> CODEC =
+         RecordCodecBuilder.create(
+               instance -> instance
+                     .group(
+                           ItemStack.SINGLE_ITEM_CODEC.fieldOf("item").forGetter(TradeItem::item),
+                           Codec.INT.fieldOf("price").forGetter(TradeItem::price),
+                           Codec.INT.fieldOf("stock").forGetter(TradeItem::stock),
+                           ExtraCodecs.POSITIVE_INT.fieldOf("quantity_per_trade").forGetter(TradeItem::quantityPerTrade))
+                     .apply(instance, TradeItem::new));
 
    private final ItemStack item;
    private final int price;

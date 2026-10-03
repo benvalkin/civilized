@@ -8,7 +8,7 @@
       "value": 1
     },
     "#minecraft:wool": {
-      "value": 2
+      "value": 1
     },
     "minecraft:apple": {
       "value": 2
@@ -22,6 +22,12 @@
     "minecraft:beetroot": {
       "per": 3,
       "value": 2
+    },
+    "minecraft:blaze_powder": {
+      "value": 35
+    },
+    "minecraft:blaze_rod": {
+      "value": 70
     },
     "minecraft:book": {
       "value": 8
@@ -61,6 +67,9 @@
     "minecraft:cooked_porkchop": {
       "value": 8
     },
+    "minecraft:cooked_rabbit": {
+      "value": 4
+    },
     "minecraft:copper_ingot": {
       "value": 2
     },
@@ -79,6 +88,9 @@
     "minecraft:glass": {
       "value": 1
     },
+    "minecraft:glowstone": {
+      "value": 3
+    },
     "minecraft:gold_ingot": {
       "value": 24
     },
@@ -91,8 +103,14 @@
     "minecraft:leather": {
       "value": 8
     },
+    "minecraft:magma_cream": {
+      "value": 35
+    },
     "minecraft:mutton": {
       "value": 2
+    },
+    "minecraft:nether_wart": {
+      "value": 5
     },
     "minecraft:paper": {
       "value": 1
@@ -104,8 +122,20 @@
       "per": 3,
       "value": 2
     },
+    "minecraft:rabbit": {
+      "value": 2
+    },
+    "minecraft:rabbit_foot": {
+      "value": 24
+    },
+    "minecraft:rabbit_hide": {
+      "value": 10
+    },
     "minecraft:redstone": {
       "value": 1
+    },
+    "minecraft:slime_ball": {
+      "value": 5
     },
     "minecraft:stick": {
       "per": 4,
@@ -117,6 +147,9 @@
     },
     "minecraft:string": {
       "value": 1
+    },
+    "minecraft:sugar": {
+      "value": 5
     },
     "minecraft:sugar_cane": {
       "per": 2,

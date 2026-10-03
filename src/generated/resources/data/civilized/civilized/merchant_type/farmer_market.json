@@ -1,0 +1,77 @@
+{
+  "offers": [
+    {
+      "items": "minecraft:wheat",
+      "stock": {
+        "type": "minecraft:uniform",
+        "max_inclusive": 48,
+        "min_inclusive": 16
+      },
+      "weight": 5
+    },
+    {
+      "items": "minecraft:bread",
+      "stock": {
+        "type": "minecraft:uniform",
+        "max_inclusive": 24,
+        "min_inclusive": 8
+      },
+      "weight": 4
+    },
+    {
+      "items": [
+        "minecraft:carrot",
+        "minecraft:potato",
+        "minecraft:beetroot"
+      ],
+      "stock": {
+        "type": "minecraft:uniform",
+        "max_inclusive": 16,
+        "min_inclusive": 8
+      },
+      "weight": 5
+    },
+    {
+      "items": "minecraft:baked_potato",
+      "stock": {
+        "type": "minecraft:uniform",
+        "max_inclusive": 12,
+        "min_inclusive": 4
+      },
+      "weight": 2
+    },
+    {
+      "items": "minecraft:apple",
+      "stock": {
+        "type": "minecraft:uniform",
+        "max_inclusive": 16,
+        "min_inclusive": 4
+      },
+      "weight": 3
+    },
+    {
+      "items": "minecraft:sugar_cane",
+      "stock": {
+        "type": "minecraft:uniform",
+        "max_inclusive": 16,
+        "min_inclusive": 4
+      },
+      "weight": 2
+    },
+    {
+      "items": "minecraft:egg",
+      "stock": {
+        "type": "minecraft:uniform",
+        "max_inclusive": 16,
+        "min_inclusive": 8
+      },
+      "weight": 2
+    }
+  ],
+  "trade_count": {
+    "type": "minecraft:uniform",
+    "max_inclusive": 6,
+    "min_inclusive": 4
+  },
+  "weight": 10
+}
