@@ -29,7 +29,8 @@ import net.minecraft.world.entity.animal.Animal;
 @Builder(builderMethodName = "internalBuilder")
 public class BuildingType {
    private final ResourceLocation resourceLocation;
-   private final boolean isResidence;
+   private final boolean isWorkerResidence;
+   private final boolean isSpouseResidence;
    private final boolean isWorksite;
    private final boolean isFoodVendor;
    @Nullable

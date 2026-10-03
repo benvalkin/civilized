@@ -136,4 +136,10 @@ public abstract class BuildingStore extends SavedData {
             .filter(b -> b.getBuildingType() == BuildingTypes.STOREHOUSE)
             .findFirst();
    }
+
+   public Optional<Building> findTownHall(UUID settlementId) {
+      return findForSettlement(settlementId).stream()
+              .filter(b -> b.getBuildingType() == BuildingTypes.TOWN_HALL)
+              .findFirst();
+   }
 }

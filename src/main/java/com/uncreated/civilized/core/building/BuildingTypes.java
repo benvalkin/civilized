@@ -95,15 +95,9 @@ public class BuildingTypes {
             registry -> ALL.forEach(buildingType -> registerBuildingType(registry, buildingType)));
    }
 
-   public static BuildingType TOWN_HALL =
-         declare(
-               BuildingType.builder(createResourceKey("town_hall"))
-                     .build());
+   public static BuildingType TOWN_HALL = declare(BuildingType.builder(createResourceKey("town_hall")).build());
    public static BuildingType INN =
-         declare(
-               BuildingType.builder(createResourceKey("inn"))
-                     .isResidence(true)
-                     .build());
+         declare(BuildingType.builder(createResourceKey("inn")).isWorkerResidence(true).build());
    public static BuildingType TOWN_SQUARE =
          declare(
                BuildingType.builder(createResourceKey("town_square"))
@@ -113,78 +107,100 @@ public class BuildingTypes {
    public static BuildingType CHURCH =
          declare(
                BuildingType.builder(createResourceKey("church"))
-                     .isResidence(true)
+                     .isWorkerResidence(true)
+                     .isSpouseResidence(true)
                      .occupation(() -> VillagerOccupations.PRIEST)
                      .build());
-   public static BuildingType BARRACKS =
+   public static BuildingType TOWN_HOUSE =
          declare(
-               BuildingType.builder(createResourceKey("barracks"))
-                     .isResidence(true)
-                     .occupation(() -> VillagerOccupations.SOLDIER)
+               BuildingType.builder(createResourceKey("town_house"))
+                     .isSpouseResidence(true)
                      .build());
    public static BuildingType GUARD_POST =
          declare(
                BuildingType.builder(createResourceKey("guard_post"))
-                     .isResidence(true)
+                     .isWorkerResidence(true)
+                     .occupation(() -> VillagerOccupations.SOLDIER)
+                     .build());
+   public static BuildingType BARRACKS =
+         declare(
+               BuildingType.builder(createResourceKey("barracks"))
+                     .isWorkerResidence(true)
+                     .occupation(() -> VillagerOccupations.SOLDIER)
+                     .build());
+   public static BuildingType MILITARY_HOUSE =
+         declare(
+               BuildingType.builder(createResourceKey("military_house"))
+                     .isWorkerResidence(true)
+                     .isSpouseResidence(true)
                      .occupation(() -> VillagerOccupations.SOLDIER)
                      .build());
    public static BuildingType TAVERN =
          declare(
                BuildingType.builder(createResourceKey("tavern"))
-                     .isResidence(true)
+                     .isWorkerResidence(true)
+                     .isSpouseResidence(true)
                      .isFoodVendor(true)
                      .occupation(() -> VillagerOccupations.TAVERN_KEEPER)
                      .build());
    public static BuildingType FARMER_HOUSE =
          declare(
                BuildingType.builder(createResourceKey("farmer_house"))
-                     .isResidence(true)
+                     .isWorkerResidence(true)
+                     .isSpouseResidence(true)
                      .occupation(() -> VillagerOccupations.FARMER)
                      .build());
    public static BuildingType WOODCUTTER_HOUSE =
          declare(
                BuildingType.builder(createResourceKey("woodcutter_house"))
-                     .isResidence(true)
+                     .isWorkerResidence(true)
+                     .isSpouseResidence(true)
                      .occupation(() -> VillagerOccupations.WOODCUTTER)
                      .build());
    public static BuildingType MINER_HOUSE =
          declare(
                BuildingType.builder(createResourceKey("miner_house"))
-                     .isResidence(true)
+                     .isWorkerResidence(true)
+                     .isSpouseResidence(true)
                      .occupation(() -> VillagerOccupations.MINER)
                      .build());
 
    public static BuildingType STONECUTTER_HOUSE =
          declare(
                BuildingType.builder(createResourceKey("stonecutter_house"))
-                     .isResidence(true)
+                     .isWorkerResidence(true)
+                     .isSpouseResidence(true)
                      .occupation(() -> VillagerOccupations.STONECUTTER)
                      .build());
 
    public static BuildingType RANCHER_HOUSE =
          declare(
                BuildingType.builder(createResourceKey("rancher_house"))
-                     .isResidence(true)
+                     .isWorkerResidence(true)
+                     .isSpouseResidence(true)
                      .occupation(() -> VillagerOccupations.RANCHER)
                      .build());
 
    public static BuildingType FISHERMAN_HOUSE =
          declare(
                BuildingType.builder(createResourceKey("fisherman_house"))
-                     .isResidence(true)
+                     .isWorkerResidence(true)
+                     .isSpouseResidence(true)
                      .occupation(() -> VillagerOccupations.FISHERMAN)
                      .build());
    public static BuildingType BEEKEEPER_HOUSE =
          declare(
                BuildingType.builder(createResourceKey("beekeeper_house"))
-                     .isResidence(true)
+                     .isWorkerResidence(true)
+                     .isSpouseResidence(true)
                      .occupation(() -> VillagerOccupations.BEEKEEPER)
                      .build());
 
    public static BuildingType BAKER_HOUSE =
          declare(
                BuildingType.builder(createResourceKey("baker_house"))
-                     .isResidence(true)
+                     .isWorkerResidence(true)
+                     .isSpouseResidence(true)
                      .supportedProductionTypes(List.of(ProductionTypes.CRAFTING, ProductionTypes.SMELTING))
                      .createState(BakeryState::new)
                      .createBehaviour(ArtisanHouseBehaviour::new)
@@ -194,7 +210,8 @@ public class BuildingTypes {
    public static BuildingType BUTCHER_HOUSE =
          declare(
                BuildingType.builder(createResourceKey("butcher_house"))
-                     .isResidence(true)
+                     .isWorkerResidence(true)
+                     .isSpouseResidence(true)
                      .supportedProductionTypes(List.of(ProductionTypes.CRAFTING, ProductionTypes.SMOKING))
                      .createState(ButcheryState::new)
                      .createBehaviour(ArtisanHouseBehaviour::new)
@@ -204,7 +221,8 @@ public class BuildingTypes {
    public static BuildingType BLACKSMITH_HOUSE =
          declare(
                BuildingType.builder(createResourceKey("blacksmith_house"))
-                     .isResidence(true)
+                     .isWorkerResidence(true)
+                     .isSpouseResidence(true)
                      .supportedProductionTypes(List.of(ProductionTypes.CRAFTING, ProductionTypes.BLASTING))
                      .createState(BlacksmithHouseState::new)
                      .createBehaviour(ArtisanHouseBehaviour::new)
@@ -214,7 +232,8 @@ public class BuildingTypes {
    public static BuildingType MASON_HOUSE =
          declare(
                BuildingType.builder(createResourceKey("mason_house"))
-                     .isResidence(true)
+                     .isWorkerResidence(true)
+                     .isSpouseResidence(true)
                      .supportedProductionTypes(List.of(ProductionTypes.CRAFTING, ProductionTypes.SMELTING))
                      .createState(MasonHouseState::new)
                      .createBehaviour(ArtisanHouseBehaviour::new)
@@ -224,7 +243,8 @@ public class BuildingTypes {
    public static BuildingType CARPENTER_HOUSE =
          declare(
                BuildingType.builder(createResourceKey("carpenter_house"))
-                     .isResidence(true)
+                     .isWorkerResidence(true)
+                     .isSpouseResidence(true)
                      .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                      .createState(CarpenterHouseState::new)
                      .createBehaviour(ArtisanHouseBehaviour::new)
@@ -234,7 +254,8 @@ public class BuildingTypes {
    public static BuildingType TOOLSMITH_HOUSE =
          declare(
                BuildingType.builder(createResourceKey("toolsmith_house"))
-                     .isResidence(true)
+                     .isWorkerResidence(true)
+                     .isSpouseResidence(true)
                      .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                      .createState(ToolsmithHouseState::new)
                      .createBehaviour(ArtisanHouseBehaviour::new)
@@ -244,7 +265,8 @@ public class BuildingTypes {
    public static BuildingType WEAPONSMITH_HOUSE =
          declare(
                BuildingType.builder(createResourceKey("weaponsmith_house"))
-                     .isResidence(true)
+                     .isWorkerResidence(true)
+                     .isSpouseResidence(true)
                      .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                      .createState(WeaponsmithHouseState::new)
                      .createBehaviour(ArtisanHouseBehaviour::new)
@@ -254,7 +276,8 @@ public class BuildingTypes {
    public static BuildingType ARMORER_HOUSE =
          declare(
                BuildingType.builder(createResourceKey("armorer_house"))
-                     .isResidence(true)
+                     .isWorkerResidence(true)
+                     .isSpouseResidence(true)
                      .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                      .createState(ArmorerHouseState::new)
                      .createBehaviour(ArtisanHouseBehaviour::new)
@@ -264,7 +287,8 @@ public class BuildingTypes {
    public static BuildingType LEATHERWORKER_HOUSE =
          declare(
                BuildingType.builder(createResourceKey("leatherworker_house"))
-                     .isResidence(true)
+                     .isWorkerResidence(true)
+                     .isSpouseResidence(true)
                      .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                      .createState(LeatherworkerHouseState::new)
                      .createBehaviour(ArtisanHouseBehaviour::new)
@@ -273,7 +297,8 @@ public class BuildingTypes {
    public static BuildingType WEAVER_HOUSE =
          declare(
                BuildingType.builder(createResourceKey("weaver_house"))
-                     .isResidence(true)
+                     .isWorkerResidence(true)
+                     .isSpouseResidence(true)
                      .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                      .createState(WeaverHouseState::new)
                      .createBehaviour(ArtisanHouseBehaviour::new)
@@ -283,7 +308,8 @@ public class BuildingTypes {
    public static BuildingType FLETCHER_HOUSE =
          declare(
                BuildingType.builder(createResourceKey("fletcher_house"))
-                     .isResidence(true)
+                     .isWorkerResidence(true)
+                     .isSpouseResidence(true)
                      .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                      .createState(FletcherHouseState::new)
                      .createBehaviour(ArtisanHouseBehaviour::new)
@@ -293,7 +319,8 @@ public class BuildingTypes {
    public static BuildingType CARTOGRAPHER_HOUSE =
          declare(
                BuildingType.builder(createResourceKey("cartographer_house"))
-                     .isResidence(true)
+                     .isWorkerResidence(true)
+                     .isSpouseResidence(true)
                      .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                      .createState(CartographerHouseState::new)
                      .createBehaviour(ArtisanHouseBehaviour::new)
@@ -303,7 +330,8 @@ public class BuildingTypes {
    public static BuildingType ARTIST_HOUSE =
          declare(
                BuildingType.builder(createResourceKey("artist_house"))
-                     .isResidence(true)
+                     .isWorkerResidence(true)
+                     .isSpouseResidence(true)
                      .supportedProductionTypes(List.of(ProductionTypes.CRAFTING))
                      .createState(ArtistHouseState::new)
                      .createBehaviour(ArtisanHouseBehaviour::new)

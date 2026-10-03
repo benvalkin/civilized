@@ -107,7 +107,7 @@ public class ManageResidentsTab extends ABuildingScreenTab {
    }
 
    protected List<VillagerInfo> getCurrentOccupants(Building building, Settlement settlement) {
-      return BuildingUtil.getResidents(building, ClientVillagerStore.INSTANCE);
+      return BuildingUtil.getOccupants(building, ClientVillagerStore.INSTANCE);
    }
 
    protected List<VillagerInfo> getCandidateOccupants(Building building, Settlement settlement) {

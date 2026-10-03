@@ -35,16 +35,15 @@ public class JoinSettlementContext extends DialogueContext {
       if (requiredBuildingType == null) {
          unoccupiedBuilding =
                BuildingUtil
-                     .findUnoccupiedHome(
+                     .findUnoccupiedWorkerHome(
                            settlement.getSettlementId(),
                            ClientBuildingStore.INSTANCE,
-                           ClientVillagerStore.INSTANCE,
-                           false)
+                           ClientVillagerStore.INSTANCE)
                      .orElse(null);
       } else {
          unoccupiedBuilding =
                BuildingUtil
-                     .findUnoccupiedHome(
+                     .findUnoccupiedWorkerHome(
                            settlement.getSettlementId(),
                            requiredBuildingType,
                            ClientBuildingStore.INSTANCE,

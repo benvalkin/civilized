@@ -78,12 +78,12 @@ public class SignHelper {
                settlement.displayNameTranslation().withStyle(ChatFormatting.ITALIC),
                Component.translatable("menu.building.town_hall.population.count", citizens.size()), Component.empty() };
       } else if (building.getBuildingType().is(BuildingTypes.INN)) {
-         List<VillagerInfo> visitors = BuildingUtil.getResidents(building, villagerStore);
+         List<VillagerInfo> visitors = BuildingUtil.getOccupants(building, villagerStore);
          return new Component[] { building.getBuildingType().shortName(),
                Component.translatable("menu.building.inn.visitors.count", visitors.size()), Component.empty(),
                Component.empty() };
-      } else if (building.getBuildingType().isResidence()) {
-         List<VillagerInfo> residents = BuildingUtil.getResidents(building, villagerStore);
+      } else if (building.getBuildingType().isWorkerResidence()) {
+         List<VillagerInfo> residents = BuildingUtil.getOccupants(building, villagerStore);
 
          Optional<VillagerInfo> owner = residents.stream().filter(v -> v.getGender() == Gender.MALE).findFirst();
          if (owner.isEmpty())

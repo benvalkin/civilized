@@ -106,6 +106,16 @@ public class VillagerInfo {
       return partnerId != null;
    }
 
+   public boolean isPartnerOf(VillagerInfo other) {
+      if (partnerId == null)
+         return false;
+
+      if (other.partnerId == null)
+         return false;
+
+      return partnerId.equals(other.partnerId);
+   }
+
    public String getFullName() {
 
       if (!hasName()) {

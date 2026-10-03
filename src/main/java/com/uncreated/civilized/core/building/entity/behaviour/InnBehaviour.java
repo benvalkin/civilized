@@ -39,7 +39,7 @@ public class InnBehaviour extends BuildingBehaviour {
 
    private void trySpawnVisitor(ServerLevel level) {
 
-      List<VillagerInfo> occupants = BuildingUtil.getResidents(getBuilding(), ServerVillagerStore.INSTANCE);
+      List<VillagerInfo> occupants = BuildingUtil.getOccupants(getBuilding(), ServerVillagerStore.INSTANCE);
       if (occupants.size() >= 4)
          return;
 

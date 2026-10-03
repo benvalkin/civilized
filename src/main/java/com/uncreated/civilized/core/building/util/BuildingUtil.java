@@ -1,7 +1,5 @@
 package com.uncreated.civilized.core.building.util;
 
-import static com.uncreated.civilized.ui.menu.building.worksite.tabs.ManageWorkersTab.MAX_ASSIGNED_WORKERS;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -10,6 +8,7 @@ import java.util.function.Predicate;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.BuildingStore;
 import com.uncreated.civilized.core.building.BuildingType;
+import com.uncreated.civilized.core.building.BuildingTypes;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
 import com.uncreated.civilized.core.villagerinfo.VillagerStore;
@@ -28,12 +27,15 @@ import net.minecraft.world.level.gameevent.GameEvent;
 
 public class BuildingUtil {
 
-   public static List<VillagerInfo> getResidents(Building building, VillagerStore store) {
+   public static List<VillagerInfo> getOccupants(Building building, VillagerStore store) {
       return store.getCitizens(building.getSettlementId()).stream().filter(v -> v.isOccupantOf(building)).toList();
    }
 
    public static List<VillagerInfo> getVisitors(Building building, VillagerStore store) {
-      return store.all().stream().filter(v -> v.getSettlementId() == null && v.isOccupantOf(building)).toList();
+      return store.getCitizens(building.getSettlementId())
+            .stream()
+            .filter(v -> v.getSettlementId() == null && v.isOccupantOf(building))
+            .toList();
    }
 
    public static List<VillagerInfo> getAssignedWorkers(Building building, VillagerStore store) {
@@ -43,37 +45,29 @@ public class BuildingUtil {
             .toList();
    }
 
-   public static boolean isBuildingFull(Building building, VillagerStore store) {
-      return store.getCitizens(building.getSettlementId())
-            .stream()
-            .filter(v -> v.getNpcRole().is(VillagerNpcRoles.WORKER) && v.isOccupantOf(building))
-            .count() >= MAX_ASSIGNED_WORKERS;
+   public static boolean workResidenceHasWorker(Building building, VillagerStore store) {
+      return getOccupants(building, store).stream()
+            .anyMatch(v -> v.getNpcRole().is(VillagerNpcRoles.WORKER) && v.isOccupantOf(building));
    }
 
-   public static boolean isWorksiteFull(Building building, VillagerStore store) {
-      return store.getCitizens(building.getSettlementId())
-            .stream()
-            .filter(v -> v.isAssignedWorkerOf(building))
-            .count() == MAX_ASSIGNED_WORKERS;
+   public static boolean worksiteHasAssignedWorker(Building building, VillagerStore store) {
+      return store.getCitizens(building.getSettlementId()).stream().anyMatch(v -> v.isAssignedWorkerOf(building));
    }
 
-   public static Optional<Building> findUnoccupiedHome(
+   public static Optional<Building> findUnoccupiedWorkerHome(
          UUID settlementId,
          BuildingStore buildingStore,
-         VillagerStore villagerStore,
-         boolean includeTemporaryHomes) {
+         VillagerStore villagerStore) {
 
       return buildingStore.findForSettlement(settlementId)
             .stream()
             .filter(
-                  b -> b.getSettlementId().equals(settlementId)
-                        && (includeTemporaryHomes ? b.getBuildingType().isResidence()
-                              : b.getBuildingType().isResidence())
-                        && !isBuildingFull(b, villagerStore))
+                  b -> b.getBuildingType().isWorkerResidence()
+                        && !workResidenceHasWorker(b, villagerStore))
             .findFirst();
    }
 
-   public static Optional<Building> findUnoccupiedHome(
+   public static Optional<Building> findUnoccupiedWorkerHome(
          UUID settlementId,
          BuildingType requiredBuildingType,
          BuildingStore buildingStore,
@@ -82,8 +76,8 @@ public class BuildingUtil {
       return buildingStore.findForSettlement(settlementId)
             .stream()
             .filter(
-                  b -> b.getSettlementId().equals(settlementId) && b.getBuildingType() == requiredBuildingType
-                        && !isBuildingFull(b, villagerStore))
+                  b -> b.getBuildingType() == requiredBuildingType
+                        && !workResidenceHasWorker(b, villagerStore))
             .findFirst();
    }
 
@@ -96,9 +90,34 @@ public class BuildingUtil {
       return buildingStore.findForSettlement(settlementId)
             .stream()
             .filter(
-                  b -> b.getSettlementId().equals(settlementId) && filter.test(b.getBuildingType())
-                        && !isWorksiteFull(b, villagerStore))
+                  b -> filter.test(b.getBuildingType())
+                        && !worksiteHasAssignedWorker(b, villagerStore))
             .findFirst();
+   }
+
+   public static Optional<Building> findEmptyAlternativeHomeForWorker(
+           UUID settlementId,
+           BuildingStore buildingStore) {
+
+      return buildingStore.findForSettlement(settlementId)
+              .stream()
+              .filter(
+                      b -> b.getBuildingType().is(BuildingTypes.TOWN_HALL)
+                              && b.getOccupantIds().isEmpty())
+              .findFirst();
+   }
+
+   public static Optional<Building> findEmptyAlternativeHomeForSpouse(
+           UUID settlementId,
+           BuildingStore buildingStore,
+           VillagerStore villagerStore) {
+
+      return buildingStore.findForSettlement(settlementId)
+              .stream()
+              .filter(
+                      b -> b.getBuildingType().isSpouseResidence()
+                              && b.getOccupantIds().isEmpty())
+              .findFirst();
    }
 
    public static void ensureBuildingDoorsAreClosed(CivilizedVillager doorCloser, Building building, ServerLevel level) {

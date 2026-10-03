@@ -9,7 +9,6 @@ import com.google.common.collect.ImmutableMap;
 import com.mojang.logging.LogUtils;
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.Building;
-import com.uncreated.civilized.core.building.BuildingTypes;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.util.BuildingUtil;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
@@ -46,7 +45,7 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
       Optional<Building> oldHome = ServerBuildingsStore.INSTANCE.find(villagerInfo.getHomeBuildingId());
       Optional<Building> oldWorksite = ServerBuildingsStore.INSTANCE.find(villagerInfo.getPrimaryWorksiteId());
 
-      Optional<Building> home = invalidateHome(villagerInfo, level);
+      Optional<Building> home = invalidateHome(villagerInfo);
       if (home.isPresent()) {
 
          if (villagerInfo.getNpcRole().is(VillagerNpcRoles.WORKER))
@@ -114,54 +113,87 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
       }
    }
 
-   private Optional<Building> invalidateHome(VillagerInfo villagerInfo, ServerLevel level) {
+   private Optional<Building> invalidateHome(VillagerInfo villagerInfo) {
 
       if (villagerInfo.getNpcRole().is(VillagerNpcRoles.WORKER)) {
-         return invalidateHomeForWorker(villagerInfo, level);
+         return invalidateHomeForWorker(villagerInfo);
       } else if (villagerInfo.getNpcRole().is(VillagerNpcRoles.SPOUSE)) {
-         return invalidateHomeForPartner(villagerInfo, level);
+         return invalidateHomeForSpouse(villagerInfo);
       }
 
       return Optional.empty();
    }
 
-   private Optional<Building> invalidateHomeForWorker(VillagerInfo villagerInfo, ServerLevel level) {
+   private Optional<Building> invalidateHomeForWorker(VillagerInfo worker) {
 
-      Optional<Building> currentHome = ServerBuildingsStore.INSTANCE.find(villagerInfo.getHomeBuildingId());
-      if (currentHome.isPresent()) {
-         // try to move villager out of the inn if a better home is available
-         if (currentHome.get().getBuildingType().is(BuildingTypes.INN)) {
-            Optional<Building> betterHome =
-                  BuildingUtil.findUnoccupiedHome(
-                        villagerInfo.getSettlementId(),
-                        ServerBuildingsStore.INSTANCE,
-                        ServerVillagerStore.INSTANCE,
-                        false);
+      Optional<Building> currentHome = ServerBuildingsStore.INSTANCE.find(worker.getHomeBuildingId());
+      if (currentHome.isPresent())
+         return currentHome;
 
-            if (betterHome.isPresent())
-               return betterHome;
-         }
+      // If their current home no longer exists, or they are already homeless, try to find a new worker home.
+      Optional<Building> newWorkerHome =
+            BuildingUtil.findUnoccupiedWorkerHome(
+                  worker.getSettlementId(),
+                  ServerBuildingsStore.INSTANCE,
+                  ServerVillagerStore.INSTANCE);
+      if (newWorkerHome.isPresent())
+         return newWorkerHome;
 
-         return currentHome; // otherwise, they stay where they are
-      }
+      // Fallback option is to live in an alternative home (e.g. a town house)
+      Optional<Building> alternativeHome =
+            BuildingUtil.findEmptyAlternativeHomeForWorker(worker.getSettlementId(), ServerBuildingsStore.INSTANCE);
+      if (alternativeHome.isPresent())
+         return alternativeHome;
 
-      return BuildingUtil.findUnoccupiedHome(
-            villagerInfo.getSettlementId(),
-            ServerBuildingsStore.INSTANCE,
-            ServerVillagerStore.INSTANCE,
-            true);
+      // or otherwise the town hall
+      Optional<Building> townHall = ServerBuildingsStore.INSTANCE.findTownHall(worker.getSettlementId());
+      if (townHall.isPresent())
+         return townHall;
+
+      // Otherwise, they will roam around homeless at night :(
+      return Optional.empty();
    }
 
-   private Optional<Building> invalidateHomeForPartner(VillagerInfo villagerInfo, ServerLevel level) {
-      Optional<VillagerInfo> mainHomeOwner = ServerVillagerStore.INSTANCE.find(villagerInfo.getPartnerId());
-      if (mainHomeOwner.isEmpty())
-         return Optional.empty();
+   private Optional<Building> invalidateHomeForSpouse(VillagerInfo spouse) {
 
-      Optional<Building> building = ServerBuildingsStore.INSTANCE.find(mainHomeOwner.get().getHomeBuildingId());
-      if (building.isPresent())
-         return building;
+      Optional<VillagerInfo> mainHomeOwner = ServerVillagerStore.INSTANCE.find(spouse.getPartnerId());
+      if (mainHomeOwner.isPresent()) {
+         // try move to wherever the spouse's partner is staying
+         Optional<Building> building = ServerBuildingsStore.INSTANCE.find(mainHomeOwner.get().getHomeBuildingId());
+         if (building.isPresent())
+            return building;
+      }
 
-      // should eventually be able to find an alternative plain house or something
+      // if we cannot stay where the partner is staying (partner is missing, or partner is homeless), they are allowed
+      // to remain in whatever building they're currently staying at, provided it doesn't now belong to another worker
+      // who is not their partner
+      Optional<Building> building = ServerBuildingsStore.INSTANCE.find(spouse.getHomeBuildingId());
+      if (building.isPresent()) {
+         boolean existingResidenceOccupiedByStranger =
+               BuildingUtil.getOccupants(building.get(), ServerVillagerStore.INSTANCE)
+                     .stream()
+                     .anyMatch(other -> other.getNpcRole().is(VillagerNpcRoles.WORKER) && !spouse.isPartnerOf(other));
+
+         if (!existingResidenceOccupiedByStranger)
+            return building;
+      }
+
+      // if they have no partner, their partner is homeless, and they cannot stay in their current building, spouses can
+      // live in any empty building where spouses can usually live
+      Optional<Building> alternative =
+            BuildingUtil.findEmptyAlternativeHomeForSpouse(
+                  spouse.getSettlementId(),
+                  ServerBuildingsStore.INSTANCE,
+                  ServerVillagerStore.INSTANCE);
+      if (alternative.isPresent())
+         return alternative;
+
+      // if there are not even any viable empty buildings, they will still in the town hall
+      Optional<Building> townHall = ServerBuildingsStore.INSTANCE.findTownHall(spouse.getSettlementId());
+      if (townHall.isPresent())
+         return townHall;
+
+      // Otherwise, they will roam around homeless at night :(
       return Optional.empty();
    }
 
