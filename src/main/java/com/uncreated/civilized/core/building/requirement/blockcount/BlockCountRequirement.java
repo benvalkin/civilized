@@ -1,8 +1,10 @@
 package com.uncreated.civilized.core.building.requirement.blockcount;
 
+import javax.annotation.Nullable;
+
+import com.uncreated.civilized.core.building.bounds.BuildingBounds;
 import com.uncreated.civilized.core.building.requirement.IBuildingRequirement;
 import com.uncreated.civilized.core.building.requirement.IBuildingRequirementResult;
-import com.uncreated.civilized.core.building.bounds.BuildingBounds;
 import com.uncreated.civilized.ui.style.Colors;
 
 import net.minecraft.core.BlockPos;
@@ -12,17 +14,29 @@ import net.minecraft.world.level.Level;
 public class BlockCountRequirement implements IBuildingRequirement {
 
    protected final IBlockValidator validator;
-   protected final int requiredBlocks;
+   protected final int minBlocks;
+   /** The most blocks allowed, or null if there's no limit. */
+   protected final @Nullable Integer maxBlocks;
    protected final Component blockDescription;
    private final boolean hidIfSatisfied;
 
    public BlockCountRequirement(
          IBlockValidator validator,
-         int requiredBlocks,
+         int minBlocks,
+         Component blockDescription,
+         boolean hideIfSatisfied) {
+      this(validator, minBlocks, null, blockDescription, hideIfSatisfied);
+   }
+
+   public BlockCountRequirement(
+         IBlockValidator validator,
+         int minBlocks,
+         @Nullable Integer maxBlocks,
          Component blockDescription,
          boolean hideIfSatisfied) {
       this.validator = validator;
-      this.requiredBlocks = requiredBlocks;
+      this.minBlocks = minBlocks;
+      this.maxBlocks = maxBlocks;
       this.blockDescription = blockDescription;
       this.hidIfSatisfied = hideIfSatisfied;
    }
@@ -51,7 +65,7 @@ public class BlockCountRequirement implements IBuildingRequirement {
    }
 
    public BlockCountResult createResult(int actualBlocks) {
-      return new BlockCountResult(actualBlocks, requiredBlocks);
+      return new BlockCountResult(actualBlocks, minBlocks);
    }
 
    public class BlockCountResult implements IBuildingRequirementResult {

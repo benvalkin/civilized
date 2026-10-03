@@ -23,6 +23,7 @@ public class JoinSettlementAction implements Consumer<DialogueContext> {
 
       info.setSettlementId(settlement.getSettlementId());
       info.setHomeBuildingId(joinSettlement.getUnoccupiedBuilding().getBuildingId());
+      // do not change occupation - server will do that
       joinSettlement.getVillager().changeNpcRole(VillagerNpcRoles.WORKER);
 
       ClientVillagerStore.INSTANCE.replicateChange(info, StoreOperation.UPDATE);

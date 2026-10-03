@@ -58,8 +58,8 @@ public class BuildingRequirements {
                registry,
                BuildingRequirementList.forBuilding(BuildingTypes.STOREHOUSE, 1)
                      .add(new SpaceRequirement(30))
-                     .add(new BlockTypeRequirement(BuildingBlockTypes.WOOD, 40))
-                     .add(new ChestsPresentRequirement(8, false))
+                     .add(new BlockTypeRequirement(BuildingBlockTypes.WOOD, 40, 40))
+                     .add(new ChestsPresentRequirement(6, 6, false))
                      .add(new SignsPresentRequirement(1, false))
                      .create());
 
@@ -68,9 +68,9 @@ public class BuildingRequirements {
                BuildingRequirementList.forBuilding(BuildingTypes.INN, 1)
                      .add(new SpaceRequirement(50))
                      .add(new EnclosedRoomRequirement())
-                     .add(new BlockTypeRequirement(BuildingBlockTypes.WOOD, 200))
+                     .add(new BlockTypeRequirement(BuildingBlockTypes.WOOD, 200, 200))
                      .add(new ChestsPresentRequirement(1, false))
-                     .add(new BedsPresentRequirement(4, false))
+                     .add(new BedsPresentRequirement(4, 4, false))
                      .add(new SignsPresentRequirement(1, false))
                      .create());
 
@@ -78,24 +78,24 @@ public class BuildingRequirements {
                registry,
                BuildingRequirementList.forBuilding(BuildingTypes.GUARD_POST, 1)
                      .add(new EnclosedRoomRequirement())
-                     .add(new SpaceRequirement(4))
+                     .add(new SpaceRequirement(2))
                      .add(new ChestsPresentRequirement(1, false))
                      .add(new SignsPresentRequirement(1, false))
                      .create());
 
          registerStandardHouse(BuildingTypes.BAKER_HOUSE, registry, b -> {
-            b.add(new CraftingTablesPresentRequirement(1, false));
+            b.add(new CraftingTablesPresentRequirement(1, 1, false));
             b.add(new FurnacesPresentRequirement(1, false));
          });
 
          registerStandardHouse(BuildingTypes.BUTCHER_HOUSE, registry, b -> {
-            b.add(new CraftingTablesPresentRequirement(1, false));
-            b.add(new SmokersPresentRequirement(1, false));
+            b.add(new CraftingTablesPresentRequirement(1, 1, false));
+            b.add(new SmokersPresentRequirement(1, 1, false));
          });
 
          registerStandardHouse(BuildingTypes.BLACKSMITH_HOUSE, registry, b -> {
-            b.add(new CraftingTablesPresentRequirement(1, false));
-            b.add(new BlastFurnacesPresentRequirement(1, false));
+            b.add(new CraftingTablesPresentRequirement(1, 1, false));
+            b.add(new BlastFurnacesPresentRequirement(1, 1, false));
          });
 
          registerRequirements(
@@ -154,6 +154,7 @@ public class BuildingRequirements {
             .add(new SpaceRequirement(15))
             .add(new BlockTypeRequirement(BuildingBlockTypes.WOOD, 120))
             .add(new ChestsPresentRequirement(1, false))
+            .add(new BedsPresentRequirement(1, false))
             .add(new SignsPresentRequirement(1, false));
    }
 
@@ -164,6 +165,7 @@ public class BuildingRequirements {
             .add(new BlockTypeRequirement(BuildingBlockTypes.WOOD, 160))
             .add(new BlockTypeRequirement(BuildingBlockTypes.STONE, 32))
             .add(new ChestsPresentRequirement(1, false))
+            .add(new BedsPresentRequirement(2, false))
             .add(new SignsPresentRequirement(1, false));
    }
 
@@ -174,6 +176,7 @@ public class BuildingRequirements {
             .add(new BlockTypeRequirement(BuildingBlockTypes.WOOD, 160))
             .add(new BlockTypeRequirement(BuildingBlockTypes.STONE, 100))
             .add(new ChestsPresentRequirement(1, false))
+            .add(new BedsPresentRequirement(2, false))
             .add(new SignsPresentRequirement(1, false));
    }
 
