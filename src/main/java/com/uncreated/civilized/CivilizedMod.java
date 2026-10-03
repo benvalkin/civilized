@@ -14,6 +14,7 @@ import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermis
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.events.VillagerStoreEvents;
 import com.uncreated.civilized.neoforge.registration.BlockRegistry;
+import com.uncreated.civilized.neoforge.registration.DataMapRegistry;
 import com.uncreated.civilized.neoforge.registration.ItemRegistry;
 import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 import com.uncreated.civilized.neoforge.registration.attachments.DataAttachments;
@@ -91,6 +92,7 @@ public class CivilizedMod {
 
       modEventBus.register(EntitySetupEventsCommon.class);
       modEventBus.register(PacketRegistry.class);
+      modEventBus.register(DataMapRegistry.class);
 
       // Client only events. This check is necessary because registering these client-only events on a server would
       // crash it
