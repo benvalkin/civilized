@@ -101,8 +101,7 @@ public class Notification {
             .receiver(Receiver.ADMINISTRATION)
             .severity(Severity.MINOR)
             .headline(headline)
-            // TODO: make the expiry value longer - it's been reduced for testing
-            .expireAfter(Duration.of(30, ChronoUnit.SECONDS))
+            .expireAfter(Duration.of(5, ChronoUnit.MINUTES))
             .detail(detail)
             .icon(new ItemStack(item));
    }
@@ -128,8 +127,8 @@ public class Notification {
             .receiver(Receiver.ADMINISTRATION)
             .severity(Severity.MINOR)
             .headline(headline)
-            .deliverAfter(Duration.of(30, ChronoUnit.SECONDS))
-            .expireAfter(Duration.of(1, ChronoUnit.MINUTES))
+            .deliverAfter(Duration.of(3, ChronoUnit.MINUTES))
+            .expireAfter(Duration.of(10, ChronoUnit.MINUTES))
             .detail(detail)
             .icon(new ItemStack(item));
    }

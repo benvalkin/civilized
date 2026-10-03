@@ -138,7 +138,7 @@ public class WorkActivities {
                               new IdleStrollAroundSettlement(5, 3, 0.25f)),
                         ImmutableList.of(
                               WorkStates.CHECK_LOGISTICS_OPPORTUNITIES,
-                              WorkStates.BREEDING_ANIMALS,
+                              /* WorkStates.BREEDING_ANIMALS, */
                               WorkStates.HARVESTING_HONEY),
                         ImmutableList.of(WorkStates.MONITOR_WORKSITE, BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT))));
    }

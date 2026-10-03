@@ -12,5 +12,6 @@ public class DataGen {
    @SubscribeEvent // on the mod event bus
    public static void gatherData(GatherDataEvent.Client event) {
       event.createProvider(CivilizedItemModelProvider::new);
+      event.createProvider(CivilizedDataMapProvider::new);
    }
 }

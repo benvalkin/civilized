@@ -1,0 +1,133 @@
+{
+  "values": {
+    "#minecraft:logs": {
+      "value": 2
+    },
+    "#minecraft:planks": {
+      "per": 2,
+      "value": 1
+    },
+    "#minecraft:wool": {
+      "value": 2
+    },
+    "minecraft:apple": {
+      "value": 2
+    },
+    "minecraft:baked_potato": {
+      "value": 2
+    },
+    "minecraft:beef": {
+      "value": 4
+    },
+    "minecraft:beetroot": {
+      "per": 3,
+      "value": 2
+    },
+    "minecraft:book": {
+      "value": 8
+    },
+    "minecraft:bread": {
+      "value": 4
+    },
+    "minecraft:bricks": {
+      "value": 1
+    },
+    "minecraft:carrot": {
+      "per": 3,
+      "value": 2
+    },
+    "minecraft:charcoal": {
+      "value": 2
+    },
+    "minecraft:chicken": {
+      "value": 2
+    },
+    "minecraft:coal": {
+      "value": 2
+    },
+    "minecraft:cobblestone": {
+      "per": 4,
+      "value": 1
+    },
+    "minecraft:cooked_beef": {
+      "value": 8
+    },
+    "minecraft:cooked_chicken": {
+      "value": 4
+    },
+    "minecraft:cooked_mutton": {
+      "value": 4
+    },
+    "minecraft:cooked_porkchop": {
+      "value": 8
+    },
+    "minecraft:copper_ingot": {
+      "value": 2
+    },
+    "minecraft:diamond": {
+      "value": 160
+    },
+    "minecraft:egg": {
+      "value": 1
+    },
+    "minecraft:emerald": {
+      "value": 60
+    },
+    "minecraft:feather": {
+      "value": 1
+    },
+    "minecraft:glass": {
+      "value": 1
+    },
+    "minecraft:gold_ingot": {
+      "value": 24
+    },
+    "minecraft:iron_ingot": {
+      "value": 12
+    },
+    "minecraft:lapis_lazuli": {
+      "value": 2
+    },
+    "minecraft:leather": {
+      "value": 8
+    },
+    "minecraft:mutton": {
+      "value": 2
+    },
+    "minecraft:paper": {
+      "value": 1
+    },
+    "minecraft:porkchop": {
+      "value": 4
+    },
+    "minecraft:potato": {
+      "per": 3,
+      "value": 2
+    },
+    "minecraft:redstone": {
+      "value": 1
+    },
+    "minecraft:stick": {
+      "per": 4,
+      "value": 1
+    },
+    "minecraft:stone": {
+      "per": 2,
+      "value": 1
+    },
+    "minecraft:string": {
+      "value": 1
+    },
+    "minecraft:sugar_cane": {
+      "per": 2,
+      "value": 1
+    },
+    "minecraft:torch": {
+      "per": 2,
+      "value": 1
+    },
+    "minecraft:wheat": {
+      "value": 1
+    }
+  }
+}
