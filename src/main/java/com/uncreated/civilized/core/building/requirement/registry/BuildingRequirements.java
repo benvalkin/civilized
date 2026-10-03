@@ -54,14 +54,9 @@ public class BuildingRequirements {
    private static void registerRequirements(RegisterEvent event) {
       event.register(BUILDING_REQUIREMENTS_KEY, registry -> {
 
-         registerRequirements(
-               registry,
-               BuildingRequirementList.forBuilding(BuildingTypes.STOREHOUSE, 1)
-                     .add(new SpaceRequirement(30))
-                     .add(new BlockTypeRequirement(BuildingBlockTypes.WOOD, 40, 40))
-                     .add(new ChestsPresentRequirement(6, 6, false))
-                     .add(new SignsPresentRequirement(1, false))
-                     .create());
+         registerStoreHouseLevel(registry, 6, 1);
+         registerStoreHouseLevel(registry, 10, 2);
+         registerStoreHouseLevel(registry, 16, 3);
 
          registerRequirements(
                registry,
@@ -187,6 +182,20 @@ public class BuildingRequirements {
       registerWithExtras(standardHouseL1(buildingType), registry, extras);
       registerWithExtras(standardHouseL2(buildingType), registry, extras);
       registerWithExtras(standardHouseL3(buildingType), registry, extras);
+   }
+
+   public static void registerStoreHouseLevel(
+         RegisterEvent.RegisterHelper<BuildingRequirementList> registry,
+         int numberOfChests,
+         int upgradeLevel) {
+      registerRequirements(
+            registry,
+            BuildingRequirementList.forBuilding(BuildingTypes.STOREHOUSE, upgradeLevel)
+                  .add(new SpaceRequirement(30))
+                  .add(new BlockTypeRequirement(BuildingBlockTypes.WOOD, 40, 40))
+                  .add(new ChestsPresentRequirement(numberOfChests, numberOfChests, false))
+                  .add(new SignsPresentRequirement(1, false))
+                  .create());
    }
 
    public static void registerWithExtras(
