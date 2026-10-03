@@ -80,7 +80,7 @@ public class TradingMenu extends AbstractContainerMenu {
 
    @Override
    public boolean stillValid(Player player) {
-      return true; // todo: make this check distance to vendor
+      return vendor == null || !vendor.isAlive() || player.distanceToSqr(vendor) <= 8 * 8;
    }
 
    public @Nullable TradeItem lookUpSlot(int slot) {
