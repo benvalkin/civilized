@@ -29,6 +29,7 @@ import com.uncreated.civilized.core.settlement.defense.SettlementDefenseHighComm
 import com.uncreated.civilized.core.settlement.defense.TargetRequestResult;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlement;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
+import com.uncreated.civilized.core.settlement.entity.LoadedVillagers;
 import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
@@ -184,6 +185,20 @@ public class CivilizedVillager extends AgeableMob
       ServerVillagerStore.INSTANCE.setDirty();
       villagerId = info.getVillagerId();
       setArbitraryRandom(getRandom().nextLong());
+   }
+
+   /**
+    * Whether this villager carries on a villager that already exists, even though it wasn't loaded from disk.
+    * Typically, this occurs when the villager changes dimension, e.g. walks through a nether portal. The villager is
+    * copied into a brand new entity, save data and all, which joins the new level as if it were brand new.
+    */
+   public boolean continuesExistingVillager() {
+      if (villagerId == null || ServerVillagerStore.INSTANCE.find(villagerId).isEmpty())
+         return false;
+
+      // a copy of a villager that's still around, e.g. one summoned with its save data, is a new villager. The one
+      // that changed dimension has already been removed by now
+      return LoadedVillagers.find(villagerId).filter(other -> other != this && !other.isRemoved()).isEmpty();
    }
 
    public void initVillagerFromSave() {
