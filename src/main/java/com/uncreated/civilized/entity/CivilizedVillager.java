@@ -115,6 +115,9 @@ public class CivilizedVillager extends AgeableMob
    @Getter
    private VillagerHunger hunger;
 
+   @Getter
+   private VillagerState state;
+
    @Nullable
    private IdleBehaviourControl idleBehaviourControl; // we're keeping this as a field so that other villagers can
                                                       // socialize with each other
@@ -187,7 +190,17 @@ public class CivilizedVillager extends AgeableMob
       info = ServerVillagerStore.INSTANCE.get(villagerId);
    }
 
+   @Nullable // gets around `state` being null when saved data is read
+   private CompoundTag pendingVillagerStateTag;
+
    public void serverFinalizeSpawn() {
+
+      state = new DefaultVillagerState(this);
+      if (pendingVillagerStateTag != null) {
+         state.readAdditionalSaveData(pendingVillagerStateTag);
+         pendingVillagerStateTag = null;
+      }
+
       refreshBrain((ServerLevel) level());
 
       if (routedOnLoad) {
@@ -215,6 +228,9 @@ public class CivilizedVillager extends AgeableMob
       compound.putLong(FIELD_LIFETIME_SEED, lifetimeSeed);
       compound.putBoolean(FIELD_ROUTED, isRouted());
       compound.putLong(FIELD_DEPART_AT, departAt);
+      CompoundTag behaviourState = new CompoundTag();
+      state.addAdditionalSaveData(behaviourState);
+      compound.put(VillagerState.FIELD_VILLAGER_STATE, behaviourState);
       hunger.save(compound);
       this.writeInventoryToTag(compound, this.registryAccess());
    }
@@ -230,6 +246,8 @@ public class CivilizedVillager extends AgeableMob
       // the brain's activities aren't set up yet, so routing is restored once it is (see serverFinalizeSpawn)
       routedOnLoad = compound.getBoolean(FIELD_ROUTED);
       departAt = compound.getLong(FIELD_DEPART_AT);
+      if (compound.contains(VillagerState.FIELD_VILLAGER_STATE))
+         pendingVillagerStateTag = compound.getCompound(VillagerState.FIELD_VILLAGER_STATE);
       hunger.load(compound);
 
       this.readInventoryFromTag(compound, this.registryAccess());
@@ -239,6 +257,9 @@ public class CivilizedVillager extends AgeableMob
    public void writeSpawnData(RegistryFriendlyByteBuf buf) {
       info.encode(buf);
       buf.writeLong(lifetimeSeed);
+      CompoundTag stateTag = new CompoundTag();
+      state.addAdditionalSaveData(stateTag);
+      buf.writeNbt(stateTag);
    }
 
    public void readInventoryFromTag(CompoundTag tag, HolderLookup.Provider levelRegistry) {
@@ -275,6 +296,11 @@ public class CivilizedVillager extends AgeableMob
    public void readSpawnData(RegistryFriendlyByteBuf buf) {
       info = ClientVillagerStore.INSTANCE.addFromServer(VillagerInfo.decode(buf));
       lifetimeSeed = buf.readLong();
+      if (state == null)
+         state = new DefaultVillagerState(this);
+      CompoundTag stateTag = buf.readNbt();
+      if (stateTag != null)
+         state.readAdditionalSaveData(stateTag);
       dialogueController = DialogueController.selectDialogueController(this);
       ClientVillagerStore.INSTANCE.addFromServer(info);
       villagerId = info.getVillagerId();
@@ -528,6 +554,7 @@ public class CivilizedVillager extends AgeableMob
       updateActivity(serverLevel.getDayTime(), serverLevel.getGameTime());
       regenerateHealth(serverLevel.getGameTime());
       hunger.serverTickHunger(serverLevel.getGameTime());
+      state.serverTick(serverLevel, serverLevel.getGameTime());
 
       reportNearbyHostiles();
       ProfilerFiller profilerFiller = Profiler.get();
