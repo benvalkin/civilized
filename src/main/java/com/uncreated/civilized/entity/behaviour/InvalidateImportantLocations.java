@@ -14,7 +14,7 @@ import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.util.BuildingUtil;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
-import com.uncreated.civilized.core.villagerinfo.VillagerNpcRole;
+import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
 import com.uncreated.civilized.core.villagerinfo.VillagerOccupation;
 import com.uncreated.civilized.core.villagerinfo.VillagerOccupations;
 import com.uncreated.civilized.entity.CivilizedVillager;
@@ -49,7 +49,7 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
       Optional<Building> home = invalidateHome(villagerInfo, level);
       if (home.isPresent()) {
 
-         if (villagerInfo.getNpcRoles().contains(VillagerNpcRole.WORKER))
+         if (villagerInfo.getNpcRole().is(VillagerNpcRoles.WORKER))
             villagerInfo.setOccupation(home.get().getBuildingType().occupation());
          else
             villagerInfo.setOccupation(VillagerOccupations.UNEMPLOYED);
@@ -116,9 +116,9 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
 
    private Optional<Building> invalidateHome(VillagerInfo villagerInfo, ServerLevel level) {
 
-      if (villagerInfo.getNpcRoles().contains(VillagerNpcRole.WORKER)) {
+      if (villagerInfo.getNpcRole().is(VillagerNpcRoles.WORKER)) {
          return invalidateHomeForWorker(villagerInfo, level);
-      } else if (villagerInfo.getNpcRoles().contains(VillagerNpcRole.SPOUSE)) {
+      } else if (villagerInfo.getNpcRole().is(VillagerNpcRoles.SPOUSE)) {
          return invalidateHomeForPartner(villagerInfo, level);
       }
 
@@ -168,7 +168,7 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
    private Optional<Building> invalidateWorksite(VillagerInfo villagerInfo, ServerLevel level) {
 
       if (villagerInfo.getOccupation().is(VillagerOccupations.UNEMPLOYED)
-            || !villagerInfo.getNpcRoles().contains(VillagerNpcRole.WORKER))
+            || !villagerInfo.getNpcRole().is(VillagerNpcRoles.WORKER))
          return Optional.empty();
 
       Optional<Building> currentWorksite = ServerBuildingsStore.INSTANCE.find(villagerInfo.getPrimaryWorksiteId());

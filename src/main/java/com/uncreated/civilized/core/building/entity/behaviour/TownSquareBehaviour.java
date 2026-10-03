@@ -10,6 +10,7 @@ import com.uncreated.civilized.core.building.util.BuildingUtil;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.core.villagerinfo.VillagerNpcRole;
+import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.neoforge.registration.entity.EntityRegistry;
 import com.uncreated.civilized.util.random.DailyEventScheduler;
@@ -42,15 +43,15 @@ public class TownSquareBehaviour extends BuildingBehaviour {
    }
 
    private static final SimpleWeightedRandomList<VillagerNpcRole> VISITOR_ROLES =
-         new SimpleWeightedRandomList.Builder<VillagerNpcRole>().add(VillagerNpcRole.TRAVELLER, 0)
-               .add(VillagerNpcRole.MIGRANT, 1)
-               .add(VillagerNpcRole.SUITOR, 1)
-               .add(VillagerNpcRole.SKILLED_PROFESSIONAL, 0)
-               .add(VillagerNpcRole.MERCENARY, 0)
-               .add(VillagerNpcRole.BEGGAR, 0)
-               .add(VillagerNpcRole.SCOUNDREL, 0)
-               .add(VillagerNpcRole.THIEF, 0)
-               .add(VillagerNpcRole.MERCHANT, 0)
+         new SimpleWeightedRandomList.Builder<VillagerNpcRole>().add(VillagerNpcRoles.TRAVELLER, 0)
+               .add(VillagerNpcRoles.MIGRANT, 1)
+               .add(VillagerNpcRoles.SUITOR, 1)
+               .add(VillagerNpcRoles.SKILLED_PROFESSIONAL, 0)
+               .add(VillagerNpcRoles.MERCENARY, 0)
+               .add(VillagerNpcRoles.BEGGAR, 0)
+               .add(VillagerNpcRoles.SCOUNDREL, 0)
+               .add(VillagerNpcRoles.THIEF, 0)
+               .add(VillagerNpcRoles.MERCHANT, 0)
                .build();
 
    private void trySpawnVisitor(ServerLevel level) {
@@ -76,8 +77,8 @@ public class TownSquareBehaviour extends BuildingBehaviour {
       }
 
       VillagerNpcRole visitorRole =
-            VISITOR_ROLES.getRandomValue(villager.getRandom()).orElse(VillagerNpcRole.TRAVELLER);
-      villager.getInfo().getNpcRoles().add(visitorRole);
+            VISITOR_ROLES.getRandomValue(villager.getRandom()).orElse(VillagerNpcRoles.TRAVELLER);
+      villager.changeNpcRole(visitorRole);
       villager.getInfo().setHomeBuildingId(getBuilding().getBuildingId());
       villager.setDepartAt(chooseDepartureTime(level.getDayTime(), villager.getRandom()));
       ServerVillagerStore.INSTANCE.setDirty();

@@ -5,7 +5,7 @@ import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 import org.joml.Matrix4f;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.uncreated.civilized.core.villagerinfo.VillagerNpcRole;
+import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.data.VillagerHunger;
 import com.uncreated.civilized.entity.renderer.layer.ClothingLayer;
@@ -69,7 +69,7 @@ public class CivilizedVillagerRenderer extends
       state.health = villager.getHealth();
       state.maxHealth = villager.getMaxHealth();
       int hunger = villager.getHunger().hunger();
-      if (villager.getInfo().getNpcRoles().contains(VillagerNpcRole.WORKER)) {
+      if (villager.getInfo().getNpcRole().is(VillagerNpcRoles.WORKER)) {
          if (DEBUG) {
             state.title =
                   Component.translatable(
@@ -91,12 +91,8 @@ public class CivilizedVillagerRenderer extends
                         hungerC,
                         hungerIcon(hunger));
          }
-      } else if (villager.getInfo().getNpcRoles().contains(VillagerNpcRole.SUITOR)) {
-         state.title = VillagerNpcRole.suitorTranslation(villager.getInfo().getGender());
-      } else if (villager.getInfo().getNpcRoles().contains(VillagerNpcRole.SPOUSE)) {
-         state.title = VillagerNpcRole.spouseTranslation(villager.getInfo().getGender());
       } else {
-         state.title = villager.getInfo().getNpcRoles().getFirst().translation();
+         state.title = villager.getInfo().getNpcRole().translation(villager.getInfo().getGender());
       }
 
       if (DEBUG) {

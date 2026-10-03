@@ -12,6 +12,7 @@ import com.uncreated.civilized.core.settlement.events.SettlementStoreEvents;
 import com.uncreated.civilized.core.notifications.NotificationService;
 import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermissionStore;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
+import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
 import com.uncreated.civilized.core.villagerinfo.events.VillagerStoreEvents;
 import com.uncreated.civilized.neoforge.registration.BlockRegistry;
 import com.uncreated.civilized.neoforge.registration.DataMapRegistry;
@@ -74,6 +75,7 @@ public class CivilizedMod {
 
       BuildingRequirements.BUILDING_REQUIREMENTS.register(modEventBus);
       BuildingTypes.BUILDING_TYPES.register(modEventBus);
+      VillagerNpcRoles.NPC_ROLES.register(modEventBus);
 
       CreativeTab.CREATIVE_MODE_TABS.register(modEventBus);
 

@@ -8,6 +8,7 @@ import com.uncreated.civilized.core.building.util.BuildingUtil;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.core.villagerinfo.VillagerNpcRole;
+import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.neoforge.registration.entity.EntityRegistry;
 import com.uncreated.civilized.util.random.DailyEventScheduler;
@@ -32,8 +33,8 @@ public class InnBehaviour extends BuildingBehaviour {
    }
 
    private static final SimpleWeightedRandomList<VillagerNpcRole> VISITOR_ROLES =
-         new SimpleWeightedRandomList.Builder<VillagerNpcRole>().add(VillagerNpcRole.MIGRANT, 20)
-               .add(VillagerNpcRole.TRAVELLER, 1)
+         new SimpleWeightedRandomList.Builder<VillagerNpcRole>().add(VillagerNpcRoles.MIGRANT, 20)
+               .add(VillagerNpcRoles.TRAVELLER, 1)
                .build();
 
    private void trySpawnVisitor(ServerLevel level) {
@@ -53,8 +54,8 @@ public class InnBehaviour extends BuildingBehaviour {
       }
 
       VillagerNpcRole visitorRole =
-            VISITOR_ROLES.getRandomValue(villager.getRandom()).orElse(VillagerNpcRole.TRAVELLER);
-      villager.getInfo().getNpcRoles().add(visitorRole);
+            VISITOR_ROLES.getRandomValue(villager.getRandom()).orElse(VillagerNpcRoles.TRAVELLER);
+      villager.changeNpcRole(visitorRole);
       villager.getInfo().setHomeBuildingId(getBuilding().getBuildingId());
       ServerVillagerStore.INSTANCE.setDirty();
       ServerVillagerStore.INSTANCE.replicateChange(villager.getInfo(), StoreOperation.UPDATE);

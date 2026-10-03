@@ -371,6 +371,7 @@
   "settlement.access_level.governor.description": "The highest level of access.\n\nCan build anywhere, open any chest, establish/manage/decommission buildings, and also change other players' permissions.",
   "settlement.access_level.none": "No access",
   "settlement.access_level.none.description": "Has no access to the settlement. Cannot place or break blocks, open chests, or do much else.",
+  "civilized.villager.role.none": "Villager",
   "civilized.villager.role.traveller": "Traveller",
   "civilized.villager.role.migrant": "Migrant",
   "civilized.villager.role.suitor.male": "Rake",

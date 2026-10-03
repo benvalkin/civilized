@@ -34,7 +34,9 @@ import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.core.villagerinfo.VillagerNpcRole;
+import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
 import com.uncreated.civilized.core.villagerinfo.VillagerOccupations;
+import com.uncreated.civilized.entity.behaviour.BehaviourState;
 import com.uncreated.civilized.entity.behaviour.BehaviourStates;
 import com.uncreated.civilized.entity.behaviour.IdleBehaviourControl;
 import com.uncreated.civilized.entity.behaviour.StatefulBehaviourControl;
@@ -118,6 +120,8 @@ public class CivilizedVillager extends AgeableMob
 
    @Getter
    private VillagerState state;
+   /** The role {@link #state} belongs to. */
+   private VillagerNpcRole stateRole;
 
    @Nullable
    private IdleBehaviourControl idleBehaviourControl; // we're keeping this as a field so that other villagers can
@@ -130,7 +134,12 @@ public class CivilizedVillager extends AgeableMob
       if (!getBrain().isActive(Activity.IDLE) || !idleBehaviourControl.isRunningIdleTask())
          return false;
 
-      if (!idleBehaviourControl.hasTask(BehaviourStates.SOCIALISING))
+      BehaviourState conversationBehaviourState = switch (conversation.getConversationTopic()) {
+      case GENERAL -> BehaviourStates.SOCIALISING;
+      case FLIRTING -> BehaviourStates.FLIRTING;
+      };
+
+      if (!idleBehaviourControl.hasTask(conversationBehaviourState))
          return false;
 
       boolean alreadyTalking =
@@ -139,7 +148,7 @@ public class CivilizedVillager extends AgeableMob
          return false;
 
       getBrain().setMemory(AIRegistry.MM_CONVERSATION.get(), conversation);
-      idleBehaviourControl.queueImmediately(BehaviourStates.SOCIALISING);
+      idleBehaviourControl.queueImmediately(conversationBehaviourState);
       return true;
    }
 
@@ -205,12 +214,25 @@ public class CivilizedVillager extends AgeableMob
       info = ServerVillagerStore.INSTANCE.get(villagerId);
    }
 
+   public void changeNpcRole(VillagerNpcRole role) {
+      info.setNpcRole(role);
+      ensureStateMatchesRole();
+   }
+
+   private void ensureStateMatchesRole() {
+      if (state != null && stateRole.is(info.getNpcRole()))
+         return;
+
+      stateRole = info.getNpcRole();
+      state = stateRole.createState().apply(this);
+   }
+
    @Nullable // gets around `state` being null when saved data is read
    private CompoundTag pendingVillagerStateTag;
 
    public void serverFinalizeSpawn() {
 
-      state = new DefaultVillagerState(this);
+      ensureStateMatchesRole();
       if (pendingVillagerStateTag != null) {
          state.readAdditionalSaveData(pendingVillagerStateTag);
          pendingVillagerStateTag = null;
@@ -311,8 +333,7 @@ public class CivilizedVillager extends AgeableMob
    public void readSpawnData(RegistryFriendlyByteBuf buf) {
       info = ClientVillagerStore.INSTANCE.addFromServer(VillagerInfo.decode(buf));
       lifetimeSeed = buf.readLong();
-      if (state == null)
-         state = new DefaultVillagerState(this);
+      ensureStateMatchesRole();
       CompoundTag stateTag = buf.readNbt();
       if (stateTag != null)
          state.readAdditionalSaveData(stateTag);
@@ -489,7 +510,7 @@ public class CivilizedVillager extends AgeableMob
             Set.of(Pair.of(AIRegistry.MM_DIALOGUE_TARGET.get(), MemoryStatus.VALUE_PRESENT)),
             Set.of(AIRegistry.MM_DIALOGUE_TARGET.get()));
       brain.addActivity(Activity.PANIC, getPanicPackage(0.7f));
-      if (info.getNpcRoles().contains(VillagerNpcRole.SUITOR))
+      if (info.getNpcRole().is(VillagerNpcRoles.SUITOR))
          idleBehaviourControl = createSuitorBehaviourControl(0.25f);
       else
          idleBehaviourControl = createIdleBehaviourControl(0.25f);
@@ -569,6 +590,7 @@ public class CivilizedVillager extends AgeableMob
       updateActivity(serverLevel.getDayTime(), serverLevel.getGameTime());
       regenerateHealth(serverLevel.getGameTime());
       hunger.serverTickHunger(serverLevel.getGameTime());
+      ensureStateMatchesRole();
       state.serverTick(serverLevel, serverLevel.getGameTime());
 
       reportNearbyHostiles();
@@ -909,7 +931,7 @@ public class CivilizedVillager extends AgeableMob
             info.getOccupation(),
             info.getFirstName(),
             info.getLastName(),
-            info.getNpcRoles(),
+            info.getNpcRole(),
             super.toString());
    }
 }

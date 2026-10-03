@@ -9,7 +9,7 @@ import com.uncreated.civilized.core.dialogue.context.DialogueContext;
 import com.uncreated.civilized.core.settlement.Settlement;
 import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
-import com.uncreated.civilized.core.villagerinfo.VillagerNpcRole;
+import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
 import com.uncreated.civilized.ui.style.Colors;
 
 public class JoinSettlementAction implements Consumer<DialogueContext> {
@@ -23,8 +23,7 @@ public class JoinSettlementAction implements Consumer<DialogueContext> {
 
       info.setSettlementId(settlement.getSettlementId());
       info.setHomeBuildingId(joinSettlement.getUnoccupiedBuilding().getBuildingId());
-      info.getNpcRoles().clear();
-      info.getNpcRoles().add(VillagerNpcRole.WORKER);
+      joinSettlement.getVillager().changeNpcRole(VillagerNpcRoles.WORKER);
 
       ClientVillagerStore.INSTANCE.replicateChange(info, StoreOperation.UPDATE);
       ClientVillagerStore.INSTANCE.setDirty();

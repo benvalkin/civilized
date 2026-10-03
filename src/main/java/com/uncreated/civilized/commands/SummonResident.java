@@ -10,7 +10,7 @@ import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
-import com.uncreated.civilized.core.villagerinfo.VillagerNpcRole;
+import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.neoforge.registration.entity.EntityRegistry;
 
@@ -58,7 +58,7 @@ public class SummonResident {
          throw ERROR_ENTITY_SPAWN_ERROR.create();
       }
 
-      villager.getInfo().getNpcRoles().add(VillagerNpcRole.WORKER);
+      villager.changeNpcRole(VillagerNpcRoles.WORKER);
       villager.getInfo().setOccupation(building.get().getBuildingType().occupation());
       villager.getInfo().setSettlementId(building.get().getSettlementId());
       villager.getInfo().setHomeBuildingId(building.get().getBuildingId());

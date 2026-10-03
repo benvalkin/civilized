@@ -3,7 +3,6 @@ package com.uncreated.civilized.core.villagerinfo;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.mojang.datafixers.util.Pair;
@@ -64,13 +63,7 @@ public class ServerVillagerStore extends VillagerStore {
          if (villagerInfo.getPartnerId() != null)
             item.putUUID(VillagerInfo.FIELD_PARTNER_ID, villagerInfo.getPartnerId());
 
-         ListTag npcRoles = new ListTag();
-         npcRoles.addAll(villagerInfo.getNpcRoles().stream().map(role -> {
-            CompoundTag t = new CompoundTag();
-            t.putString(VillagerInfo.FIELD_VILLAGER_NPC_ROLE, role.name());
-            return t;
-         }).toList());
-         item.put(VillagerInfo.FIELD_VILLAGER_NPC_ROLES, npcRoles);
+         item.putString(VillagerInfo.FIELD_VILLAGER_NPC_ROLE, villagerInfo.getNpcRole().resourceLocation().toString());
 
          tags.add(item);
       }
@@ -97,6 +90,9 @@ public class ServerVillagerStore extends VillagerStore {
                      .occupation(
                            VillagerOccupations.getFromResourceLocation(
                                  ResourceLocation.parse(itemTag.getString(VillagerInfo.FIELD_VILLAGER_OCCUPATION))))
+                     .npcRole(
+                           VillagerNpcRoles.getFromResourceLocation(
+                                 ResourceLocation.parse(itemTag.getString(VillagerInfo.FIELD_VILLAGER_NPC_ROLE))))
                      .gender(Gender.valueOf(itemTag.getString(VillagerInfo.FIELD_VILLAGER_GENDER)));
 
          if (itemTag.hasUUID(VillagerInfo.FIELD_SETTLEMENT_ID))
@@ -105,14 +101,6 @@ public class ServerVillagerStore extends VillagerStore {
             builder.homeBuildingId(itemTag.getUUID(VillagerInfo.FIELD_HOME_BUILDING_ID));
          if (itemTag.hasUUID(VillagerInfo.FIELD_PARTNER_ID))
             builder.partnerId(itemTag.getUUID(VillagerInfo.FIELD_PARTNER_ID));
-
-         ListTag npcRoles = itemTag.getList(VillagerInfo.FIELD_VILLAGER_NPC_ROLES, Tag.TAG_COMPOUND);
-         builder.npcRoles(
-               npcRoles.stream()
-                     .map(
-                           e -> VillagerNpcRole
-                                 .valueOf(((CompoundTag) e).getString(VillagerInfo.FIELD_VILLAGER_NPC_ROLE)))
-                     .collect(Collectors.toList()));
 
          VillagerInfo villagerInfo = builder.build();
          store.villagers.add(villagerInfo);

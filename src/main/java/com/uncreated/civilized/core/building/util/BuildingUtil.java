@@ -11,7 +11,7 @@ import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.BuildingStore;
 import com.uncreated.civilized.core.building.BuildingType;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
-import com.uncreated.civilized.core.villagerinfo.VillagerNpcRole;
+import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
 import com.uncreated.civilized.core.villagerinfo.VillagerStore;
 import com.uncreated.civilized.entity.CivilizedVillager;
 
@@ -46,7 +46,7 @@ public class BuildingUtil {
    public static boolean isBuildingFull(Building building, VillagerStore store) {
       return store.getCitizens(building.getSettlementId())
             .stream()
-            .filter(v -> v.getNpcRoles().contains(VillagerNpcRole.WORKER) && v.isOccupantOf(building))
+            .filter(v -> v.getNpcRole().is(VillagerNpcRoles.WORKER) && v.isOccupantOf(building))
             .count() >= MAX_ASSIGNED_WORKERS;
    }
 

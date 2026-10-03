@@ -10,7 +10,7 @@ import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
-import com.uncreated.civilized.core.villagerinfo.VillagerNpcRole;
+import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.BehaviourStates;
 import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
@@ -45,7 +45,7 @@ public class Flirt extends Socialize {
                   // TODO: eventually need to filter out hostile villagers
                   other -> other != villager && other.isAlive()
                         && other.getInfo().getGender() == villager.getInfo().getGender().opposite()
-                        && !other.getInfo().isTaken() && !other.getInfo().getNpcRoles().contains(VillagerNpcRole.SUITOR)
+                        && !other.getInfo().isTaken() && !other.getInfo().getNpcRole().is(VillagerNpcRoles.SUITOR)
                         && other.getInfo().getSettlementId() != null /* && villager.hasLineOfSight(other) */)
                   .stream()
                   .sorted(Comparator.comparingDouble(villager::distanceToSqr))
@@ -141,9 +141,8 @@ public class Flirt extends Socialize {
    }
 
    private static void convertToSpouseIfNecessary(CivilizedVillager villager) {
-      if (villager.getInfo().getNpcRoles().remove(VillagerNpcRole.SUITOR)) {
-         villager.getInfo().getNpcRoles().add(VillagerNpcRole.SPOUSE);
-      }
+      if (villager.getInfo().getNpcRole().is(VillagerNpcRoles.SUITOR))
+         villager.changeNpcRole(VillagerNpcRoles.SPOUSE);
    }
 
    public ConversationTopic getConversationTopic() {

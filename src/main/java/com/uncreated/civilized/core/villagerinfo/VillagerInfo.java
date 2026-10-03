@@ -2,7 +2,6 @@ package com.uncreated.civilized.core.villagerinfo;
 
 import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
@@ -41,7 +40,7 @@ public class VillagerInfo {
                   .settlementId(buffer.readNullable((b -> b.readUUID())))
                   .homeBuildingId(buffer.readNullable((b -> b.readUUID())))
                   .primaryWorksiteId(buffer.readNullable((b -> b.readUUID())))
-                  .npcRoles(buffer.readCollection(ArrayList::new, b -> b.readEnum(VillagerNpcRole.class)))
+                  .npcRole(VillagerNpcRoles.getFromResourceLocation(buffer.readResourceLocation()))
                   .gender(buffer.readEnum(Gender.class))
                   .partnerId(buffer.readNullable((b -> b.readUUID())));
 
@@ -58,7 +57,7 @@ public class VillagerInfo {
       buffer.writeNullable(settlementId, (b, v) -> b.writeUUID(v));
       buffer.writeNullable(homeBuildingId, (b, v) -> b.writeUUID(v));
       buffer.writeNullable(primaryWorksiteId, (b, v) -> b.writeUUID(v));
-      buffer.writeCollection(npcRoles, FriendlyByteBuf::writeEnum);
+      buffer.writeResourceLocation(npcRole.resourceLocation());
       buffer.writeEnum(gender);
       buffer.writeNullable(partnerId, (b, v) -> b.writeUUID(v));
    }
@@ -70,8 +69,7 @@ public class VillagerInfo {
    public static final String FIELD_FIRST_NAME = "first_name";
    public static final String FIELD_LAST_NAME = "last_name";
    public static final String FIELD_VILLAGER_OCCUPATION = "field_villager_occupation";
-   public static final String FIELD_VILLAGER_NPC_ROLES = "field_villager_npc_roles";
-   public static final String FIELD_VILLAGER_NPC_ROLE = "field_villager_npc_role";
+   public static final String FIELD_VILLAGER_NPC_ROLE = "npc_role";
    public static final String FIELD_VILLAGER_GENDER = "field_villager_gender";
    public static final String FIELD_PARTNER_ID = "field_spouse_id";
 
@@ -87,8 +85,9 @@ public class VillagerInfo {
    @Setter
    @Builder.Default
    private VillagerOccupation occupation = VillagerOccupations.UNEMPLOYED;
+   @Setter
    @Builder.Default
-   private List<VillagerNpcRole> npcRoles = new ArrayList<>();
+   private VillagerNpcRole npcRole = VillagerNpcRoles.NONE;
    @Setter
    private @Nullable UUID settlementId;
    @Setter
@@ -205,7 +204,7 @@ public class VillagerInfo {
       settlementId = other.settlementId;
       homeBuildingId = other.homeBuildingId;
       primaryWorksiteId = other.primaryWorksiteId;
-      npcRoles = other.npcRoles;
+      npcRole = other.npcRole;
       gender = other.gender;
       partnerId = other.partnerId;
    }

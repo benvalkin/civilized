@@ -4,10 +4,6 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import com.uncreated.civilized.core.dialogue.questline.advisor.controller.AdvisorDialogueController;
-import com.uncreated.civilized.core.dialogue.questline.migrant.controller.MigrantDialogueController;
-import com.uncreated.civilized.core.dialogue.questline.worker.controller.WorkerDialogueController;
-import com.uncreated.civilized.core.villagerinfo.VillagerNpcRole;
 import com.uncreated.civilized.entity.CivilizedVillager;
 
 import net.minecraft.world.InteractionHand;
@@ -37,18 +33,6 @@ public abstract class DialogueController {
    }
 
    public static DialogueController selectDialogueController(CivilizedVillager villager) {
-      DialogueController controller;
-      List<VillagerNpcRole> roles = villager.getInfo().getNpcRoles();
-
-      if (roles.contains(VillagerNpcRole.WORKER)) {
-         controller = new WorkerDialogueController();
-      } else if (roles.contains(VillagerNpcRole.ADVISOR)) {
-         controller = new AdvisorDialogueController();
-      } else if (roles.contains(VillagerNpcRole.MIGRANT)) {
-         controller = new MigrantDialogueController();
-      } else
-         return DialogueController.noDialogue();
-
-      return controller;
+      return villager.getInfo().getNpcRole().createDialogueController();
    }
 }
