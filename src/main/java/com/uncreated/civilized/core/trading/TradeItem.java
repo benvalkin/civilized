@@ -8,6 +8,7 @@ import com.uncreated.civilized.core.building.logistics.AggregateItemStack;
 import com.uncreated.civilized.item.CurrencyItem;
 import com.uncreated.civilized.util.ContainerHelper;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -19,7 +20,6 @@ import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 
 @Accessors(fluent = true)
-@Getter
 public class TradeItem {
 
    public static final StreamCodec<RegistryFriendlyByteBuf, TradeItem> STREAM_CODEC =
@@ -41,13 +41,27 @@ public class TradeItem {
                            ItemStack.SINGLE_ITEM_CODEC.fieldOf("item").forGetter(TradeItem::item),
                            Codec.INT.fieldOf("price").forGetter(TradeItem::price),
                            Codec.INT.fieldOf("stock").forGetter(TradeItem::stock),
-                           ExtraCodecs.POSITIVE_INT.fieldOf("quantity_per_trade").forGetter(TradeItem::quantityPerTrade))
+                           ExtraCodecs.POSITIVE_INT.fieldOf("quantity_per_trade")
+                                 .forGetter(TradeItem::quantityPerTrade))
                      .apply(instance, TradeItem::new));
 
+   @Getter
    private final ItemStack item;
+   @Getter(AccessLevel.PRIVATE)
    private final int price;
+
+   public int sellPrice() {
+      return price;
+   }
+
+   public int buyPrice() {
+      return Math.round(price * MarketValue.BUY_PRICE_MULTIPLIER);
+   }
+
+   @Getter
    @Setter
    private int stock;
+   @Getter
    private final int quantityPerTrade;
 
    /**
@@ -88,7 +102,7 @@ public class TradeItem {
          return new ItemTraded(ItemStack.EMPTY, vendorAvailableCurrency, 0);
 
       int quantity = trades * quantityPerTrade;
-      int valueOfTrades = trades * price;
+      int valueOfTrades = trades * buyPrice();
       stock -= quantity;
       vendorAvailableCurrency += CurrencyItem.debit(List.of(buyer), valueOfTrades);
 
@@ -101,7 +115,7 @@ public class TradeItem {
     */
    public ItemTraded sellToVendor(ItemStack itemStack, Container seller, int vendorAvailableCurrency) {
 
-      TradeQuote quote = adjustIfOddOrNotAffordable(vendorAvailableCurrency, itemStack.getCount());
+      TradeQuote quote = adjustIfOddOrNotAffordable(vendorAvailableCurrency, TradeDirection.SELL, itemStack.getCount());
       int quantitySold = quote.quanity();
       if (quantitySold <= 0)
          return new ItemTraded(itemStack, vendorAvailableCurrency, 0);
@@ -114,18 +128,16 @@ public class TradeItem {
       return new ItemTraded(remainderNotSold, vendorAvailableCurrency, valueOfCoinsFailedToTransfer);
    }
 
-   public boolean canAfford(Container buyer, int quantity) {
-      return countCurrency(buyer) >= wholeTrades(quantity) * price;
+   public TradeQuote adjustIfOddOrNotAffordable(Container buyer, TradeDirection direction, int quantity) {
+      return adjustIfOddOrNotAffordable(countCurrency(buyer), direction, quantity);
    }
 
-   public TradeQuote adjustIfOddOrNotAffordable(Container buyer, int quantity) {
-      return adjustIfOddOrNotAffordable(countCurrency(buyer), quantity);
-   }
-
-   public TradeQuote adjustIfOddOrNotAffordable(int availableCurrency, int quantity) {
+   public TradeQuote adjustIfOddOrNotAffordable(int availableCurrency, TradeDirection direction, int quantity) {
       int requestedTrades = wholeTrades(quantity);
       if (requestedTrades <= 0)
          return new TradeQuote(0, 0, true);
+
+      int price = direction == TradeDirection.BUY ? buyPrice() : sellPrice();
 
       // free trades are always affordable (would otherwise divide by zero)
       int affordableTrades;

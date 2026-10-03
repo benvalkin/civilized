@@ -9,6 +9,7 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
+import com.uncreated.civilized.core.trading.CurrencyStock;
 import com.uncreated.civilized.core.trading.MerchantType;
 import com.uncreated.civilized.core.trading.MerchantTypes;
 import com.uncreated.civilized.core.trading.TradeItem;
@@ -23,15 +24,26 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 
-public class MerchantVisitorBehaviour extends VisitorBehaviour {
+public class MerchantVisitorBehaviour extends VisitorBehaviour implements IMerchantBehaviour {
 
    private static final Logger LOGGER = LogUtils.getLogger();
 
    public static final String FIELD_MERCHANT_TYPE = "merchant_type";
    public static final String FIELD_TRADE_ITEMS = "trade_items";
+   private static final String FIELD_TRADE_AVAILABLE_CURRENCY = "available_currency";
 
    @Getter
    private @Nullable ResourceKey<MerchantType> merchantType;
+
+   /**
+    * The amount of currency that this merchant has to pay the player when selling items.
+    * <p>
+    * Note: this object is deliberately passed by reference directly into the Trading Menu, so that when buying/selling
+    * items, adding/subtracting to and from the merchant's available funds reflects here (server-side) and doesn't need
+    * extra setting. This is why a wrapper object is used instead of a plain int.
+    */
+   @Getter
+   private CurrencyStock availableCurrency = new CurrencyStock(0);
    @Getter
    private List<TradeItem> tradeItems = new ArrayList<>();
 
@@ -50,6 +62,7 @@ public class MerchantVisitorBehaviour extends VisitorBehaviour {
 
       if (merchantType != null)
          compound.putString(FIELD_MERCHANT_TYPE, merchantType.location().toString());
+      compound.putInt(FIELD_TRADE_AVAILABLE_CURRENCY, availableCurrency.availableCurrency());
 
       TradeItem.CODEC.listOf()
             .encodeStart(registryOps(), tradeItems)
@@ -76,6 +89,9 @@ public class MerchantVisitorBehaviour extends VisitorBehaviour {
                      .map(trades -> (List<TradeItem>) new ArrayList<>(trades))
                      .orElseGet(ArrayList::new);
       }
+
+      if (compound.contains(FIELD_TRADE_AVAILABLE_CURRENCY))
+         availableCurrency = new CurrencyStock(compound.getInt(FIELD_TRADE_AVAILABLE_CURRENCY));
    }
 
    @Override
@@ -97,12 +113,21 @@ public class MerchantVisitorBehaviour extends VisitorBehaviour {
       if (type.isEmpty()) {
          LOGGER.warn("No merchant types are loaded. {} has nothing to sell", villager);
          merchantType = null;
+         availableCurrency = new CurrencyStock(0);
          tradeItems = new ArrayList<>();
          return;
       }
 
-      merchantType = type.get().key();
-      tradeItems = new ArrayList<>(type.get().value().rollTrades(villager.getArbitraryRandom()));
+      stockWithNewTrades(type.get());
+   }
+
+   /** Replaces the merchant's goods with a new random selection from the given merchant type. */
+   public void stockWithNewTrades(Holder.Reference<MerchantType> type) {
+      stocked = true;
+      merchantType = type.key();
+      int startingCurrency = type.value().startingCurrency().sample(villager.getArbitraryRandom());
+      availableCurrency = new CurrencyStock(startingCurrency);
+      tradeItems = new ArrayList<>(type.value().rollTrades(villager.getArbitraryRandom()));
    }
 
    private RegistryOps<Tag> registryOps() {

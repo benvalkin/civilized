@@ -49,6 +49,11 @@
       "stock": 1
     }
   ],
+  "starting_currency": {
+    "type": "minecraft:uniform",
+    "max_inclusive": 400,
+    "min_inclusive": 150
+  },
   "trade_count": {
     "type": "minecraft:uniform",
     "max_inclusive": 5,

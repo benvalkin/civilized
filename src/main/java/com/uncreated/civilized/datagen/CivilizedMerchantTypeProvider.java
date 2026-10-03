@@ -26,7 +26,8 @@ public class CivilizedMerchantTypeProvider {
             MerchantTypes.key("farmer_market"),
             new MerchantType(
                   10,
-                  UniformInt.of(4, 6),
+                  UniformInt.of(4, 8),
+                  UniformInt.of(60, 200),
                   List.of(
                         offerOneOf(items(Items.WHEAT), 5, UniformInt.of(16, 48)),
                         offerOneOf(items(Items.BREAD), 4, UniformInt.of(8, 24)),
@@ -40,7 +41,8 @@ public class CivilizedMerchantTypeProvider {
             MerchantTypes.key("trapper"),
             new MerchantType(
                   8,
-                  UniformInt.of(3, 5),
+                  UniformInt.of(4, 8),
+                  UniformInt.of(60, 200),
                   List.of(
                         offerAllOf(items(Items.BEEF, Items.LEATHER), 4, UniformInt.of(4, 16)),
                         offerAllOf(items(Items.CHICKEN, Items.FEATHER), 4, UniformInt.of(4, 16)),
@@ -58,7 +60,8 @@ public class CivilizedMerchantTypeProvider {
             MerchantTypes.key("lumber_merchant"),
             new MerchantType(
                   8,
-                  UniformInt.of(2, 4),
+                  UniformInt.of(4, 8),
+                  UniformInt.of(80, 300),
                   List.of(
                         offerOneOf(itemTags.getOrThrow(ItemTags.LOGS), 5, UniformInt.of(16, 64)),
                         offerOneOf(itemTags.getOrThrow(ItemTags.PLANKS), 3, UniformInt.of(16, 32)),
@@ -69,7 +72,8 @@ public class CivilizedMerchantTypeProvider {
             MerchantTypes.key("mason"),
             new MerchantType(
                   6,
-                  UniformInt.of(2, 4),
+                  UniformInt.of(4, 8),
+                  UniformInt.of(80, 300),
                   List.of(
                         offerOneOf(items(Items.COBBLESTONE), 5, UniformInt.of(16, 32)),
                         offerOneOf(items(Items.STONE), 3, UniformInt.of(16, 32)),
@@ -80,23 +84,27 @@ public class CivilizedMerchantTypeProvider {
             MerchantTypes.key("bulk_goods"),
             new MerchantType(
                   6,
-                  UniformInt.of(3, 4),
+                  UniformInt.of(4, 10),
+                  UniformInt.of(100, 350),
                   List.of(
                         offerOneOf(itemTags.getOrThrow(ItemTags.WOOL), 4, UniformInt.of(8, 32)),
                         offerOneOf(items(Items.STRING), 3, UniformInt.of(8, 32)),
                         offerOneOf(items(Items.LEATHER), 3, UniformInt.of(4, 24)),
                         offerOneOf(items(Items.SUGAR), 3, UniformInt.of(4, 32)),
                         offerOneOf(items(Items.EGG), 3, UniformInt.of(4, 20)),
-                        offerOneOf(items(Items.IRON_INGOT), 3, UniformInt.of(4, 32)),
+                        offerOneOf(items(Items.IRON_INGOT), 3, UniformInt.of(4, 24)),
+                        offerOneOf(items(Items.COAL), 3, UniformInt.of(4, 32)),
                         offerOneOf(itemTags.getOrThrow(Tags.Items.DYES), 3, UniformInt.of(4, 32)),
-                        offerOneOf(items(Items.PAPER), 2, UniformInt.of(8, 24)),
-                        offerOneOf(items(Items.BOOK), 1, UniformInt.of(1, 4)))));
+                        offerOneOf(items(Items.PAPER), 3, UniformInt.of(8, 24)),
+                        offerOneOf(items(Items.GOLD_INGOT), 2, UniformInt.of(4, 32)),
+                        offerOneOf(items(Items.BOOK), 2, UniformInt.of(1, 4)))));
 
       context.register(
             MerchantTypes.key("jewel_trader"),
             new MerchantType(
                   3,
                   UniformInt.of(3, 5),
+                  UniformInt.of(150, 400),
                   List.of(
                         offerOneOf(items(Items.GOLD_INGOT), 2, UniformInt.of(2, 8)),
                         offerOneOf(items(Items.REDSTONE), 2, UniformInt.of(8, 24)),

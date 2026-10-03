@@ -2,6 +2,7 @@ package com.uncreated.civilized.networking.packets;
 
 import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
+import com.uncreated.civilized.core.trading.CurrencyStock;
 import com.uncreated.civilized.core.trading.ItemTraded;
 import com.uncreated.civilized.core.trading.TradeItem;
 import com.uncreated.civilized.ui.menu.trading.TradingMenu;
@@ -52,17 +53,14 @@ public record SellItem(int sequence, int slot) implements CustomPacketPayload {
 
       Container seller = tradingMenu.getCustomer();
 
-      ItemTraded sold = tradeItem.sellToVendor(toSell, seller, tradingMenu.getAvailableVendorCurrency());
+      CurrencyStock vendorCurrency = tradingMenu.getVendorCurrency();
+      ItemTraded sold = tradeItem.sellToVendor(toSell, seller, vendorCurrency.availableCurrency());
 
-      tradingMenu.setAvailableVendorCurrency(sold.newVendorAvailableCurrency());
+      vendorCurrency.availableCurrency(sold.newVendorAvailableCurrency());
       tradingMenu.setCarried(sold.itemStack());
       // todo: drop loose coins
 
       context.reply(
-            new TradeSlotUpdated(
-                  packet.sequence,
-                  packet.slot,
-                  tradeItem.stock(),
-                  tradingMenu.getAvailableVendorCurrency()));
+            new TradeSlotUpdated(packet.sequence, packet.slot, tradeItem.stock(), vendorCurrency.availableCurrency()));
    }
 }

@@ -18,11 +18,13 @@ import net.minecraft.util.StringRepresentable;
 import net.minecraft.util.random.Weight;
 import net.minecraft.util.random.WeightedEntry;
 import net.minecraft.util.random.WeightedRandom;
+import net.minecraft.util.valueproviders.ConstantInt;
 import net.minecraft.util.valueproviders.IntProvider;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
-public record MerchantType(int weight, IntProvider tradeCount, List<MerchantType.Offer> offers) {
+public record MerchantType(int weight, IntProvider tradeCount, IntProvider startingCurrency,
+      List<MerchantType.Offer> offers) {
 
    private static final Logger LOGGER = LogUtils.getLogger();
 
@@ -32,6 +34,8 @@ public record MerchantType(int weight, IntProvider tradeCount, List<MerchantType
                      .group(
                            ExtraCodecs.POSITIVE_INT.optionalFieldOf("weight", 1).forGetter(MerchantType::weight),
                            IntProvider.POSITIVE_CODEC.fieldOf("trade_count").forGetter(MerchantType::tradeCount),
+                           IntProvider.NON_NEGATIVE_CODEC.optionalFieldOf("starting_currency", ConstantInt.ZERO)
+                                 .forGetter(MerchantType::startingCurrency),
                            Offer.CODEC.listOf().fieldOf("offers").forGetter(MerchantType::offers))
                      .apply(instance, MerchantType::new));
 

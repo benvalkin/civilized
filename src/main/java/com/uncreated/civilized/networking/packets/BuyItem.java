@@ -2,7 +2,9 @@ package com.uncreated.civilized.networking.packets;
 
 import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
+import com.uncreated.civilized.core.trading.CurrencyStock;
 import com.uncreated.civilized.core.trading.ItemTraded;
+import com.uncreated.civilized.core.trading.TradeDirection;
 import com.uncreated.civilized.core.trading.TradeItem;
 import com.uncreated.civilized.core.trading.TradeQuote;
 import com.uncreated.civilized.ui.menu.trading.TradingMenu;
@@ -66,11 +68,11 @@ public record BuyItem(int sequence, int slot, int quantity) implements CustomPac
 
       Container buyer = tradingMenu.getCustomer();
 
-      TradeQuote tradeQuote = tradeItem.adjustIfOddOrNotAffordable(buyer, quantity);
-      ItemTraded bought =
-            tradeItem.buyFromVendor(tradeQuote.quanity(), buyer, tradingMenu.getAvailableVendorCurrency());
+      TradeQuote tradeQuote = tradeItem.adjustIfOddOrNotAffordable(buyer, TradeDirection.BUY, quantity);
+      CurrencyStock vendorCurrency = tradingMenu.getVendorCurrency();
+      ItemTraded bought = tradeItem.buyFromVendor(tradeQuote.quanity(), buyer, vendorCurrency.availableCurrency());
 
-      tradingMenu.setAvailableVendorCurrency(bought.newVendorAvailableCurrency());
+      vendorCurrency.availableCurrency(bought.newVendorAvailableCurrency());
       if (!carried.isEmpty())
          carried.grow(bought.itemStack().getCount());
       else
@@ -80,10 +82,6 @@ public record BuyItem(int sequence, int slot, int quantity) implements CustomPac
       // todo: drop loose coins
 
       context.reply(
-            new TradeSlotUpdated(
-                  packet.sequence,
-                  packet.slot,
-                  tradeItem.stock(),
-                  tradingMenu.getAvailableVendorCurrency()));
+            new TradeSlotUpdated(packet.sequence, packet.slot, tradeItem.stock(), vendorCurrency.availableCurrency()));
    }
 }

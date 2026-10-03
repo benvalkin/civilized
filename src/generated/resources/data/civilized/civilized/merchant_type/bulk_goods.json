@@ -49,6 +49,15 @@
       "items": "minecraft:iron_ingot",
       "stock": {
         "type": "minecraft:uniform",
+        "max_inclusive": 24,
+        "min_inclusive": 4
+      },
+      "weight": 3
+    },
+    {
+      "items": "minecraft:coal",
+      "stock": {
+        "type": "minecraft:uniform",
         "max_inclusive": 32,
         "min_inclusive": 4
       },
@@ -70,6 +79,15 @@
         "max_inclusive": 24,
         "min_inclusive": 8
       },
+      "weight": 3
+    },
+    {
+      "items": "minecraft:gold_ingot",
+      "stock": {
+        "type": "minecraft:uniform",
+        "max_inclusive": 32,
+        "min_inclusive": 4
+      },
       "weight": 2
     },
     {
@@ -78,13 +96,19 @@
         "type": "minecraft:uniform",
         "max_inclusive": 4,
         "min_inclusive": 1
-      }
+      },
+      "weight": 2
     }
   ],
+  "starting_currency": {
+    "type": "minecraft:uniform",
+    "max_inclusive": 350,
+    "min_inclusive": 100
+  },
   "trade_count": {
     "type": "minecraft:uniform",
-    "max_inclusive": 4,
-    "min_inclusive": 3
+    "max_inclusive": 10,
+    "min_inclusive": 4
   },
   "weight": 6
 }

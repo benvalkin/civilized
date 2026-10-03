@@ -197,6 +197,6 @@ public class TradingMenuScreen extends AbstractContainerScreen<TradingMenu> impl
       TradeItem tradeItem = tradeSlots.get(slot).getTradeItem();
       if (tradeItem != null)
          tradeItem.stock(newStock);
-      menu.setAvailableVendorCurrency(newAvailableVendorCurrency);
+      menu.getVendorCurrency().availableCurrency(newAvailableVendorCurrency);
    }
 }

@@ -139,24 +139,33 @@ public class TradeSlotWidget extends AbstractWidget implements ITradeSlot {
 
    private Component createPriceLine() {
       ItemStack carried = parentScreen.getMenu().getCarried();
-      if (parentScreen.getTradeDirection() == TradeDirection.SELL && !carried.isEmpty()
-            && ItemStack.isSameItemSameComponents(carried, tradeItem.item())) {
-         TradeQuote quote =
-               tradeItem.adjustIfOddOrNotAffordable(
-                     parentScreen.getMenu().getAvailableVendorCurrency(),
-                     carried.getCount());
-         Component quantity = Component.literal(String.valueOf(quote.quanity())).withColor(Colors.VALIDATION_SUCCESS);
-         if (tradeItem.price() <= 0)
-            return Component.translatable("menu.trading.tooltip.sell_stack_for_nothing", quantity);
+      if (parentScreen.getTradeDirection() == TradeDirection.SELL) {
 
-         int carriedStackValue = quote.quanity() / tradeItem.quantityPerTrade() * tradeItem.price();
-         return Component
-               .translatable("menu.trading.tooltip.sell_stack_for", quantity, coinsTransaction(carriedStackValue))
-               .withColor(Colors.TEXT_LIGHT_MUTED)
-               .withStyle(ChatFormatting.ITALIC);
-      }
+         if (parentScreen.getMenu().getVendorCurrency().availableCurrency() < tradeItem.sellPrice())
+            return Component.translatable("menu.trading.tooltip.vendor_cannot_afford")
+                  .withColor(Colors.VALIDATION_ERROR);
 
-      return coinsTransaction(tradeItem.price());
+         if (!carried.isEmpty() && ItemStack.isSameItemSameComponents(carried, tradeItem.item())) {
+
+            TradeQuote quote =
+                  tradeItem.adjustIfOddOrNotAffordable(
+                        parentScreen.getMenu().getVendorCurrency().availableCurrency(),
+                        parentScreen.getTradeDirection(),
+                        carried.getCount());
+            Component quantity =
+                  Component.literal(String.valueOf(quote.quanity())).withColor(Colors.VALIDATION_SUCCESS);
+            if (tradeItem.sellPrice() <= 0)
+               return Component.translatable("menu.trading.tooltip.sell_stack_for_nothing", quantity);
+
+            int carriedStackValue = quote.quanity() / tradeItem.quantityPerTrade() * tradeItem.sellPrice();
+            return Component
+                  .translatable("menu.trading.tooltip.sell_stack_for", quantity, coinsTransaction(carriedStackValue))
+                  .withColor(Colors.TEXT_LIGHT_MUTED)
+                  .withStyle(ChatFormatting.ITALIC);
+         } else
+            return coinsTransaction(tradeItem.sellPrice());
+      } else
+         return coinsTransaction(tradeItem.buyPrice());
    }
 
    private @NotNull MutableComponent coinsTransaction(int amount) {

@@ -30,6 +30,9 @@ import com.uncreated.civilized.core.settlement.defense.TargetRequestResult;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlement;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
 import com.uncreated.civilized.core.settlement.entity.LoadedVillagers;
+import com.uncreated.civilized.core.trading.CurrencyStock;
+import com.uncreated.civilized.core.trading.TradeItem;
+import com.uncreated.civilized.core.trading.TradingScreenOpener;
 import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
@@ -63,6 +66,7 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.profiling.Profiler;
@@ -381,6 +385,23 @@ public class CivilizedVillager extends AgeableMob
       if (isSleeping())
          return InteractionResult.FAIL;
 
+      if (isSpeakingToPlayer())
+         return InteractionResult.FAIL;
+
+      boolean isClientSide = player.level().isClientSide;
+
+      if (roleBehaviour instanceof IMerchantBehaviour merchantBehaviour) {
+         if (player instanceof ServerPlayer serverPlayer) {
+            List<TradeItem> tradeItems = merchantBehaviour.getTradeItems();
+            CurrencyStock availableCurrency = merchantBehaviour.getAvailableCurrency();
+            TradingScreenOpener.open(serverPlayer, this, tradeItems, availableCurrency);
+
+            this.goSpeakToPlayer(player);
+         }
+
+         return InteractionResult.SUCCESS;
+      }
+
       DialogueController dialogueController = DialogueController.selectDialogueController(this);
       DialogueFlow dialogueFlow = dialogueController.getDialogueFlow(this, player, hand);
 
@@ -412,7 +433,7 @@ public class CivilizedVillager extends AgeableMob
          return InteractionResult.CONSUME.heldItemTransformedTo(consumed);
       }
 
-      if (player.level().isClientSide)
+      if (isClientSide)
          VillagerDialogueClientHandler.openDialogue(this, dialogue, context);
       return InteractionResult.SUCCESS;
    }
@@ -676,6 +697,10 @@ public class CivilizedVillager extends AgeableMob
       } else { // 6-7am, 3-10pm
          getBrain().setActiveActivityIfPossible(Activity.IDLE);
       }
+   }
+
+   public boolean isSpeakingToPlayer() {
+      return getBrain().isActive(AIRegistry.A_SPEAK_TO_PLAYER.get());
    }
 
    public void goSpeakToPlayer(Player player) {

@@ -4,11 +4,12 @@ import java.util.List;
 
 import org.jetbrains.annotations.Nullable;
 
+import com.uncreated.civilized.core.trading.CurrencyStock;
 import com.uncreated.civilized.core.trading.TradeItem;
+import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.neoforge.registration.gui.GuiRegistry;
 
 import lombok.Getter;
-import lombok.Setter;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -27,9 +28,10 @@ public class TradingMenu extends AbstractContainerMenu {
    public static final StreamCodec<RegistryFriendlyByteBuf, List<TradeItem>> TRADES_STREAM_CODEC =
          TradeItem.STREAM_CODEC.apply(ByteBufCodecs.list());
 
+   @Nullable
+   private CivilizedVillager vendor;
    @Getter
-   @Setter
-   private int availableVendorCurrency;
+   private final CurrencyStock vendorCurrency;
    @Getter
    private final List<TradeItem> tradeItems;
    @Getter
@@ -40,13 +42,14 @@ public class TradingMenu extends AbstractContainerMenu {
       this(
             containerId,
             playerInventory,
+            null,
             readAvailableVendorCurrency(extraDataFromServer),
             readVendorTrades(extraDataFromServer),
             playerInventory);
    }
 
-   private static int readAvailableVendorCurrency(RegistryFriendlyByteBuf extraDataFromServer) {
-      return extraDataFromServer.readInt();
+   private static CurrencyStock readAvailableVendorCurrency(RegistryFriendlyByteBuf extraDataFromServer) {
+      return new CurrencyStock(extraDataFromServer.readInt());
    }
 
    private static List<TradeItem> readVendorTrades(RegistryFriendlyByteBuf extraDataFromServer) {
@@ -56,11 +59,13 @@ public class TradingMenu extends AbstractContainerMenu {
    public TradingMenu(
          int containerId,
          Inventory playerInventory,
-         int availableVendorCurrency,
+         CivilizedVillager vendor,
+         CurrencyStock vendorCurrency,
          List<TradeItem> tradeItems,
          Container customerStock) {
       super(GuiRegistry.TRADING_MENU.get(), containerId);
-      this.availableVendorCurrency = availableVendorCurrency;
+      this.vendor = vendor;
+      this.vendorCurrency = vendorCurrency;
       this.tradeItems = tradeItems;
 
       this.customer = customerStock;
@@ -84,4 +89,12 @@ public class TradingMenu extends AbstractContainerMenu {
 
       return null;
    }
+
+   @Override
+   public void removed(Player player) {
+      super.removed(player);
+      if (vendor != null && !player.level().isClientSide())
+         vendor.stopSpeakingToPlayer();
+   }
+
 }

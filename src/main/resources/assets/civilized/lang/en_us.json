@@ -427,5 +427,6 @@
   "notification.worker.missing_tool.generic": "Missing %s",
   "notification.worker.missing_tool.generic.detail": "%s the %s cannot find any %s to start their work task.\n\nPlace one in the Storehouse or their home chests to unblock them.",
   "notification.worker.missing_ingredients.generic": "No Ingredients",
-  "notification.worker.missing_ingredients.generic.detail": "%s the %s has not been able to find any production ingredients for a while.\n\nEnsure that the Storehouse or their home chests have the appropriate ingredients required by their production bills."
+  "notification.worker.missing_ingredients.generic.detail": "%s the %s has not been able to find any production ingredients for a while.\n\nEnsure that the Storehouse or their home chests have the appropriate ingredients required by their production bills.",
+  "menu.trading.tooltip.vendor_cannot_afford": "Vendor can't afford transaction"
 }

@@ -37,10 +37,15 @@
       "weight": 2
     }
   ],
+  "starting_currency": {
+    "type": "minecraft:uniform",
+    "max_inclusive": 300,
+    "min_inclusive": 80
+  },
   "trade_count": {
     "type": "minecraft:uniform",
-    "max_inclusive": 4,
-    "min_inclusive": 2
+    "max_inclusive": 8,
+    "min_inclusive": 4
   },
   "weight": 6
 }
