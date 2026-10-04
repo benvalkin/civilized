@@ -12,7 +12,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 
-/** The server's answer to {@link CheckRequirements}. */
+/** The server's answer to {@link CheckUpgradeRequirements}. */
 public record RequirementsChecked(int requestId, List<RequirementResultData> results) implements CustomPacketPayload {
 
    public static final CustomPacketPayload.Type<RequirementsChecked> TYPE =

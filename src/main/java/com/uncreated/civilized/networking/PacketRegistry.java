@@ -17,9 +17,11 @@ import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.networking.packets.BuyItem;
-import com.uncreated.civilized.networking.packets.CheckRequirements;
+import com.uncreated.civilized.networking.packets.CheckUpgradeRequirements;
 import com.uncreated.civilized.networking.packets.CreateNewBuilding;
+import com.uncreated.civilized.networking.packets.OpenEstablishBuildingScreen;
 import com.uncreated.civilized.networking.packets.PreviewProductionBill;
+import com.uncreated.civilized.networking.packets.RequestEstablishBuilding;
 import com.uncreated.civilized.networking.packets.RequirementsChecked;
 import com.uncreated.civilized.networking.packets.ProductionBillPreview;
 import com.uncreated.civilized.networking.packets.SaveProductionBill;
@@ -83,9 +85,19 @@ public class PacketRegistry {
             CreateNewBuilding::serverReceiveCreateNewBuilding);
 
       registrar.playToServer(
-            CheckRequirements.TYPE,
-            CheckRequirements.STREAM_CODEC,
-            CheckRequirements::serverReceiveCheckRequirements);
+            RequestEstablishBuilding.TYPE,
+            RequestEstablishBuilding.STREAM_CODEC,
+            RequestEstablishBuilding::serverReceiveRequestEstablishBuilding);
+
+      registrar.playToClient(
+            OpenEstablishBuildingScreen.TYPE,
+            OpenEstablishBuildingScreen.STREAM_CODEC,
+            ClientPacketHandlers::openEstablishBuildingScreen);
+
+      registrar.playToServer(
+            CheckUpgradeRequirements.TYPE,
+            CheckUpgradeRequirements.STREAM_CODEC,
+            CheckUpgradeRequirements::serverReceiveCheckUpgradeRequirements);
 
       registrar.playToClient(
             RequirementsChecked.TYPE,

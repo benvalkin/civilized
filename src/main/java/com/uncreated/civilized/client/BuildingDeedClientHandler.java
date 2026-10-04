@@ -1,15 +1,11 @@
 package com.uncreated.civilized.client;
 
-import java.util.Optional;
 
 import javax.annotation.Nullable;
 
 import com.uncreated.civilized.client.renderer.BuildingBoundsDragTool;
-import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.BuildingType;
-import com.uncreated.civilized.core.building.BuildingTypes;
-import com.uncreated.civilized.core.building.ClientBuildingStore;
-import com.uncreated.civilized.ui.menu.building.EstablishBuildingScreen;
+import com.uncreated.civilized.networking.packets.RequestEstablishBuilding;
 import com.uncreated.civilized.ui.style.Colors;
 
 import net.minecraft.client.Minecraft;
@@ -20,6 +16,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 /**
  * Decides what happens when you use a {@link com.uncreated.civilized.item.BuildingDeedItem}. All of the interact logic
@@ -60,12 +57,9 @@ public final class BuildingDeedClientHandler {
                BuildingBoundsDragTool.getBuildingBoundsDragResult(level);
 
          if (clickedBlockPos == null || boundsResult.bounds().contains(clickedBlockPos)) {
-            if (!validateBounds(buildingType, boundsResult, player, level)) {
-               return InteractionResult.FAIL;
-            }
-
-            // the server is responsible for checking the requirements, but we can open the screen so long
-            Minecraft.getInstance().setScreen(new EstablishBuildingScreen(buildingType, boundsResult.bounds()));
+            // the server checks whether the building can go here, and either opens the establish screen or tells the
+            // player what's wrong
+            PacketDistributor.sendToServer(new RequestEstablishBuilding(buildingType, boundsResult.bounds()));
 
             return InteractionResult.SUCCESS;
          }
@@ -82,13 +76,6 @@ public final class BuildingDeedClientHandler {
          } else if (!BuildingBoundsDragTool.isDraggingComplete()) {
             BuildingBoundsDragTool.completeDragging(clickedAir);
 
-            BuildingBoundsDragTool.BuildingBoundsDragResult boundsResult =
-                  BuildingBoundsDragTool.getBuildingBoundsDragResult(level);
-
-            if (!validateBounds(buildingType, boundsResult, player, level)) {
-               return InteractionResult.FAIL;
-            }
-
             player.displayClientMessage(
                   Component.translatable("message.building.placement.help.placed_destination")
                         .withColor(Colors.VALIDATION_PARTIAL_SUCCESS),
@@ -99,50 +86,5 @@ public final class BuildingDeedClientHandler {
       }
 
       return InteractionResult.PASS;
-   }
-
-   private static boolean validateBounds(
-         BuildingType buildingType,
-         BuildingBoundsDragTool.BuildingBoundsDragResult boundsResult,
-         Player player,
-         Level level) {
-      Optional<Building> overlappingOther =
-            ClientBuildingStore.INSTANCE.findOverlappingBuilding(boundsResult.bounds(), level);
-      if (overlappingOther.isPresent()) {
-         player.displayClientMessage(
-               Component
-                     .translatable(
-                           "message.building.placement.validation.building_overlapping",
-                           overlappingOther.get().getBuildingType().translation())
-                     .withColor(Colors.VALIDATION_ERROR),
-               true);
-         return false;
-      }
-
-      if (!buildingType.isWorksite()) {
-         if (!boundsResult.centerIsAir()) {
-            player.displayClientMessage(
-                  Component
-                        .translatable(
-                              "message.building.placement.validation.center_obstructed",
-                              boundsResult.bounds().getCenter().toShortString())
-                        .withColor(Colors.VALIDATION_ERROR),
-                  true);
-            return false;
-         }
-
-         if (!buildingType.is(BuildingTypes.TOWN_SQUARE) && !boundsResult.centerIsInside()) {
-            player.displayClientMessage(
-                  Component
-                        .translatable(
-                              "message.building.placement.validation.center_no_roof",
-                              boundsResult.bounds().getCenter().toShortString())
-                        .withColor(Colors.VALIDATION_ERROR),
-                  true);
-            return false;
-         }
-      }
-
-      return true;
    }
 }

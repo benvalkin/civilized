@@ -2,9 +2,7 @@ package com.uncreated.civilized.networking.packets;
 
 import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -17,9 +15,10 @@ import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.bounds.BuildingBounds;
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.entity.LoadedBuildings;
+import com.uncreated.civilized.core.building.placement.PlacementResult;
+import com.uncreated.civilized.core.building.placement.ServerPlacementChecks;
 import com.uncreated.civilized.core.building.requirement.CurrencyRequirement;
 import com.uncreated.civilized.core.building.requirement.ServerRequirementContexts;
-import com.uncreated.civilized.item.BuildingDeedItem;
 import com.uncreated.civilized.core.building.requirement.ServerRequirementChecks;
 import com.uncreated.civilized.core.building.requirement.IBuildingRequirementResult;
 import com.uncreated.civilized.core.building.requirement.IBuildingRequirement;
@@ -27,7 +26,6 @@ import com.uncreated.civilized.core.building.requirement.registry.BuildingRequir
 import com.uncreated.civilized.core.building.requirement.registry.BuildingRequirements;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
-import com.uncreated.civilized.core.settlement.SettlementBounds;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
 import com.uncreated.civilized.core.settlement.permission.AccessLevel;
 import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermissionStore;
@@ -43,7 +41,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
-import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public record CreateNewBuilding(BuildingType buildingType,
@@ -76,31 +73,19 @@ public record CreateNewBuilding(BuildingType buildingType,
       ServerPlayer placer = (ServerPlayer) context.player();
       ServerLevel serverLevel = placer.serverLevel();
 
-      List<Settlement> thisDimensionSettlements =
-            ServerSettlementsStore.INSTANCE.findInDimension(serverLevel.dimension());
-      Optional<Settlement> existingSettlement =
-            ServerRequirementChecks.findNearbySettlement(serverLevel, packet.buildingBounds());
-
-      // the client checks these before the player can confirm, but a modified client could skip that, and the deed or
-      // requirements could have changed since
-      ItemStack deed = placer.getMainHandItem();
-      if (!(deed.getItem() instanceof BuildingDeedItem deedItem && deedItem.getBuildingType() == packet.buildingType())) {
-         placer.displayClientMessage(
-               Component
-                     .translatable(
-                           "message.settlement.create_building.failed.no_deed",
-                           packet.buildingType().translation())
-                     .withColor(Colors.VALIDATION_ERROR),
-               true);
+      // sanity check the boudns placement again
+      PlacementResult placement =
+            ServerPlacementChecks.checkEstablish(placer, packet.buildingType(), packet.buildingBounds());
+      if (placement instanceof PlacementResult.Failure failure) {
+         placer.displayClientMessage(failure.reason(), true);
          return;
       }
+      @Nullable
+      Settlement nearbySettlement = ((PlacementResult.Success) placement).settlement();
 
-      // checked before anything is created, since a new town hall creates its settlement below
-      Settlement requirementsSettlement =
-            packet.buildingType().is(BuildingTypes.TOWN_HALL) ? null : existingSettlement.orElse(null);
       List<IBuildingRequirementResult> requirements =
             ServerRequirementChecks
-                  .checkEstablish(placer, packet.buildingType(), packet.buildingBounds(), requirementsSettlement);
+                  .checkEstablish(placer, packet.buildingType(), packet.buildingBounds(), nearbySettlement);
       if (!ServerRequirementChecks.allSatisfied(requirements)) {
          placer.displayClientMessage(
                Component
@@ -112,75 +97,18 @@ public record CreateNewBuilding(BuildingType buildingType,
          return;
       }
 
+      // nothing is created until everything has been checked
       Settlement argumentSettlement;
       BlockPos settlementOrigin;
-      if (packet.buildingType().is(BuildingTypes.TOWN_HALL)) {
-         if (existingSettlement.isPresent()) {
-            placer.displayClientMessage(
-                  Component
-                        .translatable(
-                              "message.settlement.create_building.failed.building_already_exists",
-                              existingSettlement.get().displayNameTranslation(),
-                              packet.buildingType().translation())
-                        .withColor(Colors.VALIDATION_ERROR),
-                  true);
-            return;
-         } else {
-            if (ServerSettlementsStore.INSTANCE.findFromOwner(placer.getUUID()).isPresent()) {
-               placer.displayClientMessage(
-                     Component
-                           .translatable(
-                                 "message.settlement.create_building.failed.player_already_has_another_settlement")
-                           .withColor(Colors.VALIDATION_ERROR),
-                     true);
-               return;
-            }
-
-            settlementOrigin = packet.buildingBounds.getCenter();
-
-            SettlementBounds newBounds = Settlement.calculateBounds(settlementOrigin, List.of(packet.buildingBounds()));
-            if (overlapsOtherSettlement(placer, newBounds, thisDimensionSettlements, null))
-               return;
-
-            argumentSettlement =
-                  ServerSettlementsStore.INSTANCE
-                        .createNew(placer.getUUID(), settlementOrigin, serverLevel.dimension());
-            ServerSettlementPermissionStore.INSTANCE
-                  .setAccessLevel(argumentSettlement.getSettlementId(), placer, AccessLevel.GOVERNOR);
-         }
+      if (nearbySettlement == null) {
+         settlementOrigin = packet.buildingBounds().getCenter();
+         argumentSettlement =
+               ServerSettlementsStore.INSTANCE.createNew(placer.getUUID(), settlementOrigin, serverLevel.dimension());
+         ServerSettlementPermissionStore.INSTANCE
+               .setAccessLevel(argumentSettlement.getSettlementId(), placer, AccessLevel.GOVERNOR);
       } else {
-         if (existingSettlement.isPresent()) {
-            if (!ServerSettlementPermissionStore.INSTANCE.getOrCreate(existingSettlement.get().getSettlementId())
-                  .hasCreateBuildingsPermission(placer.getUUID())) {
-               placer.displayClientMessage(
-                     Component
-                           .translatable(
-                                 "message.settlement.create_building.failed.no_permission",
-                                 existingSettlement.get().displayNameTranslation())
-                           .withColor(Colors.VALIDATION_ERROR),
-                     true);
-               return;
-            } else {
-               argumentSettlement = existingSettlement.get();
-               settlementOrigin = argumentSettlement.getBounds().getOrigin();
-
-               List<BuildingBounds> existingBuildings = new ArrayList<>();
-               ServerBuildingsStore.INSTANCE.findForSettlement(argumentSettlement.getSettlementId())
-                     .forEach(building -> existingBuildings.add(building.getBounds()));
-
-               existingBuildings.add(packet.buildingBounds());
-
-               SettlementBounds newSettlementBounds = Settlement.calculateBounds(settlementOrigin, existingBuildings);
-               if (overlapsOtherSettlement(placer, newSettlementBounds, thisDimensionSettlements, argumentSettlement))
-                  return;
-            }
-         } else {
-            placer.displayClientMessage(
-                  Component.translatable("message.settlement.create_building.failed.too_far_from_settlement")
-                        .withColor(Colors.VALIDATION_ERROR),
-                  true);
-            return;
-         }
+         argumentSettlement = nearbySettlement;
+         settlementOrigin = argumentSettlement.getBounds().getOrigin();
       }
 
       Building building =
@@ -198,7 +126,7 @@ public record CreateNewBuilding(BuildingType buildingType,
       }
 
       debitCurrencyRequirements(packet.buildingType, Building.FIRST_UPGRADE_LEVEL, argumentSettlement, placer);
-      deed.consume(1, placer);
+      placer.getMainHandItem().consume(1, placer);
 
       Set<Building> settlementBuildings =
             ServerBuildingsStore.INSTANCE.findForSettlement(argumentSettlement.getSettlementId());
@@ -231,31 +159,5 @@ public record CreateNewBuilding(BuildingType buildingType,
             CurrencyItem.debit(coinStorage, c.getRequiredCurrency());
          }
       }
-   }
-
-   private static boolean overlapsOtherSettlement(
-         ServerPlayer placer,
-         SettlementBounds bounds,
-         List<Settlement> settlements,
-         @Nullable Settlement own) {
-      Optional<Settlement> overlapped = Optional.empty();
-      for (Settlement other : settlements) {
-         if (other != own && other.getBounds().isOverlapping(bounds)
-               && (own == null || !other.getBounds().isOverlapping(own.getBounds()))) {
-            overlapped = Optional.of(other);
-            break;
-         }
-      }
-      if (overlapped.isEmpty())
-         return false;
-
-      placer.displayClientMessage(
-            Component
-                  .translatable(
-                        "message.settlement.create_building.failed.too_close_to_other_settlement",
-                        overlapped.get().displayNameTranslation())
-                  .withColor(Colors.VALIDATION_ERROR),
-            true);
-      return true;
    }
 }

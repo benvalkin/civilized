@@ -127,9 +127,6 @@ public final class BuildingBoundsDragTool {
       Vec3 boxCenterVec3 = AABB.encapsulatingFullBlocks(origin, finalDestination).getCenter();
       BlockPos boxCenter = BlockPos.containing(boxCenterVec3);
 
-      boolean isCenterAir = false;
-      boolean isCenterInside = false;
-
       // elevate the center until we find a non-solid block, starting from the lowest point in the dragged box
       BlockPos.MutableBlockPos actualCenter = boxCenter.mutable().setY(origin.getY());
       for (int y = actualCenter.getY(); y < actualCenter.getY() + DRAG_LOWER_BOUND + DRAG_HEIGHT_BOUND; y++) {
@@ -137,8 +134,6 @@ public final class BuildingBoundsDragTool {
 
          BlockState blockState = level.getBlockState(actualCenter);
          if (blockState.isAir()) {
-            isCenterAir = true;
-            isCenterInside = !level.canSeeSky(actualCenter);
             break;
          }
       }
@@ -165,13 +160,10 @@ public final class BuildingBoundsDragTool {
          upperCorner.setY(oldLY);
       }
 
-      return new BuildingBoundsDragResult(
-            new BuildingBounds(actualCenter, lowerCorner, upperCorner),
-            isCenterAir,
-            isCenterInside);
+      return new BuildingBoundsDragResult(new BuildingBounds(actualCenter, lowerCorner, upperCorner));
    }
 
-   public record BuildingBoundsDragResult(BuildingBounds bounds, boolean centerIsAir, boolean centerIsInside) {
+   public record BuildingBoundsDragResult(BuildingBounds bounds) {
    }
 
    public static void resetDragging() {

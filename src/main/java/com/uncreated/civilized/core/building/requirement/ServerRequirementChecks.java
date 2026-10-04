@@ -8,12 +8,10 @@ import javax.annotation.Nullable;
 
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.BuildingType;
-import com.uncreated.civilized.core.building.BuildingTypes;
 import com.uncreated.civilized.core.building.bounds.BuildingBounds;
 import com.uncreated.civilized.core.building.requirement.registry.BuildingRequirements;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
-import com.uncreated.civilized.core.settlement.util.SettlementUtil;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -24,15 +22,12 @@ import net.minecraft.server.level.ServerPlayer;
  */
 public class ServerRequirementChecks {
 
-   /** How far outside a settlement's bounds new buildings can still be placed, in blocks. */
-   public static final int SETTLEMENT_EXTENSION_DISTANCE = 32;
-
    /**
     * Checks if a new building can be established. New buildings are evaluated with the requirements belonging to the
     * first upgrade level ({@code Building.FIRST_UPGRADE_LEVEL}).
     *
     * @param settlement
-    *           the settlement it would join, or null if this is a new town hall.
+    *           the settlement it would join, as found by its placement check, or null if this is a new town hall.
     */
    public static List<IBuildingRequirementResult> checkEstablish(
          ServerPlayer player,
@@ -70,26 +65,6 @@ public class ServerRequirementChecks {
 
    public static boolean allSatisfied(List<IBuildingRequirementResult> results) {
       return results.stream().allMatch(IBuildingRequirementResult::isSatisfied);
-   }
-
-   /** The settlement a new building at these bounds would join, if it's close enough to one. */
-   public static Optional<Settlement> findNearbySettlement(ServerLevel level, BuildingBounds bounds) {
-      return SettlementUtil.findExtendedEncapsulating(
-            ServerSettlementsStore.INSTANCE.findInDimension(level.dimension()),
-            bounds.getEncapsulatingAABB(),
-            SETTLEMENT_EXTENSION_DISTANCE);
-   }
-
-   /**
-    * The settlement a new building would join for its requirements. Town halls start their own brand new settlement.
-    */
-   public static @Nullable Settlement findSettlementForNew(
-         ServerLevel level,
-         BuildingType buildingType,
-         BuildingBounds bounds) {
-      if (buildingType.is(BuildingTypes.TOWN_HALL))
-         return null;
-      return findNearbySettlement(level, bounds).orElse(null);
    }
 
    private static RequirementContext contextFor(ServerPlayer player, Building building, BuildingBounds bounds) {

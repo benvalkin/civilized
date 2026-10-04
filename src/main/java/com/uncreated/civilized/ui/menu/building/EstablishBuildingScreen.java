@@ -4,26 +4,20 @@ import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
 import java.util.List;
 
-import javax.annotation.Nullable;
 
 import com.uncreated.civilized.client.renderer.BuildingBoundsDragTool;
 import com.uncreated.civilized.core.building.BuildingType;
 import com.uncreated.civilized.core.building.bounds.BuildingBounds;
 import com.uncreated.civilized.core.building.requirement.IBuildingRequirementResult;
 import com.uncreated.civilized.item.BuildingDeedItem;
-import com.uncreated.civilized.networking.packets.CheckRequirements;
 import com.uncreated.civilized.networking.packets.CreateNewBuilding;
-import com.uncreated.civilized.ui.components.IListViewBuilder;
-import com.uncreated.civilized.ui.components.ScrollListView;
 import com.uncreated.civilized.ui.components.multiline.ImprovedMultiLineTextWidget;
-import com.uncreated.civilized.ui.menu.building.widgets.BuildingRequirementWidget;
+import com.uncreated.civilized.ui.menu.building.widgets.BuildingRequirementsView;
 import com.uncreated.civilized.ui.style.Colors;
 
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.RenderType;
@@ -36,7 +30,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
 /**
  * Screen that shows when placing and upgrading buildings.
  */
-public class EstablishBuildingScreen extends Screen implements IRequirementsCheckListener {
+public class EstablishBuildingScreen extends Screen {
    private static final ResourceLocation BACKGROUND_TEXTURE =
          ResourceLocation.fromNamespaceAndPath(CIVILIZED_MOD_ID, "textures/gui/building_deed.png");
 
@@ -58,29 +52,23 @@ public class EstablishBuildingScreen extends Screen implements IRequirementsChec
 
    private final BuildingType buildingType;
    private final BuildingBounds bounds;
-   private final int requestId;
-   /** Null until the server has checked the requirements. */
-   private @Nullable List<IBuildingRequirementResult> requirements;
-   private ScrollListView<IBuildingRequirementResult, BuildingRequirementWidget> scrollView;
+   private final List<IBuildingRequirementResult> requirements;
+   private BuildingRequirementsView requirementsView;
 
-   public EstablishBuildingScreen(BuildingType buildingType, BuildingBounds bounds) {
+   /**
+    * @param requirements
+    *           the requirements the server checked before telling the client to open this screen
+    */
+   public EstablishBuildingScreen(
+         BuildingType buildingType,
+         BuildingBounds bounds,
+         List<? extends IBuildingRequirementResult> requirements) {
       super(Component.translatable("menu.building.management.create.heading", buildingType.translationDark()));
       this.buildingType = buildingType;
       this.bounds = bounds;
+      this.requirements = List.copyOf(requirements);
       imageWidth = 256;
       imageHeight = 256;
-
-      requestId = CheckRequirements.nextRequestId();
-      PacketDistributor.sendToServer(CheckRequirements.forEstablish(requestId, buildingType, bounds));
-   }
-
-   @Override
-   public void receiveRequirementsChecked(int requestId, List<? extends IBuildingRequirementResult> results) {
-      if (requestId != this.requestId)
-         return;
-
-      requirements = List.copyOf(results);
-      rebuildWidgets();
    }
 
    @Override
@@ -118,60 +106,16 @@ public class EstablishBuildingScreen extends Screen implements IRequirementsChec
                   .size(contentWidth / 2 - buttonMargin * 2, buttonHeight)
                   .build();
 
-      if (requirements == null) {
-         confirm.active = false;
-         confirm.setTooltip(
-               Tooltip.create(Component.translatable("menu.building.management.requirements.checking")));
-      } else if (!requirements.stream().allMatch(IBuildingRequirementResult::isSatisfied)) {
-         confirm.active = false;
-         confirm.setTooltip(
-               Tooltip.create(
-                     Component.translatable("menu.building.management.requirements.tooltip.not_satisfied_hint")
-                           .withColor(Colors.VALIDATION_ERROR)));
-      }
-
-      int elementSpacing = 14;
-
-      scrollView =
-            new ScrollListView<>(
-                  leftPos,
-                  topPos + 50,
-                  contentWidth,
-                  contentHeight - buttonMargin - 20,
-                  elementSpacing,
-                  new IListViewBuilder<>() {
-                     @Override
-                     public List<IBuildingRequirementResult> provideModelData() {
-                        if (requirements == null)
-                           return List.of();
-
-                        return requirements.stream().filter(r -> !(r.hideIfSatisfied() && r.isSatisfied())).toList();
-                     }
-
-                     @Override
-                     public BuildingRequirementWidget buildElementWidgetFromModel(
-                           int elementIndex,
-                           IBuildingRequirementResult buildingRequirement,
-                           int elementX,
-                           int elementY,
-                           int elementWidth,
-                           int elementHeight,
-                           int elementSpacing) {
-                        return new BuildingRequirementWidget(
-                              elementX,
-                              elementY,
-                              elementWidth,
-                              elementHeight,
-                              9,
-                              font,
-                              buildingRequirement);
-                     }
-                  });
+      // the heading sits where it always has, with the list below it
+      requirementsView =
+            new BuildingRequirementsView(leftPos, topPos + 35, contentWidth, contentHeight - buttonMargin - 5, font);
+      requirementsView.setResults(requirements);
+      requirementsView.updateConfirmButton(confirm);
 
       addRenderableOnly(titleText);
       addRenderableWidget(cancel);
       addRenderableWidget(confirm);
-      addRenderableWidget(scrollView);
+      addRenderableWidget(requirementsView);
    }
 
    private void onPressCancel(Button button) {
@@ -186,38 +130,13 @@ public class EstablishBuildingScreen extends Screen implements IRequirementsChec
       if (player == null)
          return;
 
-      // the server checks the requirements again and uses up the deed, if the building is established
+      // the server checks the placement and requirements again and uses up the deed, if the building is established
       ItemStack itemInHand = player.getItemInHand(InteractionHand.MAIN_HAND);
       if (itemInHand.getItem() instanceof BuildingDeedItem buildingDeed
             && buildingDeed.getBuildingType() == buildingType)
          PacketDistributor.sendToServer(new CreateNewBuilding(buildingType, bounds));
 
       BuildingBoundsDragTool.resetDragging();
-   }
-
-   public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-      super.render(graphics, mouseX, mouseY, partialTicks);
-      // this.renderBackground(graphics, mouseX, mouseY, partialTicks);
-      this.renderLabels(graphics, mouseX, mouseY, partialTicks);
-   }
-
-   protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-      graphics.drawString(
-            this.font,
-            Component.translatable("menu.building.management.requirements.heading").withStyle(ChatFormatting.UNDERLINE),
-            leftPos,
-            topPos + 35,
-            Colors.MENU_TEXT_DARK,
-            false);
-
-      if (requirements == null)
-         graphics.drawString(
-               this.font,
-               Component.translatable("menu.building.management.requirements.checking"),
-               leftPos,
-               topPos + 50,
-               Colors.MENU_TEXT_DARK,
-               false);
    }
 
    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
