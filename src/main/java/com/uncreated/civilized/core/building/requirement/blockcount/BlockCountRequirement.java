@@ -15,7 +15,6 @@ public class BlockCountRequirement implements IBuildingRequirement {
 
    protected final IBlockValidator validator;
    protected final int minBlocks;
-   /** The most blocks allowed, or null if there's no limit. */
    protected final @Nullable Integer maxBlocks;
    protected final Component blockDescription;
    private final boolean hidIfSatisfied;
@@ -65,39 +64,64 @@ public class BlockCountRequirement implements IBuildingRequirement {
    }
 
    public BlockCountResult createResult(int actualBlocks) {
-      return new BlockCountResult(actualBlocks, minBlocks);
+      return new BlockCountResult(actualBlocks, minBlocks, maxBlocks);
    }
 
    public class BlockCountResult implements IBuildingRequirementResult {
       protected final int actualBlocks;
-      protected final int requiredBlocks;
+      protected final int minBlocks;
+      @Nullable
+      private final Integer maxBlocks;
 
-      public BlockCountResult(int actualBlocks, int requiredBlocks) {
+      public BlockCountResult(int actualBlocks, int minBlocks, @Nullable Integer maxBlocks) {
          this.actualBlocks = actualBlocks;
-         this.requiredBlocks = requiredBlocks;
+         this.minBlocks = minBlocks;
+         this.maxBlocks = maxBlocks;
       }
 
       @Override
       public boolean isSatisfied() {
-         return actualBlocks >= requiredBlocks;
+         if (maxBlocks == null)
+            return actualBlocks >= minBlocks;
+
+         return actualBlocks >= minBlocks && actualBlocks <= maxBlocks;
       }
 
       @Override
       public Component getDescription() {
-         int numberToDisplay = Math.clamp(actualBlocks, 0, requiredBlocks);
+
+         if (maxBlocks == null) {
+            int numberToDisplay = Math.clamp(actualBlocks, 0, minBlocks);
+            return Component
+                  .translatable(
+                        "menu.building.management.requirements.count.description",
+                        blockDescription,
+                        numberToDisplay,
+                        minBlocks)
+                  .withColor(Colors.MENU_TEXT_DARK);
+         }
+
          return Component
                .translatable(
-                     "menu.building.management.requirements.count.description",
+                     "menu.building.management.requirements.count.range.description",
                      blockDescription,
-                     numberToDisplay,
-                     requiredBlocks)
+                     actualBlocks,
+                     minBlocks,
+                     maxBlocks)
                .withColor(Colors.MENU_TEXT_DARK);
       }
 
       @Override
       public Component getTooltipDescription() {
-         return Component
-               .translatable("menu.building.management.requirements.count.tooltip", requiredBlocks, blockDescription);
+         if (maxBlocks == null)
+            return Component
+                  .translatable("menu.building.management.requirements.count.min.tooltip", minBlocks, blockDescription);
+
+         return Component.translatable(
+               "menu.building.management.requirements.count.range.tooltip",
+               minBlocks,
+               maxBlocks,
+               blockDescription);
       }
 
       @Override
