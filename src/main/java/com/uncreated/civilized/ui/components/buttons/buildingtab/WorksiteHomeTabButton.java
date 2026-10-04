@@ -21,6 +21,6 @@ public class WorksiteHomeTabButton extends BuildingTabButton {
             tabHost,
             buttonTabIndex,
             ICON,
-            Tooltip.create(Component.translatable("menu.building.residence.info.tab.heading")), createTab);
+            Tooltip.create(Component.translatable("menu.building.info.tab.heading")), createTab);
    }
 }

@@ -38,7 +38,7 @@ public class CropFarmInfoTab extends ABuildingScreenTab implements IBuildingInfo
       super(
             tabHost,
             font,
-            Component.translatable("menu.building.residence.info.tab.heading"),
+            Component.translatable("menu.building.info.tab.heading"),
             context);
       this.workers = createOccupantsList();
 

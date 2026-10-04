@@ -12,6 +12,7 @@ import javax.annotation.Nullable;
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.bounds.BuildingBounds;
 import com.uncreated.civilized.core.building.state.BuildingState;
+import com.uncreated.civilized.ui.style.Colors;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -20,6 +21,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceKey;
@@ -196,5 +198,13 @@ public class Building {
    @Override
    public int hashCode() {
       return Objects.hashCode(buildingId);
+   }
+
+   public static Component upgradeLevelTranslationFull(int level) {
+      return Component.translatable("building.upgrade_level", level).withColor(Colors.BUILDING_UPGRADE_LEVEL);
+   }
+
+   public static Component upgradeLevelTranslation(int level) {
+      return Component.literal(String.valueOf(level)).withColor(Colors.BUILDING_UPGRADE_LEVEL);
    }
 }

@@ -130,7 +130,7 @@ public abstract class ABuildingMenuScreen extends AbstractContainerScreen<Buildi
       if (!canUpgrade)
          upgradeButton.setTooltip(
                Tooltip.create(
-                     Component.translatable("menu.building.upgrade.highest_level", building.getUpgradeLevel())));
+                     Component.translatable("menu.building.upgrade.highest_level")));
       else if (!hasPermission)
          upgradeButton.setTooltip(Tooltip.create(Component.translatable("menu.building.upgrade.no_permission")));
       else
@@ -138,8 +138,7 @@ public abstract class ABuildingMenuScreen extends AbstractContainerScreen<Buildi
                Tooltip.create(
                      Component.translatable(
                            "menu.building.upgrade.levels",
-                           building.getUpgradeLevel(),
-                           building.getUpgradeLevel() + 1)));
+                           Building.upgradeLevelTranslationFull(building.getUpgradeLevel() + 1))));
    }
 
    /**

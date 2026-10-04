@@ -10,7 +10,6 @@ import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.ui.components.widget.ItemDisplayWidget;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
-import com.uncreated.civilized.ui.menu.building.ABuildingMenuScreen;
 import com.uncreated.civilized.ui.menu.building.ABuildingScreenTab;
 import com.uncreated.civilized.ui.menu.building.IBuildingInfoTab;
 import com.uncreated.civilized.ui.menu.building.worksite.tabs.ManageWorkersTab;
@@ -32,7 +31,7 @@ public class AnimalFarmInfoTab extends ABuildingScreenTab implements IBuildingIn
    private List<VillagerInfo> workers;
 
    public AnimalFarmInfoTab(ITabHost tabHost, Font font, BuildingScreenContext context, Function<ITabHost, ATab> createAnimalFoodTab) {
-      super(tabHost, font, Component.translatable("menu.building.residence.info.tab.heading"), context);
+      super(tabHost, font, Component.translatable("menu.building.info.tab.heading"), context);
       this.workers = createOccupantsList();
 
       itemDisplayWidgets = new ArrayList<>();

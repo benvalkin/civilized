@@ -8,6 +8,7 @@ import com.uncreated.civilized.ui.context.BuildingScreenContext;
 import com.uncreated.civilized.ui.style.Colors;
 import com.uncreated.civilized.ui.tabs.ITabHost;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -26,10 +27,7 @@ public class BuildingSettingsTab extends ABuildingScreenTab {
 
    private boolean decommissionRequested;
 
-   public BuildingSettingsTab(
-         ITabHost tabHost,
-         Font font,
-         BuildingScreenContext context) {
+   public BuildingSettingsTab(ITabHost tabHost, Font font, BuildingScreenContext context) {
       super(tabHost, font, Component.translatable("menu.building.settings.tab.heading"), context);
       decommissionRequested = false;
 
@@ -78,7 +76,7 @@ public class BuildingSettingsTab extends ABuildingScreenTab {
       if (decommissionRequested) {
 
          MutableComponent titleDecommission =
-               Component.translatable("menu.building.settings.option.delete_building").withColor(Colors.WARNING_MINOR);
+               Component.translatable("menu.building.settings.option.delete_building").withStyle(ChatFormatting.RED);
          graphics.drawWordWrap(
                font,
                titleDecommission,

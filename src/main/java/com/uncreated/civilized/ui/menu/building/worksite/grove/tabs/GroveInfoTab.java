@@ -36,7 +36,7 @@ public class GroveInfoTab extends ABuildingScreenTab implements IBuildingInfoTab
       super(
             tabHost,
             font,
-            Component.translatable("menu.building.residence.info.tab.heading"),
+            Component.translatable("menu.building.info.tab.heading"),
             context);
       this.workers = createOccupantsList();
 

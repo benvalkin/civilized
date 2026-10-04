@@ -30,5 +30,7 @@ public class Colors {
    public final static int COIN = 0xffe680;
    public final static int TRADE_STOCK = 0x9ce4ff;
 
+   public final static int BUILDING_UPGRADE_LEVEL = 0x56b3ac;
+
    public final static int LOVE = 0xffb8f0;
 }

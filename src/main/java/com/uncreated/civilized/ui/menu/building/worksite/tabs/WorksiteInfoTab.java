@@ -2,9 +2,7 @@ package com.uncreated.civilized.ui.menu.building.worksite.tabs;
 
 import java.util.List;
 
-import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.util.BuildingUtil;
-import com.uncreated.civilized.core.settlement.Settlement;
 import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
@@ -29,7 +27,7 @@ public class WorksiteInfoTab extends ABuildingScreenTab implements IBuildingInfo
       super(
             tabHost,
             font,
-            Component.translatable("menu.building.residence.info.tab.heading"),
+            Component.translatable("menu.building.info.tab.heading"),
             context);
       this.workers = createOccupantsList();
    }

@@ -2,6 +2,8 @@ package com.uncreated.civilized.ui.menu.building.townhall.tabs;
 
 import java.util.List;
 
+import com.uncreated.civilized.core.building.Building;
+import com.uncreated.civilized.core.building.ClientBuildingStore;
 import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
 import com.uncreated.civilized.ui.menu.building.ABuildingScreenTab;
@@ -17,9 +19,10 @@ import net.minecraft.network.chat.Component;
 public class TownHallInfoTab extends ABuildingScreenTab implements IBuildingInfoTab {
 
    private int population;
+   private int buildings;
 
    public TownHallInfoTab(ITabHost tabHost, Font font, BuildingScreenContext context) {
-      super(tabHost, font, Component.translatable("menu.building.residence.info.tab.heading"), context);
+      super(tabHost, font, Component.translatable("menu.building.info.tab.heading"), context);
       refresh();
    }
 
@@ -36,16 +39,27 @@ public class TownHallInfoTab extends ABuildingScreenTab implements IBuildingInfo
             false);
       graphics.drawString(
             font,
-            Component.translatable("menu.building.town_hall.level", context.building().getUpgradeLevel()),
+            Component.translatable("menu.building.info.town_hall.population.count", population),
             getX() + 8,
             getY() + 35,
             Colors.MENU_TEXT_DARK,
             false);
+
       graphics.drawString(
             font,
-            Component.translatable("menu.building.town_hall.population.count", population),
+            Component.translatable("menu.building.info.town_hall.buildings.count", buildings),
             getX() + 8,
             getY() + 45,
+            Colors.MENU_TEXT_DARK,
+            false);
+
+      graphics.drawString(
+            font,
+            Component.translatable(
+                  "menu.building.info.town_hall.level",
+                  Building.upgradeLevelTranslationFull(context.building().getUpgradeLevel())),
+            getX(),
+            getBottom() - 13,
             Colors.MENU_TEXT_DARK,
             false);
    }
@@ -58,5 +72,6 @@ public class TownHallInfoTab extends ABuildingScreenTab implements IBuildingInfo
    @Override
    public void refresh() {
       population = ClientVillagerStore.INSTANCE.getCitizens(context.settlement().getSettlementId()).size();
+      buildings = ClientBuildingStore.INSTANCE.findForSettlement(context.settlement().getSettlementId()).size();
    }
 }

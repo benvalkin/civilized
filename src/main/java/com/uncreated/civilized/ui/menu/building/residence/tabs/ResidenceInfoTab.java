@@ -2,6 +2,7 @@ package com.uncreated.civilized.ui.menu.building.residence.tabs;
 
 import java.util.List;
 
+import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.util.BuildingUtil;
 import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
@@ -21,11 +22,7 @@ public class ResidenceInfoTab extends ABuildingScreenTab implements IBuildingInf
    private List<VillagerInfo> occupants;
 
    public ResidenceInfoTab(ITabHost tabHost, Font font, BuildingScreenContext context) {
-      super(
-            tabHost,
-            font,
-            Component.translatable("menu.building.residence.info.tab.heading"),
-            context);
+      super(tabHost, font, Component.translatable("menu.building.info.tab.heading"), context);
       this.occupants = createOccupantsList();
    }
 
@@ -52,6 +49,16 @@ public class ResidenceInfoTab extends ABuildingScreenTab implements IBuildingInf
                Colors.MENU_TEXT_DARK,
                false);
       }
+
+      graphics.drawString(
+            font,
+            Component.translatable(
+                  "menu.building.info.level",
+                  Building.upgradeLevelTranslationFull(context.building().getUpgradeLevel())),
+            getX(),
+            getBottom() - 13,
+            Colors.MENU_TEXT_DARK,
+            false);
    }
 
    @Override

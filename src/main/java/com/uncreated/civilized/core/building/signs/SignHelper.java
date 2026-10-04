@@ -76,7 +76,7 @@ public class SignHelper {
          Set<VillagerInfo> citizens = villagerStore.getCitizens(settlement.getSettlementId());
          return new Component[] { building.getBuildingType().shortName(),
                settlement.displayNameTranslation().withStyle(ChatFormatting.ITALIC),
-               Component.translatable("menu.building.town_hall.population.count", citizens.size()), Component.empty() };
+               Component.translatable("menu.building.info.town_hall.population.count", citizens.size()), Component.empty() };
       } else if (building.getBuildingType().is(BuildingTypes.INN)) {
          List<VillagerInfo> visitors = BuildingUtil.getOccupants(building, villagerStore);
          return new Component[] { building.getBuildingType().shortName(),

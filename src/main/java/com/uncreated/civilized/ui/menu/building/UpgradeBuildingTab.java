@@ -100,7 +100,7 @@ public class UpgradeBuildingTab extends ABuildingScreenTab implements IRequireme
       if (isAtHighestLevel()) {
          graphics.drawWordWrap(
                font,
-               Component.translatable("menu.building.upgrade.highest_level", building().getUpgradeLevel()),
+               Component.translatable("menu.building.upgrade.highest_level"),
                getX(),
                getY() + VIEW_TOP,
                width,
@@ -113,8 +113,7 @@ public class UpgradeBuildingTab extends ABuildingScreenTab implements IRequireme
             font,
             Component.translatable(
                   "menu.building.upgrade.levels",
-                  building().getUpgradeLevel(),
-                  building().getUpgradeLevel() + 1),
+                  Building.upgradeLevelTranslationFull(building().getUpgradeLevel() + 1)),
             getX(),
             getBottom() - BUTTON_HEIGHT + 5,
             Colors.MENU_TEXT_DARK,
