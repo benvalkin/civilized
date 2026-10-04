@@ -45,6 +45,7 @@ public class Building {
                   .buildingType(BuildingTypes.getFromResourceLocation(buffer.readResourceLocation()))
                   .bounds(BuildingBounds.decode(buffer))
                   .occupantIds(buffer.readCollection(ArrayList::new, b -> b.readUUID()))
+                  .upgradeLevel(buffer.readVarInt())
                   .build();
 
       result.state.applyNbt(buffer.readNbt(), buffer.registryAccess());
@@ -60,6 +61,7 @@ public class Building {
       buffer.writeResourceLocation(buildingType.resourceLocation());
       bounds.encode(buffer);
       buffer.writeCollection(occupantIds, (buf, o) -> buf.writeUUID(o));
+      buffer.writeVarInt(upgradeLevel);
       buffer.writeNbt(state.toNbt(buffer.registryAccess()));
    }
 
@@ -74,6 +76,9 @@ public class Building {
    public static final String FIELD_LOWER_CORNER_POS = "lower_corner_pos";
    public static final String FIELD_UPPER_CORNER_POS = "upper_corner_pos";
    public static final String FIELD_BEHAVIOUR_DATA = "behaviour_data";
+   public static final String FIELD_UPGRADE_LEVEL = "upgrade_level";
+
+   public static final int FIRST_UPGRADE_LEVEL = 1;
 
    private HolderLookup.Provider registryAccess;
    private ResourceKey<Level> dimension;
@@ -84,6 +89,9 @@ public class Building {
    private BuildingBounds bounds;
    @Builder.Default
    private List<UUID> occupantIds = new ArrayList<>();
+   @Setter
+   @Builder.Default
+   private int upgradeLevel = FIRST_UPGRADE_LEVEL;
    private BuildingState state;
    @Setter
    private @Nullable BlockPos primarySignPos;
@@ -104,6 +112,7 @@ public class Building {
       buildingType = other.buildingType;
       bounds = other.bounds;
       occupantIds = other.occupantIds; // BAD IMPLEMENTATION: this is sus if we are saving the list reference anywhere
+      upgradeLevel = other.upgradeLevel;
       state.applyNbt(other.state.toNbt(registryAccess), registryAccess);
    }
 
@@ -124,9 +133,10 @@ public class Building {
    @Override
    public String toString() {
       return String.format(
-            "%s: %s [occupants: %s dimension: %s blockPos: %s]",
+            "%s: %s [lvl: %s occupants: %s dimension: %s blockPos: %s]",
             buildingType,
             buildingId.toString().substring(0, 6),
+            upgradeLevel,
             occupantIds.size(),
             dimension,
             getBlockPos());

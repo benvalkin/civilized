@@ -120,6 +120,7 @@ public final class BuildingDeedClientHandler {
                if (townHall.isPresent()) {
                   List<Container> chests = BuildingUtil.findChestsInsideBounds(townHall.get(), level, false);
                   availableCurrency += CurrencyItem.countCurrency(chests);
+                  townHallLevel = townHall.get().getUpgradeLevel();
                }
             } else {
                citizens = Set.of();
@@ -149,7 +150,7 @@ public final class BuildingDeedClientHandler {
                if (requirement instanceof CurrencyRequirement c)
                   requirementResults.add(c.getResult(availableCurrency));
                if (requirement instanceof TownHallLevelRequirement thl)
-                  requirementResults.add(thl.getResult(1)); // todo: add building upgrade levels
+                  requirementResults.add(thl.getResult(townHallLevel));
             }
 
             Minecraft.getInstance()

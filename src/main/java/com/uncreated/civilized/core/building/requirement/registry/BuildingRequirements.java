@@ -15,6 +15,7 @@ import com.uncreated.civilized.core.building.requirement.FishingSiteWaterRequire
 import com.uncreated.civilized.core.building.requirement.PopulationRequirement;
 import com.uncreated.civilized.core.building.requirement.SpaceRequirement;
 import com.uncreated.civilized.core.building.requirement.SurfaceAreaRequirement;
+import com.uncreated.civilized.core.building.requirement.TownHallLevelRequirement;
 import com.uncreated.civilized.core.building.requirement.blockcount.BlockTypeRequirement;
 import com.uncreated.civilized.core.building.requirement.blockcount.BuildingBlockTypes;
 import com.uncreated.civilized.core.building.requirement.blockcount.specific.BedsPresentRequirement;
@@ -60,10 +61,10 @@ public class BuildingRequirements {
          registerStoreHouseLevel(registry, 6, 1, b -> {
          });
          registerStoreHouseLevel(registry, 10, 2, b -> {
-            b.add(new CurrencyRequirement(500));
+            b.add(new TownHallLevelRequirement(2));
          });
          registerStoreHouseLevel(registry, 16, 3, b -> {
-            b.add(new CurrencyRequirement(900));
+            b.add(new CurrencyRequirement(3));
          });
 
          registerRequirements(

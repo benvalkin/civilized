@@ -72,6 +72,7 @@ public class ServerBuildingsStore extends BuildingStore {
          item.putLong(Building.FIELD_CENTER_POS, building.getBounds().getCenter().asLong());
          item.putLong(Building.FIELD_LOWER_CORNER_POS, building.getBounds().getLowerCorner().asLong());
          item.putLong(Building.FIELD_UPPER_CORNER_POS, building.getBounds().getUpperCorner().asLong());
+         item.putInt(Building.FIELD_UPGRADE_LEVEL, building.getUpgradeLevel());
 
          ListTag occupantIds = new ListTag();
          for (UUID occupantId : building.getOccupantIds()) {
@@ -126,6 +127,9 @@ public class ServerBuildingsStore extends BuildingStore {
          }
 
          builder.occupantIds(occupantIds);
+         // buildings saved before upgrade levels existed are at the first level
+         if (itemTag.contains(Building.FIELD_UPGRADE_LEVEL))
+            builder.upgradeLevel(itemTag.getInt(Building.FIELD_UPGRADE_LEVEL));
          Building building = builder.build();
          building.getState().applyNbt(itemTag.getCompound(Building.FIELD_BEHAVIOUR_DATA), lookupProvider);
          store.buildings.add(building);
