@@ -140,6 +140,7 @@
   "menu.building.management.requirements.block_types.description": "%s blocks: %s/%s",
   "menu.building.management.requirements.block_types.tooltip": "This building level needs at least %s %s blocks or better.",
   "menu.building.management.requirements.block_types.type.wood": "Wood",
+  "menu.building.management.requirements.block_types.type.stone": "Stone",
   "menu.building.management.requirements.count.description": "%s: %s/%s",
   "menu.building.management.requirements.count.description.beds": "Beds",
   "menu.building.management.requirements.count.description.chests": "Chests",
@@ -429,5 +430,11 @@
   "notification.worker.missing_tool.generic.detail": "%s the %s cannot find any %s to start their work task.\n\nPlace one in the Storehouse or their home chests to unblock them.",
   "notification.worker.missing_ingredients.generic": "No Ingredients",
   "notification.worker.missing_ingredients.generic.detail": "%s the %s has not been able to find any production ingredients for a while.\n\nEnsure that the Storehouse or their home chests have the appropriate ingredients required by their production bills.",
-  "menu.trading.tooltip.vendor_cannot_afford": "Vendor can't afford transaction"
+  "menu.trading.tooltip.vendor_cannot_afford": "Vendor can't afford transaction",
+  "menu.building.management.requirements.population.description": "Population: %s/%s",
+  "menu.building.management.requirements.population.tooltip": "Your settlement requires a population of %s before you can build this.",
+  "menu.building.management.requirements.currency.description": "Coins: %s/%s",
+  "menu.building.management.requirements.currency.tooltip": "This building requires %s coins to build.",
+  "menu.building.management.requirements.town_hall_level.description": "Town Hall Level: %s",
+  "menu.building.management.requirements.town_hall_level.tooltip": "Your settlement's Town Hall needs to be level %s or higher to build this."
 }

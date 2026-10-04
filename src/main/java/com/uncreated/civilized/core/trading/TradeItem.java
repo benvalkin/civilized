@@ -4,9 +4,7 @@ import java.util.List;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.uncreated.civilized.core.building.logistics.AggregateItemStack;
 import com.uncreated.civilized.item.CurrencyItem;
-import com.uncreated.civilized.util.ContainerHelper;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -129,7 +127,7 @@ public class TradeItem {
    }
 
    public TradeQuote adjustIfOddOrNotAffordable(Container buyer, TradeDirection direction, int quantity) {
-      return adjustIfOddOrNotAffordable(countCurrency(buyer), direction, quantity);
+      return adjustIfOddOrNotAffordable(CurrencyItem.countCurrency(buyer), direction, quantity);
    }
 
    public TradeQuote adjustIfOddOrNotAffordable(int availableCurrency, TradeDirection direction, int quantity) {
@@ -152,8 +150,4 @@ public class TradeItem {
             affordableTrades < requestedTrades);
    }
 
-   private static int countCurrency(Container container) {
-      AggregateItemStack coins = ContainerHelper.countItems(container, i -> i.getItem() instanceof CurrencyItem);
-      return CurrencyItem.countCoins(coins.getItemStacks());
-   }
 }

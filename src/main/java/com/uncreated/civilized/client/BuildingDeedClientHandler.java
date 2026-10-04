@@ -12,21 +12,32 @@ import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.BuildingType;
 import com.uncreated.civilized.core.building.BuildingTypes;
 import com.uncreated.civilized.core.building.ClientBuildingStore;
+import com.uncreated.civilized.core.building.requirement.CurrencyRequirement;
 import com.uncreated.civilized.core.building.requirement.EnclosedRoomRequirement;
 import com.uncreated.civilized.core.building.requirement.FishingSiteWaterRequirement;
 import com.uncreated.civilized.core.building.requirement.IBuildingRequirement;
 import com.uncreated.civilized.core.building.requirement.IBuildingRequirementResult;
+import com.uncreated.civilized.core.building.requirement.PopulationRequirement;
 import com.uncreated.civilized.core.building.requirement.SpaceRequirement;
 import com.uncreated.civilized.core.building.requirement.SurfaceAreaRequirement;
+import com.uncreated.civilized.core.building.requirement.TownHallLevelRequirement;
 import com.uncreated.civilized.core.building.requirement.blockcount.BlockCountRequirement;
 import com.uncreated.civilized.core.building.requirement.registry.BuildingRequirementList;
 import com.uncreated.civilized.core.building.requirement.registry.BuildingRequirements;
+import com.uncreated.civilized.core.building.util.BuildingUtil;
+import com.uncreated.civilized.core.settlement.ClientSettlementsStore;
+import com.uncreated.civilized.core.settlement.Settlement;
+import com.uncreated.civilized.core.settlement.util.SettlementUtil;
+import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
+import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
+import com.uncreated.civilized.item.CurrencyItem;
 import com.uncreated.civilized.ui.menu.building.EstablishBuildingScreen;
 import com.uncreated.civilized.ui.style.Colors;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.Container;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -81,6 +92,39 @@ public final class BuildingDeedClientHandler {
                   BuildingRequirements.getBuildingRequirements(buildingType, buildingLevel);
             List<IBuildingRequirementResult> requirementResults = new ArrayList<>();
 
+            List<Settlement> thisDimensionSettlements =
+                  ClientSettlementsStore.INSTANCE.findInDimension(level.dimension());
+            Optional<Settlement> existingSettlement =
+                  SettlementUtil.findExtendedEncapsulating(
+                        thisDimensionSettlements,
+                        boundsResult.bounds().getEncapsulatingAABB(),
+                        32);
+
+            int availableCurrency = 0;
+            availableCurrency += CurrencyItem.countCurrency(player.getInventory());
+
+            Set<VillagerInfo> citizens;
+            int townHallLevel = 0;
+            if (existingSettlement.isPresent()) {
+               citizens = ClientVillagerStore.INSTANCE.getCitizens(existingSettlement.get().getSettlementId());
+
+               Optional<Building> storehouse =
+                     ClientBuildingStore.INSTANCE.findStorehouse(existingSettlement.get().getSettlementId());
+               if (storehouse.isPresent()) {
+                  List<Container> chests = BuildingUtil.findChestsInsideBounds(storehouse.get(), level, false);
+                  availableCurrency += CurrencyItem.countCurrency(chests);
+               }
+
+               Optional<Building> townHall =
+                     ClientBuildingStore.INSTANCE.findTownHall(existingSettlement.get().getSettlementId());
+               if (townHall.isPresent()) {
+                  List<Container> chests = BuildingUtil.findChestsInsideBounds(townHall.get(), level, false);
+                  availableCurrency += CurrencyItem.countCurrency(chests);
+               }
+            } else {
+               citizens = Set.of();
+            }
+
             Set<BlockPos> validFloorBlocks = Set.of();
             for (IBuildingRequirement requirement : requirements) {
 
@@ -100,6 +144,12 @@ public final class BuildingDeedClientHandler {
                   requirementResults.add(sa.getResult(boundsResult.bounds()));
                if (requirement instanceof FishingSiteWaterRequirement fw)
                   requirementResults.add(fw.getResult(level, boundsResult.bounds()));
+               if (requirement instanceof PopulationRequirement p)
+                  requirementResults.add(p.getResult(citizens.size()));
+               if (requirement instanceof CurrencyRequirement c)
+                  requirementResults.add(c.getResult(availableCurrency));
+               if (requirement instanceof TownHallLevelRequirement thl)
+                  requirementResults.add(thl.getResult(1)); // todo: add building upgrade levels
             }
 
             Minecraft.getInstance()

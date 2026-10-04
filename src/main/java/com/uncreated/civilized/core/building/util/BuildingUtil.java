@@ -18,10 +18,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.world.Container;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.FenceGateBlock;
+import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
 
@@ -61,9 +63,7 @@ public class BuildingUtil {
 
       return buildingStore.findForSettlement(settlementId)
             .stream()
-            .filter(
-                  b -> b.getBuildingType().isWorkerResidence()
-                        && !workResidenceHasWorker(b, villagerStore))
+            .filter(b -> b.getBuildingType().isWorkerResidence() && !workResidenceHasWorker(b, villagerStore))
             .findFirst();
    }
 
@@ -75,9 +75,7 @@ public class BuildingUtil {
 
       return buildingStore.findForSettlement(settlementId)
             .stream()
-            .filter(
-                  b -> b.getBuildingType() == requiredBuildingType
-                        && !workResidenceHasWorker(b, villagerStore))
+            .filter(b -> b.getBuildingType() == requiredBuildingType && !workResidenceHasWorker(b, villagerStore))
             .findFirst();
    }
 
@@ -89,35 +87,27 @@ public class BuildingUtil {
 
       return buildingStore.findForSettlement(settlementId)
             .stream()
-            .filter(
-                  b -> filter.test(b.getBuildingType())
-                        && !worksiteHasAssignedWorker(b, villagerStore))
+            .filter(b -> filter.test(b.getBuildingType()) && !worksiteHasAssignedWorker(b, villagerStore))
             .findFirst();
    }
 
-   public static Optional<Building> findEmptyAlternativeHomeForWorker(
-           UUID settlementId,
-           BuildingStore buildingStore) {
+   public static Optional<Building> findEmptyAlternativeHomeForWorker(UUID settlementId, BuildingStore buildingStore) {
 
       return buildingStore.findForSettlement(settlementId)
-              .stream()
-              .filter(
-                      b -> b.getBuildingType().is(BuildingTypes.TOWN_HALL)
-                              && b.getOccupantIds().isEmpty())
-              .findFirst();
+            .stream()
+            .filter(b -> b.getBuildingType().is(BuildingTypes.TOWN_HALL) && b.getOccupantIds().isEmpty())
+            .findFirst();
    }
 
    public static Optional<Building> findEmptyAlternativeHomeForSpouse(
-           UUID settlementId,
-           BuildingStore buildingStore,
-           VillagerStore villagerStore) {
+         UUID settlementId,
+         BuildingStore buildingStore,
+         VillagerStore villagerStore) {
 
       return buildingStore.findForSettlement(settlementId)
-              .stream()
-              .filter(
-                      b -> b.getBuildingType().isSpouseResidence()
-                              && b.getOccupantIds().isEmpty())
-              .findFirst();
+            .stream()
+            .filter(b -> b.getBuildingType().isSpouseResidence() && b.getOccupantIds().isEmpty())
+            .findFirst();
    }
 
    public static void ensureBuildingDoorsAreClosed(CivilizedVillager doorCloser, Building building, ServerLevel level) {
@@ -169,5 +159,14 @@ public class BuildingUtil {
       // lets sculk sensors and wardens hear the villagers opening/closing the gate, like they do with doors.
       // can't think of a situation where this would be important but it's hear anyway
       level.gameEvent(entity, open ? GameEvent.BLOCK_OPEN : GameEvent.BLOCK_CLOSE, blockPos);
+   }
+
+   public static List<Container> findChestsInsideBounds(Building building, Level level, boolean checkUnloadedChunks) {
+      return building.getBounds()
+            .getBlockEntitiesInsideBuilding(level, checkUnloadedChunks)
+            .stream()
+            .filter(e -> e instanceof ChestBlockEntity)
+            .map(e -> ((Container) e))
+            .toList();
    }
 }

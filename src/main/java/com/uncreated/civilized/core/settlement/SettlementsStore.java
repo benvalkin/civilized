@@ -1,5 +1,6 @@
 package com.uncreated.civilized.core.settlement;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -45,7 +46,7 @@ public abstract class SettlementsStore extends SavedData {
       return settlements.find(settlementId);
    }
 
-  public Optional<Settlement> findEnclosing(BlockPos pos, Level level) {
+   public Optional<Settlement> findEnclosing(BlockPos pos, Level level) {
       return settlements.findEnclosing(pos, level.dimension());
    }
 
@@ -59,5 +60,9 @@ public abstract class SettlementsStore extends SavedData {
 
    public Settlement getFromOwner(UUID ownerId) {
       return findFromOwner(ownerId).orElseThrow();
+   }
+
+   public List<Settlement> findInDimension(ResourceKey<Level> dimension) {
+      return settlements.all().stream().filter(settlement -> settlement.getDimension() == dimension).toList();
    }
 }

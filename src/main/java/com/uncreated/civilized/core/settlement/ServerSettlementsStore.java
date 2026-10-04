@@ -134,10 +134,6 @@ public class ServerSettlementsStore extends SettlementsStore {
       }
    }
 
-   public List<Settlement> findInDimension(ResourceKey<Level> dimension) {
-      return settlements.all().stream().filter(settlement -> settlement.getDimension() == dimension).toList();
-   }
-
    public Optional<Settlement> delete(UUID settlementId) {
       Optional<Settlement> remove = settlements.remove(settlementId);
       setDirty();

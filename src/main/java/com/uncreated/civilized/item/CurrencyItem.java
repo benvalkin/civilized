@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
+import com.uncreated.civilized.core.building.logistics.AggregateItemStack;
 import com.uncreated.civilized.neoforge.registration.ItemRegistry;
 import com.uncreated.civilized.ui.style.Colors;
 import com.uncreated.civilized.util.ContainerHelper;
@@ -251,5 +252,18 @@ public class CurrencyItem extends Item {
 
          return 0;
       }).sum();
+   }
+
+   public static int countCurrency(Container container) {
+      AggregateItemStack coins = ContainerHelper.countItems(container, i -> i.getItem() instanceof CurrencyItem);
+      return CurrencyItem.countCoins(coins.getItemStacks());
+   }
+
+   public static int countCurrency(List<Container> containers) {
+      int sum = 0;
+      for (Container container : containers) {
+         sum += countCurrency(container);
+      }
+      return sum;
    }
 }

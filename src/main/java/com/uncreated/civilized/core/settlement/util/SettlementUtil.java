@@ -1,13 +1,20 @@
 package com.uncreated.civilized.core.settlement.util;
 
-import com.uncreated.civilized.core.settlement.Settlement;
-import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
-import com.uncreated.civilized.core.villagerinfo.VillagerStore;
-
 import java.util.List;
+import java.util.Optional;
+
+import com.uncreated.civilized.core.settlement.Settlement;
+
+import net.minecraft.world.phys.AABB;
 
 public class SettlementUtil {
-    public static List<VillagerInfo> getCitizens(Settlement settlement, VillagerStore store) {
-        return store.all().stream().filter(v -> settlement.getSettlementId().equals(v.getSettlementId())).toList();
-    }
+   public static Optional<Settlement> findExtendedEncapsulating(
+         List<Settlement> inThisDimension,
+         AABB bounds,
+         int boundsSearchExtension) {
+      return inThisDimension.stream()
+            .filter(s -> s.getBounds().getEncapsulatingAABB().inflate(boundsSearchExtension).intersects(bounds))
+            .findFirst();
+   }
+
 }

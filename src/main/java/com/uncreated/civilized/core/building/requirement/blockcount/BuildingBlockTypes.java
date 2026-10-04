@@ -34,7 +34,7 @@ public class BuildingBlockTypes {
 
    public static final BuildingBlockType STONE =
            new BuildingBlockType(
-                   Component.translatable("menu.building.management.requirements.block_types.type.wood")
+                   Component.translatable("menu.building.management.requirements.block_types.type.stone")
                            .withColor(Colors.RESOURCE_STONE),
                    List.of(Tags.Blocks.STONES, Tags.Blocks.COBBLESTONES));
 }
