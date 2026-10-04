@@ -14,6 +14,7 @@ import com.uncreated.civilized.core.building.requirement.ServerRequirementChecks
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
 import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermissionStore;
+import com.uncreated.civilized.ui.menu.building.BuildingMenu;
 import com.uncreated.civilized.ui.style.Colors;
 
 import net.minecraft.network.FriendlyByteBuf;
@@ -83,6 +84,11 @@ public record UpgradeBuilding(UUID buildingId) implements CustomPacketPayload {
 
       ServerBuildingsStore.INSTANCE.setDirty();
       ServerBuildingsStore.INSTANCE.replicateChange(building, StoreOperation.UPDATE);
+
+      // once the upgrade is finalize, close the menu, otherwise the player can't really see the chat message.
+      if (player.containerMenu instanceof BuildingMenu menu
+            && menu.getBuilding().getBuildingId().equals(building.getBuildingId()))
+         player.closeContainer();
 
       player.displayClientMessage(
             Component

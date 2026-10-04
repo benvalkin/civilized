@@ -67,6 +67,7 @@ public class SummonResident {
       ServerVillagerStore.INSTANCE.replicateChange(villager.getInfo(), StoreOperation.ADD_OR_OVERWRITE);
       ServerBuildingsStore.INSTANCE.setDirty();
       ServerBuildingsStore.INSTANCE.replicateChange(building.get(), StoreOperation.UPDATE);
+      villager.refreshBrain(level);
       return 1;
    }
 }

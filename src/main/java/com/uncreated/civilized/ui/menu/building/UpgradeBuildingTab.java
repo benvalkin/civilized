@@ -102,7 +102,7 @@ public class UpgradeBuildingTab extends ABuildingScreenTab implements IRequireme
    private void upgrade() {
       PacketDistributor.sendToServer(new UpgradeBuilding(building().getBuildingId()));
       // checked again straight away, since the server handles packets in order. If the upgrade failed, this shows the
-      // player why. If it worked, the building's update arrives first and refreshes this tab for the next level
+      // player why. If it worked, the server closes the menu, so the answer is ignored
       checkRequirements();
    }
 
