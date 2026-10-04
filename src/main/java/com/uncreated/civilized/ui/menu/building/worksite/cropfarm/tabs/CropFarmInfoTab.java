@@ -11,6 +11,7 @@ import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.ui.components.widget.ItemDisplayWidget;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
 import com.uncreated.civilized.ui.menu.building.ABuildingScreenTab;
+import com.uncreated.civilized.ui.menu.building.IBuildingInfoTab;
 import com.uncreated.civilized.ui.menu.building.worksite.tabs.ManageWorkersTab;
 import com.uncreated.civilized.ui.style.Colors;
 import com.uncreated.civilized.ui.tabs.ATab;
@@ -23,7 +24,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
-public class CropFarmInfoTab extends ABuildingScreenTab {
+public class CropFarmInfoTab extends ABuildingScreenTab implements IBuildingInfoTab {
 
    private final ArrayList<ItemDisplayWidget> itemDisplayWidgets;
    private List<VillagerInfo> workers;

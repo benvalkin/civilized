@@ -12,6 +12,7 @@ import com.uncreated.civilized.core.building.bounds.BuildingBounds;
 import com.uncreated.civilized.core.building.requirement.registry.BuildingRequirements;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
+import com.uncreated.civilized.item.CurrencyItem;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -61,6 +62,24 @@ public class ServerRequirementChecks {
 
       return BuildingRequirements.getBuildingRequirements(building.getBuildingType(), building.getUpgradeLevel())
             .evaluate(contextFor(player, building, newBounds), EnumSet.of(RequirementKind.STRUCTURAL));
+   }
+
+   /**
+    * Pays the {@link RequirementKind#COST} requirements for a building to reach a level (typically by subtracting coins
+    * from the player's inventory and certain building chests). Only call this once its requirements have been checked
+    * and met.
+    */
+   public static void payCosts(
+         BuildingType buildingType,
+         int upgradeLevel,
+         Settlement settlement,
+         ServerPlayer player) {
+      for (IBuildingRequirement requirement : BuildingRequirements
+            .getBuildingRequirements(buildingType, upgradeLevel)) {
+         if (requirement instanceof CurrencyRequirement currency)
+            CurrencyItem
+                  .debit(ServerRequirementContexts.coinStorage(settlement, player), currency.getRequiredCurrency());
+      }
    }
 
    public static boolean allSatisfied(List<IBuildingRequirementResult> results) {

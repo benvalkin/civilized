@@ -17,19 +17,13 @@ import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.entity.LoadedBuildings;
 import com.uncreated.civilized.core.building.placement.PlacementResult;
 import com.uncreated.civilized.core.building.placement.ServerPlacementChecks;
-import com.uncreated.civilized.core.building.requirement.CurrencyRequirement;
-import com.uncreated.civilized.core.building.requirement.ServerRequirementContexts;
 import com.uncreated.civilized.core.building.requirement.ServerRequirementChecks;
 import com.uncreated.civilized.core.building.requirement.IBuildingRequirementResult;
-import com.uncreated.civilized.core.building.requirement.IBuildingRequirement;
-import com.uncreated.civilized.core.building.requirement.registry.BuildingRequirementList;
-import com.uncreated.civilized.core.building.requirement.registry.BuildingRequirements;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
 import com.uncreated.civilized.core.settlement.permission.AccessLevel;
 import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermissionStore;
-import com.uncreated.civilized.item.CurrencyItem;
 import com.uncreated.civilized.ui.style.Colors;
 
 import net.minecraft.core.BlockPos;
@@ -40,7 +34,6 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.Container;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public record CreateNewBuilding(BuildingType buildingType,
@@ -125,7 +118,7 @@ public record CreateNewBuilding(BuildingType buildingType,
          LoadedSettlements.onBuildingLoaded(argumentSettlement, loadedBuilding, serverLevel);
       }
 
-      debitCurrencyRequirements(packet.buildingType, Building.FIRST_UPGRADE_LEVEL, argumentSettlement, placer);
+      ServerRequirementChecks.payCosts(packet.buildingType(), Building.FIRST_UPGRADE_LEVEL, argumentSettlement, placer);
       placer.getMainHandItem().consume(1, placer);
 
       Set<Building> settlementBuildings =
@@ -145,19 +138,5 @@ public record CreateNewBuilding(BuildingType buildingType,
                         building.getBuildingType().translation())
                   .withColor(Colors.VALIDATION_SUCCESS),
             false);
-   }
-
-   private static void debitCurrencyRequirements(
-         BuildingType buildingType,
-         int upgradeLevel,
-         Settlement argumentSettlement,
-         ServerPlayer placer) {
-      BuildingRequirementList requirements = BuildingRequirements.getBuildingRequirements(buildingType, upgradeLevel);
-      for (IBuildingRequirement requirement : requirements) {
-         if (requirement instanceof CurrencyRequirement c) {
-            List<Container> coinStorage = ServerRequirementContexts.coinStorage(argumentSettlement, placer);
-            CurrencyItem.debit(coinStorage, c.getRequiredCurrency());
-         }
-      }
    }
 }

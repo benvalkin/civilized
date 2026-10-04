@@ -9,6 +9,7 @@ import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
 import com.uncreated.civilized.ui.menu.building.ABuildingScreenTab;
+import com.uncreated.civilized.ui.menu.building.IBuildingInfoTab;
 import com.uncreated.civilized.ui.style.Colors;
 import com.uncreated.civilized.ui.tabs.ITabHost;
 
@@ -17,7 +18,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
 
-public class WorksiteInfoTab extends ABuildingScreenTab {
+public class WorksiteInfoTab extends ABuildingScreenTab implements IBuildingInfoTab {
 
    private List<VillagerInfo> workers;
 

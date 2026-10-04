@@ -22,6 +22,7 @@ import com.uncreated.civilized.networking.packets.CreateNewBuilding;
 import com.uncreated.civilized.networking.packets.OpenEstablishBuildingScreen;
 import com.uncreated.civilized.networking.packets.PreviewProductionBill;
 import com.uncreated.civilized.networking.packets.RequestEstablishBuilding;
+import com.uncreated.civilized.networking.packets.UpgradeBuilding;
 import com.uncreated.civilized.networking.packets.RequirementsChecked;
 import com.uncreated.civilized.networking.packets.ProductionBillPreview;
 import com.uncreated.civilized.networking.packets.SaveProductionBill;
@@ -93,6 +94,11 @@ public class PacketRegistry {
             OpenEstablishBuildingScreen.TYPE,
             OpenEstablishBuildingScreen.STREAM_CODEC,
             ClientPacketHandlers::openEstablishBuildingScreen);
+
+      registrar.playToServer(
+            UpgradeBuilding.TYPE,
+            UpgradeBuilding.STREAM_CODEC,
+            UpgradeBuilding::serverReceiveUpgradeBuilding);
 
       registrar.playToServer(
             CheckUpgradeRequirements.TYPE,

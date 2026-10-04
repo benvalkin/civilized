@@ -7,6 +7,8 @@ import java.util.Optional;
 
 import org.jetbrains.annotations.Nullable;
 
+import com.uncreated.civilized.core.building.Building;
+import com.uncreated.civilized.core.building.requirement.registry.BuildingRequirements;
 import com.uncreated.civilized.ui.components.SlotFrameRenderer;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
 import com.uncreated.civilized.ui.style.Colors;
@@ -16,8 +18,10 @@ import com.uncreated.civilized.ui.tabs.TabController;
 import com.uncreated.civilized.ui.tabs.TabCoords;
 
 import lombok.Getter;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.RenderType;
@@ -38,11 +42,14 @@ public abstract class ABuildingMenuScreen extends AbstractContainerScreen<Buildi
 
    private static final int CONTENT_MARGIN_X = 25;
    private static final int CONTENT_MARGIN_Y = 20;
+   private static final int UPGRADE_BUTTON_WIDTH = 80;
+   private static final int UPGRADE_BUTTON_HEIGHT = 18;
 
    @Getter
    protected final BuildingScreenContext context;
 
    private TabController tabController;
+   private Button upgradeButton;
 
    @Getter
    protected TabCoords tabCoords;
@@ -77,15 +84,62 @@ public abstract class ABuildingMenuScreen extends AbstractContainerScreen<Buildi
 
       createTabButtons(this).forEach(this::addRenderableWidget);
 
+      // added before the tab, so that it gets clicks before the tab does
+      upgradeButton =
+            Button.builder(
+                  Component.translatable("menu.building.upgrade.button"),
+                  button -> changeTab(new UpgradeBuildingTab(this, font, context)))
+                  .pos(
+                        tabCoords.contentLeftPos() + tabCoords.tabWidth() - UPGRADE_BUTTON_WIDTH,
+                        tabCoords.contentTopPos() + tabCoords.tabHeight() - UPGRADE_BUTTON_HEIGHT)
+                  .size(UPGRADE_BUTTON_WIDTH, UPGRADE_BUTTON_HEIGHT)
+                  .build();
+      addRenderableWidget(upgradeButton);
+
       ATab openTab = tabController.changeToDefaultTabIfNotSet(this);
       menu.setPlayerInventoryVisible(openTab.showsPlayerInventory());
+      updateUpgradeButton();
    }
 
    @Override
    public ATab changeTab(ATab newTab) {
       tabController.changeTab(newTab);
       menu.setPlayerInventoryVisible(newTab.showsPlayerInventory());
+      updateUpgradeButton();
       return newTab;
+   }
+
+   /**
+    * Only shows the Upgrade button on the info tab, and only lets players with permission to create buildings press
+    * it, while the building has a level to upgrade to.
+    */
+   private void updateUpgradeButton() {
+      if (upgradeButton == null)
+         return;
+
+      upgradeButton.visible = getCurrentTab() instanceof IBuildingInfoTab;
+
+      Building building = context.building();
+      boolean canUpgrade =
+            BuildingRequirements.find(building.getBuildingType(), building.getUpgradeLevel() + 1).isPresent();
+      boolean hasPermission =
+            Minecraft.getInstance().player != null
+                  && context.permissions().hasCreateBuildingsPermission(Minecraft.getInstance().player.getUUID());
+
+      upgradeButton.active = canUpgrade && hasPermission;
+      if (!canUpgrade)
+         upgradeButton.setTooltip(
+               Tooltip.create(
+                     Component.translatable("menu.building.upgrade.highest_level", building.getUpgradeLevel())));
+      else if (!hasPermission)
+         upgradeButton.setTooltip(Tooltip.create(Component.translatable("menu.building.upgrade.no_permission")));
+      else
+         upgradeButton.setTooltip(
+               Tooltip.create(
+                     Component.translatable(
+                           "menu.building.upgrade.levels",
+                           building.getUpgradeLevel(),
+                           building.getUpgradeLevel() + 1)));
    }
 
    /**
@@ -188,5 +242,8 @@ public abstract class ABuildingMenuScreen extends AbstractContainerScreen<Buildi
    public void refresh() {
       if (tabController != null)
          tabController.refresh();
+
+      // the building's level or the player's permissions may have changed
+      updateUpgradeButton();
    }
 }
