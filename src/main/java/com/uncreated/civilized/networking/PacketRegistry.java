@@ -21,6 +21,9 @@ import com.uncreated.civilized.networking.packets.BuyItem;
 import com.uncreated.civilized.networking.packets.CheckUpgradeRequirements;
 import com.uncreated.civilized.networking.packets.CreateNewBuilding;
 import com.uncreated.civilized.networking.packets.OpenEstablishBuildingScreen;
+import com.uncreated.civilized.networking.packets.ResizeBuilding;
+import com.uncreated.civilized.networking.packets.RequestRedrawBuilding;
+import com.uncreated.civilized.networking.packets.OpenRedrawBoundsScreen;
 import com.uncreated.civilized.networking.packets.PreviewProductionBill;
 import com.uncreated.civilized.networking.packets.RequestEstablishBuilding;
 import com.uncreated.civilized.networking.packets.UpgradeBuilding;
@@ -95,6 +98,21 @@ public class PacketRegistry {
             BuildingPlacementRejected.TYPE,
             BuildingPlacementRejected.STREAM_CODEC,
             ClientPacketHandlers::receiveBuildingPlacementRejected);
+
+      registrar.playToServer(
+            RequestRedrawBuilding.TYPE,
+            RequestRedrawBuilding.STREAM_CODEC,
+            RequestRedrawBuilding::serverReceiveRequestRedrawBuilding);
+
+      registrar.playToClient(
+            OpenRedrawBoundsScreen.TYPE,
+            OpenRedrawBoundsScreen.STREAM_CODEC,
+            ClientPacketHandlers::openRedrawBoundsScreen);
+
+      registrar.playToServer(
+            ResizeBuilding.TYPE,
+            ResizeBuilding.STREAM_CODEC,
+            ResizeBuilding::serverReceiveResizeBuilding);
 
       registrar.playToClient(
             OpenEstablishBuildingScreen.TYPE,

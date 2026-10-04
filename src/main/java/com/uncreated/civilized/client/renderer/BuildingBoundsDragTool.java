@@ -14,12 +14,15 @@ import com.uncreated.civilized.core.building.bounds.BuildingBounds;
 import com.uncreated.civilized.item.BuildingDeedItem;
 import com.uncreated.civilized.item.events.EquipmentChange;
 import com.uncreated.civilized.item.events.PlayerChangedEquipment;
+import com.uncreated.civilized.ui.style.Colors;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShapeRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -47,10 +50,102 @@ public final class BuildingBoundsDragTool {
    private static @Nullable Player player;
 
    private static boolean showDraggedBounds;
+   /** true if dragging while not holding a building deed item. */
+   private static boolean draggingExternally;
 
    private static final Map<ItemStack, SavedDraggedBounds> savedDraggedBounds = new HashMap<>();
 
    private BuildingBoundsDragTool() {
+   }
+
+   public interface IBoundsDragListener {
+
+      void onSecondCornerPlaced(BuildingBounds bounds);
+
+      void onBoundsConfirmed(BuildingBounds bounds);
+
+      default void onCancelled() {
+      }
+   }
+
+   /**
+    * Handles the player right-clicking while dragging bounds: first click places first corner, second places second
+    * corner other, third click confirms bounds placement if clicked pos is inside the box. Shift + Right-click cancels.
+    */
+   public static InteractionResult handleUse(Player player, Level level, IBoundsDragListener listener) {
+      HitResult hitResult = Minecraft.getInstance().hitResult;
+      @Nullable
+      BlockPos clickedBlockPos = null;
+      @Nullable
+      BlockPos clickedAir = null;
+      if (hitResult instanceof BlockHitResult blockHitResult && blockHitResult.getType() == HitResult.Type.BLOCK) {
+         clickedBlockPos = blockHitResult.getBlockPos();
+         clickedAir = clickedBlockPos.mutable().move(blockHitResult.getDirection());
+      }
+
+      if (player.isSecondaryUseActive()) {
+         resetDragging();
+         player.displayClientMessage(
+               Component.translatable("message.building.placement.help.placement_cancelled"),
+               true);
+         listener.onCancelled();
+         return InteractionResult.SUCCESS;
+      }
+
+      if (isDraggingComplete()) {
+         BuildingBounds bounds = getBuildingBoundsDragResult(level).bounds();
+         if (clickedBlockPos != null && bounds.contains(clickedBlockPos)) {
+            listener.onBoundsConfirmed(bounds);
+            return InteractionResult.SUCCESS;
+         }
+      }
+
+      if (clickedAir == null)
+         return InteractionResult.PASS;
+
+      if (!isBusyDragging()) {
+         startDraggingBounds(clickedAir);
+         player.displayClientMessage(
+               Component.translatable("message.building.placement.help.placed_origin")
+                     .withColor(Colors.VALIDATION_PARTIAL_SUCCESS),
+               true);
+         return InteractionResult.SUCCESS;
+      }
+
+      if (!isDraggingComplete()) {
+         completeDragging(clickedAir);
+         // the bounds are checked straight away, so that bad bounds are rejected (and cleared) before the player tries
+         // to confirm them
+         listener.onSecondCornerPlaced(getBuildingBoundsDragResult(level).bounds());
+         return InteractionResult.SUCCESS;
+      }
+
+      return InteractionResult.PASS;
+   }
+
+   /**
+    * Starts dragging bounds without a deed in hand, e.g. to redraw a building. A held deed's bounds are put aside until
+    * {@link #endExternalDrag()}.
+    */
+   public static void beginExternalDrag() {
+      if (currentItem != null)
+         saveAndHideDraggedBounds(currentItem);
+
+      resetDragging();
+      player = Minecraft.getInstance().player;
+      draggingExternally = true;
+      showDraggedBounds = true;
+   }
+
+   public static void endExternalDrag() {
+      resetDragging();
+      draggingExternally = false;
+      showDraggedBounds = false;
+
+      // brings back the bounds of a deed the player is still holding
+      Player localPlayer = Minecraft.getInstance().player;
+      if (localPlayer != null && localPlayer.getMainHandItem().getItem() instanceof BuildingDeedItem)
+         loadAndShowDraggedBounds(localPlayer.getMainHandItem());
    }
 
    public static void startDraggingBounds(BlockPos origin) {
@@ -215,6 +310,9 @@ public final class BuildingBoundsDragTool {
 
    @SubscribeEvent
    public static void onPlayerChangeEquipment(PlayerChangedEquipment event) {
+      // deeds don't take over while the player is dragging bounds for something else
+      if (draggingExternally)
+         return;
 
       Optional<EquipmentChange> equipmentChange = event.getEquipmentChange(EquipmentSlot.MAINHAND);
       if (equipmentChange.isEmpty())
@@ -235,13 +333,26 @@ public final class BuildingBoundsDragTool {
          Vec3 camera,
          BlockPos pos1,
          BlockPos pos2) {
+      drawBox(poseStack, consumer, camera, pos1, pos2, 0.67F, 0.85F, 0.96F);
+   }
+
+   /** Draws the outline of the box between two blocks, e.g. a building's bounds. */
+   public static void drawBox(
+         PoseStack poseStack,
+         VertexConsumer consumer,
+         Vec3 camera,
+         BlockPos pos1,
+         BlockPos pos2,
+         float red,
+         float green,
+         float blue) {
       AABB aabb =
             AABB.encapsulatingFullBlocks(pos1, pos2)
                   .move((double) (-pos1.getX()), (double) (-pos1.getY()), (double) (-pos1.getZ()));
       Vec3 offset = Vec3.atLowerCornerOf(pos1).subtract(camera);
       poseStack.pushPose();
       poseStack.translate(offset.x, offset.y, offset.z);
-      ShapeRenderer.renderLineBox(poseStack, consumer, aabb, 0.67F, 0.85F, 0.96F, 1F);
+      ShapeRenderer.renderLineBox(poseStack, consumer, aabb, red, green, blue, 1F);
       poseStack.popPose();
    }
 }

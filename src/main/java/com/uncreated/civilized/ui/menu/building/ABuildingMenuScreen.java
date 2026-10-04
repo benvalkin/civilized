@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import org.jetbrains.annotations.Nullable;
 
+import com.uncreated.civilized.client.BuildingRedrawSession;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.requirement.registry.BuildingRequirements;
 import com.uncreated.civilized.ui.components.SlotFrameRenderer;
@@ -18,7 +19,6 @@ import com.uncreated.civilized.ui.tabs.TabController;
 import com.uncreated.civilized.ui.tabs.TabCoords;
 
 import lombok.Getter;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
@@ -42,14 +42,18 @@ public abstract class ABuildingMenuScreen extends AbstractContainerScreen<Buildi
 
    private static final int CONTENT_MARGIN_X = 25;
    private static final int CONTENT_MARGIN_Y = 20;
-   private static final int UPGRADE_BUTTON_WIDTH = 80;
+   private static final int UPGRADE_BUTTON_WIDTH = 88;
    private static final int UPGRADE_BUTTON_HEIGHT = 18;
+   private static final int BUTTON_SPACING = 4;
 
    @Getter
    protected final BuildingScreenContext context;
 
    private TabController tabController;
+   /** Shown in the bottom right of the building's info tab, and opens its upgrade tab. */
    private Button upgradeButton;
+   /** Shown to the left of the Upgrade button, and lets the player drag out new bounds for the building. */
+   private Button redrawButton;
 
    @Getter
    protected TabCoords tabCoords;
@@ -96,33 +100,43 @@ public abstract class ABuildingMenuScreen extends AbstractContainerScreen<Buildi
                   .build();
       addRenderableWidget(upgradeButton);
 
+      redrawButton =
+            Button.builder(
+                  Component.translatable("menu.building.redraw.button"),
+                  button -> BuildingRedrawSession.startFromMenu(context.building()))
+                  .pos(upgradeButton.getX() - BUTTON_SPACING - UPGRADE_BUTTON_WIDTH, upgradeButton.getY())
+                  .size(UPGRADE_BUTTON_WIDTH, UPGRADE_BUTTON_HEIGHT)
+                  .build();
+      addRenderableWidget(redrawButton);
+
       ATab openTab = tabController.changeToDefaultTabIfNotSet(this);
       menu.setPlayerInventoryVisible(openTab.showsPlayerInventory());
-      updateUpgradeButton();
+      refreshUpgradeAndRedrawButtons();
    }
 
    @Override
    public ATab changeTab(ATab newTab) {
       tabController.changeTab(newTab);
       menu.setPlayerInventoryVisible(newTab.showsPlayerInventory());
-      updateUpgradeButton();
+      refreshUpgradeAndRedrawButtons();
       return newTab;
    }
 
-   /**
-    * Only shows the Upgrade button on the info tab, and only lets players with permission to create buildings press
-    * it, while the building has a level to upgrade to.
-    */
-   private void updateUpgradeButton() {
+   private void refreshUpgradeAndRedrawButtons() {
       if (upgradeButton == null)
          return;
 
       Building building = context.building();
       boolean canUpgrade =
             BuildingRequirements.find(building.getBuildingType(), building.getUpgradeLevel() + 1).isPresent();
-      boolean hasPermission =
-            Minecraft.getInstance().player != null
-                  && context.permissions().hasCreateBuildingsPermission(Minecraft.getInstance().player.getUUID());
+      boolean hasPermission = AlterBuildingPermissions.hasPermission(context);
+
+      redrawButton.visible = getCurrentTab() instanceof IBuildingInfoTab;
+      redrawButton.active = hasPermission;
+      redrawButton.setTooltip(
+            Tooltip.create(
+                  Component.translatable(
+                        hasPermission ? "menu.building.redraw.button.tooltip" : "menu.building.redraw.no_permission")));
 
       upgradeButton.visible = canUpgrade && getCurrentTab() instanceof IBuildingInfoTab;
       upgradeButton.active = hasPermission;
@@ -238,6 +252,6 @@ public abstract class ABuildingMenuScreen extends AbstractContainerScreen<Buildi
          tabController.refresh();
 
       // the building's level or the player's permissions may have changed
-      updateUpgradeButton();
+      refreshUpgradeAndRedrawButtons();
    }
 }

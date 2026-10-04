@@ -14,6 +14,7 @@ import com.uncreated.civilized.core.building.bounds.BuildingBounds;
 import com.uncreated.civilized.core.building.state.BuildingState;
 import com.uncreated.civilized.ui.style.Colors;
 
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -88,6 +89,8 @@ public class Building {
    private UUID settlementId;
    private UUID placerId;
    private BuildingType buildingType;
+   /** Only changed through {@link BuildingStore#changeBounds}, which keeps the store's chunk index up to date. */
+   @Setter(AccessLevel.PACKAGE)
    private BuildingBounds bounds;
    @Builder.Default
    private List<UUID> occupantIds = new ArrayList<>();

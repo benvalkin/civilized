@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import com.google.common.collect.ImmutableList;
 import com.mojang.logging.LogUtils;
 import com.uncreated.civilized.core.building.bounds.BuildingBounds;
+import com.uncreated.civilized.core.building.placement.ServerPlacementChecks;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -57,6 +58,28 @@ public abstract class BuildingStore extends SavedData {
       return building;
    }
 
+   private static final int ENCLOSING_SEARCH_CHUNK_RADIUS = ServerPlacementChecks.MAX_HORIZONTAL_SIZE / 2 / 16 + 1;
+
+   private static final int OVERLAP_SEARCH_CHUNK_RADIUS = ServerPlacementChecks.MAX_HORIZONTAL_SIZE / 16 + 1;
+
+   public void changeBounds(Building building, BuildingBounds newBounds) {
+      // add and remove from the DB to reindex it
+      buildings.remove(building.getBuildingId());
+      building.setBounds(newBounds);
+      buildings.add(building);
+      setDirty();
+   }
+
+   // BAD IMPLEMENTATION: in future we should migrate all synced DBs to have specific client update packets instead of
+   // being able to write to the DB unchecked.
+   /** wrapper around copyFrom that re-indexes the building in its DB. */
+   protected void updateFrom(Building existing, Building from) {
+      // add and remove from the DB to reindex it
+      buildings.remove(existing.getBuildingId());
+      existing.copyFrom(from);
+      buildings.add(existing);
+   }
+
    public Optional<Building> find(@Nullable UUID buildingId) {
       return buildings.find(buildingId);
    }
@@ -85,7 +108,8 @@ public abstract class BuildingStore extends SavedData {
       // lookups)
 
       ChunkPos centerChunk = new ChunkPos(blockPos);
-      Set<ChunkPos> neighborChunks = ChunkPos.rangeClosed(centerChunk, 2).collect(Collectors.toSet());
+      Set<ChunkPos> neighborChunks =
+            ChunkPos.rangeClosed(centerChunk, ENCLOSING_SEARCH_CHUNK_RADIUS).collect(Collectors.toSet());
 
       for (ChunkPos chunk : neighborChunks) {
          // find the first building in this chunk that contains our point
@@ -112,7 +136,8 @@ public abstract class BuildingStore extends SavedData {
       // lookups)
 
       ChunkPos centerChunk = new ChunkPos(bounds.getCenter());
-      Set<ChunkPos> neighborChunks = ChunkPos.rangeClosed(centerChunk, 2).collect(Collectors.toSet());
+      Set<ChunkPos> neighborChunks =
+            ChunkPos.rangeClosed(centerChunk, OVERLAP_SEARCH_CHUNK_RADIUS).collect(Collectors.toSet());
 
       for (ChunkPos chunk : neighborChunks) {
          // find the first building in this chunk that overlaps our bounds
@@ -139,7 +164,7 @@ public abstract class BuildingStore extends SavedData {
 
    public Optional<Building> findTownHall(UUID settlementId) {
       return findForSettlement(settlementId).stream()
-              .filter(b -> b.getBuildingType() == BuildingTypes.TOWN_HALL)
-              .findFirst();
+            .filter(b -> b.getBuildingType() == BuildingTypes.TOWN_HALL)
+            .findFirst();
    }
 }

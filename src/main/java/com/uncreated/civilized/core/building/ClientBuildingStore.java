@@ -57,7 +57,7 @@ public class ClientBuildingStore extends BuildingStore {
          if (existing.isEmpty()) {
             INSTANCE.buildings.add(fromPacket);
          } else
-            existing.get().copyFrom(fromPacket);
+            INSTANCE.updateFrom(existing.get(), fromPacket);
 
          NeoForge.EVENT_BUS.post(new BuildingUpdatedEvent(existing.orElse(fromPacket), true));
          return;
@@ -76,7 +76,7 @@ public class ClientBuildingStore extends BuildingStore {
       if (packet.storeOperation() == StoreOperation.DELETE) {
          INSTANCE.buildings.remove(existing.get().getBuildingId());
       } else if (packet.storeOperation() == StoreOperation.UPDATE) {
-         existing.get().copyFrom(packet.building());
+         INSTANCE.updateFrom(existing.get(), packet.building());
       }
 
       NeoForge.EVENT_BUS.post(new BuildingUpdatedEvent(existing.orElse(fromPacket), true));

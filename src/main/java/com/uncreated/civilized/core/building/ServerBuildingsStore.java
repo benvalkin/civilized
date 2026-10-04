@@ -174,16 +174,14 @@ public class ServerBuildingsStore extends BuildingStore {
       UUID key = fromPacket.getBuildingId();
       Optional<Building> existing = INSTANCE.find(key);
 
+      // buildings are only ever created by the server, after checking they're allowed, e.g. in CreateNewBuilding
       if (packet.storeOperation() == StoreOperation.ADD_OR_OVERWRITE
             || packet.storeOperation() == StoreOperation.INIT_NEW_CLIENT) {
-
-         if (existing.isEmpty()) {
-            INSTANCE.buildings.add(fromPacket);
-         } else
-            existing.get().copyFrom(fromPacket);
-
-         INSTANCE.replicateChange(fromPacket, packet.storeOperation());
-         INSTANCE.setDirty();
+         LOGGER.warn(
+               "Client {} tried to sync {} for building {}, which clients aren't allowed to do. This sync will be ignored.",
+               context.player().getScoreboardName(),
+               packet.storeOperation(),
+               fromPacket);
          return;
       }
 
@@ -207,7 +205,7 @@ public class ServerBuildingsStore extends BuildingStore {
             INSTANCE.setDirty();
          }
       } else if (packet.storeOperation() == StoreOperation.UPDATE) {
-         existing.get().copyFrom(packet.building());
+         INSTANCE.updateFrom(existing.get(), packet.building());
          INSTANCE.replicateChange(existing.get(), StoreOperation.UPDATE);
          INSTANCE.setDirty();
       }
