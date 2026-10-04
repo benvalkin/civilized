@@ -4,11 +4,14 @@ import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import com.uncreated.civilized.client.renderer.BuildingBoundsDragTool;
 import com.uncreated.civilized.core.building.BuildingType;
 import com.uncreated.civilized.core.building.bounds.BuildingBounds;
 import com.uncreated.civilized.core.building.requirement.IBuildingRequirementResult;
 import com.uncreated.civilized.item.BuildingDeedItem;
+import com.uncreated.civilized.networking.packets.CheckRequirements;
 import com.uncreated.civilized.networking.packets.CreateNewBuilding;
 import com.uncreated.civilized.ui.components.IListViewBuilder;
 import com.uncreated.civilized.ui.components.ScrollListView;
@@ -33,7 +36,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
 /**
  * Screen that shows when placing and upgrading buildings.
  */
-public class EstablishBuildingScreen extends Screen {
+public class EstablishBuildingScreen extends Screen implements IRequirementsCheckListener {
    private static final ResourceLocation BACKGROUND_TEXTURE =
          ResourceLocation.fromNamespaceAndPath(CIVILIZED_MOD_ID, "textures/gui/building_deed.png");
 
@@ -55,19 +58,29 @@ public class EstablishBuildingScreen extends Screen {
 
    private final BuildingType buildingType;
    private final BuildingBounds bounds;
-   private final List<IBuildingRequirementResult> requirements;
+   private final int requestId;
+   /** Null until the server has checked the requirements. */
+   private @Nullable List<IBuildingRequirementResult> requirements;
    private ScrollListView<IBuildingRequirementResult, BuildingRequirementWidget> scrollView;
 
-   public EstablishBuildingScreen(
-         BuildingType buildingType,
-         BuildingBounds bounds,
-         List<IBuildingRequirementResult> requirements) {
+   public EstablishBuildingScreen(BuildingType buildingType, BuildingBounds bounds) {
       super(Component.translatable("menu.building.management.create.heading", buildingType.translationDark()));
       this.buildingType = buildingType;
       this.bounds = bounds;
-      this.requirements = requirements;
       imageWidth = 256;
       imageHeight = 256;
+
+      requestId = CheckRequirements.nextRequestId();
+      PacketDistributor.sendToServer(CheckRequirements.forEstablish(requestId, buildingType, bounds));
+   }
+
+   @Override
+   public void receiveRequirementsChecked(int requestId, List<? extends IBuildingRequirementResult> results) {
+      if (requestId != this.requestId)
+         return;
+
+      requirements = List.copyOf(results);
+      rebuildWidgets();
    }
 
    @Override
@@ -105,8 +118,11 @@ public class EstablishBuildingScreen extends Screen {
                   .size(contentWidth / 2 - buttonMargin * 2, buttonHeight)
                   .build();
 
-      boolean allSatisfied = requirements.stream().allMatch(IBuildingRequirementResult::isSatisfied);
-      if (!allSatisfied) {
+      if (requirements == null) {
+         confirm.active = false;
+         confirm.setTooltip(
+               Tooltip.create(Component.translatable("menu.building.management.requirements.checking")));
+      } else if (!requirements.stream().allMatch(IBuildingRequirementResult::isSatisfied)) {
          confirm.active = false;
          confirm.setTooltip(
                Tooltip.create(
@@ -126,6 +142,9 @@ public class EstablishBuildingScreen extends Screen {
                   new IListViewBuilder<>() {
                      @Override
                      public List<IBuildingRequirementResult> provideModelData() {
+                        if (requirements == null)
+                           return List.of();
+
                         return requirements.stream().filter(r -> !(r.hideIfSatisfied() && r.isSatisfied())).toList();
                      }
 
@@ -167,12 +186,11 @@ public class EstablishBuildingScreen extends Screen {
       if (player == null)
          return;
 
-      ItemStack itemInHand = Minecraft.getInstance().player.getItemInHand(InteractionHand.MAIN_HAND);
+      // the server checks the requirements again and uses up the deed, if the building is established
+      ItemStack itemInHand = player.getItemInHand(InteractionHand.MAIN_HAND);
       if (itemInHand.getItem() instanceof BuildingDeedItem buildingDeed
-            && buildingDeed.getBuildingType() == buildingType) {
+            && buildingDeed.getBuildingType() == buildingType)
          PacketDistributor.sendToServer(new CreateNewBuilding(buildingType, bounds));
-         itemInHand.consume(1, player);
-      }
 
       BuildingBoundsDragTool.resetDragging();
    }
@@ -191,6 +209,15 @@ public class EstablishBuildingScreen extends Screen {
             topPos + 35,
             Colors.MENU_TEXT_DARK,
             false);
+
+      if (requirements == null)
+         graphics.drawString(
+               this.font,
+               Component.translatable("menu.building.management.requirements.checking"),
+               leftPos,
+               topPos + 50,
+               Colors.MENU_TEXT_DARK,
+               false);
    }
 
    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {

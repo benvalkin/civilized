@@ -362,7 +362,7 @@ public class BuildingRequirements {
       registerWithExtras(
             BuildingRequirementList.forBuilding(BuildingTypes.STOREHOUSE, upgradeLevel)
                   .add(new SpaceRequirement(30))
-                  .add(new BlockTypeRequirement(BuildingBlockTypes.WOOD, 40, 40))
+                  .add(new BlockTypeRequirement(BuildingBlockTypes.WOOD, 40))
                   .add(new ChestsPresentRequirement(numberOfChests, numberOfChests, false))
                   .add(new SignsPresentRequirement(1, false)),
             registry,
@@ -391,12 +391,14 @@ public class BuildingRequirements {
       return requirementList;
    }
 
-   public static BuildingRequirementList getBuildingRequirements(BuildingType buildingType, int upgradeLevel) {
-      Optional<BuildingRequirementList> requirements =
-            BUILDING_REQUIREMENTS_INTERNAL.stream()
-                  .filter(f -> f.getBuildingType() == buildingType && f.getUpgradeLevel() == upgradeLevel)
-                  .findFirst();
-      return requirements.orElseGet(() -> BuildingRequirementList.forBuilding(buildingType, 1).create());
+   public static Optional<BuildingRequirementList> find(BuildingType buildingType, int upgradeLevel) {
+      return BUILDING_REQUIREMENTS_INTERNAL.stream()
+            .filter(f -> f.getBuildingType() == buildingType && f.getUpgradeLevel() == upgradeLevel)
+            .findFirst();
+   }
 
+   public static BuildingRequirementList getBuildingRequirements(BuildingType buildingType, int upgradeLevel) {
+      return find(buildingType, upgradeLevel)
+            .orElseGet(() -> BuildingRequirementList.forBuilding(buildingType, upgradeLevel).create());
    }
 }

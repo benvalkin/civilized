@@ -3,7 +3,6 @@ package com.uncreated.civilized.networking.packets;
 import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -19,6 +18,10 @@ import com.uncreated.civilized.core.building.bounds.BuildingBounds;
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.entity.LoadedBuildings;
 import com.uncreated.civilized.core.building.requirement.CurrencyRequirement;
+import com.uncreated.civilized.core.building.requirement.ServerRequirementContexts;
+import com.uncreated.civilized.item.BuildingDeedItem;
+import com.uncreated.civilized.core.building.requirement.ServerRequirementChecks;
+import com.uncreated.civilized.core.building.requirement.IBuildingRequirementResult;
 import com.uncreated.civilized.core.building.requirement.IBuildingRequirement;
 import com.uncreated.civilized.core.building.requirement.registry.BuildingRequirementList;
 import com.uncreated.civilized.core.building.requirement.registry.BuildingRequirements;
@@ -28,7 +31,6 @@ import com.uncreated.civilized.core.settlement.SettlementBounds;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
 import com.uncreated.civilized.core.settlement.permission.AccessLevel;
 import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermissionStore;
-import com.uncreated.civilized.core.settlement.util.SettlementUtil;
 import com.uncreated.civilized.item.CurrencyItem;
 import com.uncreated.civilized.ui.style.Colors;
 
@@ -41,6 +43,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public record CreateNewBuilding(BuildingType buildingType,
@@ -76,10 +79,38 @@ public record CreateNewBuilding(BuildingType buildingType,
       List<Settlement> thisDimensionSettlements =
             ServerSettlementsStore.INSTANCE.findInDimension(serverLevel.dimension());
       Optional<Settlement> existingSettlement =
-            SettlementUtil.findExtendedEncapsulating(
-                  thisDimensionSettlements,
-                  packet.buildingBounds().getEncapsulatingAABB(),
-                  32);
+            ServerRequirementChecks.findNearbySettlement(serverLevel, packet.buildingBounds());
+
+      // the client checks these before the player can confirm, but a modified client could skip that, and the deed or
+      // requirements could have changed since
+      ItemStack deed = placer.getMainHandItem();
+      if (!(deed.getItem() instanceof BuildingDeedItem deedItem && deedItem.getBuildingType() == packet.buildingType())) {
+         placer.displayClientMessage(
+               Component
+                     .translatable(
+                           "message.settlement.create_building.failed.no_deed",
+                           packet.buildingType().translation())
+                     .withColor(Colors.VALIDATION_ERROR),
+               true);
+         return;
+      }
+
+      // checked before anything is created, since a new town hall creates its settlement below
+      Settlement requirementsSettlement =
+            packet.buildingType().is(BuildingTypes.TOWN_HALL) ? null : existingSettlement.orElse(null);
+      List<IBuildingRequirementResult> requirements =
+            ServerRequirementChecks
+                  .checkEstablish(placer, packet.buildingType(), packet.buildingBounds(), requirementsSettlement);
+      if (!ServerRequirementChecks.allSatisfied(requirements)) {
+         placer.displayClientMessage(
+               Component
+                     .translatable(
+                           "message.settlement.create_building.failed.requirements_not_met",
+                           packet.buildingType().translation())
+                     .withColor(Colors.VALIDATION_ERROR),
+               true);
+         return;
+      }
 
       Settlement argumentSettlement;
       BlockPos settlementOrigin;
@@ -166,7 +197,8 @@ public record CreateNewBuilding(BuildingType buildingType,
          LoadedSettlements.onBuildingLoaded(argumentSettlement, loadedBuilding, serverLevel);
       }
 
-      debitCurrencyRequirements(packet.buildingType, 1, argumentSettlement, placer);
+      debitCurrencyRequirements(packet.buildingType, Building.FIRST_UPGRADE_LEVEL, argumentSettlement, placer);
+      deed.consume(1, placer);
 
       Set<Building> settlementBuildings =
             ServerBuildingsStore.INSTANCE.findForSettlement(argumentSettlement.getSettlementId());
@@ -195,22 +227,7 @@ public record CreateNewBuilding(BuildingType buildingType,
       BuildingRequirementList requirements = BuildingRequirements.getBuildingRequirements(buildingType, upgradeLevel);
       for (IBuildingRequirement requirement : requirements) {
          if (requirement instanceof CurrencyRequirement c) {
-            List<Container> storehouseStorage =
-                  ServerBuildingsStore.INSTANCE.findStorehouse(argumentSettlement.getSettlementId())
-                        .flatMap(LoadedBuildings::checkLoaded)
-                        .map(LoadedBuilding::chests)
-                        .orElse(List.of());
-            List<Container> townhallStorage =
-                  ServerBuildingsStore.INSTANCE.findTownHall(argumentSettlement.getSettlementId())
-                        .flatMap(LoadedBuildings::checkLoaded)
-                        .map(LoadedBuilding::chests)
-                        .orElse(List.of());
-            LinkedList<Container> coinStorage = new LinkedList<>();
-            // chests are debited in order
-            coinStorage.add(placer.getInventory());
-            coinStorage.addAll(townhallStorage);
-            coinStorage.addAll(storehouseStorage);
-
+            List<Container> coinStorage = ServerRequirementContexts.coinStorage(argumentSettlement, placer);
             CurrencyItem.debit(coinStorage, c.getRequiredCurrency());
          }
       }

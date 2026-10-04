@@ -13,6 +13,16 @@ public class PopulationRequirement implements IBuildingRequirement {
       this.requiredPopulation = requiredPopulation;
    }
 
+   @Override
+   public RequirementKind kind() {
+      return RequirementKind.PREREQUISITE;
+   }
+
+   @Override
+   public IBuildingRequirementResult evaluate(RequirementContext context) {
+      return getResult(context.population());
+   }
+
    public Result getResult(int actualPopulation) {
 
       return new Result(actualPopulation, requiredPopulation);
@@ -24,7 +34,7 @@ public class PopulationRequirement implements IBuildingRequirement {
       @Getter
       private final int requiredPopulation;
 
-      private Result(int requiredPopulation, int actualPopulation) {
+      private Result(int actualPopulation, int requiredPopulation) {
          this.actualPopulation = actualPopulation;
          this.requiredPopulation = requiredPopulation;
       }

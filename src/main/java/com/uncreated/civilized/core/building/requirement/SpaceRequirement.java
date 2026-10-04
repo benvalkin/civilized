@@ -18,6 +18,16 @@ public class SpaceRequirement implements IBuildingRequirement {
       this.requiredSpace = requiredSpace;
    }
 
+   @Override
+   public RequirementKind kind() {
+      return RequirementKind.STRUCTURAL;
+   }
+
+   @Override
+   public IBuildingRequirementResult evaluate(RequirementContext context) {
+      return getResult(context.level(), context.bounds());
+   }
+
    public Result getResult(Level level, BuildingBounds bounds) {
 
       return new Result(bounds.findValidInsideFloorBlocks(level), requiredSpace);

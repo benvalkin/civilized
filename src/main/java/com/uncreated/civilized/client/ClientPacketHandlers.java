@@ -3,14 +3,17 @@ package com.uncreated.civilized.client;
 import com.uncreated.civilized.client.toast.SettlementNotificationToast;
 import com.uncreated.civilized.networking.packets.NotificationToast;
 import com.uncreated.civilized.networking.packets.ProductionBillPreview;
+import com.uncreated.civilized.networking.packets.RequirementsChecked;
 import com.uncreated.civilized.networking.packets.SettlementAccessLevelDenied;
 import com.uncreated.civilized.networking.packets.TradeSlotUpdated;
 import com.uncreated.civilized.ui.menu.building.ABuildingMenuScreen;
+import com.uncreated.civilized.ui.menu.building.IRequirementsCheckListener;
 import com.uncreated.civilized.ui.menu.building.residence.artisan.EditProductionBillTab;
 import com.uncreated.civilized.ui.menu.building.townhall.tabs.ManagePermissionsTab;
-
 import com.uncreated.civilized.ui.menu.trading.TradingMenuScreen;
+
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
@@ -50,8 +53,22 @@ public final class ClientPacketHandlers {
          editTab.receivePreview(packet.sequence(), packet.resultItem(), packet.recipeAllowed());
    }
 
+   public static void receiveRequirementsChecked(RequirementsChecked packet, IPayloadContext context) {
+      // this response is intended for both standalone screens and also specialized building menu tabs
+      Screen screen = Minecraft.getInstance().screen;
+      if (screen instanceof IRequirementsCheckListener listener)
+         listener.receiveRequirementsChecked(packet.requestId(), packet.results());
+      else if (screen instanceof ABuildingMenuScreen buildingScreen
+            && buildingScreen.getCurrentTab() instanceof IRequirementsCheckListener listener)
+         listener.receiveRequirementsChecked(packet.requestId(), packet.results());
+   }
+
    public static void receiveTradeSlotUpdated(TradeSlotUpdated packet, IPayloadContext context) {
       if (Minecraft.getInstance().screen instanceof TradingMenuScreen screen)
-         screen.receiveTradeSlotUpdated(packet.sequence(), packet.slot(), packet.newStock(), packet.newAvailableVendorCurrency());
+         screen.receiveTradeSlotUpdated(
+               packet.sequence(),
+               packet.slot(),
+               packet.newStock(),
+               packet.newAvailableVendorCurrency());
    }
 }

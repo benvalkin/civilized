@@ -15,6 +15,16 @@ public class SurfaceAreaRequirement implements IBuildingRequirement {
       this.requiredArea = requiredArea;
    }
 
+   @Override
+   public RequirementKind kind() {
+      return RequirementKind.STRUCTURAL;
+   }
+
+   @Override
+   public IBuildingRequirementResult evaluate(RequirementContext context) {
+      return getResult(context.bounds());
+   }
+
    public Result getResult(BuildingBounds bounds) {
 
       int x1 = bounds.getUpperCorner().getX();
@@ -22,7 +32,9 @@ public class SurfaceAreaRequirement implements IBuildingRequirement {
       int z1 = bounds.getUpperCorner().getZ();
       int z2 = bounds.getLowerCorner().getZ();
 
-      int area = (x1 - x2) * (z1 - z2);
+      // add 1 to each rectangle side because bounds include both corners. Measuring sides by subtracting coordinates
+      // misses one block that's actually still in the bounds
+      int area = (x1 - x2 + 1) * (z1 - z2 + 1);
       return new Result(area, requiredArea);
    }
 

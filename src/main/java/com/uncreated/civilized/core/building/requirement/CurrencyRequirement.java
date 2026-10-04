@@ -14,6 +14,16 @@ public class CurrencyRequirement implements IBuildingRequirement {
       this.requiredCurrency = requiredCurrency;
    }
 
+   @Override
+   public RequirementKind kind() {
+      return RequirementKind.COST;
+   }
+
+   @Override
+   public IBuildingRequirementResult evaluate(RequirementContext context) {
+      return getResult(context.availableCurrency());
+   }
+
    public Result getResult(int actualCurrency) {
 
       return new Result(actualCurrency, requiredCurrency);
@@ -25,7 +35,7 @@ public class CurrencyRequirement implements IBuildingRequirement {
       @Getter
       private final int requiredCurrency;
 
-      private Result(int requiredCurrency, int actualCurrency) {
+      private Result(int actualCurrency, int requiredCurrency) {
          this.actualCurrency = actualCurrency;
          this.requiredCurrency = requiredCurrency;
       }

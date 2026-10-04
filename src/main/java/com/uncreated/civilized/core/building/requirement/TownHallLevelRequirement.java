@@ -13,6 +13,16 @@ public class TownHallLevelRequirement implements IBuildingRequirement {
       this.requiredLevel = requiredLevel;
    }
 
+   @Override
+   public RequirementKind kind() {
+      return RequirementKind.PREREQUISITE;
+   }
+
+   @Override
+   public IBuildingRequirementResult evaluate(RequirementContext context) {
+      return getResult(context.townHallLevel());
+   }
+
    public Result getResult(int actualLevel) {
 
       return new Result(actualLevel, requiredLevel);
@@ -24,7 +34,7 @@ public class TownHallLevelRequirement implements IBuildingRequirement {
       @Getter
       private final int requiredLevel;
 
-      private Result(int requiredLevel, int actualLevel) {
+      private Result(int actualLevel, int requiredLevel) {
          this.actualLevel = actualLevel;
          this.requiredLevel = requiredLevel;
       }

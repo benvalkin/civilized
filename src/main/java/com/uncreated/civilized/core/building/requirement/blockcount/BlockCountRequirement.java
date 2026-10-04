@@ -5,6 +5,8 @@ import javax.annotation.Nullable;
 import com.uncreated.civilized.core.building.bounds.BuildingBounds;
 import com.uncreated.civilized.core.building.requirement.IBuildingRequirement;
 import com.uncreated.civilized.core.building.requirement.IBuildingRequirementResult;
+import com.uncreated.civilized.core.building.requirement.RequirementContext;
+import com.uncreated.civilized.core.building.requirement.RequirementKind;
 import com.uncreated.civilized.ui.style.Colors;
 
 import net.minecraft.core.BlockPos;
@@ -38,6 +40,16 @@ public class BlockCountRequirement implements IBuildingRequirement {
       this.maxBlocks = maxBlocks;
       this.blockDescription = blockDescription;
       this.hidIfSatisfied = hideIfSatisfied;
+   }
+
+   @Override
+   public RequirementKind kind() {
+      return RequirementKind.STRUCTURAL;
+   }
+
+   @Override
+   public IBuildingRequirementResult evaluate(RequirementContext context) {
+      return getResult(context.level(), context.bounds());
    }
 
    public BlockCountResult getResult(Level level, BuildingBounds bounds) {
@@ -90,7 +102,7 @@ public class BlockCountRequirement implements IBuildingRequirement {
       @Override
       public Component getDescription() {
 
-         if (maxBlocks == null) {
+         if (maxBlocks == null || minBlocks == maxBlocks) {
             int numberToDisplay = Math.clamp(actualBlocks, 0, minBlocks);
             return Component
                   .translatable(
@@ -116,6 +128,12 @@ public class BlockCountRequirement implements IBuildingRequirement {
          if (maxBlocks == null)
             return Component
                   .translatable("menu.building.management.requirements.count.min.tooltip", minBlocks, blockDescription);
+
+         if (minBlocks == maxBlocks)
+            return Component.translatable(
+                  "menu.building.management.requirements.count.exact.tooltip",
+                  minBlocks,
+                  blockDescription);
 
          return Component.translatable(
                "menu.building.management.requirements.count.range.tooltip",

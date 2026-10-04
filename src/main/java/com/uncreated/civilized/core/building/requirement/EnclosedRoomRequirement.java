@@ -22,7 +22,22 @@ public class EnclosedRoomRequirement implements IBuildingRequirement {
 
    }
 
+   @Override
+   public RequirementKind kind() {
+      return RequirementKind.STRUCTURAL;
+   }
+
+   @Override
+   public IBuildingRequirementResult evaluate(RequirementContext context) {
+      return getResult(context.level(), context.bounds());
+   }
+
    public Result getResult(Level level, BuildingBounds bounds) {
+
+      // the room is searched from the center, so a blocked center can't be checked. Clients check this before asking,
+      // but the block may have changed since, and the server shouldn't throw on what a client sends it
+      if (level.getBlockState(bounds.getCenter()).isSolid())
+         return new Result(true);
 
       boolean leakFound = bfsCheckRoomsForLeaks(level, bounds.getCenter());
 

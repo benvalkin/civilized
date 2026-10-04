@@ -243,6 +243,12 @@ public class CivilizedVillager extends AgeableMob
       return RandomSource.create(lifetimeSeed);
    }
 
+   public RandomSource perLifetimeRandom(int consumeCount) {
+      RandomSource random = RandomSource.create(lifetimeSeed);
+      random.consumeCount(consumeCount);
+      return random;
+   }
+
    @Override
    public void addAdditionalSaveData(CompoundTag compound) {
       super.addAdditionalSaveData(compound);
@@ -328,14 +334,14 @@ public class CivilizedVillager extends AgeableMob
    }
 
    public void updateSkin() {
-      skin = SkinTextureRegistry.getRandomSkin(perLifetimeRandom(), "default", info.getGender()).getValue();
-      hair = HairTextureRegistry.getRandomSkin(perLifetimeRandom(), "default", info.getGender()).getValue();
+      skin = SkinTextureRegistry.getRandomSkin(perLifetimeRandom(1), "default", info.getGender()).getValue();
+      hair = HairTextureRegistry.getRandomSkin(perLifetimeRandom(2), "default", info.getGender()).getValue();
    }
 
    public void updateClothing() {
       clothing =
             ClothingTextureRegistry
-                  .getRandomClothingTexture(perLifetimeRandom(), "default", info.getOccupation(), info.getGender())
+                  .getRandomClothingTexture(perLifetimeRandom(3), "default", info.getOccupation(), info.getGender())
                   .getValue();
    }
 

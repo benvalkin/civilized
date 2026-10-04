@@ -24,6 +24,16 @@ public class FishingSiteWaterRequirement implements IBuildingRequirement {
       this.requiredDepth = requiredDepth;
    }
 
+   @Override
+   public RequirementKind kind() {
+      return RequirementKind.STRUCTURAL;
+   }
+
+   @Override
+   public IBuildingRequirementResult evaluate(RequirementContext context) {
+      return getResult(context.level(), context.bounds());
+   }
+
    public Result getResult(Level level, BuildingBounds bounds) {
       return new Result(containsBodyOfWater(level, bounds));
    }
