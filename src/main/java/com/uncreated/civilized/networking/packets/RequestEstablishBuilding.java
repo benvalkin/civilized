@@ -11,8 +11,10 @@ import com.uncreated.civilized.core.building.placement.PlacementResult;
 import com.uncreated.civilized.core.building.placement.ServerPlacementChecks;
 import com.uncreated.civilized.core.building.requirement.RequirementResultData;
 import com.uncreated.civilized.core.building.requirement.ServerRequirementChecks;
+import com.uncreated.civilized.ui.style.Colors;
 
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
@@ -22,9 +24,12 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
  * Sent when a player finishes dragging out a new building's bounds. If the building can be placed there, the server
- * answers with {@link OpenEstablishBuildingScreen} to show its requirements. Otherwise, it tells the player why not.
+ * either i) displays an 'accepted' chat message to the player {@code confirming} is not yet true, or ii) answers with
+ * {@link OpenEstablishBuildingScreen} to show its requirements. Otherwise, it tells the player why the bounds were
+ * invalid.
  */
-public record RequestEstablishBuilding(BuildingType buildingType, BuildingBounds bounds) implements CustomPacketPayload {
+public record RequestEstablishBuilding(BuildingType buildingType, BuildingBounds bounds,
+      boolean confirming) implements CustomPacketPayload {
 
    public static final CustomPacketPayload.Type<RequestEstablishBuilding> TYPE =
          new CustomPacketPayload.Type<>(
@@ -36,12 +41,14 @@ public record RequestEstablishBuilding(BuildingType buildingType, BuildingBounds
    public static RequestEstablishBuilding decode(FriendlyByteBuf buffer) {
       return new RequestEstablishBuilding(
             BuildingTypes.getFromResourceLocation(buffer.readResourceLocation()),
-            BuildingBounds.decode(buffer));
+            BuildingBounds.decode(buffer),
+            buffer.readBoolean());
    }
 
    public void encode(FriendlyByteBuf buffer) {
       buffer.writeResourceLocation(buildingType.resourceLocation());
       bounds.encode(buffer);
+      buffer.writeBoolean(confirming);
    }
 
    @Override
@@ -52,10 +59,21 @@ public record RequestEstablishBuilding(BuildingType buildingType, BuildingBounds
    public static void serverReceiveRequestEstablishBuilding(RequestEstablishBuilding packet, IPayloadContext context) {
       ServerPlayer player = (ServerPlayer) context.player();
 
-      PlacementResult placement = ServerPlacementChecks.checkEstablish(player, packet.buildingType(), packet.bounds());
+      PlacementResult placement =
+            ServerPlacementChecks.checkEstablish(player, packet.buildingType(), packet.bounds(), packet.confirming());
       switch (placement) {
-      case PlacementResult.Failure failure -> player.displayClientMessage(failure.reason(), true);
-      case PlacementResult.Success success -> {
+      case PlacementResult.Failure failure ->
+         PacketDistributor.sendToPlayer(player, new BuildingPlacementRejected(failure.reason()));
+      case PlacementResult.Confirmed success -> {
+
+         if (!success.confirmed()) {
+            player.displayClientMessage(
+                  Component.translatable("message.building.placement.help.placed_destination")
+                        .withColor(Colors.VALIDATION_PARTIAL_SUCCESS),
+                  true);
+            return;
+         }
+
          List<RequirementResultData> requirementsResults =
                ServerRequirementChecks
                      .checkEstablish(player, packet.buildingType(), packet.bounds(), success.settlement())

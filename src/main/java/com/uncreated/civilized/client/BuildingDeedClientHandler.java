@@ -1,10 +1,10 @@
 package com.uncreated.civilized.client;
 
-
 import javax.annotation.Nullable;
 
 import com.uncreated.civilized.client.renderer.BuildingBoundsDragTool;
 import com.uncreated.civilized.core.building.BuildingType;
+import com.uncreated.civilized.core.building.bounds.BuildingBounds;
 import com.uncreated.civilized.networking.packets.RequestEstablishBuilding;
 import com.uncreated.civilized.ui.style.Colors;
 
@@ -56,11 +56,8 @@ public final class BuildingDeedClientHandler {
          BuildingBoundsDragTool.BuildingBoundsDragResult boundsResult =
                BuildingBoundsDragTool.getBuildingBoundsDragResult(level);
 
-         if (clickedBlockPos == null || boundsResult.bounds().contains(clickedBlockPos)) {
-            // the server checks whether the building can go here, and either opens the establish screen or tells the
-            // player what's wrong
-            PacketDistributor.sendToServer(new RequestEstablishBuilding(buildingType, boundsResult.bounds()));
-
+         if (clickedBlockPos != null && boundsResult.bounds().contains(clickedBlockPos)) {
+            PacketDistributor.sendToServer(new RequestEstablishBuilding(buildingType, boundsResult.bounds(), true));
             return InteractionResult.SUCCESS;
          }
       }
@@ -76,10 +73,10 @@ public final class BuildingDeedClientHandler {
          } else if (!BuildingBoundsDragTool.isDraggingComplete()) {
             BuildingBoundsDragTool.completeDragging(clickedAir);
 
-            player.displayClientMessage(
-                  Component.translatable("message.building.placement.help.placed_destination")
-                        .withColor(Colors.VALIDATION_PARTIAL_SUCCESS),
-                  true);
+            // checked straight away, so that bad bounds are rejected (and cleared) before the player tries to confirm
+            // them
+            BuildingBounds bounds = BuildingBoundsDragTool.getBuildingBoundsDragResult(level).bounds();
+            PacketDistributor.sendToServer(new RequestEstablishBuilding(buildingType, bounds, false));
 
             return InteractionResult.SUCCESS;
          }

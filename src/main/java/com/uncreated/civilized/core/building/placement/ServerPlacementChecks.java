@@ -39,8 +39,19 @@ public class ServerPlacementChecks {
    /** The tallest a building can be, in blocks. */
    public static final int MAX_HEIGHT = 32;
 
-   /** Whether a new building of this type can be placed at these bounds. */
-   public static PlacementResult checkEstablish(ServerPlayer player, BuildingType buildingType, BuildingBounds bounds) {
+   /**
+    * Whether a new building of this type can be placed at these bounds.
+    *
+    * @param confirming
+    *           whether the player is confirming the bounds, e.g. by right-clicking inside them, rather than having just
+    *           finished dragging them out. Valid bounds are {@link PlacementResult.Confirmed} if so, and only
+    *           {@link PlacementResult.Accepted} otherwise
+    */
+   public static PlacementResult checkEstablish(
+         ServerPlayer player,
+         BuildingType buildingType,
+         BuildingBounds bounds,
+         boolean confirming) {
       ServerLevel level = player.serverLevel();
 
       ItemStack deed = player.getMainHandItem();
@@ -71,7 +82,7 @@ public class ServerPlacementChecks {
          if (overlap.isPresent())
             return overlap.get();
 
-         return new PlacementResult.Success(null);
+         return new PlacementResult.Confirmed(null, confirming);
       }
 
       if (nearbySettlement.isEmpty())
@@ -94,7 +105,7 @@ public class ServerPlacementChecks {
       if (overlap.isPresent())
          return overlap.get();
 
-      return new PlacementResult.Success(settlement);
+      return new PlacementResult.Confirmed(settlement, confirming);
    }
 
    /** The settlement close enough to these bounds for a new building there to join it. */

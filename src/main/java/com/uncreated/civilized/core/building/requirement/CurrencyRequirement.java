@@ -1,5 +1,6 @@
 package com.uncreated.civilized.core.building.requirement;
 
+import com.uncreated.civilized.item.CurrencyItem;
 import com.uncreated.civilized.ui.style.Colors;
 
 import lombok.Getter;
@@ -58,7 +59,9 @@ public class CurrencyRequirement implements IBuildingRequirement {
 
       @Override
       public Component getTooltipDescription() {
-         return Component.translatable("menu.building.management.requirements.currency.tooltip", requiredCurrency);
+         return Component.translatable(
+               "menu.building.management.requirements.currency.tooltip",
+               CurrencyItem.amountTranslation(requiredCurrency).withColor(Colors.COIN));
       }
    }
 }

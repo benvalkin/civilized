@@ -4,7 +4,6 @@ import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
 import java.util.List;
 
-
 import com.uncreated.civilized.client.renderer.BuildingBoundsDragTool;
 import com.uncreated.civilized.core.building.BuildingType;
 import com.uncreated.civilized.core.building.bounds.BuildingBounds;
@@ -119,7 +118,23 @@ public class EstablishBuildingScreen extends Screen {
    }
 
    private void onPressCancel(Button button) {
-      Minecraft.getInstance().setScreen(null);
+      onClose();
+   }
+
+   /**
+    * Closing without confirming (by pressing Escape) keeps the dragged bounds, so it's useful to explain to the player
+    * that they have a way to bring up the screen again.
+    */
+   @Override
+   public void onClose() {
+      super.onClose();
+
+      LocalPlayer player = Minecraft.getInstance().player;
+      if (player != null)
+         player.displayClientMessage(
+               Component.translatable("message.building.placement.help.placed_destination")
+                     .withColor(Colors.VALIDATION_PARTIAL_SUCCESS),
+               true);
    }
 
    private void onPressConfirm(Button button) {

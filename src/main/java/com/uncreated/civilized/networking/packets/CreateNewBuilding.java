@@ -34,6 +34,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public record CreateNewBuilding(BuildingType buildingType,
@@ -66,15 +67,15 @@ public record CreateNewBuilding(BuildingType buildingType,
       ServerPlayer placer = (ServerPlayer) context.player();
       ServerLevel serverLevel = placer.serverLevel();
 
-      // sanity check the boudns placement again
+      // sanity check the bounds placement again
       PlacementResult placement =
-            ServerPlacementChecks.checkEstablish(placer, packet.buildingType(), packet.buildingBounds());
+            ServerPlacementChecks.checkEstablish(placer, packet.buildingType(), packet.buildingBounds(), true);
       if (placement instanceof PlacementResult.Failure failure) {
-         placer.displayClientMessage(failure.reason(), true);
+         PacketDistributor.sendToPlayer(placer, new BuildingPlacementRejected(failure.reason()));
          return;
       }
       @Nullable
-      Settlement nearbySettlement = ((PlacementResult.Success) placement).settlement();
+      Settlement nearbySettlement = ((PlacementResult.Confirmed) placement).settlement();
 
       List<IBuildingRequirementResult> requirements =
             ServerRequirementChecks

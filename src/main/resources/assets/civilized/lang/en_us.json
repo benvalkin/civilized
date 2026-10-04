@@ -452,7 +452,7 @@
   "menu.building.management.requirements.population.description": "Population: %s/%s",
   "menu.building.management.requirements.population.tooltip": "Your settlement requires a population of %s before you can build this.",
   "menu.building.management.requirements.currency.description": "Coins: %s/%s",
-  "menu.building.management.requirements.currency.tooltip": "This building requires %s coins to build.",
+  "menu.building.management.requirements.currency.tooltip": "Completing this action costs %s.",
   "menu.building.management.requirements.town_hall_level.description": "Town Hall Level: %s",
   "menu.building.management.requirements.town_hall_level.tooltip": "Your settlement's Town Hall needs to be level %s or higher to build this.",
   "building.upgrade_level": "Level %s",

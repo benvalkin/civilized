@@ -1,6 +1,8 @@
 package com.uncreated.civilized.client;
 
+import com.uncreated.civilized.client.renderer.BuildingBoundsDragTool;
 import com.uncreated.civilized.client.toast.SettlementNotificationToast;
+import com.uncreated.civilized.networking.packets.BuildingPlacementRejected;
 import com.uncreated.civilized.networking.packets.NotificationToast;
 import com.uncreated.civilized.networking.packets.OpenEstablishBuildingScreen;
 import com.uncreated.civilized.networking.packets.ProductionBillPreview;
@@ -16,6 +18,7 @@ import com.uncreated.civilized.ui.menu.trading.TradingMenuScreen;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.player.LocalPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
@@ -53,6 +56,14 @@ public final class ClientPacketHandlers {
       if (Minecraft.getInstance().screen instanceof ABuildingMenuScreen screen
             && screen.getCurrentTab() instanceof EditProductionBillTab editTab)
          editTab.receivePreview(packet.sequence(), packet.resultItem(), packet.recipeAllowed());
+   }
+
+   public static void receiveBuildingPlacementRejected(BuildingPlacementRejected packet, IPayloadContext context) {
+      LocalPlayer player = Minecraft.getInstance().player;
+      if (player != null)
+         player.displayClientMessage(packet.reason(), true);
+
+      BuildingBoundsDragTool.resetDragging();
    }
 
    public static void openEstablishBuildingScreen(OpenEstablishBuildingScreen packet, IPayloadContext context) {

@@ -117,8 +117,6 @@ public abstract class ABuildingMenuScreen extends AbstractContainerScreen<Buildi
       if (upgradeButton == null)
          return;
 
-      upgradeButton.visible = getCurrentTab() instanceof IBuildingInfoTab;
-
       Building building = context.building();
       boolean canUpgrade =
             BuildingRequirements.find(building.getBuildingType(), building.getUpgradeLevel() + 1).isPresent();
@@ -126,12 +124,9 @@ public abstract class ABuildingMenuScreen extends AbstractContainerScreen<Buildi
             Minecraft.getInstance().player != null
                   && context.permissions().hasCreateBuildingsPermission(Minecraft.getInstance().player.getUUID());
 
-      upgradeButton.active = canUpgrade && hasPermission;
-      if (!canUpgrade)
-         upgradeButton.setTooltip(
-               Tooltip.create(
-                     Component.translatable("menu.building.upgrade.highest_level")));
-      else if (!hasPermission)
+      upgradeButton.visible = canUpgrade && getCurrentTab() instanceof IBuildingInfoTab;
+      upgradeButton.active = hasPermission;
+      if (!hasPermission)
          upgradeButton.setTooltip(Tooltip.create(Component.translatable("menu.building.upgrade.no_permission")));
       else
          upgradeButton.setTooltip(

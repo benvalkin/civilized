@@ -16,6 +16,7 @@ import com.uncreated.civilized.core.settlement.permission.SettlementPermissions;
 import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
+import com.uncreated.civilized.networking.packets.BuildingPlacementRejected;
 import com.uncreated.civilized.networking.packets.BuyItem;
 import com.uncreated.civilized.networking.packets.CheckUpgradeRequirements;
 import com.uncreated.civilized.networking.packets.CreateNewBuilding;
@@ -89,6 +90,11 @@ public class PacketRegistry {
             RequestEstablishBuilding.TYPE,
             RequestEstablishBuilding.STREAM_CODEC,
             RequestEstablishBuilding::serverReceiveRequestEstablishBuilding);
+
+      registrar.playToClient(
+            BuildingPlacementRejected.TYPE,
+            BuildingPlacementRejected.STREAM_CODEC,
+            ClientPacketHandlers::receiveBuildingPlacementRejected);
 
       registrar.playToClient(
             OpenEstablishBuildingScreen.TYPE,
