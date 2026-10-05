@@ -2,6 +2,7 @@ package com.uncreated.civilized.ui.menu.building;
 
 import java.util.List;
 
+import com.uncreated.civilized.client.BuildingRedrawSession;
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.ClientBuildingStore;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
@@ -14,6 +15,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Checkbox;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -21,6 +23,7 @@ import net.minecraft.network.chat.MutableComponent;
 public class BuildingSettingsTab extends ABuildingScreenTab {
 
    private final Checkbox autoAssignOccupants;
+   private final Button redrawBounds;
    private final Button decommission;
    private final Button decommissionConfirm;
    private final Button decommissionCancel;
@@ -37,10 +40,25 @@ public class BuildingSettingsTab extends ABuildingScreenTab {
                   .maxWidth(width)
                   .build();
 
+      boolean canAlterBuilding = AlterBuildingPermissions.hasPermission(context);
+      redrawBounds =
+            Button.builder(
+                  Component.translatable("menu.building.redraw.button"),
+                  button -> BuildingRedrawSession.startFromMenu(context.building()))
+                  .pos(getX(), getY() + 40)
+                  .size(120, 18)
+                  .tooltip(
+                        Tooltip.create(
+                              Component.translatable(
+                                    canAlterBuilding ? "menu.building.redraw.button.tooltip"
+                                          : "menu.building.redraw.no_permission")))
+                  .build();
+      redrawBounds.active = canAlterBuilding;
+
       decommission =
             Button.builder(
                   Component.translatable("menu.building.settings.option.delete_building"),
-                  this::onPressDecommission).pos(getX(), getY() + 40).size(120, 18).build();
+                  this::onPressDecommission).pos(getX(), getY() + 62).size(120, 18).build();
 
       decommissionConfirm =
             Button.builder(Component.translatable("gui.misc.button.confirm"), this::onPressDecommissionConfirm)
@@ -101,11 +119,16 @@ public class BuildingSettingsTab extends ABuildingScreenTab {
 
       super.renderWidget(graphics, mouseX, mouseY, partialTicks);
       autoAssignOccupants.render(graphics, mouseX, mouseY, partialTicks);
+      redrawBounds.render(graphics, mouseX, mouseY, partialTicks);
       decommission.render(graphics, mouseX, mouseY, partialTicks);
    }
 
    @Override
    public List<? extends GuiEventListener> children() {
-      return List.of(autoAssignOccupants, decommission, decommissionConfirm, decommissionCancel);
+      // only what's showing can be clicked, or the hidden confirm button would decommission the building without asking
+      if (decommissionRequested)
+         return List.of(decommissionConfirm, decommissionCancel);
+
+      return List.of(autoAssignOccupants, redrawBounds, decommission);
    }
 }

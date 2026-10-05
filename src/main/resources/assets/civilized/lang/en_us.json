@@ -465,5 +465,7 @@
   "menu.building.management.requirements.town_hall_level.description": "Town Hall Level: %s",
   "menu.building.management.requirements.town_hall_level.tooltip": "Your settlement's Town Hall needs to be level %s or higher to build this.",
   "building.upgrade_level": "Level %s",
-  "menu.building.info.level": "Building %s"
+  "menu.building.info.level": "Building %s",
+  "notification.tax.taxes_collected": "Taxes Collected",
+  "notification.tax.taxes_collected.detail": "Citizens of %s have paid %s in taxes"
 }

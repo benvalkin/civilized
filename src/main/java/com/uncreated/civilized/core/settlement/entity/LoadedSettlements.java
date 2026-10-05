@@ -59,7 +59,7 @@ public class LoadedSettlements {
 
          try {
             loadedSettlement.getBehaviour()
-                  .serverTick((ServerLevel) loadedSettlement.getLevel(), loadedSettlement.getLevel().getGameTime());
+                  .serverTick((ServerLevel) loadedSettlement.getLevel(), loadedSettlement.getLevel().getGameTime(), loadedSettlement.getLevel().getDayTime());
          } catch (Exception ex) {
             LOGGER.error("Error while ticking settlement {}", loadedSettlement.getSettlement().getSettlementId(), ex);
          }
