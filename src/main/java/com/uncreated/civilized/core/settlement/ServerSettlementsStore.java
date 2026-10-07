@@ -65,6 +65,7 @@ public class ServerSettlementsStore extends SettlementsStore {
             citizenIds.add(citizenTag);
          }
          item.put(Settlement.FIELD_LIST_CITIZENS, citizenIds);
+         item.put(Settlement.FIELD_ADDITIONAL_DATA, settlement.getState().toNbt());
          tags.add(item);
       }
 
@@ -103,6 +104,7 @@ public class ServerSettlementsStore extends SettlementsStore {
          }
 
          builder.citizenIds(citizenIds);
+         builder.state(SettlementState.fromNbt(itemTag.getCompound(Settlement.FIELD_ADDITIONAL_DATA)));
          Settlement settlement = builder.build();
          store.settlements.add(settlement);
       }

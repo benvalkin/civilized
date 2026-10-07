@@ -65,6 +65,7 @@ public class Settlement {
    public static final String FIELD_ORIGIN_POS = "origin_pos";
    public static final String FIELD_LOWER_CORNER_POS = "lower_corner_pos";
    public static final String FIELD_UPPER_CORNER_POS = "upper_corner_pos";
+   public static final String FIELD_ADDITIONAL_DATA = "additional_data";
 
    private UUID settlementId;
    private ResourceKey<Level> dimension;
@@ -75,6 +76,9 @@ public class Settlement {
    @Builder.Default
    public SettlementLevel settlementLevel = SettlementLevel.OUTPOST;
    private SettlementBounds bounds;
+   /** Only used on the server at the moment */
+   @Builder.Default
+   private SettlementState state = new SettlementState();
 
    public Settlement.Packet toPacket() {
       return new Settlement.Packet(this, StoreOperation.UPDATE);

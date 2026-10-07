@@ -14,7 +14,9 @@ import com.uncreated.civilized.core.notifications.Notification;
 import com.uncreated.civilized.core.notifications.NotificationService;
 import com.uncreated.civilized.core.notifications.Receiver;
 import com.uncreated.civilized.core.notifications.Severity;
+import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
+import com.uncreated.civilized.core.settlement.SettlementState;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlement;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
@@ -29,14 +31,11 @@ import net.minecraft.world.item.ItemStack;
 
 public class TaxCollector {
    public static final int TAX_COLLECTION_INTERVAL_DAYS = 5;
-   private static final long NOT_SCHEDULED = -1;
 
    private final LoadedSettlement loadedSettlement;
-   private long nextTaxCollectionDay;
 
    public TaxCollector(LoadedSettlement loadedSettlement) {
       this.loadedSettlement = loadedSettlement;
-      this.nextTaxCollectionDay = NOT_SCHEDULED;
    }
 
    public void serverTick(ServerLevel level, long gameTime, long dayTime) {
@@ -44,10 +43,13 @@ public class TaxCollector {
       // (explaining this so that i don't forget again) dayTime keeps counting up across days, even when time is
       // advanced, that's why it works and gameTime doesn't
       long day = dayTime / 24000;
+      SettlementState state = loadedSettlement.getSettlement().getState();
+      long nextTaxCollectionDay = state.getNextTaxCollectionDay();
       // second check catches the clock being set back /time set which would otherwise leave us waiting until the old
       // date came around again (it may be very far in the future)
-      if (nextTaxCollectionDay == NOT_SCHEDULED || nextTaxCollectionDay - day > TAX_COLLECTION_INTERVAL_DAYS) {
-         nextTaxCollectionDay = day + TAX_COLLECTION_INTERVAL_DAYS;
+      if (nextTaxCollectionDay == SettlementState.NOT_SCHEDULED
+            || nextTaxCollectionDay - day > TAX_COLLECTION_INTERVAL_DAYS) {
+         scheduleNextCollection(state, day);
          return;
       }
 
@@ -59,7 +61,7 @@ public class TaxCollector {
       boolean onTheHour = dayTime % 1000 == 0;
       // avoid trying to collect taxes every tick or at night
       boolean collectionTime = timeOfDay >= 6000 && timeOfDay <= 12000 && onTheHour;
-      if (collectionTime)
+      if (!collectionTime)
          return;
 
       Optional<Building> townHall =
@@ -72,7 +74,7 @@ public class TaxCollector {
       if (loadedTownHall.isEmpty())
          return; // tried again next tick, so the collection happens as soon as the town hall is loaded
 
-      nextTaxCollectionDay = day + TAX_COLLECTION_INTERVAL_DAYS;
+      scheduleNextCollection(state, day);
 
       int taxCollected = 0;
 
@@ -95,6 +97,11 @@ public class TaxCollector {
 
       CurrencyItem.credit(loadedTownHall.get().chests(), taxCollected);
       NotificationService.INSTANCE.sendNotification(taxCollected(loadedSettlement.getSettlement(), taxCollected));
+   }
+
+   private static void scheduleNextCollection(SettlementState data, long today) {
+      data.setNextTaxCollectionDay(today + TAX_COLLECTION_INTERVAL_DAYS);
+      ServerSettlementsStore.INSTANCE.setDirty();
    }
 
    public static boolean buildingPaysTax(Building building, VillagerStore villagerStore) {
