@@ -224,13 +224,13 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
       reserveRequiredItems(reservationKey, building, requirements);
    }
 
-   protected void reserveRequiredItems(
+   protected List<ItemReservation.Entry> reserveRequiredItems(
          ReservationKey reservationKey,
          LoadedBuilding building,
          List<? extends ItemStockRequirement> requirements) {
 
       if (requirements.isEmpty())
-         return;
+         return List.of();
 
       List<ItemReservation.Entry> entries =
             requirements.stream()
@@ -238,5 +238,6 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
                   .toList();
 
       building.placeReservation(reservationKey, entries);
+      return entries;
    }
 }

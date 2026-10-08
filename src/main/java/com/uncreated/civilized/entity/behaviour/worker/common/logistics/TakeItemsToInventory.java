@@ -5,8 +5,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.logistics.AggregateItemStack;
+import com.uncreated.civilized.core.building.logistics.hauling.ItemReservation;
 import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventoryType;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.ConditionalHaulingInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.DropOffItemsInstruction;
@@ -17,7 +20,9 @@ import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
 import com.uncreated.civilized.entity.behaviour.worker.WorkTaskBehaviour;
 import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
+import com.uncreated.civilized.util.ContainerHelper;
 
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
@@ -72,6 +77,9 @@ public class TakeItemsToInventory extends WorkTaskBehaviour {
       }
       return Optional.empty();
    }
+
+   @Nullable
+   private Component sampleItemName;
 
    @Override
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
@@ -143,8 +151,7 @@ public class TakeItemsToInventory extends WorkTaskBehaviour {
          DropOffItemsInstruction dropOffItemsInstruction =
                new DropOffItemsInstruction(
                      takeToBuildingInstruction.destinationBuilding(),
-                     List.of(VillagerInventoryType.LOGISTICS)
-               );
+                     List.of(VillagerInventoryType.LOGISTICS));
          villager.getBrain().setMemory(AIRegistry.MM_DROP_OFF_ITEMS_INSTRUCTION.get(), dropOffItemsInstruction);
          getStateMachine().queueImmediately(WorkStates.DROPPING_OFF_ITEMS_AT_BUILDING);
       } else
@@ -155,15 +162,37 @@ public class TakeItemsToInventory extends WorkTaskBehaviour {
 
    private void acceptNextTargetBuilding(CivilizedVillager villager, LoadedBuilding nextBuildingWithStock) {
       currentSourceBuilding = nextBuildingWithStock;
-      reserveRequiredItems(
-            haulingInstruction.reservationKey(),
-            currentSourceBuilding,
-            haulingInstruction.requirements());
+      List<ItemReservation.Entry> reservationEntries =
+            reserveRequiredItems(
+                  haulingInstruction.reservationKey(),
+                  currentSourceBuilding,
+                  haulingInstruction.requirements());
       BlockEntity chest = currentSourceBuilding.anyChest().orElseThrow();
       travelHelper = new MediumDistanceTravelTask(villager, chest.getBlockPos(), 2);
+
+      findSampleItemForActivityDesc(reservationEntries);
+   }
+
+   private void findSampleItemForActivityDesc(List<ItemReservation.Entry> reservationEntries) {
+      Optional<ContainerHelper.ItemSearchResult> sampleItem =
+            ContainerHelper.findItem(
+                  currentSourceBuilding.chests(),
+                  i -> reservationEntries.stream().anyMatch(e -> e.filter().test(i)));
+      sampleItem.ifPresent(itemSearchResult -> sampleItemName = itemSearchResult.itemStack().getItemName());
    }
 
    private void eraseMemory(CivilizedVillager villager) {
       villager.getBrain().eraseMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get());
+   }
+
+   @Override
+   public Component description() {
+      if (sampleItemName == null)
+         return super.description();
+
+      return Component.translatableWithFallback(
+            "villager.behaviour.taking_items_to_inventory.description.with_args",
+            "",
+            sampleItemName);
    }
 }

@@ -10,6 +10,7 @@ import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
 import com.uncreated.civilized.entity.CivilizedVillager;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.WalkTarget;
@@ -90,5 +91,10 @@ public class IdleStrollAroundSettlement extends StatefulBehaviour {
          } else
             villager.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
       }
+   }
+
+   @Override
+   public Component description() {
+      return Component.empty();
    }
 }

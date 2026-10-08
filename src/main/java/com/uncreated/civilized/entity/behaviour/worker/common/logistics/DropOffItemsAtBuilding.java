@@ -11,9 +11,11 @@ import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
 import com.uncreated.civilized.entity.behaviour.worker.WorkTaskBehaviour;
 import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 
 public class DropOffItemsAtBuilding extends WorkTaskBehaviour {
@@ -42,11 +44,26 @@ public class DropOffItemsAtBuilding extends WorkTaskBehaviour {
       return true;
    }
 
+   private Component sampleItemName;
+
    @Override
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.start(level, villager, gameTime);
       ChestBlockEntity chest = haulingInstruction.destinationBuilding().anyChest().orElseThrow();
       travelHelper = new MediumDistanceTravelTask(villager, chest.getBlockPos(), 2);
+
+      findSampleItemForActivityDesc(villager);
+   }
+
+   private void findSampleItemForActivityDesc(CivilizedVillager villager) {
+      for (VillagerInventoryType inventoryType : haulingInstruction.inventoriesToOffload()) {
+         SimpleContainer inventory = villager.getInventory(inventoryType);
+         Optional<ItemStack> item = inventory.getItems().stream().filter(i -> !i.isEmpty()).findFirst();
+         if (item.isPresent()) {
+            sampleItemName = item.get().getItemName();
+            break;
+         }
+      }
    }
 
    @Override
@@ -80,5 +97,16 @@ public class DropOffItemsAtBuilding extends WorkTaskBehaviour {
 
    private void eraseMemory(CivilizedVillager villager) {
       villager.getBrain().eraseMemory(AIRegistry.MM_DROP_OFF_ITEMS_INSTRUCTION.get());
+   }
+
+   @Override
+   public Component description() {
+      if (sampleItemName == null)
+         return super.description();
+
+      return Component.translatableWithFallback(
+            "villager.behaviour.dropping_off_items_at_building.description.with_args",
+            "",
+              sampleItemName);
    }
 }

@@ -187,11 +187,16 @@ public class ContainerHelper {
    }
 
    public static Optional<ItemSearchResult> findItem(Container container, Predicate<ItemStack> itemSearch) {
+      return findItem(List.of(container), itemSearch);
+   }
 
-      for (int i = 0; i < container.getContainerSize(); i++) {
-         ItemStack item = container.getItem(i);
-         if (itemSearch.test(item))
-            return Optional.of(new ItemSearchResult(item, i));
+   public static Optional<ItemSearchResult> findItem(List<Container> containers, Predicate<ItemStack> itemSearch) {
+      for (Container container : containers) {
+         for (int i = 0; i < container.getContainerSize(); i++) {
+            ItemStack item = container.getItem(i);
+            if (itemSearch.test(item))
+               return Optional.of(new ItemSearchResult(item, i));
+         }
       }
 
       return Optional.empty();

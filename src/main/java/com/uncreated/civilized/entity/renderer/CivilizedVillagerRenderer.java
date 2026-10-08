@@ -32,7 +32,7 @@ import net.minecraft.world.item.BowItem;
 public class CivilizedVillagerRenderer extends
       HumanoidMobRenderer<CivilizedVillager, CivilizedVillagerRenderState, HumanoidModel<CivilizedVillagerRenderState>> {
 
-   public static final boolean DEBUG = true;
+   public static final boolean DEBUG = false;
 
    // Wide player model (Steve) for male villagers
    private final HumanoidModel<CivilizedVillagerRenderState> wideModel;
@@ -253,7 +253,7 @@ public class CivilizedVillagerRenderer extends
       if (renderState.villagerName != null)
          renderTag(
                renderState.villagerName,
-               2.1,
+               2.3,
                0.021F,
                NAME_TAG_COLOUR,
                renderState,
@@ -268,7 +268,7 @@ public class CivilizedVillagerRenderer extends
          MultiBufferSource bufferSource,
          int packedLight) {
       if (renderState.title != null)
-         renderTag(renderState.title, 1.8, 0.018F, TAG_COLOUR, renderState, poseStack, bufferSource, packedLight);
+         renderTag(renderState.title, 2.05, 0.018F, TAG_COLOUR, renderState, poseStack, bufferSource, packedLight);
    }
 
    protected void renderDebugInfo(
@@ -279,7 +279,7 @@ public class CivilizedVillagerRenderer extends
       if (renderState.currentActivity != null && !renderState.currentActivity.getString().isEmpty()) {
          renderTag(
                renderState.currentActivity,
-               2.4,
+               2.8,
                0.018F,
                TAG_COLOUR,
                renderState,
@@ -297,7 +297,7 @@ public class CivilizedVillagerRenderer extends
       if (!renderState.currentActivity.toString().isEmpty()) {
          renderTag(
                renderState.currentActivity,
-               2.4,
+               1.8,
                0.018F,
                TAG_COLOUR,
                renderState,
