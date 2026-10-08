@@ -343,10 +343,17 @@ public class CivilizedVillager extends AgeableMob
    }
 
    public void updateClothing() {
+      // the occupation's clothing sets take over from the role's, e.g. a worker dresses for its job
+      List<String> clothingSets = info.getOccupation().clothingSets();
+      if (clothingSets.isEmpty())
+         clothingSets = info.getNpcRole().clothingSets();
+
       clothing =
-            ClothingTextureRegistry
-                  .getRandomClothingTexture(perLifetimeRandom(3), "default", info.getOccupation(), info.getGender())
-                  .getValue();
+            ClothingTextureRegistry.getRandomClothingTexture(
+                  perLifetimeRandom(3),
+                  ClothingTextureRegistry.DEFAULT_CULTURE,
+                  clothingSets,
+                  info.getGender());
    }
 
    @Override

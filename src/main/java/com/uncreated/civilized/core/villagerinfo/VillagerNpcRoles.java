@@ -76,6 +76,7 @@ public class VillagerNpcRoles {
    public static final VillagerNpcRole ADVISOR =
          declare(
                VillagerNpcRole.builder(createResourceKey("advisor"))
+                     .clothingSets(List.of("patrician"))
                      .dialogueController(AdvisorDialogueController::new)
                      .build());
    // visitors
@@ -124,6 +125,7 @@ public class VillagerNpcRoles {
    public static final VillagerNpcRole MERCHANT =
          declare(
                VillagerNpcRole.builder(createResourceKey("merchant"))
+                     .clothingSets(List.of("patrician"))
                      .createRoleBehaviour(MerchantVisitorBehaviour::new)
                      .build());
    public static final VillagerNpcRole BANDIT =

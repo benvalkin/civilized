@@ -2,75 +2,115 @@ package com.uncreated.civilized.entity.stats;
 
 import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
+import org.slf4j.Logger;
+
+import com.mojang.logging.LogUtils;
 import com.uncreated.civilized.core.villagerinfo.Gender;
-import com.uncreated.civilized.core.villagerinfo.VillagerOccupation;
 
-import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
-import net.minecraft.Util;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.RandomSource;
 
+/**
+ * The villager clothing textures, found by looking through the resources for anything under
+ * {@code textures/entity/civilized_villager/clothing/<culture>/<clothingSet>/<gender>/}. Only clients have textures, so
+ * this is only filled in on the client, when resources are loaded or reloaded (e.g. with F3+T). Resource packs can add
+ * outfits just by adding files there.
+ */
 public class ClothingTextureRegistry {
 
-   public static final ResourceLocation FALLBACK =
-         ResourceLocation.fromNamespaceAndPath(
-               CIVILIZED_MOD_ID,
-               "textures/entity/civilized_villager/occupations/default/farmer/male/1.png");
+   private static final Logger LOGGER = LogUtils.getLogger();
 
-   private static final String ROOT_PREFIX = "textures/entity/civilized_villager/occupations";
+   private static final String ROOT = "textures/entity/civilized_villager/clothing";
    public static final String DEFAULT_CULTURE = "default";
+   public static final String DEFAULT_CLOTHING_SET = "peasant";
 
-   private static final Object2ObjectArrayMap<String, Int2ObjectMap<ResourceLocation>> CLOTHING_TEXTURES =
-         Util.make(new Object2ObjectArrayMap<>(), map -> {
-            add(map, DEFAULT_CULTURE, "peasant", "male", "1");
-            add(map, DEFAULT_CULTURE, "peasant", "male", "1");
-            add(map, DEFAULT_CULTURE, "peasant", "female", "1");
-            add(map, DEFAULT_CULTURE, "peasant", "female", "2");
-            add(map, DEFAULT_CULTURE, "labourer", "male", "1");
-            add(map, DEFAULT_CULTURE, "labourer", "male", "2");
-            add(map, DEFAULT_CULTURE, "labourer", "female", "1");
-            add(map, DEFAULT_CULTURE, "labourer", "female", "2");
-         });
+   public static final ResourceLocation FALLBACK =
+         ResourceLocation.fromNamespaceAndPath(CIVILIZED_MOD_ID, ROOT + "/default/peasant/male/1.png");
 
-   private static void add(
-         Object2ObjectArrayMap<String, Int2ObjectMap<ResourceLocation>> map,
-         String cultureName,
-         String clothingSet,
-         String gender,
-         String textureFileName) {
-      String key = getResourceKey(cultureName, clothingSet, gender);
-      Int2ObjectMap<ResourceLocation> selection = map.getOrDefault(key, new Int2ObjectArrayMap<>());
-      selection.put(selection.size(), getResourceLocation(key, textureFileName));
-      map.put(key, selection);
+   private static Map<String, Culture> cultures = Map.of();
+
+   public static void reload(ResourceManager resources) {
+      Map<String, Culture> found = new HashMap<>();
+
+      // sorted, so that every client lists the textures in the same order, and picks the same one for a villager
+      List<ResourceLocation> textures =
+            resources.listResources(ROOT, location -> location.getPath().endsWith(".png"))
+                  .keySet()
+                  .stream()
+                  .filter(location -> location.getNamespace().equals(CIVILIZED_MOD_ID))
+                  .sorted(Comparator.comparing(ResourceLocation::getPath))
+                  .toList();
+
+      for (ResourceLocation texture : textures) {
+         // <culture>/<clothingSet>/<gender>/<file>.png
+         String[] parts = texture.getPath().substring(ROOT.length() + 1).split("/");
+         if (parts.length != 4) {
+            LOGGER.warn(
+                  "Villager clothing texture {} is not in the right folder format <culture>/<set>/<gender>. It will not be loaded.",
+                  texture);
+            continue;
+         }
+
+         Gender gender;
+         try {
+            gender = Gender.valueOf(parts[2].toUpperCase());
+         } catch (IllegalArgumentException e) {
+            LOGGER.warn(
+                  "Villager clothing texture {} not in a 'male' or 'female' subfolder. It will not be loaded.",
+                  texture);
+            continue;
+         }
+
+         String cultureName = parts[0];
+         String clothingSetName = parts[1];
+         Culture culture = found.computeIfAbsent(cultureName, Culture::new);
+         ClothingSet clothingSet = culture.clothingSets().getOrCreate(clothingSetName);
+         clothingSet.add(gender, texture);
+      }
+
+      cultures = found;
+      LOGGER.info("Loaded {} villager clothing textures", textures.size());
    }
 
-   private static String getResourceKey(String cultureName, String clothingSet, String gender) {
-      return String.format("%s/%s/%s/%s", ROOT_PREFIX, cultureName, clothingSet, gender);
+   public static Optional<Culture> findCulture(String name) {
+      return Optional.ofNullable(cultures.get(name));
    }
 
-   private static ResourceLocation getResourceLocation(String resourceKey, String textureFileName) {
-      return ResourceLocation.fromNamespaceAndPath(CIVILIZED_MOD_ID, resourceKey + "/" + textureFileName + ".png");
-   }
-
-   public static Map.Entry<Integer, ResourceLocation> getRandomClothingTexture(
+   /**
+    * A random outfit from any of the allowed clothing sets. Every outfit is equally likely, so sets with more outfits
+    * are picked more often.
+    */
+   public static ResourceLocation getRandomClothingTexture(
          RandomSource random,
          String cultureName,
-         VillagerOccupation occupation,
+         List<String> allowedClothingSets,
          Gender gender) {
-      String resourceKey = getResourceKey(cultureName, occupation.name().toLowerCase(), gender.name().toLowerCase());
-      Int2ObjectMap<ResourceLocation> selection = CLOTHING_TEXTURES.get(resourceKey);
-      if (selection == null)
-         return Map.entry(0, FALLBACK);
+      Optional<Culture> culture = findCulture(cultureName);
+      if (culture.isEmpty())
+         culture = findCulture(DEFAULT_CULTURE);
+      if (culture.isEmpty())
+         return FALLBACK;
 
-      int index = random.nextInt(selection.size());
-      ResourceLocation result = selection.get(index);
-      if (result == null)
-         return Map.entry(index, FALLBACK);
+      List<ResourceLocation> options = new ArrayList<>();
+      for (String clothingSet : allowedClothingSets)
+         culture.get().clothingSets().find(clothingSet).ifPresent(set -> options.addAll(set.forGender(gender)));
 
-      return Map.entry(index, result);
+      if (options.isEmpty())
+         culture.get()
+               .clothingSets()
+               .find(DEFAULT_CLOTHING_SET)
+               .ifPresent(set -> options.addAll(set.forGender(gender)));
+      if (options.isEmpty())
+         return FALLBACK;
+
+      return options.get(random.nextInt(options.size()));
    }
 }

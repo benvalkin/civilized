@@ -1,5 +1,6 @@
 package com.uncreated.civilized.core.villagerinfo;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -9,6 +10,7 @@ import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.DefaultRoleBehaviour;
 import com.uncreated.civilized.entity.VillagerRoleBehaviour;
 
+import com.uncreated.civilized.entity.stats.ClothingTextureRegistry;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -29,6 +31,8 @@ public class VillagerNpcRole {
    @Getter(AccessLevel.NONE)
    @Builder.Default
    private final Supplier<DialogueController> dialogueController = DialogueController::noDialogue;
+   @Builder.Default
+   private final List<String> clothingSets = List.of(ClothingTextureRegistry.DEFAULT_CLOTHING_SET);
 
    public static VillagerNpcRoleBuilder builder(ResourceLocation key) {
       return internalBuilder().resourceLocation(key);
