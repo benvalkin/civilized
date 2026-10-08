@@ -1,17 +1,13 @@
 package com.uncreated.civilized.entity.behaviour.worker.common;
 
-import com.uncreated.civilized.core.building.bounds.BuildingBounds;
 import com.uncreated.civilized.entity.CivilizedVillager;
+import com.uncreated.civilized.entity.behaviour.BoundsStroller;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
 import com.uncreated.civilized.entity.behaviour.worker.WorkTaskBehaviour;
 
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.ai.memory.MemoryModuleType;
-import net.minecraft.world.entity.ai.memory.WalkTarget;
-import net.minecraft.world.entity.ai.util.LandRandomPos;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
 
 public class MonitorWorksite extends WorkTaskBehaviour {
 
@@ -20,11 +16,9 @@ public class MonitorWorksite extends WorkTaskBehaviour {
    private static final int OUTSIDE_TRAVEL_MARGIN = 4;
 
    private final int maxHorizontalDist;
-   private final int maxVerticalDist;
-   private final float speedModifier;
    private final boolean strollOutside;
+   private final BoundsStroller stroller;
 
-   private long nextWorkTime;
    private long nextPickupTime;
    private MediumDistanceTravelTask travelHelper;
 
@@ -32,16 +26,20 @@ public class MonitorWorksite extends WorkTaskBehaviour {
     * @param strollOutside
     *           whether the villager should keep out of the worksite's bounds while monitoring it
     */
-   public MonitorWorksite(
+      public MonitorWorksite(
          int maxHorizontalDist,
          int maxVerticalDist,
          float strollSpeedModifier,
          boolean strollOutside) {
       super(WorkStates.MONITOR_WORKSITE, true, false, 5 * 20, 0);
       this.maxHorizontalDist = maxHorizontalDist;
-      this.maxVerticalDist = maxVerticalDist;
-      this.speedModifier = strollSpeedModifier;
       this.strollOutside = strollOutside;
+      this.stroller =
+            new BoundsStroller(
+                  strollOutside ? BoundsStroller.Area.OUTSIDE : BoundsStroller.Area.INSIDE,
+                  maxHorizontalDist,
+                  maxVerticalDist,
+                  strollSpeedModifier);
    }
 
    public MonitorWorksite(int maxHorizontalDist, int maxVerticalDist, float strollSpeedModifier) {
@@ -50,7 +48,7 @@ public class MonitorWorksite extends WorkTaskBehaviour {
 
    @Override
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
-      nextWorkTime = gameTime;
+      stroller.start(gameTime);
       nextPickupTime = gameTime;
       travelHelper = strollOutside ? createTravelToOutsideWorksite(villager) : createTravelToWorksite(villager);
    }
@@ -85,49 +83,6 @@ public class MonitorWorksite extends WorkTaskBehaviour {
             goDropOffWorkOutputAtHome(villager);
       }
 
-      if (tickTime < nextWorkTime)
-         return;
-
-      nextWorkTime += villager.getRandom().nextInt(5 * 20, 15 * 20);
-
-      Vec3 wanderPos = strollOutside ? findPosOutsideWorksite(villager) : findPosAroundWorksite(villager);
-
-      if (wanderPos != null)
-         villager.getBrain().setMemory(MemoryModuleType.WALK_TARGET, new WalkTarget(wanderPos, speedModifier, 2));
-      else
-         villager.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
-   }
-
-   private Vec3 findPosAroundWorksite(CivilizedVillager villager) {
-      if (getWorksite().getBuilding().getBounds().contains(villager.blockPosition()))
-         return LandRandomPos.getPos(villager, maxHorizontalDist, maxVerticalDist);
-
-      return LandRandomPos.getPosTowards(
-            villager,
-            maxHorizontalDist,
-            maxVerticalDist,
-            getWorksite().getBuilding().getBlockPos().getBottomCenter());
-   }
-
-   private Vec3 findPosOutsideWorksite(CivilizedVillager villager) {
-      BuildingBounds worksiteBounds = getWorksite().getBuilding().getBounds();
-      AABB innerBounds = worksiteBounds.getEncapsulatingAABB().inflate(1);
-      AABB outerBounds = worksiteBounds.getEncapsulatingAABB().inflate(1 + maxHorizontalDist);
-
-      Vec3 wanderPos = null;
-      for (int i = 0; i < 20; i++) {
-         wanderPos = LandRandomPos.getPos(villager, maxHorizontalDist, maxVerticalDist);
-         if (wanderPos == null)
-            continue;
-
-         if (outerBounds.contains(wanderPos) && !innerBounds.contains(wanderPos))
-            break;
-      }
-
-      // rather stay put than wander into the worksite
-      if (wanderPos != null && innerBounds.contains(wanderPos))
-         return null;
-
-      return wanderPos;
+      stroller.tick(villager, getWorksite().getBuilding().getBounds(), tickTime);
    }
 }

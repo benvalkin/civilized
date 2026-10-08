@@ -516,6 +516,7 @@ public class CivilizedVillager extends AgeableMob
             Set.of(Pair.of(AIRegistry.MM_DIALOGUE_TARGET.get(), MemoryStatus.VALUE_PRESENT)),
             Set.of(AIRegistry.MM_DIALOGUE_TARGET.get()));
       brain.addActivity(Activity.PANIC, getPanicPackage(0.7f));
+      brain.addActivity(AIRegistry.A_STRIKE.get(), getStrikePackage(createStrikeBehaviourControl(0.25f)));
       if (info.getNpcRole().is(VillagerNpcRoles.SUITOR))
          idleBehaviourControl = createSuitorBehaviourControl(0.25f);
       else
@@ -696,6 +697,13 @@ public class CivilizedVillager extends AgeableMob
             || isRouted())
          return;
 
+      boolean isRestTime = todayTime >= 16000; // 10pm-6am
+      // striking villagers still go to bed at night, but will not do anything else
+      if (!isRestTime && shouldStrike()) {
+         getBrain().setActiveActivityIfPossible(AIRegistry.A_STRIKE.get());
+         return;
+      }
+
       if (todayTime >= 1000 && todayTime < 9000) { // 7am-3pm
          getBrain().setActiveActivityIfPossible(Activity.WORK);
       } else if (todayTime >= 16000) { // 10pm-6am
@@ -703,6 +711,18 @@ public class CivilizedVillager extends AgeableMob
       } else { // 6-7am, 3-10pm
          getBrain().setActiveActivityIfPossible(Activity.IDLE);
       }
+   }
+
+   /**
+    * Settlement members strike once they've gone too hungry, until they've eaten. Visitors don't, since they aren't the
+    * settlement's to look after.
+    */
+   public boolean shouldStrike() {
+      return info.getSettlementId() != null && hunger.isHungryEnoughToStrike();
+   }
+
+   public boolean isOnStrike() {
+      return getBrain().isActive(AIRegistry.A_STRIKE.get());
    }
 
    public boolean isSpeakingToPlayer() {

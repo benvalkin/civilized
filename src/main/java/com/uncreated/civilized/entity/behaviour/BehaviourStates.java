@@ -8,4 +8,6 @@ public class BehaviourStates {
    public static final BehaviourState VISITING_ENTERTAINMENT = new BehaviourState("visiting_entertainment");
    public static final BehaviourState NONE = new BehaviourState("none");
    public static final BehaviourState FLIRTING = new BehaviourState("flirting");
+   public static final BehaviourState GOING_TO_TOWN_SQUARE = new BehaviourState("going_to_town_square");
+   public static final BehaviourState STROLLING_IN_TOWN_SQUARE = new BehaviourState("strolling_in_town_square");
 }

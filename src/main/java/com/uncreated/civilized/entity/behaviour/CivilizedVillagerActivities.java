@@ -7,6 +7,8 @@ import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.social.Flirt;
 import com.uncreated.civilized.entity.behaviour.social.Socialize;
 import com.uncreated.civilized.entity.behaviour.social.VisitEntertainmentPlace;
+import com.uncreated.civilized.entity.behaviour.strike.GoToTownSquare;
+import com.uncreated.civilized.entity.behaviour.strike.StrikeBehaviourControl;
 import com.uncreated.civilized.entity.behaviour.worker.common.logistics.TakeItemsToInventory;
 import com.uncreated.civilized.neoforge.registration.entity.EntityRegistry;
 
@@ -83,6 +85,38 @@ public class CivilizedVillagerActivities {
                   .add(BehaviourStates.SOCIALISING, 8)
                   .add(BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT, 3)
                   .add(BehaviourStates.VISITING_ENTERTAINMENT, 1));
+   }
+
+   /**
+    * A striking villager tries to eat above all else, since eating ends the strike. Otherwise, it goes to the town square
+    * and mills about there, or strolls around the settlement if there's no town square to go to.
+    */
+   public static StrikeBehaviourControl createStrikeBehaviourControl(float speedModifier) {
+      return new StrikeBehaviourControl(
+            ImmutableList.of(
+                  new EatFood(BehaviourStates.EATING_FOOD),
+                  // EatFood queues this when the villager has to fetch food first
+                  new TakeItemsToInventory(),
+                  new GoToTownSquare(0.4F),
+                  new StrollWithinBuildingBounds(
+                        BehaviourStates.STROLLING_IN_TOWN_SQUARE,
+                        20 * 20,
+                        40 * 20,
+                        4,
+                        2,
+                        speedModifier,
+                        GoToTownSquare::findLoadedTownSquare),
+                  new IdleStrollAroundSettlement(5, 3, speedModifier)),
+            ImmutableList.of(BehaviourStates.EATING_FOOD),
+            ImmutableList.of(
+                  BehaviourStates.GOING_TO_TOWN_SQUARE,
+                  BehaviourStates.STROLLING_IN_TOWN_SQUARE,
+                  BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT));
+   }
+
+   public static ImmutableList<Pair<Integer, ? extends BehaviorControl<? super CivilizedVillager>>> getStrikePackage(
+         StrikeBehaviourControl strikeBehaviourControl) {
+      return ImmutableList.of(getFullLookBehavior(), Pair.of(1, strikeBehaviourControl));
    }
 
    public static ImmutableList<Pair<Integer, ? extends BehaviorControl<? super CivilizedVillager>>> getIdlePackage(

@@ -17,6 +17,8 @@ public class VillagerHunger {
    public static final float WALK_DISTANCE_PER_EXHAUSTION_STEP = 2F;
    public static final float EXHAUSTION_PER_WALKING_STEP = 0.1f;
    public static final int HUNGRY_THRESHOLD = 15;
+   /** At or below this, a settlement member goes on strike until it's eaten. */
+   public static final int STRIKE_THRESHOLD = 8;
    public static final int MAX_HUNGER = 20;
    public static final float EXHAUSTION_PER_WORK_UNIT = 0.4f;
 
@@ -45,6 +47,14 @@ public class VillagerHunger {
 
    public boolean isHungry() {
       return hunger() <= HUNGRY_THRESHOLD;
+   }
+
+   public boolean isHungryEnoughToStrike() {
+      return hunger() <= STRIKE_THRESHOLD;
+   }
+
+   public boolean isStarving() {
+      return hunger() <= 0;
    }
 
    public long timeSpentHungry() {
