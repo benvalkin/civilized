@@ -12,7 +12,7 @@ import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 public class StrollWithinBuildingBounds extends StatefulBehaviour {
 
    private final Function<CivilizedVillager, Optional<LoadedBuilding>> findBuilding;
-   private final BoundsStroller stroller;
+   protected final BoundsStroller stroller;
 
    private LoadedBuilding building;
 
@@ -26,8 +26,7 @@ public class StrollWithinBuildingBounds extends StatefulBehaviour {
          Function<CivilizedVillager, Optional<LoadedBuilding>> findBuilding) {
       super(state, minDuration, maxDuration, 0);
       this.findBuilding = findBuilding;
-      this.stroller =
-            new BoundsStroller(BoundsStroller.Area.INSIDE, maxHorizontalDist, maxVerticalDist, speedModifier);
+      this.stroller = new BoundsStroller(BoundsStroller.Area.INSIDE, maxHorizontalDist, maxVerticalDist, speedModifier);
    }
 
    @Override

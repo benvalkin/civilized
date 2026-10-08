@@ -88,8 +88,8 @@ public class CivilizedVillagerActivities {
    }
 
    /**
-    * A striking villager tries to eat above all else, since eating ends the strike. Otherwise, it goes to the town square
-    * and mills about there, or strolls around the settlement if there's no town square to go to.
+    * A striking villager tries to eat above all else, since eating ends the strike. Otherwise, it goes to the town
+    * square and mills about there, or strolls around the settlement if there's no town square to go to.
     */
    public static StrikeBehaviourControl createStrikeBehaviourControl(float speedModifier) {
       return new StrikeBehaviourControl(
@@ -98,14 +98,7 @@ public class CivilizedVillagerActivities {
                   // EatFood queues this when the villager has to fetch food first
                   new TakeItemsToInventory(),
                   new GoToTownSquare(0.4F),
-                  new StrollWithinBuildingBounds(
-                        BehaviourStates.STROLLING_IN_TOWN_SQUARE,
-                        20 * 20,
-                        40 * 20,
-                        4,
-                        2,
-                        speedModifier,
-                        GoToTownSquare::findLoadedTownSquare),
+                  new Strike(speedModifier),
                   new IdleStrollAroundSettlement(5, 3, speedModifier)),
             ImmutableList.of(BehaviourStates.EATING_FOOD),
             ImmutableList.of(

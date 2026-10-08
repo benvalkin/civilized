@@ -1,10 +1,13 @@
 package com.uncreated.civilized.entity.behaviour;
 
+import java.util.function.BiConsumer;
+
 import javax.annotation.Nullable;
 
 import com.uncreated.civilized.core.building.bounds.BuildingBounds;
 import com.uncreated.civilized.entity.CivilizedVillager;
 
+import lombok.Setter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.WalkTarget;
@@ -32,6 +35,10 @@ public class BoundsStroller {
    private final int maxHorizontalDist;
    private final int maxVerticalDist;
    private final float speedModifier;
+   @Setter
+   @Nullable
+   private BiConsumer<CivilizedVillager, BuildingBounds> onArrived;
+   private boolean arrived;
 
    private long nextStrollTime;
 
@@ -48,6 +55,7 @@ public class BoundsStroller {
 
    public void start(long gameTime) {
       nextStrollTime = gameTime;
+      arrived = false;
    }
 
    public void tick(CivilizedVillager villager, BuildingBounds bounds, long gameTime) {
@@ -66,6 +74,16 @@ public class BoundsStroller {
          villager.getBrain().setMemory(MemoryModuleType.WALK_TARGET, new WalkTarget(wanderPos, speedModifier, 2));
       else
          villager.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
+
+      boolean arrived = switch (area) {
+      case INSIDE_OR_NEAR, INSIDE -> bounds.getEncapsulatingAABB().contains(villager.position());
+      case OUTSIDE -> bounds.getEncapsulatingAABB().inflate(1 + maxHorizontalDist).contains(villager.position());
+      };
+
+      if (onArrived != null && arrived && !this.arrived) {
+         this.arrived = true;
+         onArrived.accept(villager, bounds);
+      }
    }
 
    private @Nullable Vec3 findPosAround(CivilizedVillager villager, BuildingBounds bounds) {

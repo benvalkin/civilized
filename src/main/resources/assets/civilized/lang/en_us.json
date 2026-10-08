@@ -467,5 +467,7 @@
   "building.upgrade_level": "Level %s",
   "menu.building.info.level": "Building %s",
   "notification.tax.taxes_collected": "Taxes Collected",
-  "notification.tax.taxes_collected.detail": "Citizens of %s have paid %s in taxes"
+  "notification.tax.taxes_collected.detail": "Citizens of %s have paid %s in taxes",
+  "notification.villager.hunger.strike": "Villagers on Strike",
+  "notification.villager.strike.hunger.detail": "Some villagers are refusing to work due to prolonged hunger."
 }
