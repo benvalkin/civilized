@@ -85,6 +85,6 @@ public abstract class StatefulBehaviour extends Behavior<CivilizedVillager> impl
    }
 
    public Component description() {
-      return Component.translatableWithFallback("villager.behaviour." + getState().toString() + ".description", null);
+      return getState().description();
    }
 }

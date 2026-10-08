@@ -10,6 +10,7 @@ import com.google.common.collect.ImmutableList;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.util.CooldownTracker;
 
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.behavior.Behavior;
 import net.minecraft.world.entity.ai.behavior.BehaviorControl;
@@ -124,6 +125,13 @@ public abstract class StatefulBehaviourControl<StateMachine extends BehaviourSta
          tryStartNextNonIdleTask(serverLevel, civilizedVillager, currentTicks);
          lastIdlePollTicks += 5 * 20;
       }
+   }
+
+   public Component currentBehaviourDescription() {
+      if (status != Behavior.Status.RUNNING || currentBehaviour == null)
+         return Component.empty();
+
+      return currentBehaviour.description();
    }
 
    protected boolean canContinueToUse(ServerLevel serverLevel, CivilizedVillager civilizedVillager, long currentTicks) {

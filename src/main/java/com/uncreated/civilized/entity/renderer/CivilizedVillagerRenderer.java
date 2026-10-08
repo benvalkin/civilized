@@ -60,7 +60,7 @@ public class CivilizedVillagerRenderer extends
       // floor sleepers are laid out as if they were in a bed facing their sleeping direction, so they fill exactly the
       // two blocks that were checked to be clear for them
       state.sleepingOnFloor = villager.isSleepingOnFloor();
-      // females use the slim arms palyer model
+      // females use the slim arms player model
       state.useSlimArmsPlayerModel = villager.getInfo().getGender() == Gender.FEMALE;
       if (state.sleepingOnFloor)
          state.bedOrientation = villager.getFloorSleepingDirection();
@@ -104,10 +104,7 @@ public class CivilizedVillagerRenderer extends
       } else {
          state.title = villager.getInfo().getNpcRole().translation(villager.getInfo().getGender());
       }
-
-      if (DEBUG) {
-         state.debugBehavioursList = villager.getEntityData().get(CivilizedVillager.CURRENT_WORK_BEHAVIOUR);
-      }
+      state.currentActivity = villager.getEntityData().get(CivilizedVillager.ACTIVITY_DESCRIPTION);
    }
 
    /**
@@ -239,6 +236,7 @@ public class CivilizedVillagerRenderer extends
 
       renderNameTag(renderState, pose, bufferSource, packedLight);
       renderJobTag(renderState, pose, bufferSource, packedLight);
+      renderActivityDescription(renderState, pose, bufferSource, packedLight);
 
       if (DEBUG)
          renderDebugInfo(renderState, pose, bufferSource, packedLight);
@@ -278,9 +276,9 @@ public class CivilizedVillagerRenderer extends
          PoseStack poseStack,
          MultiBufferSource bufferSource,
          int packedLight) {
-      if (renderState.debugBehavioursList != null)
+      if (renderState.currentActivity != null && !renderState.currentActivity.getString().isEmpty()) {
          renderTag(
-               Component.literal(renderState.debugBehavioursList),
+               renderState.currentActivity,
                2.4,
                0.018F,
                TAG_COLOUR,
@@ -288,6 +286,25 @@ public class CivilizedVillagerRenderer extends
                poseStack,
                bufferSource,
                packedLight);
+      }
+   }
+
+   protected void renderActivityDescription(
+         CivilizedVillagerRenderState renderState,
+         PoseStack poseStack,
+         MultiBufferSource bufferSource,
+         int packedLight) {
+      if (!renderState.currentActivity.toString().isEmpty()) {
+         renderTag(
+               renderState.currentActivity,
+               2.4,
+               0.018F,
+               TAG_COLOUR,
+               renderState,
+               poseStack,
+               bufferSource,
+               packedLight);
+      }
    }
 
    /**

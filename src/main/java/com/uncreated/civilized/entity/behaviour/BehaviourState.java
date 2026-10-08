@@ -1,6 +1,7 @@
 package com.uncreated.civilized.entity.behaviour;
 
 import lombok.EqualsAndHashCode;
+import net.minecraft.network.chat.Component;
 
 @EqualsAndHashCode(callSuper = false)
 public class BehaviourState {
@@ -18,5 +19,9 @@ public class BehaviourState {
    @Override
    public String toString() {
       return value;
+   }
+
+   public Component description() {
+      return Component.translatableWithFallback("villager.behaviour." + value + ".description", "");
    }
 }
