@@ -5,6 +5,7 @@ import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 import org.joml.Matrix4f;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.uncreated.civilized.core.villagerinfo.Gender;
 import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.data.VillagerHunger;
@@ -33,8 +34,15 @@ public class CivilizedVillagerRenderer extends
 
    public static final boolean DEBUG = true;
 
+   // Wide player model (Steve) for male villagers
+   private final HumanoidModel<CivilizedVillagerRenderState> wideModel;
+   // Slim player model (Alex) for female villagers
+   private final HumanoidModel<CivilizedVillagerRenderState> slimModel;
+
    public CivilizedVillagerRenderer(EntityRendererProvider.Context context) {
       super(context, new HumanoidModel<>(context.bakeLayer(ModelLayers.PLAYER)), 1);
+      this.wideModel = this.model;
+      this.slimModel = new HumanoidModel<>(context.bakeLayer(ModelLayers.PLAYER_SLIM));
 
       this.addLayer(new ClothingLayer(this, context.getModelSet()));
       this.addLayer(new HairLayer(this, context.getModelSet())); // hair renders over clothing
@@ -52,6 +60,8 @@ public class CivilizedVillagerRenderer extends
       // floor sleepers are laid out as if they were in a bed facing their sleeping direction, so they fill exactly the
       // two blocks that were checked to be clear for them
       state.sleepingOnFloor = villager.isSleepingOnFloor();
+      // females use the slim arms palyer model
+      state.useSlimArmsPlayerModel = villager.getInfo().getGender() == Gender.FEMALE;
       if (state.sleepingOnFloor)
          state.bedOrientation = villager.getFloorSleepingDirection();
 
@@ -187,6 +197,17 @@ public class CivilizedVillagerRenderer extends
          poseStack.translate(0.0F, FLOOR_SLEEPING_RENDER_OFFSET, 0.0F);
 
       super.setupRotations(renderState, poseStack, bodyRot, scale);
+   }
+
+   /**
+    * We had to implement toggling of the wide/slim player model in this method instead of in {@code .render}. This is
+    * because the super method here {@code AgeableMobRenderer.render} sets the model back to its adult model before
+    * drawing, which would overwrite any setting of this.model we made in our implementation of .render.
+    */
+   @Override
+   protected void scale(CivilizedVillagerRenderState renderState, PoseStack poseStack) {
+      this.model = renderState.useSlimArmsPlayerModel ? slimModel : wideModel;
+      super.scale(renderState, poseStack);
    }
 
    @Override

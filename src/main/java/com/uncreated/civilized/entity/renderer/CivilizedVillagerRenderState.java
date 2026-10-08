@@ -19,6 +19,7 @@ public class CivilizedVillagerRenderState extends HumanoidRenderState {
    public ResourceLocation clothing;
    public String debugBehavioursList;
    public boolean sleepingOnFloor;
+   public boolean useSlimArmsPlayerModel;
    public float health;
    public float maxHealth;
 
