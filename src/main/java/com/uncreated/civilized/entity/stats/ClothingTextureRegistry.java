@@ -39,17 +39,17 @@ public class ClothingTextureRegistry {
    private static void add(
          Object2ObjectArrayMap<String, Int2ObjectMap<ResourceLocation>> map,
          String cultureName,
-         String villagerOccupation,
+         String clothingSet,
          String gender,
          String textureFileName) {
-      String key = getResourceKey(cultureName, villagerOccupation, gender);
+      String key = getResourceKey(cultureName, clothingSet, gender);
       Int2ObjectMap<ResourceLocation> selection = map.getOrDefault(key, new Int2ObjectArrayMap<>());
       selection.put(selection.size(), getResourceLocation(key, textureFileName));
       map.put(key, selection);
    }
 
-   private static String getResourceKey(String cultureName, String villagerOccupation, String gender) {
-      return String.format("%s/%s/%s/%s", ROOT_PREFIX, cultureName, villagerOccupation, gender);
+   private static String getResourceKey(String cultureName, String clothingSet, String gender) {
+      return String.format("%s/%s/%s/%s", ROOT_PREFIX, cultureName, clothingSet, gender);
    }
 
    private static ResourceLocation getResourceLocation(String resourceKey, String textureFileName) {
