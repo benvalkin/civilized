@@ -103,7 +103,7 @@ public class CivilizedVillagerActivities {
             ImmutableList.of(BehaviourStates.EATING_FOOD),
             ImmutableList.of(
                   BehaviourStates.GOING_TO_TOWN_SQUARE,
-                  BehaviourStates.STROLLING_IN_TOWN_SQUARE,
+                  BehaviourStates.STRIKING,
                   BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT));
    }
 

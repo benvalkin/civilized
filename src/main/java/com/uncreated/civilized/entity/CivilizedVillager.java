@@ -4,7 +4,9 @@ import static com.uncreated.civilized.entity.behaviour.CivilizedVillagerActiviti
 import static com.uncreated.civilized.entity.behaviour.worker.CombatActivities.getCombatPackage;
 import static com.uncreated.civilized.entity.behaviour.worker.WorkActivities.getWorkPackage;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -80,7 +82,6 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.Brain;
-import net.minecraft.world.entity.ai.behavior.BehaviorControl;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.MemoryStatus;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
@@ -128,6 +129,8 @@ public class CivilizedVillager extends AgeableMob
    @Nullable
    private IdleBehaviourControl idleBehaviourControl; // we're keeping this as a field so that other villagers can
                                                       // socialize with each other
+   /** Each activity's {@link StatefulBehaviourControl}, for the activities that have one. */
+   private final Map<Activity, StatefulBehaviourControl<?>> behaviourControls = new HashMap<>();
 
    public boolean tryJoinConversation(Conversation conversation) {
       if (!isAlive() || isSleeping() || idleBehaviourControl == null)
@@ -495,15 +498,19 @@ public class CivilizedVillager extends AgeableMob
    }
 
    private void registerBrainGoals(Brain<CivilizedVillager> brain) {
+      behaviourControls.clear();
+
       brain.addActivity(Activity.CORE, getCorePackage(0.33f));
       if (!info.getOccupation().is(VillagerOccupations.UNEMPLOYED)) {
          brain.addActivityWithConditions(
                Activity.WORK,
-               getWorkPackage(info.getOccupation()),
+               trackBehaviourControl(Activity.WORK, getWorkPackage(info.getOccupation())),
                Set.of(Pair.of(AIRegistry.MM_VILLAGER_WORKTIME_OCCUPATION.get(), MemoryStatus.VALUE_PRESENT)));
 
          if (info.getOccupation().is(VillagerOccupations.SOLDIER)) {
-            brain.addActivity(AIRegistry.A_DRAFTED.get(), getCombatPackage());
+            brain.addActivity(
+                  AIRegistry.A_DRAFTED.get(),
+                  trackBehaviourControl(AIRegistry.A_DRAFTED.get(), getCombatPackage()));
          }
       }
       brain.addActivityWithConditions(
@@ -516,7 +523,9 @@ public class CivilizedVillager extends AgeableMob
             Set.of(Pair.of(AIRegistry.MM_DIALOGUE_TARGET.get(), MemoryStatus.VALUE_PRESENT)),
             Set.of(AIRegistry.MM_DIALOGUE_TARGET.get()));
       brain.addActivity(Activity.PANIC, getPanicPackage(0.7f));
-      brain.addActivity(AIRegistry.A_STRIKE.get(), getStrikePackage(createStrikeBehaviourControl(0.25f)));
+      brain.addActivity(
+            AIRegistry.A_STRIKE.get(),
+            trackBehaviourControl(AIRegistry.A_STRIKE.get(), getStrikePackage(createStrikeBehaviourControl(0.25f))));
       if (info.getNpcRole().is(VillagerNpcRoles.SUITOR))
          idleBehaviourControl = createSuitorBehaviourControl(0.25f);
       else
@@ -525,13 +534,29 @@ public class CivilizedVillager extends AgeableMob
       // its partner notices
       brain.addActivityAndRemoveMemoriesWhenStopped(
             Activity.IDLE,
-            getIdlePackage(idleBehaviourControl),
+            trackBehaviourControl(Activity.IDLE, getIdlePackage(idleBehaviourControl)),
             Set.of(),
             Set.of(AIRegistry.MM_CONVERSATION.get()));
 
       brain.setCoreActivities(ImmutableSet.of(Activity.CORE));
       brain.setDefaultActivity(Activity.IDLE);
       brain.setActiveActivityIfPossible(Activity.IDLE);
+   }
+
+   private <L extends List<? extends Pair<Integer, ?>>> L trackBehaviourControl(Activity activity, L behaviours) {
+      for (Pair<Integer, ?> behaviour : behaviours) {
+         if (behaviour.getSecond() instanceof StatefulBehaviourControl<?> control)
+            behaviourControls.put(activity, control);
+      }
+      return behaviours;
+   }
+
+   /**
+    * The behavior control of the villager's current activity, if the current activity uses a
+    * {@link StatefulBehaviourControl}.
+    */
+   public Optional<StatefulBehaviourControl<?>> getCurrentBehaviourControl() {
+      return getBrain().getActiveNonCoreActivity().map(behaviourControls::get);
    }
 
    public static final EntityDataAccessor<Byte> FLOOR_SLEEPING_DIRECTION =
@@ -606,15 +631,9 @@ public class CivilizedVillager extends AgeableMob
       profilerFiller.pop();
 
       if (CivilizedVillagerRenderer.DEBUG) {
-         List<BehaviorControl<? super CivilizedVillager>> runningBehaviours = getBrain().getRunningBehaviors();
          String activityName =
                getBrain().getActiveNonCoreActivity().map(Activity::getName).orElse("none").toUpperCase();
-         String behaviourName =
-               runningBehaviours.stream()
-                     .filter(b -> b instanceof StatefulBehaviourControl)
-                     .map(BehaviorControl::debugString)
-                     .findFirst()
-                     .orElse("none");
+         String behaviourName = getCurrentBehaviourControl().map(StatefulBehaviourControl::debugString).orElse("none");
 
          getEntityData().set(CURRENT_WORK_BEHAVIOUR, activityName + ": " + behaviourName);
       }
