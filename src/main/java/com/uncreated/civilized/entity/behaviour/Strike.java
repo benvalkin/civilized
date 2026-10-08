@@ -17,14 +17,7 @@ import net.minecraft.world.item.Items;
 public class Strike extends StrollWithinBuildingBounds {
 
    public Strike(float speedModifier) {
-      super(
-            BehaviourStates.STROLLING_IN_TOWN_SQUARE,
-            20 * 20,
-            40 * 20,
-            4,
-            2,
-            speedModifier,
-            GoToTownSquare::findLoadedTownSquare);
+      super(BehaviourStates.STRIKING, 20 * 20, 40 * 20, 4, 2, speedModifier, GoToTownSquare::findLoadedTownSquare);
       stroller.setOnArrived((villager, bounds) -> {
          UUID settlementId = villager.getInfo().getSettlementId();
          if (settlementId != null) {

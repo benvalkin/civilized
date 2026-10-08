@@ -8,11 +8,12 @@ import com.uncreated.civilized.util.CooldownTracker;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.behavior.Behavior;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 
-public abstract class StatefulBehaviour extends Behavior<CivilizedVillager> {
+public abstract class StatefulBehaviour extends Behavior<CivilizedVillager> implements ITranslatableBehaviour {
 
    @Getter
    private final BehaviourState state;
@@ -81,5 +82,9 @@ public abstract class StatefulBehaviour extends Behavior<CivilizedVillager> {
    @Override
    protected boolean canStillUse(ServerLevel level, CivilizedVillager entity, long gameTime) {
       return true;
+   }
+
+   public Component description() {
+      return Component.translatableWithFallback("villager.behaviour." + getState().toString() + ".description", null);
    }
 }

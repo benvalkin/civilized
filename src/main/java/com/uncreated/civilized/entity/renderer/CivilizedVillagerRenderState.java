@@ -14,6 +14,7 @@ public class CivilizedVillagerRenderState extends HumanoidRenderState {
    @Nullable
    public Component villagerName;
    public Component title;
+   public String currentActivity;
    public ResourceLocation skin;
    public ResourceLocation hair;
    public ResourceLocation clothing;
