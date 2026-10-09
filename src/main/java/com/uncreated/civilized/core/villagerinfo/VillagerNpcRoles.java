@@ -64,6 +64,11 @@ public class VillagerNpcRoles {
       event.register(NPC_ROLES_KEY, registry -> ALL.forEach(role -> registry.register(role.resourceLocation(), role)));
    }
 
+   public static final String CLOTHING_SET_PEASANT = "peasant";
+   public static final String CLOTHING_SET_PATRICIAN = "patrician";
+   public static final String CLOTHING_SET_NOBLEMAN = "nobleman";
+   public static final String CLOTHING_SET_LABOURER = "labourer";
+
    public static final VillagerNpcRole NONE = declare(VillagerNpcRole.builder(createResourceKey("none")).build());
    // settlement members
    public static final VillagerNpcRole WORKER =
@@ -109,9 +114,7 @@ public class VillagerNpcRoles {
                      .build());
    public static final VillagerNpcRole BEGGAR =
          declare(
-               VillagerNpcRole.builder(createResourceKey("beggar"))
-                     .createRoleBehaviour(VisitorBehaviour::new)
-                     .build());
+               VillagerNpcRole.builder(createResourceKey("beggar")).createRoleBehaviour(VisitorBehaviour::new).build());
    public static final VillagerNpcRole SCOUNDREL =
          declare(
                VillagerNpcRole.builder(createResourceKey("scoundrel"))
@@ -119,18 +122,17 @@ public class VillagerNpcRoles {
                      .build());
    public static final VillagerNpcRole THIEF =
          declare(
-               VillagerNpcRole.builder(createResourceKey("thief"))
-                     .createRoleBehaviour(VisitorBehaviour::new)
-                     .build());
+               VillagerNpcRole.builder(createResourceKey("thief")).createRoleBehaviour(VisitorBehaviour::new).build());
    public static final VillagerNpcRole MERCHANT =
          declare(
                VillagerNpcRole.builder(createResourceKey("merchant"))
-                     .clothingSets(List.of("patrician"))
+                     .clothingSets(
+                           List.of(
+                                 CLOTHING_SET_PATRICIAN,
+                                 CLOTHING_SET_PEASANT))
                      .createRoleBehaviour(MerchantVisitorBehaviour::new)
                      .build());
    public static final VillagerNpcRole BANDIT =
          declare(
-               VillagerNpcRole.builder(createResourceKey("bandit"))
-                     .createRoleBehaviour(VisitorBehaviour::new)
-                     .build());
+               VillagerNpcRole.builder(createResourceKey("bandit")).createRoleBehaviour(VisitorBehaviour::new).build());
 }

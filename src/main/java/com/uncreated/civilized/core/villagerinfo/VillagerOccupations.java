@@ -4,9 +4,12 @@ import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
 import java.util.List;
 
+import org.jetbrains.annotations.NotNull;
+
 import com.uncreated.civilized.CivilizedMod;
 import com.uncreated.civilized.core.building.BuildingTypes;
 import com.uncreated.civilized.entity.behaviour.worker.WorkActivities;
+import com.uncreated.civilized.entity.stats.cultures.CommonClothingSets;
 
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
@@ -79,6 +82,14 @@ public class VillagerOccupations {
       });
    }
 
+   private static @NotNull List<String> labourerClothing() {
+      return List.of(CommonClothingSets.LABOURER);
+   }
+
+   private static @NotNull List<String> labourerAndCitizenClothing() {
+      return List.of(CommonClothingSets.LABOURER, CommonClothingSets.PEASANT);
+   }
+
    public static final VillagerOccupation UNEMPLOYED =
          VillagerOccupation.builder(createResourceKey("unemployed")).build();
    // resource gatherer
@@ -87,25 +98,30 @@ public class VillagerOccupations {
                .homeType(BuildingTypes.FARMER_HOUSE)
                .validWorksite(b -> b.is(BuildingTypes.CROP_FARM))
                .workBehaviourPackage(WorkActivities::getFarmerWorkPackage)
+               .clothingSets(labourerAndCitizenClothing())
                .build();
    public static final VillagerOccupation RANCHER =
          VillagerOccupation.builder(createResourceKey("rancher"))
                .homeType(BuildingTypes.RANCHER_HOUSE)
                .validWorksite(b -> b.isAnimalFarm() && !b.is(BuildingTypes.BEE_FARM))
                .workBehaviourPackage(WorkActivities::getRancherWorkPackage)
+               .clothingSets(labourerClothing())
                .build();
+
    public static final VillagerOccupation WOODCUTTER =
          VillagerOccupation.builder(createResourceKey("woodcutter"))
                .clothingSets(List.of("labourer"))
                .homeType(BuildingTypes.WOODCUTTER_HOUSE)
                .validWorksite(b -> b.is(BuildingTypes.GROVE))
                .workBehaviourPackage(WorkActivities::getWoodcutterWorkPackage)
+               .clothingSets(labourerClothing())
                .build();
    public static final VillagerOccupation STONECUTTER =
          VillagerOccupation.builder(createResourceKey("stonecutter"))
                .clothingSets(List.of("labourer"))
                .homeType(BuildingTypes.STONECUTTER_HOUSE)
                .validWorksite(b -> b.is(BuildingTypes.QUARRY))
+               .clothingSets(labourerClothing())
                .build();
    public static final VillagerOccupation MINER =
          VillagerOccupation.builder(createResourceKey("miner"))
@@ -113,18 +129,21 @@ public class VillagerOccupations {
                .homeType(BuildingTypes.MINER_HOUSE)
                .validWorksite(b -> b.is(BuildingTypes.MINE))
                .workBehaviourPackage(WorkActivities::getMinerWorkPackage)
+               .clothingSets(labourerClothing())
                .build();
    public static final VillagerOccupation BEEKEEPER =
          VillagerOccupation.builder(createResourceKey("beekeeper"))
                .homeType(BuildingTypes.BEEKEEPER_HOUSE)
                .validWorksite(b -> b.is(BuildingTypes.BEE_FARM))
                .workBehaviourPackage(WorkActivities::getBeekeeperWorkPackage)
+               .clothingSets(labourerClothing())
                .build();
    public static final VillagerOccupation FISHERMAN =
          VillagerOccupation.builder(createResourceKey("fisherman"))
                .homeType(BuildingTypes.FISHERMAN_HOUSE)
                .validWorksite(b -> b.is(BuildingTypes.FISHING_SPOT))
                .workBehaviourPackage(WorkActivities::getFishermanWorkPackage)
+               .clothingSets(labourerClothing())
                .build();
    // artisan
    public static final VillagerOccupation BAKER =
@@ -138,6 +157,7 @@ public class VillagerOccupations {
                .homeType(BuildingTypes.BUTCHER_HOUSE)
                .validWorksite(b -> b.is(BuildingTypes.BUTCHER_HOUSE))
                .workBehaviourPackage(WorkActivities::getArtisanWorkPackage)
+               .clothingSets(labourerClothing())
                .build();
    public static final VillagerOccupation BLACKSMITH =
          VillagerOccupation.builder(createResourceKey("blacksmith"))
@@ -145,6 +165,7 @@ public class VillagerOccupations {
                .homeType(BuildingTypes.BLACKSMITH_HOUSE)
                .validWorksite(b -> b.is(BuildingTypes.BLACKSMITH_HOUSE))
                .workBehaviourPackage(WorkActivities::getArtisanWorkPackage)
+               .clothingSets(labourerClothing())
                .build();
    public static final VillagerOccupation TOOLSMITH =
          VillagerOccupation.builder(createResourceKey("toolsmith"))
@@ -152,6 +173,7 @@ public class VillagerOccupations {
                .homeType(BuildingTypes.TOOLSMITH_HOUSE)
                .validWorksite(b -> b.is(BuildingTypes.TOOLSMITH_HOUSE))
                .workBehaviourPackage(WorkActivities::getArtisanWorkPackage)
+               .clothingSets(labourerClothing())
                .build();
    public static final VillagerOccupation WEAPONSMITH =
          VillagerOccupation.builder(createResourceKey("weaponsmith"))
@@ -159,6 +181,7 @@ public class VillagerOccupations {
                .homeType(BuildingTypes.WEAPONSMITH_HOUSE)
                .validWorksite(b -> b.is(BuildingTypes.WEAPONSMITH_HOUSE))
                .workBehaviourPackage(WorkActivities::getArtisanWorkPackage)
+               .clothingSets(labourerClothing())
                .build();
    public static final VillagerOccupation ARMORER =
          VillagerOccupation.builder(createResourceKey("armorer"))
@@ -166,12 +189,14 @@ public class VillagerOccupations {
                .homeType(BuildingTypes.ARMORER_HOUSE)
                .validWorksite(b -> b.is(BuildingTypes.ARMORER_HOUSE))
                .workBehaviourPackage(WorkActivities::getArtisanWorkPackage)
+               .clothingSets(labourerClothing())
                .build();
    public static final VillagerOccupation FLETCHER =
          VillagerOccupation.builder(createResourceKey("fletcher"))
                .homeType(BuildingTypes.FLETCHER_HOUSE)
                .validWorksite(b -> b.is(BuildingTypes.FLETCHER_HOUSE))
                .workBehaviourPackage(WorkActivities::getArtisanWorkPackage)
+               .clothingSets(labourerClothing())
                .build();
    public static final VillagerOccupation CARPENTER =
          VillagerOccupation.builder(createResourceKey("carpenter"))
@@ -179,6 +204,7 @@ public class VillagerOccupations {
                .homeType(BuildingTypes.CARPENTER_HOUSE)
                .validWorksite(b -> b.is(BuildingTypes.CARPENTER_HOUSE))
                .workBehaviourPackage(WorkActivities::getArtisanWorkPackage)
+               .clothingSets(labourerClothing())
                .build();
    public static final VillagerOccupation MASON =
          VillagerOccupation.builder(createResourceKey("mason"))
@@ -186,12 +212,14 @@ public class VillagerOccupations {
                .homeType(BuildingTypes.MASON_HOUSE)
                .validWorksite(b -> b.is(BuildingTypes.MASON_HOUSE))
                .workBehaviourPackage(WorkActivities::getArtisanWorkPackage)
+               .clothingSets(labourerClothing())
                .build();
    public static final VillagerOccupation LEATHERWORKER =
          VillagerOccupation.builder(createResourceKey("leatherworker"))
                .homeType(BuildingTypes.LEATHERWORKER_HOUSE)
                .validWorksite(b -> b.is(BuildingTypes.LEATHERWORKER_HOUSE))
                .workBehaviourPackage(WorkActivities::getArtisanWorkPackage)
+               .clothingSets(labourerClothing())
                .build();
    public static final VillagerOccupation WEAVER =
          VillagerOccupation.builder(createResourceKey("weaver"))

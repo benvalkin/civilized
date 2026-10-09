@@ -2,6 +2,7 @@ package com.uncreated.civilized.neoforge.registration.entity;
 
 import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
+import com.uncreated.civilized.entity.renderer.CivilizedModelLayers;
 import com.uncreated.civilized.entity.renderer.CivilizedVillagerRenderer;
 import com.uncreated.civilized.entity.stats.ClothingTextureRegistry;
 
@@ -17,6 +18,11 @@ public class EntitySetupEventsClient {
     @SubscribeEvent
     public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(EntityRegistry.CIVILIZED_VILLAGER.get(), CivilizedVillagerRenderer::new);
+    }
+
+    @SubscribeEvent
+    public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
+        CivilizedModelLayers.registerLayerDefinitions(event);
     }
 
     @SubscribeEvent

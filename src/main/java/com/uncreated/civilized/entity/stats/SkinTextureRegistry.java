@@ -2,7 +2,6 @@ package com.uncreated.civilized.entity.stats;
 
 import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
-import java.nio.file.Path;
 import java.util.Map;
 
 import com.uncreated.civilized.core.villagerinfo.Gender;
@@ -49,8 +48,7 @@ public class SkinTextureRegistry {
    }
 
    private static ResourceLocation getResourceLocation(String resourceKey, String textureFileName) {
-      return ResourceLocation
-            .fromNamespaceAndPath(CIVILIZED_MOD_ID, resourceKey + "/" + textureFileName + ".png");
+      return ResourceLocation.fromNamespaceAndPath(CIVILIZED_MOD_ID, resourceKey + "/" + textureFileName + ".png");
    }
 
    public static Map.Entry<Integer, ResourceLocation> getRandomSkin(

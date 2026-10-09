@@ -11,6 +11,7 @@ import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Pair;
 import com.uncreated.civilized.core.building.BuildingType;
 import com.uncreated.civilized.entity.CivilizedVillager;
+import com.uncreated.civilized.entity.stats.ClothingTextureRegistry;
 import com.uncreated.civilized.ui.style.Colors;
 
 import lombok.Builder;
@@ -33,9 +34,8 @@ public class VillagerOccupation {
    private final Predicate<BuildingType> validWorksite;
    @Nullable
    private final Supplier<ImmutableList<Pair<Integer, ? extends BehaviorControl<CivilizedVillager>>>> workBehaviourPackage;
-   /** The clothing sets villagers with this occupation wear, instead of their role's. Empty to use the role's. */
    @Builder.Default
-   private final List<String> clothingSets = List.of();
+   private final List<String> clothingSets = List.of(ClothingTextureRegistry.DEFAULT_CLOTHING_SET);
 
    public static VillagerOccupation.VillagerOccupationBuilder builder(ResourceLocation key) {
       return internalBuilder().resourceLocation(key);

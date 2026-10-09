@@ -13,9 +13,11 @@ import java.util.UUID;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 
 import com.google.common.collect.ImmutableSet;
 import com.mojang.datafixers.util.Pair;
+import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Dynamic;
 import com.uncreated.civilized.client.VillagerDialogueClientHandler;
 import com.uncreated.civilized.core.StoreOperation;
@@ -106,6 +108,8 @@ import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
 @Log4j2
 public class CivilizedVillager extends AgeableMob
       implements InventoryCarrier, IEntityWithComplexSpawn, RangedAttackMob {
+
+   private final Logger LOGGER = LogUtils.getLogger();
 
    public static final String FIELD_VILLAGER_ID = "villager_id";
    public static final String FIELD_LIFETIME_SEED = "lifetime_seed";
@@ -203,7 +207,16 @@ public class CivilizedVillager extends AgeableMob
    }
 
    public void initVillagerFromSave() {
-      info = ServerVillagerStore.INSTANCE.get(villagerId);
+
+      Optional<VillagerInfo> fromSave = ServerVillagerStore.INSTANCE.find(villagerId);
+      if (fromSave.isEmpty()) {
+         LOGGER.error("Encountered villager entity with no recorded VillagerInfo. This entity will be deleted.");
+         info = ServerVillagerStore.INSTANCE.createNewVillager(this);
+         depart();
+         return;
+      }
+
+      info = fromSave.get();
    }
 
    public void changeNpcRole(VillagerNpcRole role) {

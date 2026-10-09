@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
 import com.uncreated.civilized.core.villagerinfo.Gender;
+import com.uncreated.civilized.entity.stats.cultures.CommonClothingSets;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -30,7 +31,7 @@ public class ClothingTextureRegistry {
 
    private static final String ROOT = "textures/entity/civilized_villager/clothing";
    public static final String DEFAULT_CULTURE = "default";
-   public static final String DEFAULT_CLOTHING_SET = "peasant";
+   public static final String DEFAULT_CLOTHING_SET = CommonClothingSets.PEASANT;
 
    public static final ResourceLocation FALLBACK =
          ResourceLocation.fromNamespaceAndPath(CIVILIZED_MOD_ID, ROOT + "/default/peasant/male/1.png");
