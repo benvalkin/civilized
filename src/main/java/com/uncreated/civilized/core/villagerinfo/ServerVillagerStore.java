@@ -64,6 +64,7 @@ public class ServerVillagerStore extends VillagerStore {
             item.putUUID(VillagerInfo.FIELD_PARTNER_ID, villagerInfo.getPartnerId());
 
          item.putString(VillagerInfo.FIELD_VILLAGER_NPC_ROLE, villagerInfo.getNpcRole().resourceLocation().toString());
+         item.putInt(VillagerInfo.FIELD_SOCIAL_CLASS, villagerInfo.getSocialClass());
 
          tags.add(item);
       }
@@ -101,6 +102,8 @@ public class ServerVillagerStore extends VillagerStore {
             builder.homeBuildingId(itemTag.getUUID(VillagerInfo.FIELD_HOME_BUILDING_ID));
          if (itemTag.hasUUID(VillagerInfo.FIELD_PARTNER_ID))
             builder.partnerId(itemTag.getUUID(VillagerInfo.FIELD_PARTNER_ID));
+         if (itemTag.contains(VillagerInfo.FIELD_SOCIAL_CLASS))
+            builder.socialClass(itemTag.getInt(VillagerInfo.FIELD_SOCIAL_CLASS));
 
          VillagerInfo villagerInfo = builder.build();
          store.villagers.add(villagerInfo);

@@ -25,6 +25,8 @@ import net.minecraft.resources.ResourceLocation;
 @Builder
 public class VillagerInfo {
 
+   private static final int MAX_SOCIAL_CLASS_LEVEL = 3;
+
    public static StreamCodec<FriendlyByteBuf, VillagerInfo> CODEC =
          StreamCodec.ofMember(VillagerInfo::encode, VillagerInfo::decode);
 
@@ -42,7 +44,8 @@ public class VillagerInfo {
                   .primaryWorksiteId(buffer.readNullable((b -> b.readUUID())))
                   .npcRole(VillagerNpcRoles.getFromResourceLocation(buffer.readResourceLocation()))
                   .gender(buffer.readEnum(Gender.class))
-                  .partnerId(buffer.readNullable((b -> b.readUUID())));
+                  .partnerId(buffer.readNullable((b -> b.readUUID())))
+                  .socialClass(buffer.readVarInt());
 
       return builder.build();
    }
@@ -60,6 +63,7 @@ public class VillagerInfo {
       buffer.writeResourceLocation(npcRole.resourceLocation());
       buffer.writeEnum(gender);
       buffer.writeNullable(partnerId, (b, v) -> b.writeUUID(v));
+      buffer.writeVarInt(socialClass);
    }
 
    public static final String FIELD_VILLAGER_ID = "villager_id";
@@ -72,6 +76,7 @@ public class VillagerInfo {
    public static final String FIELD_VILLAGER_NPC_ROLE = "npc_role";
    public static final String FIELD_VILLAGER_GENDER = "field_villager_gender";
    public static final String FIELD_PARTNER_ID = "field_spouse_id";
+   public static final String FIELD_SOCIAL_CLASS = "social_class";
 
    private UUID villagerId;
    @Setter
@@ -97,12 +102,15 @@ public class VillagerInfo {
    private Gender gender;
    @Setter
    private @Nullable UUID partnerId;
-   @Setter
    @Builder.Default
    private int socialClass = 1;
 
    public boolean hasName() {
       return !firstName.isEmpty() && !lastName.isEmpty();
+   }
+
+   public void setSocialClass(int socialClass) {
+      this.socialClass = Math.clamp(socialClass, 1, MAX_SOCIAL_CLASS_LEVEL);
    }
 
    public boolean isTaken() {
@@ -136,7 +144,8 @@ public class VillagerInfo {
    }
 
    public Component getSocialClassTranslation() {
-      return Component.translatable("villager.social_class.default." + socialClass + "." + gender.toString().toLowerCase());
+      return Component
+            .translatable("villager.social_class.default." + socialClass + "." + gender.toString().toLowerCase());
    }
 
    public static List<String> PLACEHOLDER_FIRST_NAMES_MALE =
@@ -224,6 +233,7 @@ public class VillagerInfo {
       npcRole = other.npcRole;
       gender = other.gender;
       partnerId = other.partnerId;
+      socialClass = other.socialClass;
    }
 
    public String toStringLite() {
