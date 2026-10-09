@@ -2,7 +2,6 @@ package com.uncreated.civilized.core.villagerinfo;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
@@ -30,12 +29,16 @@ public class VillagerOccupation {
    private final ResourceLocation resourceLocation;
    @Nullable
    private final BuildingType homeType;
-   @Nullable
-   private final Predicate<BuildingType> validWorksite;
+   @Builder.Default
+   private final List<BuildingType> worksiteTypes = List.of();
    @Nullable
    private final Supplier<ImmutableList<Pair<Integer, ? extends BehaviorControl<CivilizedVillager>>>> workBehaviourPackage;
    @Builder.Default
    private final List<String> clothingSets = List.of(ClothingTextureRegistry.DEFAULT_CLOTHING_SET);
+
+   public boolean isValidWorksite(BuildingType buildingType) {
+      return worksiteTypes.stream().anyMatch(buildingType::is);
+   }
 
    public static VillagerOccupation.VillagerOccupationBuilder builder(ResourceLocation key) {
       return internalBuilder().resourceLocation(key);

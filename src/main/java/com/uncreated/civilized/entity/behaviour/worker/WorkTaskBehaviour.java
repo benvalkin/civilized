@@ -1,15 +1,19 @@
 package com.uncreated.civilized.entity.behaviour.worker;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import org.jetbrains.annotations.NotNull;
 
+import com.uncreated.civilized.core.building.BuildingType;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.entity.LoadedBuildings;
@@ -22,6 +26,7 @@ import com.uncreated.civilized.core.notifications.Notification;
 import com.uncreated.civilized.core.notifications.NotificationService;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlement;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
+import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.BehaviourState;
 import com.uncreated.civilized.entity.behaviour.StatefulBehaviour;
@@ -29,6 +34,7 @@ import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 import com.uncreated.civilized.util.ContainerHelper;
 
 import lombok.Getter;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.Container;
@@ -36,6 +42,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 public abstract class WorkTaskBehaviour extends StatefulBehaviour {
 
@@ -61,12 +68,10 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
       return home;
    }
 
-   /**
-    * Tells players about something the villager needs to work but can't find anywhere, e.g. a tool. Kept so that it can
-    * be resolved once the villager has it.
-    */
    @Nullable
    private Notification missingItemNotification;
+   @Nullable
+   private Notification noWorksiteNotification;
 
    @Nullable
    protected LoadedBuilding worksite;
@@ -114,7 +119,18 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
       settlement = loadedSettlement.get();
 
       if (requiresWorksite) {
-         Optional<LoadedBuilding> building = LoadedBuildings.checkLoaded(villager.getInfo().getPrimaryWorksiteId());
+         UUID worksiteId = villager.getInfo().getPrimaryWorksiteId();
+         if (worksiteId == null) {
+            // only when it has no worksite at all. One that just isn't loaded, e.g. because it's far away, is fine
+            noWorksiteNotification = noWorksiteNotification(villager.getInfo()).build();
+            NotificationService.INSTANCE.sendNotification(noWorksiteNotification);
+            return false;
+         }
+
+         NotificationService.INSTANCE.resolveNotification(noWorksiteNotification);
+         noWorksiteNotification = null;
+
+         Optional<LoadedBuilding> building = LoadedBuildings.checkLoaded(worksiteId);
          if (building.isEmpty())
             return false;
 
@@ -195,12 +211,6 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
       getStateMachine().queueActionOnce(WorkStates.DROPPING_OFF_ITEMS_AT_BUILDING);
    }
 
-   /**
-    * Collects items lying on the ground anywhere in the worksite into the villager's work output inventory, e.g. eggs
-    * laid by chickens or drops that nobody picked up.
-    *
-    * @return whether anything was picked up
-    */
    protected boolean pickUpDroppedItemsAtWorksite(ServerLevel level, CivilizedVillager villager) {
 
       List<ItemEntity> droppedItems =
@@ -258,5 +268,33 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
 
       building.placeReservation(reservationKey, entries);
       return entries;
+   }
+
+   private static Notification.NotificationBuilder noWorksiteNotification(VillagerInfo info) {
+
+      if (info.getSettlementId() == null)
+         throw new IllegalArgumentException("Villager's settlementId must not be null");
+
+      Component headline = Component.translatable("notification.worker.no_worksite");
+
+      List<BuildingType> worksiteTypes = info.getOccupation().worksiteTypes();
+
+      Component detail;
+      if (worksiteTypes.size() != 1)
+         detail =
+               Component.translatable(
+                     "notification.worker.no_worksite.specific.detail",
+                     info.getFirstName(),
+                     info.getOccupation().translation(),
+                     worksiteTypes.getFirst().translation());
+      else
+         detail =
+               Component.translatable(
+                     "notification.worker.no_worksite.detail",
+                     info.getFirstName(),
+                     info.getOccupation().translation());
+
+      return Notification.workBlockedNotification("no_worksite", info, headline, detail, new ItemStack(Items.OAK_SIGN))
+            .deliverAfter(Duration.of(1, ChronoUnit.MINUTES));
    }
 }

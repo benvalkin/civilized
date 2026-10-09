@@ -211,7 +211,7 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
 
       return BuildingUtil.findUnoccupiedWorksite(
             villagerInfo.getSettlementId(),
-            villagerInfo.getOccupation().validWorksite(),
+            villagerInfo.getOccupation()::isValidWorksite,
             ServerBuildingsStore.INSTANCE,
             ServerVillagerStore.INSTANCE);
    }
