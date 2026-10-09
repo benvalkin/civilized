@@ -18,6 +18,8 @@ import com.uncreated.civilized.core.building.logistics.hauling.ReservationKey;
 import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventoryType;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.DropOffItemsInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.ItemStockRequirement;
+import com.uncreated.civilized.core.notifications.Notification;
+import com.uncreated.civilized.core.notifications.NotificationService;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlement;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
 import com.uncreated.civilized.entity.CivilizedVillager;
@@ -59,6 +61,13 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
       return home;
    }
 
+   /**
+    * Tells players about something the villager needs to work but can't find anywhere, e.g. a tool. Kept so that it can
+    * be resolved once the villager has it.
+    */
+   @Nullable
+   private Notification missingItemNotification;
+
    @Nullable
    protected LoadedBuilding worksite;
    @Nullable
@@ -83,6 +92,16 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
       super(state, minDuration, maxDuration, cooldownDuration);
       this.requiresWorksite = requiresWorksite;
       this.requiresHome = requiresHome;
+   }
+
+   protected void notifyMissingItem(Notification.NotificationBuilder notification) {
+      missingItemNotification = notification.build();
+      NotificationService.INSTANCE.sendNotification(missingItemNotification);
+   }
+
+   protected void resolveMissingItemNotification() {
+      NotificationService.INSTANCE.resolveNotification(missingItemNotification);
+      missingItemNotification = null;
    }
 
    @Override

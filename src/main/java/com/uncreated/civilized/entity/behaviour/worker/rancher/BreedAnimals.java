@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -11,12 +13,15 @@ import com.uncreated.civilized.core.building.logistics.hauling.ReservationKey;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.TakeToInventoryInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
 import com.uncreated.civilized.core.building.state.animalfarm.AnimalFarmState;
+import com.uncreated.civilized.core.notifications.Notification;
+import com.uncreated.civilized.core.notifications.NotificationService;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
 import com.uncreated.civilized.entity.behaviour.worker.WorkTaskBehaviour;
 import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -32,6 +37,8 @@ public class BreedAnimals<T extends Animal> extends WorkTaskBehaviour {
    private MediumDistanceTravelTask travelHelper;
    private ItemStack handHeld;
    private Class<? extends Animal> animalFarmMobType;
+   @Nullable
+   private Notification missingLivestockNotification;
 
    public BreedAnimals() {
       super(WorkStates.BREEDING_ANIMALS, true, true, 120 * 20, 30 * 20);
@@ -46,6 +53,14 @@ public class BreedAnimals<T extends Animal> extends WorkTaskBehaviour {
       Objects.requireNonNull(animalFarmMobType, "worksite is expected to be an animal farm");
 
       List<Animal> totalAnimals = getTotalAnimals(level, animalFarmMobType);
+
+      if (totalAnimals.isEmpty()) {
+         missingLivestockNotification = missingAnimalFoodNotification(villager);
+         return false;
+      }
+
+      NotificationService.INSTANCE.resolveNotification(missingLivestockNotification);
+
       if (totalAnimals.size() > 8)
          return false;
 
@@ -81,12 +96,14 @@ public class BreedAnimals<T extends Animal> extends WorkTaskBehaviour {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
             getStateMachine().queueActionOnce(this.getState());
-            // todo: send notification that the villager is missing shears
+         } else {
+            notifyMissingItem(missingAnimalFoodNotification(villager, animalFarmState));
          }
 
          return false;
       }
 
+      resolveMissingItemNotification();
       this.handHeld = carrying.stock().getItemStacks().getFirst();
       assert this.handHeld.getCount() >= 2;
       return true;
@@ -172,5 +189,30 @@ public class BreedAnimals<T extends Animal> extends WorkTaskBehaviour {
 
    private List<ItemStack> getAnimalFoodItemsInventory(CivilizedVillager villager, Animal animal) {
       return villager.getWorkInputInventory().getItems().stream().filter(animal::isFood).toList();
+   }
+
+   private static Notification.NotificationBuilder missingAnimalFoodNotification(
+         CivilizedVillager villager,
+         AnimalFarmState animalFarmState) {
+      ItemStack food = animalFarmState.getFoodSlot(0);
+      return Notification.missingItem(
+            "missing_animal_food",
+            villager.getInfo(),
+            Component.translatable("notification.worker.item.animal_food"),
+            food);
+   }
+
+   private static Notification missingAnimalFoodNotification(CivilizedVillager villager) {
+      return Notification
+            .workBlockedNotification(
+                  "missing_livestock",
+                  villager.getInfo(),
+                  Component.translatable("notification.worker.no_livestock"),
+                  Component.translatable(
+                        "notification.worker.no_livestock.description",
+                        villager.getInfo().getFirstName(),
+                        villager.getInfo().getOccupation().translation()),
+                  ItemStack.EMPTY)
+            .build();
    }
 }

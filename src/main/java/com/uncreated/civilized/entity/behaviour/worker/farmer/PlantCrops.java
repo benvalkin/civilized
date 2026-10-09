@@ -1,5 +1,7 @@
 package com.uncreated.civilized.entity.behaviour.worker.farmer;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,6 +15,7 @@ import com.uncreated.civilized.core.building.logistics.orders.imports.ImportUpTo
 import com.uncreated.civilized.core.building.logistics.orders.task.TaskConsumableItemRequirement;
 import com.uncreated.civilized.core.building.logistics.orders.task.TaskItemRequirement;
 import com.uncreated.civilized.core.building.state.CropFarmState;
+import com.uncreated.civilized.core.notifications.Notification;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
@@ -20,6 +23,7 @@ import com.uncreated.civilized.entity.behaviour.worker.WorkTaskBehaviour;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.Container;
@@ -28,6 +32,7 @@ import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.WalkTarget;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.FarmBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -52,7 +57,7 @@ public class PlantCrops extends WorkTaskBehaviour {
       if (emptyFarmland.isEmpty())
          return false;
 
-      LogisticsManager logisticsManager =getSettlement().getBehaviour().getLogisticsManager();
+      LogisticsManager logisticsManager = getSettlement().getBehaviour().getLogisticsManager();
       CropFarmState behaviour = (CropFarmState) getWorksite().getBuilding().getState();
       TaskItemRequirement taskItemRequirement =
             new TaskConsumableItemRequirement(
@@ -76,9 +81,20 @@ public class PlantCrops extends WorkTaskBehaviour {
       logisticsManager.registerOrder(getHome().getBuilding(), importOrder);
 
       if (!(hasSeedsInInventory(villager.getWorkInputInventory())
-            || hasSeedsInInventory(villager.getWorkOutputInventory())))
+            || hasSeedsInInventory(villager.getWorkOutputInventory()))) {
+         notifyMissingItem(
+               Notification
+                     .missingItem(
+                           "missing_seeds",
+                           villager.getInfo(),
+                           Component.translatable("notification.worker.item.seeds"),
+                           new ItemStack(Items.WHEAT_SEEDS))
+                     // only sent after a while, since haulers may already be bringing seeds
+                     .deliverAfter(Duration.of(3, ChronoUnit.MINUTES)));
          return false;
+      }
 
+      resolveMissingItemNotification();
       return true;
    }
 

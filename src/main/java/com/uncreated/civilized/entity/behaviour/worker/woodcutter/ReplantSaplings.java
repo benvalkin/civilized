@@ -13,6 +13,7 @@ import com.uncreated.civilized.core.building.logistics.hauling.ReservationKey;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.TakeToInventoryInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
 import com.uncreated.civilized.core.building.state.GroveState;
+import com.uncreated.civilized.core.notifications.Notification;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
@@ -21,6 +22,7 @@ import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.BlockTags;
@@ -29,6 +31,7 @@ import net.minecraft.world.entity.ai.behavior.BlockPosTracker;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.WalkTarget;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SaplingBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -49,6 +52,10 @@ public class ReplantSaplings extends WorkTaskBehaviour {
       if (!super.checkExtraStartConditions(level, villager))
          return false;
 
+      findValidPlantingBlocks(level);
+      if (validPlantingBlocks.isEmpty())
+         return false;
+
       GroveState groveState = (GroveState) getWorksite().getBuilding().getState();
       saplingFilter = groveState::isCorrectSapling;
 
@@ -65,13 +72,16 @@ public class ReplantSaplings extends WorkTaskBehaviour {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
             getStateMachine().queueActionOnce(this.getState());
-            // todo: send notification that the villager is missing saplings
+         } else {
+            notifyMissingItem(
+                  missingSaplingsNotification(villager, groveState));
          }
          return false;
       }
 
-      findValidPlantingBlocks(level);
-      return !validPlantingBlocks.isEmpty(); // only start when it is possible to replant saplings
+      resolveMissingItemNotification();
+
+      return true;
    }
 
    @Override
@@ -176,5 +186,20 @@ public class ReplantSaplings extends WorkTaskBehaviour {
 
    private Optional<ItemStack> getSaplingsInInventory(CivilizedVillager villager) {
       return villager.getWorkInputInventory().getItems().stream().filter(saplingFilter).findFirst();
+   }
+
+   private static Notification.NotificationBuilder missingSaplingsNotification(
+         CivilizedVillager villager,
+         GroveState groveState) {
+      // the grove's chosen sapling, or saplings in general if it doesn't have one
+      ItemStack sapling = groveState.getSapling();
+      if (sapling.isEmpty())
+         return Notification.missingItem(
+               "missing_saplings",
+               villager.getInfo(),
+               Component.translatable("notification.worker.item.saplings"),
+               new ItemStack(Items.OAK_SAPLING));
+
+      return Notification.missingItem("missing_saplings", villager.getInfo(), sapling.getHoverName(), sapling);
    }
 }

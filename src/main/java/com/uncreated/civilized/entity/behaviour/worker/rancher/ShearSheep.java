@@ -10,7 +10,6 @@ import com.uncreated.civilized.core.building.logistics.hauling.instruction.TakeT
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.ToolRequirement;
 import com.uncreated.civilized.core.notifications.Notification;
-import com.uncreated.civilized.core.notifications.NotificationService;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
@@ -54,7 +53,6 @@ public class ShearSheep extends WorkTaskBehaviour {
    private ItemStack shears;
    private boolean hasShearedSheep;
    private static final ToolRequirement shearsRequirement = new ToolRequirement("shears", i -> i.is(Items.SHEARS));
-   private Notification missingToolNotification;
 
    public ShearSheep() {
       super(WorkStates.SHEARING_SHEEP, true, true, 120 * 20, 30 * 20);
@@ -85,14 +83,12 @@ public class ShearSheep extends WorkTaskBehaviour {
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
             getStateMachine().queueActionOnce(this.getState());
          } else {
-            missingToolNotification =
-                  Notification.missingTool("missing_shears", villager.getInfo(), Items.SHEARS).build();
-            NotificationService.INSTANCE.sendNotification(missingToolNotification);
+            notifyMissingItem(Notification.missingTool("missing_shears", villager.getInfo(), Items.SHEARS));
          }
          return false;
       }
 
-      NotificationService.INSTANCE.resolveNotification(missingToolNotification);
+      resolveMissingItemNotification();
 
       shears = carrying.stock().getItemStacks().getFirst();
       return true;

@@ -81,29 +81,47 @@ public class Notification {
    }
 
    public static Notification.NotificationBuilder missingTool(String type, VillagerInfo info, Item item) {
+      return missingTool(type, info, item.getName(), new ItemStack(item));
+   }
+
+   public static Notification.NotificationBuilder missingTool(
+         String type,
+         VillagerInfo info,
+         Component toolName,
+         ItemStack icon) {
 
       if (info.getSettlementId() == null)
          throw new IllegalArgumentException("Villager's settlementId must not be null");
 
-      Component headline = Component.translatable("notification.worker.missing_tool.generic", item.getName());
+      Component headline = Component.translatable("notification.worker.missing_tool.generic", toolName);
 
       Component detail =
             Component.translatable(
                   "notification.worker.missing_tool.generic.detail",
                   info.getFirstName(),
                   info.getOccupation().translation(),
-                  item.getName());
+                  toolName);
 
-      return Notification.builder()
-            .type(type)
-            .settlementId(info.getSettlementId())
-            .villagerId(info.getVillagerId())
-            .receiver(Receiver.ADMINISTRATION)
-            .severity(Severity.MINOR)
-            .headline(headline)
-            .expireAfter(Duration.of(5, ChronoUnit.MINUTES))
-            .detail(detail)
-            .icon(new ItemStack(item));
+      return workBlockedNotification(type, info, headline, detail, icon)
+            .expireAfter(Duration.of(5, ChronoUnit.MINUTES));
+   }
+
+   public static Notification.NotificationBuilder missingItem(
+         String type,
+         VillagerInfo info,
+         Component itemName,
+         ItemStack icon) {
+
+      Component headline = Component.translatable("notification.worker.missing_item.generic", itemName);
+
+      Component detail =
+            Component.translatable(
+                  "notification.worker.missing_item.generic.detail",
+                  info.getFirstName(),
+                  info.getOccupation().translation(),
+                  itemName);
+
+      return workBlockedNotification(type, info, headline, detail, icon);
    }
 
    public static Notification.NotificationBuilder missingIngredients(String type, VillagerInfo info, Item item) {
@@ -120,6 +138,20 @@ public class Notification {
                   info.getOccupation().translation(),
                   item.getName());
 
+      return workBlockedNotification(type, info, headline, detail, new ItemStack(item))
+            .deliverAfter(Duration.of(3, ChronoUnit.MINUTES));
+   }
+
+   public static Notification.NotificationBuilder workBlockedNotification(
+         String type,
+         VillagerInfo info,
+         Component headline,
+         Component detail,
+         ItemStack icon) {
+
+      if (info.getSettlementId() == null)
+         throw new IllegalArgumentException("Villager's settlementId must not be null");
+
       return Notification.builder()
             .type(type)
             .settlementId(info.getSettlementId())
@@ -127,10 +159,9 @@ public class Notification {
             .receiver(Receiver.ADMINISTRATION)
             .severity(Severity.MINOR)
             .headline(headline)
-            .deliverAfter(Duration.of(3, ChronoUnit.MINUTES))
             .expireAfter(Duration.of(10, ChronoUnit.MINUTES))
             .detail(detail)
-            .icon(new ItemStack(item));
+            .icon(icon);
    }
 
    public CompoundTag toNbt(HolderLookup.Provider registries) {

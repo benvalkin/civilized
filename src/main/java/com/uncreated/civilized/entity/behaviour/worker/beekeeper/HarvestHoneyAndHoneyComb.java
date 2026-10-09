@@ -10,6 +10,7 @@ import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventory
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.TakeToInventoryInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.ToolRequirement;
+import com.uncreated.civilized.core.notifications.Notification;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
@@ -18,6 +19,7 @@ import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 import com.uncreated.civilized.util.ContainerHelper;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
@@ -85,11 +87,18 @@ public class HarvestHoneyAndHoneyComb extends WorkTaskBehaviour {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
             getStateMachine().queueActionOnce(this.getState());
-            // todo: send notification that the villager is missing shears
+         } else {
+            notifyMissingItem(
+                  Notification.missingTool(
+                        "missing_shears_or_glass_bottles",
+                        villager.getInfo(),
+                        Component.translatable("notification.worker.tool.shears_or_glass_bottles"),
+                        new ItemStack(Items.GLASS_BOTTLE)));
          }
          return false;
       }
 
+      resolveMissingItemNotification();
       return true;
    }
 
