@@ -101,8 +101,8 @@ public class CivilizedVillagerRenderer extends
                         hungerC,
                         hungerIcon(hunger));
          }
-      } else {
-         state.title = villager.getInfo().getNpcRole().translation(villager.getInfo().getGender());
+      } else if (villager.getInfo().getNpcRole().is(VillagerNpcRoles.SPOUSE)) {
+         state.title = villager.getInfo().getSocialClassTranslation();
       }
       state.currentActivity = villager.getEntityData().get(CivilizedVillager.ACTIVITY_DESCRIPTION);
    }

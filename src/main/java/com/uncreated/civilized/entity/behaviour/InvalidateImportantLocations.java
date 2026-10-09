@@ -44,7 +44,7 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
       VillagerOccupation oldOccupation = villagerInfo.getOccupation();
       Optional<Building> oldHome = ServerBuildingsStore.INSTANCE.find(villagerInfo.getHomeBuildingId());
       Optional<Building> oldWorksite = ServerBuildingsStore.INSTANCE.find(villagerInfo.getPrimaryWorksiteId());
-
+      int oldSocialClass = villagerInfo.getSocialClass();
       Optional<Building> home = invalidateHome(villagerInfo);
       if (home.isPresent()) {
 
@@ -54,6 +54,7 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
             villagerInfo.setOccupation(VillagerOccupations.UNEMPLOYED);
 
          villagerInfo.setHomeBuildingId(home.get().getBuildingId());
+         villagerInfo.setSocialClass(home.get().getUpgradeLevel());
          villager.getBrain()
                .setMemory(MemoryModuleType.HOME, new GlobalPos(level.dimension(), home.get().getBlockPos()));
 
@@ -78,6 +79,7 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
       }
 
       boolean jobChanged = oldOccupation != villagerInfo.getOccupation();
+      boolean socialClassChanged = oldSocialClass != villagerInfo.getSocialClass();
       boolean homeChanged =
             !Objects.equals(oldHome.map(Building::getBuildingId).orElse(null), villagerInfo.getHomeBuildingId());
       boolean worksiteChanged =
@@ -97,7 +99,7 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
             ServerBuildingsStore.INSTANCE.replicateChange(b, StoreOperation.UPDATE);
          });
       }
-      if (jobChanged) {
+      if (jobChanged || socialClassChanged) {
          villager.refreshBrain(level);
          villager.updateClothing();
       }

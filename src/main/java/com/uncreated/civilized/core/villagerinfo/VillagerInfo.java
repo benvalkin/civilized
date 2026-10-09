@@ -97,6 +97,9 @@ public class VillagerInfo {
    private Gender gender;
    @Setter
    private @Nullable UUID partnerId;
+   @Setter
+   @Builder.Default
+   private int socialClass = 1;
 
    public boolean hasName() {
       return !firstName.isEmpty() && !lastName.isEmpty();
@@ -130,6 +133,10 @@ public class VillagerInfo {
          return Component.empty();
 
       return Component.literal(getFullName());
+   }
+
+   public Component getSocialClassTranslation() {
+      return Component.translatable("villager.social_class.default." + socialClass + "." + gender.toString().toLowerCase());
    }
 
    public static List<String> PLACEHOLDER_FIRST_NAMES_MALE =
