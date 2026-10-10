@@ -3,8 +3,8 @@ package com.uncreated.civilized.commands.events;
 import com.uncreated.civilized.CivilizedMod;
 import com.uncreated.civilized.commands.OpenTradingMenu;
 import com.uncreated.civilized.commands.SetSettlementAccess;
-import com.uncreated.civilized.commands.SummonMerchant;
 import com.uncreated.civilized.commands.SummonResident;
+import com.uncreated.civilized.commands.SummonVisitor;
 import com.uncreated.civilized.core.building.events.model.BuildingUpdatedEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -18,6 +18,6 @@ public class CommandRegistry {
         SummonResident.register(event.getDispatcher());
         SetSettlementAccess.register(event.getDispatcher());
         OpenTradingMenu.register(event.getDispatcher());
-        SummonMerchant.register(event.getDispatcher());
+        SummonVisitor.register(event.getDispatcher());
     }
 }
