@@ -7,7 +7,6 @@ import java.util.List;
 import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventoryType;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.DropOffItemsInstruction;
 import com.uncreated.civilized.entity.CivilizedVillager;
-import com.uncreated.civilized.entity.behaviour.BehaviourStates;
 import com.uncreated.civilized.entity.behaviour.Cooldowns;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
 import com.uncreated.civilized.entity.behaviour.worker.WorkTaskBehaviour;
@@ -23,7 +22,7 @@ import net.minecraft.world.SimpleContainer;
 public class CheckOffloadInventoriesAtHome extends WorkTaskBehaviour {
 
    public CheckOffloadInventoriesAtHome() {
-      super(BehaviourStates.OFFLOAD_INVENTORIES_AFTER_WORK, false, true, 0, 120 * 20);
+      super(WorkStates.OFFLOAD_INVENTORIES_AFTER_WORK, false, true, 0, 120 * 20);
    }
 
    @Override
