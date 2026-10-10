@@ -41,8 +41,6 @@ public class MineOres extends WorkTaskBehaviour {
    private long lastWorkTime;
    private MediumDistanceTravelTask travelHelper;
 
-   private int workSpeedMultiplier = 2;
-   private float minerLuckChange = 0.2f; // percentage chance to successfully mine an ore
    private int minerMaxYield = 2; // max ore item yield per ore block mined
 
    private boolean foundOres = false;
@@ -115,9 +113,12 @@ public class MineOres extends WorkTaskBehaviour {
       return villager.getBrain().checkMemory(MemoryModuleType.JOB_SITE, MemoryStatus.VALUE_PRESENT);
    }
 
-   private int applyWorkSpeedMultiplier(int requiredToolHits) {
-      return requiredToolHits / workSpeedMultiplier;
+   private int getRequiredToolHits() {
+      int blocksPerDay = 28;
+      return CivilizedVillager.WORK_DAY_DURATION_SECONDS / blocksPerDay;
    }
+
+   private int toolHits = 0;
 
    @Override
    protected void tick(ServerLevel level, CivilizedVillager villager, long gameTime) {
@@ -127,14 +128,17 @@ public class MineOres extends WorkTaskBehaviour {
          return;
       }
 
-      if (gameTime - lastWorkTime > applyWorkSpeedMultiplier(30)) {
-
+      if (gameTime - lastWorkTime > 20) {
          lastWorkTime = gameTime;
+         toolHits++;
 
-         villager.swing(InteractionHand.MAIN_HAND, true);
-         villager.addWorkExhaustion(1);
+         if (toolHits >= getRequiredToolHits()) {
+            toolHits = 0;
+            villager.swing(InteractionHand.MAIN_HAND, true);
+            villager.addWorkExhaustion(1);
 
-         mineOreVein(level, villager, gameTime);
+            mineOreVein(level, villager, gameTime);
+         }
       }
    }
 
@@ -174,8 +178,8 @@ public class MineOres extends WorkTaskBehaviour {
          long gameTime) {
       BlockState blockState = chunk.getBlockState(toMine);
 
-      if (!(blockState.getBlock() instanceof DropExperienceBlock deb))
-         return;
+      if (!(blockState.getBlock() instanceof DropExperienceBlock) && villager.getRandom().nextFloat() < 0.33f)
+         return; // only mine 33% os non ore blocks
 
       Long timeLastMinedThisBlock = recentlyMinedBlocks.get(toMine);
       if (timeLastMinedThisBlock != null && gameTime - timeLastMinedThisBlock < 20 * 60 * 10)
@@ -187,8 +191,6 @@ public class MineOres extends WorkTaskBehaviour {
 
       for (int i = 0; i < drops.size(); i++) {
          ItemStack drop = drops.get(i);
-         if (i > 0 && villager.getRandom().nextFloat() > minerLuckChange)
-            continue;
 
          int adjustedYield = Math.min(drop.getCount(), minerMaxYield);
          drop.setCount(adjustedYield);

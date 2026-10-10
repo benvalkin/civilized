@@ -743,6 +743,12 @@ public class CivilizedVillager extends AgeableMob
 
    private long lastScheduleUpdate = 0;
 
+   public static final int WORK_START_DAY_TIME = 1000; // 7pm
+   public static final int WORK_FINISH_DAY_TIME = 9000; // 3pm
+   public static final int REST_TIME = 16000; // 10pm
+   public static final int WORK_DAY_DURATION_TICKS = WORK_FINISH_DAY_TIME - WORK_START_DAY_TIME; // 10pm
+   public static final int WORK_DAY_DURATION_SECONDS = WORK_DAY_DURATION_TICKS * 20; // 10pm
+
    public void updateActivity(long dayTime, long gameTime) {
       if (gameTime < this.lastScheduleUpdate)
          return;
@@ -761,9 +767,9 @@ public class CivilizedVillager extends AgeableMob
          return;
       }
 
-      if (todayTime >= 1000 && todayTime < 9000) { // 7am-3pm
+      if (todayTime >= WORK_START_DAY_TIME && todayTime < WORK_FINISH_DAY_TIME) { // 7am-3pm
          getBrain().setActiveActivityIfPossible(Activity.WORK);
-      } else if (todayTime >= 16000) { // 10pm-6am
+      } else if (todayTime >= REST_TIME) { // 10pm-6am
          getBrain().setActiveActivityIfPossible(Activity.REST);
       } else { // 6-7am, 3-10pm
          getBrain().setActiveActivityIfPossible(Activity.IDLE);
