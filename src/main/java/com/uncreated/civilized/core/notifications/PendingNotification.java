@@ -55,14 +55,6 @@ public class PendingNotification {
       return elapsedSeconds >= notification.expireAfter().toSeconds();
    }
 
-   public boolean isTimeToDeliver(long gameTime) {
-      if (notification.deliverAfter() == null)
-         return true;
-
-      long elapsedSeconds = (gameTime - createdGameTime) / 20;
-      return elapsedSeconds >= notification.deliverAfter().toSeconds();
-   }
-
    public CompoundTag toNbt(HolderLookup.Provider registries) {
       CompoundTag tag = new CompoundTag();
       tag.put(FIELD_NOTIFICATION, notification.toNbt(registries));

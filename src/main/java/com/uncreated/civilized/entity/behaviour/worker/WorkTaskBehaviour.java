@@ -22,6 +22,7 @@ import com.uncreated.civilized.core.building.logistics.hauling.ReservationKey;
 import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventoryType;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.DropOffItemsInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.ItemStockRequirement;
+import com.uncreated.civilized.core.notifications.Delay;
 import com.uncreated.civilized.core.notifications.Notification;
 import com.uncreated.civilized.core.notifications.NotificationService;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlement;
@@ -40,6 +41,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.schedule.Activity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -104,6 +106,11 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
       NotificationService.INSTANCE.sendNotification(missingItemNotification);
    }
 
+   protected void notifyMissingItem(Notification.NotificationBuilder notification, Delay delay) {
+      missingItemNotification = notification.build();
+      NotificationService.INSTANCE.sendNotification(missingItemNotification, delay);
+   }
+
    protected void resolveMissingItemNotification() {
       NotificationService.INSTANCE.resolveNotification(missingItemNotification);
       missingItemNotification = null;
@@ -123,7 +130,9 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
          if (worksiteId == null) {
             // only when it has no worksite at all. One that just isn't loaded, e.g. because it's far away, is fine
             noWorksiteNotification = noWorksiteNotification(villager.getInfo()).build();
-            NotificationService.INSTANCE.sendNotification(noWorksiteNotification);
+            NotificationService.INSTANCE.sendNotification(
+                  noWorksiteNotification,
+                  new Delay(Duration.of(1, ChronoUnit.MINUTES), p -> villager.getBrain().isActive(Activity.WORK)));
             return false;
          }
 
@@ -294,7 +303,6 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
                      info.getFirstName(),
                      info.getOccupation().translation());
 
-      return Notification.workBlockedNotification("no_worksite", info, headline, detail, new ItemStack(Items.OAK_SIGN))
-            .deliverAfter(Duration.of(1, ChronoUnit.MINUTES));
+      return Notification.workBlockedNotification("no_worksite", info, headline, detail, new ItemStack(Items.OAK_SIGN));
    }
 }

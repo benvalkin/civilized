@@ -9,6 +9,7 @@ import com.uncreated.civilized.entity.behaviour.social.Socialize;
 import com.uncreated.civilized.entity.behaviour.social.VisitEntertainmentPlace;
 import com.uncreated.civilized.entity.behaviour.strike.GoToTownSquare;
 import com.uncreated.civilized.entity.behaviour.strike.StrikeBehaviourControl;
+import com.uncreated.civilized.entity.behaviour.worker.common.logistics.CheckOffloadInventoriesAtHome;
 import com.uncreated.civilized.entity.behaviour.worker.common.logistics.TakeItemsToInventory;
 import com.uncreated.civilized.neoforge.registration.entity.EntityRegistry;
 
@@ -60,12 +61,13 @@ public class CivilizedVillagerActivities {
    public static IdleBehaviourControl createIdleBehaviourControl(float speedModifier) {
       return new IdleBehaviourControl(
             ImmutableList.of(
+                  new CheckOffloadInventoriesAtHome(),
                   new EatFood(BehaviourStates.EATING_FOOD),
                   new TakeItemsToInventory(),
                   new IdleStrollAroundSettlement(5, 3, speedModifier),
                   new Socialize(speedModifier),
                   new VisitEntertainmentPlace(0.4F)),
-            ImmutableList.of(BehaviourStates.EATING_FOOD),
+            ImmutableList.of(BehaviourStates.OFFLOAD_INVENTORIES_AFTER_WORK, BehaviourStates.EATING_FOOD),
             new ShufflingList<BehaviourState>().add(BehaviourStates.SOCIALISING, 10)
                   .add(BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT, 5)
                   .add(BehaviourStates.VISITING_ENTERTAINMENT, 1));
@@ -76,6 +78,7 @@ public class CivilizedVillagerActivities {
             ImmutableList.of(
                   new EatFood(BehaviourStates.EATING_FOOD),
                   new TakeItemsToInventory(),
+                  new CheckOffloadInventoriesAtHome(),
                   new IdleStrollAroundSettlement(5, 3, speedModifier),
                   new Flirt(speedModifier),
                   new Socialize(speedModifier),

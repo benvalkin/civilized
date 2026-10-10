@@ -21,7 +21,6 @@ import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 
 @Accessors(fluent = true)
 @Getter
@@ -35,7 +34,6 @@ public class Notification {
    private static final String FIELD_EXPIRE_AFTER_SECONDS = "expire_after_seconds";
    private static final String FIELD_HEADLINE = "headline";
    private static final String FIELD_DETAIL = "detail";
-   private static final String FIELD_DELIVER_AFTER_SECONDS = "deliver_after_seconds";
    private static final String FIELD_ICON = "icon";
 
    private final String type;
@@ -44,7 +42,6 @@ public class Notification {
    private final Receiver receiver;
    private final Severity severity;
    private final Duration expireAfter;
-   private final @Nullable Duration deliverAfter;
    private final Component headline;
    private final Component detail;
    private final ItemStack icon;
@@ -57,7 +54,6 @@ public class Notification {
          Receiver receiver,
          Severity severity,
          Duration expireAfter,
-         @Nullable Duration deliverAfter,
          Component headline,
          Component detail,
          @Nullable ItemStack icon) {
@@ -67,7 +63,6 @@ public class Notification {
       this.receiver = receiver;
       this.severity = severity;
       this.expireAfter = expireAfter;
-      this.deliverAfter = deliverAfter;
       this.headline = headline;
       this.detail = detail;
       // copied, so that changes to the stack it was made from don't show up in the notification
@@ -139,8 +134,7 @@ public class Notification {
                   info.getOccupation().translation(),
                   item.getName());
 
-      return workBlockedNotification(type, info, headline, detail, new ItemStack(item))
-            .deliverAfter(Duration.of(3, ChronoUnit.MINUTES));
+      return workBlockedNotification(type, info, headline, detail, new ItemStack(item));
    }
 
    public static Notification.NotificationBuilder workBlockedNotification(
@@ -178,8 +172,6 @@ public class Notification {
       tag.putLong(FIELD_EXPIRE_AFTER_SECONDS, expireAfter.toSeconds());
       tag.put(FIELD_HEADLINE, ComponentSerialization.CODEC.encodeStart(ops, headline).getOrThrow());
       tag.put(FIELD_DETAIL, ComponentSerialization.CODEC.encodeStart(ops, detail).getOrThrow());
-      if (deliverAfter != null)
-         tag.putLong(FIELD_DELIVER_AFTER_SECONDS, deliverAfter.toSeconds());
       if (!icon.isEmpty())
          tag.put(FIELD_ICON, ItemStack.CODEC.encodeStart(ops, icon).getOrThrow());
       return tag;
@@ -200,10 +192,6 @@ public class Notification {
                      .expireAfter(Duration.ofSeconds(tag.getLong(FIELD_EXPIRE_AFTER_SECONDS)))
                      .headline(ComponentSerialization.CODEC.parse(ops, tag.get(FIELD_HEADLINE)).getOrThrow())
                      .detail(ComponentSerialization.CODEC.parse(ops, tag.get(FIELD_DETAIL)).getOrThrow())
-                     .deliverAfter(
-                           tag.contains(FIELD_DELIVER_AFTER_SECONDS)
-                                 ? Duration.ofSeconds(tag.getLong(FIELD_DELIVER_AFTER_SECONDS))
-                                 : null)
                      .icon(
                            tag.contains(FIELD_ICON)
                                  ? ItemStack.CODEC.parse(ops, tag.get(FIELD_ICON)).result().orElse(ItemStack.EMPTY)

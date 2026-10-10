@@ -1,9 +1,11 @@
 package com.uncreated.civilized.core.notifications;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -31,6 +33,7 @@ public class NotificationService extends SavedData {
    private static final int TICK_INTERVAL = 20 * 10;
 
    private final Map<String, PendingNotification> notifications = new HashMap<>();
+   private final Map<String, DelayedNotification> delayedNotifications = new HashMap<>();
    private @Nullable MinecraftServer server;
 
    public static void loadServer(MinecraftServer server) {
@@ -54,13 +57,54 @@ public class NotificationService extends SavedData {
       PendingNotification pendingNotification = new PendingNotification(notification, server.overworld().getGameTime());
       notifications.put(notification.key(), pendingNotification);
       setDirty();
-      if (pendingNotification.isTimeToDeliver(pendingNotification.createdGameTime()))
-         pushNotificationToRelevantPlayers(pendingNotification);
+      pushNotificationToRelevantPlayers(pendingNotification);
+   }
+
+   public void sendNotification(Notification notification, Delay delay) {
+
+      PendingNotification existingAlreadySent = notifications.get(notification.key());
+      // do not resend similar notifications,
+      // unresolve existing notifications recently resolved,
+      // update existing's notification instances in case the new one is different
+      if (existingAlreadySent != null) {
+         existingAlreadySent.resolved(false);
+         existingAlreadySent.notification(notification);
+         return;
+      }
+      // must do the same thing if the notification is still waiting to be sent
+      DelayedNotification existingNotSentYet = delayedNotifications.get(notification.key());
+      if (existingNotSentYet != null) {
+         existingNotSentYet.notification(notification); // update the existing's notification in case it's different
+         return;
+      }
+      DelayedNotification delayedNotification =
+            new DelayedNotification(notification, delay, server.overworld().getGameTime());
+      delayedNotifications.put(notification.key(), delayedNotification);
+   }
+
+   private void sendDelayedNotifications(long gameTime) {
+      Set<String> finished = new HashSet<>();
+      for (Map.Entry<String, DelayedNotification> entry : delayedNotifications.entrySet()) {
+         DelayedNotification delayedNotification = entry.getValue();
+         if (delayedNotification.isTimeToDeliver(gameTime)) {
+            if (delayedNotification.isStillRelevant())
+               sendNotification(delayedNotification.notification());
+
+            finished.add(entry.getKey());
+         }
+      }
+      for (String key : finished) {
+         delayedNotifications.remove(key);
+      }
    }
 
    public void tick(long gameTime) {
+
       if (gameTime % TICK_INTERVAL != 0)
          return;
+
+      // because of the tick interval, delayed notifications may not be sent exactly on time.
+      sendDelayedNotifications(gameTime);
 
       List<String> keysToRemove = new LinkedList<>();
       for (PendingNotification pending : notifications.values()) {
@@ -69,7 +113,7 @@ public class NotificationService extends SavedData {
             continue;
          }
 
-         if (!pending.delivered() && pending.isTimeToDeliver(gameTime))
+         if (!pending.delivered())
             pushNotificationToRelevantPlayers(pending);
       }
 
@@ -85,11 +129,12 @@ public class NotificationService extends SavedData {
          return;
 
       PendingNotification removed = notifications.remove(notification.key());
-      if (removed == null)
-         return;
+      if (removed != null) {
+         removed.resolved(true);
+         setDirty();
+      }
 
-      removed.resolved(true);
-      setDirty();
+      delayedNotifications.remove(notification.key());
    }
 
    private void pushNotificationToRelevantPlayers(PendingNotification pending) {
@@ -123,8 +168,9 @@ public class NotificationService extends SavedData {
    @Override
    public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
       ListTag list = new ListTag();
-      for (PendingNotification pending : notifications.values())
+      for (PendingNotification pending : notifications.values()) {
          list.add(pending.toNbt(registries));
+      }
 
       tag.put(FIELD_NOTIFICATIONS, list);
       return tag;

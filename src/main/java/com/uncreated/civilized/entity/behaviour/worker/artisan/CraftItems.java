@@ -1,11 +1,12 @@
 package com.uncreated.civilized.entity.behaviour.worker.artisan;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import com.uncreated.civilized.core.building.production.PendingProduction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -17,9 +18,11 @@ import com.uncreated.civilized.core.building.entity.behaviour.ArtisanHouseBehavi
 import com.uncreated.civilized.core.building.logistics.hauling.ReservationKey;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.TransferToBuildingInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.BuildingStockRequirement;
+import com.uncreated.civilized.core.building.production.PendingProduction;
 import com.uncreated.civilized.core.building.production.PendingProductionOutput;
 import com.uncreated.civilized.core.building.production.lines.crafting.CraftingMachine;
 import com.uncreated.civilized.core.building.production.lines.crafting.CraftingOrder;
+import com.uncreated.civilized.core.notifications.Delay;
 import com.uncreated.civilized.core.notifications.Notification;
 import com.uncreated.civilized.core.notifications.NotificationService;
 import com.uncreated.civilized.entity.CivilizedVillager;
@@ -36,6 +39,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.behavior.BlockPosTracker;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.MemoryStatus;
+import net.minecraft.world.entity.schedule.Activity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.CraftingTableBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -122,7 +126,9 @@ public class CraftItems extends WorkTaskBehaviour {
             missingIngredientsNotification =
                   Notification.missingIngredients("missing_crafting_ingredients", villager.getInfo(), icon.getItem())
                         .build();
-            NotificationService.INSTANCE.sendNotification(missingIngredientsNotification);
+            NotificationService.INSTANCE.sendNotification(
+                  missingIngredientsNotification,
+                  new Delay(Duration.of(3, ChronoUnit.MINUTES), p -> villager.getBrain().isActive(Activity.WORK)));
          }
 
          return false;
