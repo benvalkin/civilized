@@ -747,7 +747,7 @@ public class CivilizedVillager extends AgeableMob
    public static final int WORK_FINISH_DAY_TIME = 9000; // 3pm
    public static final int REST_TIME = 16000; // 10pm
    public static final int WORK_DAY_DURATION_TICKS = WORK_FINISH_DAY_TIME - WORK_START_DAY_TIME; // 10pm
-   public static final int WORK_DAY_DURATION_SECONDS = WORK_DAY_DURATION_TICKS * 20; // 10pm
+   public static final int WORK_DAY_DURATION_SECONDS = WORK_DAY_DURATION_TICKS / 20; // 10pm
 
    public void updateActivity(long dayTime, long gameTime) {
       if (gameTime < this.lastScheduleUpdate)

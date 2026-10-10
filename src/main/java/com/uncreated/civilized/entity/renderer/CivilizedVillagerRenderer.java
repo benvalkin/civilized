@@ -103,6 +103,8 @@ public class CivilizedVillagerRenderer extends
          }
       } else if (villager.getInfo().getNpcRole().is(VillagerNpcRoles.SPOUSE)) {
          state.title = villager.getInfo().getSocialClassTranslation();
+      } else {
+         state.title = villager.getInfo().getNpcRole().translation(villager.getInfo().getGender());
       }
       state.currentActivity = villager.getEntityData().get(CivilizedVillager.ACTIVITY_DESCRIPTION);
    }
@@ -276,7 +278,7 @@ public class CivilizedVillagerRenderer extends
          PoseStack poseStack,
          MultiBufferSource bufferSource,
          int packedLight) {
-      if (renderState.currentActivity != null && !renderState.currentActivity.getString().isEmpty()) {
+      if (renderState.currentActivity != null) {
          renderTag(
                renderState.currentActivity,
                2.8,
@@ -294,7 +296,7 @@ public class CivilizedVillagerRenderer extends
          PoseStack poseStack,
          MultiBufferSource bufferSource,
          int packedLight) {
-      if (!renderState.currentActivity.toString().isEmpty()) {
+      if (renderState.currentActivity != null) {
          renderTag(
                renderState.currentActivity,
                1.8,
@@ -331,6 +333,11 @@ public class CivilizedVillagerRenderer extends
          PoseStack poseStack,
          MultiBufferSource bufferSource,
          int packedLight) {
+      // the font draws the tag's background even when there's no text, which shows up as a thin black line. Blank
+      // tags happen whenever a translation is empty, e.g. when the villager isn't doing anything worth describing
+      if (text.getString().isBlank())
+         return;
+
       boolean seeThrough = !renderState.isDiscrete;
 
       poseStack.pushPose();

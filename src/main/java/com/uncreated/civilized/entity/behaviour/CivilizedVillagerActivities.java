@@ -94,7 +94,7 @@ public class CivilizedVillagerActivities {
                   WorkStates.OFFLOAD_INVENTORIES_AFTER_WORK,
                   WorkStates.DROPPING_OFF_ITEMS_AT_BUILDING,
                   BehaviourStates.EATING_FOOD),
-            new ShufflingList<BehaviourState>().add(BehaviourStates.FLIRTING, 8)
+            new ShufflingList<BehaviourState>().add(BehaviourStates.FLIRTING, 32)
                   .add(BehaviourStates.SOCIALISING, 8)
                   .add(BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT, 3)
                   .add(BehaviourStates.VISITING_ENTERTAINMENT, 1));

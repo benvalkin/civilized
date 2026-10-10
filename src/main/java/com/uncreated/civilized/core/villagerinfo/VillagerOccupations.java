@@ -261,5 +261,6 @@ public class VillagerOccupations {
                .homeType(BuildingTypes.BARRACKS)
                .worksiteTypes(List.of(BuildingTypes.BARRACKS, BuildingTypes.GUARD_POST))
                .workBehaviourPackage(WorkActivities::getGuardWorkPackage)
+               .clothingSets(List.of(CommonClothingSets.SOLDIER))
                .build();
 }

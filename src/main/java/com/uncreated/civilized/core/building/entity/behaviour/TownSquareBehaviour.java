@@ -3,10 +3,17 @@ package com.uncreated.civilized.core.building.entity.behaviour;
 import java.util.List;
 import java.util.Optional;
 
+import javax.annotation.Nullable;
+
+import org.slf4j.Logger;
+
+import com.mojang.logging.LogUtils;
 import com.uncreated.civilized.core.StoreOperation;
+import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.util.BuildingUtil;
+import com.uncreated.civilized.core.trading.MerchantType;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.core.villagerinfo.VillagerNpcRole;
@@ -18,12 +25,17 @@ import com.uncreated.civilized.neoforge.registration.entity.EntityRegistry;
 import com.uncreated.civilized.util.random.DailyEventScheduler;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.random.SimpleWeightedRandomList;
+import net.minecraft.util.random.WeightedEntry;
 import net.minecraft.world.entity.EntitySpawnReason;
 
 public class TownSquareBehaviour extends BuildingBehaviour {
+
+   // the building behaviour's logger isn't static, so it can't be used when spawning visitors from elsewhere
+   private static final Logger LOGGER = LogUtils.getLogger();
 
    private final DailyEventScheduler eventScheduler;
 
@@ -35,8 +47,8 @@ public class TownSquareBehaviour extends BuildingBehaviour {
    private static final int MAX_VISITORS = 12;
    private static final int SPAWN_SPOT_ATTEMPTS = 16;
 
-   // visitors may leave at any time from 5pm, and are guaranteed to be gone by 10pm
-   private static final int EARLIEST_DEPARTURE_TIME = 11000;
+   // visitors may leave at any time from 8pm, and are guaranteed to be gone by 10pm
+   private static final int EARLIEST_DEPARTURE_TIME = 14000;
    private static final int LATEST_DEPARTURE_TIME = 16000;
 
    @Override
@@ -56,17 +68,38 @@ public class TownSquareBehaviour extends BuildingBehaviour {
                .add(VillagerNpcRoles.MERCHANT, 1)
                .build();
 
+   /** Every role that can visit a town square, including ones that currently never spawn by themselves. */
+   public static List<VillagerNpcRole> visitorRoles() {
+      return VISITOR_ROLES.unwrap().stream().map(WeightedEntry.Wrapper::data).toList();
+   }
+
    private void trySpawnVisitor(ServerLevel level) {
 
       List<VillagerInfo> visitors = BuildingUtil.getVisitors(getBuilding(), ServerVillagerStore.INSTANCE);
       if (visitors.size() >= MAX_VISITORS)
          return;
 
+      VillagerNpcRole visitorRole = VISITOR_ROLES.getRandomValue(level.getRandom()).orElse(VillagerNpcRoles.TRAVELLER);
+      spawnVisitor(level, getBuilding(), visitorRole, null);
+   }
+
+   /**
+    * Spawns a visitor somewhere inside the town square, which it will stay at until it departs later in the day.
+    *
+    * @param merchantType
+    *           what a merchant sells. A random type is picked when it's null.
+    */
+   public static Optional<CivilizedVillager> spawnVisitor(
+         ServerLevel level,
+         Building townSquare,
+         VillagerNpcRole role,
+         @Nullable Holder.Reference<MerchantType> merchantType) {
+
       Optional<BlockPos> spawnPos =
-            getBuilding().getBounds().findRandomStandableSpot(level, level.getRandom(), SPAWN_SPOT_ATTEMPTS);
+            townSquare.getBounds().findRandomStandableSpot(level, level.getRandom(), SPAWN_SPOT_ATTEMPTS);
       if (spawnPos.isEmpty()) {
-         LOGGER.debug("Couldn't find anywhere to spawn a visitor at Town Square {}", getBuilding().getBuildingId());
-         return;
+         LOGGER.debug("Couldn't find anywhere to spawn a visitor at Town Square {}", townSquare.getBuildingId());
+         return Optional.empty();
       }
 
       CivilizedVillager villager =
@@ -75,25 +108,28 @@ public class TownSquareBehaviour extends BuildingBehaviour {
       if (villager == null) {
          LOGGER.error(
                "Tried to spawn villager at a Town Square, but something went wrong during the entity spawning process.");
-         return;
+         return Optional.empty();
       }
 
-      VillagerNpcRole visitorRole =
-            VISITOR_ROLES.getRandomValue(villager.getRandom()).orElse(VillagerNpcRoles.TRAVELLER);
-      villager.changeNpcRole(visitorRole);
-      if (villager.getRoleBehaviour() instanceof MerchantVisitorBehaviour merchant)
-         merchant.stockWithNewTrades(level);
-      villager.getInfo().setHomeBuildingId(getBuilding().getBuildingId());
+      villager.changeNpcRole(role);
+      if (villager.getRoleBehaviour() instanceof MerchantVisitorBehaviour merchant) {
+         if (merchantType != null)
+            merchant.stockWithNewTrades(merchantType);
+         else
+            merchant.stockWithNewTrades(level);
+      }
+      villager.getInfo().setHomeBuildingId(townSquare.getBuildingId());
       VisitorBehaviour.of(villager)
             .ifPresent(visitor -> visitor.setDepartAt(chooseDepartureTime(level.getDayTime(), villager.getRandom())));
       ServerVillagerStore.INSTANCE.setDirty();
       ServerVillagerStore.INSTANCE.replicateChange(villager.getInfo(), StoreOperation.UPDATE);
-      ServerBuildingsStore.INSTANCE.replicateChange(getBuilding(), StoreOperation.UPDATE);
+      ServerBuildingsStore.INSTANCE.replicateChange(townSquare, StoreOperation.UPDATE);
 
       // villager's activities may have changed with its role so we need refresh its brain
       villager.refreshBrain(level);
 
       LOGGER.debug("Villager spawned at Town Square: {}", villager.getUUID());
+      return Optional.of(villager);
    }
 
    private static long chooseDepartureTime(long dayTime, RandomSource random) {
