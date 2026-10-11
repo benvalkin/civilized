@@ -7,8 +7,10 @@ import java.util.Optional;
 import org.jetbrains.annotations.NotNull;
 
 import com.uncreated.civilized.core.StoreOperation;
+import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
+import com.uncreated.civilized.core.settlement.festival.Festival;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
 import com.uncreated.civilized.entity.CivilizedVillager;
@@ -63,6 +65,16 @@ public class Flirt extends Socialize {
    @Override
    protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
       if (villager.getInfo().isTaken())
+         return false;
+
+      Festival.Phase festival =
+            Festival.currentPhaseFor(
+                  villager.getInfo(),
+                  ServerBuildingsStore.INSTANCE,
+                  ServerSettlementsStore.INSTANCE,
+                  level.getDayTime());
+      // if there's currently a festival gathering, rather wait until it actually starts
+      if (festival == Festival.Phase.GATHERING)
          return false;
 
       return super.checkExtraStartConditions(level, villager);

@@ -47,6 +47,7 @@ public class BuildingMenu extends AbstractContainerMenu {
             playerInventory,
             ClientBuildingStore.INSTANCE.get(extraDataFromServer.readUUID()),
             ClientSettlementsStore.INSTANCE.get(extraDataFromServer.readUUID()),
+            extraDataFromServer.readVarInt(),
             extraDataFromServer.readNbt());
    }
 
@@ -55,6 +56,7 @@ public class BuildingMenu extends AbstractContainerMenu {
          Inventory playerInventory,
          Building building,
          Settlement settlement,
+         int availableCoins,
          CompoundTag additionalData) {
       this(
             containerId,
@@ -62,6 +64,7 @@ public class BuildingMenu extends AbstractContainerMenu {
             building,
             settlement,
             ClientSettlementPermissionStore.INSTANCE.getOrCreate(settlement.getSettlementId()),
+            availableCoins,
             additionalData);
    }
 
@@ -71,6 +74,7 @@ public class BuildingMenu extends AbstractContainerMenu {
          Building building,
          Settlement settlement,
          SettlementPermissions permissions,
+         int availableCoins,
          CompoundTag additionalData) {
       super(GuiRegistry.BUILDING_MENU.get(), containerId);
 
@@ -81,6 +85,7 @@ public class BuildingMenu extends AbstractContainerMenu {
                   building,
                   settlement,
                   permissions,
+                  availableCoins,
                   additionalData,
                   playerInventory.player.registryAccess());
 

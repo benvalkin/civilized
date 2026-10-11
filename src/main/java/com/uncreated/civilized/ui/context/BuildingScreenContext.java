@@ -8,6 +8,6 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 
 public record BuildingScreenContext(Building building, Settlement settlement, SettlementPermissions permissions,
-      CompoundTag additionalData, HolderLookup.Provider registryAccess) {
+      int availableCoins, CompoundTag additionalData, HolderLookup.Provider registryAccess) {
 
 }

@@ -53,7 +53,7 @@ public class TownSquareInfoTab extends ABuildingScreenTab implements IBuildingIn
                   Component.translatable(
                         "menu.building.town_square.festival.button",
                         CurrencyItem.amountTranslation(festivalCost).withColor(Colors.COIN)),
-                  button -> startFestival())
+                  button -> cloaseAndStartFestival())
                   .pos(getX() + (getWidth() - BUTTON_WIDTH) / 2, getBottom() - BUTTON_HEIGHT)
                   .size(BUTTON_WIDTH, BUTTON_HEIGHT)
                   .build();
@@ -69,8 +69,10 @@ public class TownSquareInfoTab extends ABuildingScreenTab implements IBuildingIn
       return Minecraft.getInstance().level == null ? 0 : Minecraft.getInstance().level.getDayTime();
    }
 
-   private void startFestival() {
+   private void cloaseAndStartFestival() {
       PacketDistributor.sendToServer(new StartFestival(context.building().getBuildingId()));
+      if (Minecraft.getInstance().player != null)
+         Minecraft.getInstance().player.closeContainer();
    }
 
    private int countVisitors() {
@@ -133,7 +135,7 @@ public class TownSquareInfoTab extends ABuildingScreenTab implements IBuildingIn
    }
 
    private void updateFestivalButton() {
-      Optional<Component> whyNot = Festival.whyCannotStart(state(), dayTime());
+      Optional<Component> whyNot = Festival.whyCannotStart(state(), dayTime(), context.availableCoins());
       boolean hasPermission = AlterBuildingPermissions.hasPermission(context);
       festivalButton.active = hasPermission && whyNot.isEmpty();
 

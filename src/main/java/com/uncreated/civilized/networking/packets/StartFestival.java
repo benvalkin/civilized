@@ -75,24 +75,15 @@ public record StartFestival(UUID townSquareId) implements CustomPacketPayload {
          return;
 
       long dayTime = level.getDayTime();
-      Optional<Component> whyNot = Festival.whyCannotStart(settlement.get().getState(), dayTime);
+      List<Container> coinStorage = ServerRequirementContexts.coinStorage(settlement.get(), player);
+      Optional<Component> whyNot =
+            Festival.whyCannotStart(settlement.get().getState(), dayTime, CurrencyItem.countCurrency(coinStorage));
       if (whyNot.isPresent()) {
          fail(player, whyNot.get());
          return;
       }
 
-      int cost = Festival.cost(settlement.get().getState());
-      List<Container> coinStorage = ServerRequirementContexts.coinStorage(settlement.get(), player);
-      if (CurrencyItem.countCurrency(coinStorage) < cost) {
-         fail(
-               player,
-               Component.translatable(
-                     "message.festival.failed.not_enough_coins",
-                     Festival.costTranslation(settlement.get().getState())));
-         return;
-      }
-
-      CurrencyItem.debit(coinStorage, cost);
+      CurrencyItem.debit(coinStorage, Festival.cost(settlement.get().getState()));
       FestivalOrganiser.start(settlement.get(), dayTime);
 
       player.displayClientMessage(

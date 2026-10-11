@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.BuildingStore;
 import com.uncreated.civilized.core.settlement.SettlementState;
+import com.uncreated.civilized.core.settlement.SettlementsStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.item.CurrencyItem;
 import com.uncreated.civilized.ui.style.Colors;
@@ -63,7 +64,7 @@ public final class Festival {
       return state.getFestivalStartTime() + GATHERING_DURATION + CELEBRATION_DURATION;
    }
 
-   public static Optional<Component> whyCannotStart(SettlementState state, long dayTime) {
+   public static Optional<Component> whyCannotStart(SettlementState state, long dayTime, int availableCoins) {
       if (isUnderway(state))
          return Optional.of(Component.translatable("festival.cannot_start.underway"));
 
@@ -77,6 +78,9 @@ public final class Festival {
       if (timeOfDay < EARLIEST_START_TIME || timeOfDay > LATEST_START_TIME)
          return Optional.of(Component.translatable("festival.cannot_start.wrong_time"));
 
+      if (availableCoins < cost(state))
+         return Optional.of(Component.translatable("festival.cannot_start.not_enough_coins", costTranslation(state)));
+
       return Optional.empty();
    }
 
@@ -89,5 +93,17 @@ public final class Festival {
          return villager.getSettlementId();
 
       return buildings.find(villager.getHomeBuildingId()).map(Building::getSettlementId).orElse(null);
+   }
+
+   public static Phase currentPhaseFor(
+         VillagerInfo villager,
+         BuildingStore buildings,
+         SettlementsStore settlements,
+         long dayTime) {
+      UUID settlementId = findHostSettlementId(villager, buildings);
+      if (settlementId == null)
+         return Phase.NONE;
+
+      return settlements.find(settlementId).map(s -> phase(s.getState(), dayTime)).orElse(Phase.NONE);
    }
 }

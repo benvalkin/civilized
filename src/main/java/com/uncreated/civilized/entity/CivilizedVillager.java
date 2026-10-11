@@ -21,13 +21,13 @@ import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Dynamic;
 import com.uncreated.civilized.client.VillagerDialogueClientHandler;
 import com.uncreated.civilized.core.StoreOperation;
+import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventoryType;
 import com.uncreated.civilized.core.dialogue.IVillageDialogue;
 import com.uncreated.civilized.core.dialogue.context.DialogueContext;
 import com.uncreated.civilized.core.dialogue.controller.DialogueController;
 import com.uncreated.civilized.core.dialogue.controller.DialogueFlow;
 import com.uncreated.civilized.core.dialogue.specialized.ItemDepotDialogue;
-import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.defense.CombatTarget;
 import com.uncreated.civilized.core.settlement.defense.ICombatCommand;
@@ -780,7 +780,13 @@ public class CivilizedVillager extends AgeableMob
       }
 
       // festivals can run late, so they keep villagers up past their bedtime
-      if (isFestivalCelebrating(dayTime)) {
+      boolean activeFestival =
+            Festival.currentPhaseFor(
+                  info,
+                  ServerBuildingsStore.INSTANCE,
+                  ServerSettlementsStore.INSTANCE,
+                  dayTime) == Festival.Phase.CELEBRATING;
+      if (activeFestival) {
          getBrain().setActiveActivityIfPossible(AIRegistry.A_ATTENDING_FESTIVAL.get());
          return;
       }
@@ -794,23 +800,8 @@ public class CivilizedVillager extends AgeableMob
       }
    }
 
-   /**
-    * Settlement members strike once they've gone too hungry, until they've eaten. Visitors don't, since they aren't the
-    * settlement's to look after.
-    */
    public boolean shouldStrike() {
       return info.getSettlementId() != null && hunger.isHungryEnoughToStrike();
-   }
-
-   /** Whether the settlement the villager lives in or is visiting is celebrating a festival. */
-   private boolean isFestivalCelebrating(long dayTime) {
-      UUID settlementId = Festival.findHostSettlementId(info, ServerBuildingsStore.INSTANCE);
-      if (settlementId == null)
-         return false;
-
-      return ServerSettlementsStore.INSTANCE.find(settlementId)
-            .filter(settlement -> Festival.phase(settlement.getState(), dayTime) == Festival.Phase.CELEBRATING)
-            .isPresent();
    }
 
    public boolean isOnStrike() {

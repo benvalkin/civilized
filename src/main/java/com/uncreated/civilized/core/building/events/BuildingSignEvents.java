@@ -2,14 +2,19 @@ package com.uncreated.civilized.core.building.events;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import com.uncreated.civilized.CivilizedMod;
 import com.uncreated.civilized.core.building.Building;
+import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.entity.LoadedBuildings;
 import com.uncreated.civilized.core.building.events.model.BuildingDeletedEvent;
 import com.uncreated.civilized.core.building.events.model.BuildingUpdatedEvent;
 import com.uncreated.civilized.core.building.signs.SignHelper;
+import com.uncreated.civilized.core.settlement.events.SettlementUpdatedEvent;
+import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
+import com.uncreated.civilized.core.villagerinfo.events.model.VillagerInfoUpdatedEvent;
 import com.uncreated.civilized.neoforge.registration.attachments.DataAttachments;
 
 import net.minecraft.world.level.block.entity.SignBlockEntity;
@@ -22,30 +27,59 @@ public class BuildingSignEvents {
 
    @SubscribeEvent
    public static void onBuildingUpdated(BuildingUpdatedEvent event) {
-
       if (event.isClientside())
          return;
 
-      Optional<LoadedBuilding> loadedBuilding = LoadedBuildings.checkLoaded(event.getBuilding());
-      if (loadedBuilding.isEmpty())
+      updateSign(event.getBuilding());
+   }
+
+   @SubscribeEvent
+   public static void onSettlementUpdated(SettlementUpdatedEvent event) {
+      if (event.isClientside())
          return;
 
-      Building building = event.getBuilding();
+      // town hall often cares when a settlement is updated
+      ServerBuildingsStore.INSTANCE.findTownHall(event.getSettlement().getSettlementId())
+            .ifPresent(BuildingSignEvents::updateSign);
+   }
 
-      List<SignBlockEntity> signs =
-            event.getBuilding()
-                  .getBounds()
-                  .getBlockEntitiesInsideBuilding(loadedBuilding.get().getLevel(), true)
-                  .stream()
-                  .filter(b -> b instanceof SignBlockEntity)
-                  .map(b -> (SignBlockEntity) b)
-                  .toList();
+   @SubscribeEvent
+   public static void onVillagerInfoUpdated(VillagerInfoUpdatedEvent event) {
+      if (event.isClientside())
+         return;
 
-      if (signs.isEmpty())
+      // update buildings relevant to this villager
+      VillagerInfo villager = event.getVillagerInfo();
+      Stream.of(
+            ServerBuildingsStore.INSTANCE.findTownHall(villager.getSettlementId()),
+            ServerBuildingsStore.INSTANCE.find(villager.getHomeBuildingId()),
+            ServerBuildingsStore.INSTANCE.find(villager.getPrimaryWorksiteId()))
+            .flatMap(Optional::stream)
+            .distinct()
+            .forEach(BuildingSignEvents::updateSign);
+   }
+
+   /**
+    * Tells clients to redraw the building's sign from what they know about it. Links the building to one of its signs
+    * first, if it isn't linked to one yet.
+    */
+   public static void updateSign(Building building) {
+      Optional<LoadedBuilding> loadedBuilding = LoadedBuildings.checkLoaded(building);
+      if (loadedBuilding.isEmpty())
          return;
 
       SignBlockEntity primarySign = building.getPrimarySign(loadedBuilding.get().getLevel());
       if (primarySign == null) {
+         List<SignBlockEntity> signs =
+               building.getBounds()
+                     .getBlockEntitiesInsideBuilding(loadedBuilding.get().getLevel(), true)
+                     .stream()
+                     .filter(b -> b instanceof SignBlockEntity)
+                     .map(b -> (SignBlockEntity) b)
+                     .toList();
+
+         if (signs.isEmpty())
+            return;
 
          // link primary sign if it has not been set yet (usually after creating a new building)
          primarySign = signs.stream().min((s1, s2) -> {

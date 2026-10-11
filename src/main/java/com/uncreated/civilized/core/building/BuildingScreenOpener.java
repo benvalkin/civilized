@@ -1,8 +1,11 @@
 package com.uncreated.civilized.core.building;
 
+import com.uncreated.civilized.core.building.requirement.ServerRequirementContexts;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
+import com.uncreated.civilized.core.settlement.Settlement;
 import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermissionStore;
 import com.uncreated.civilized.core.settlement.permission.SettlementPermissions;
+import com.uncreated.civilized.item.CurrencyItem;
 import com.uncreated.civilized.ui.menu.building.BuildingMenu;
 
 import net.minecraft.nbt.CompoundTag;
@@ -42,6 +45,10 @@ public class BuildingScreenOpener {
          Building building,
          SettlementPermissions permissions,
          CompoundTag additionalData) {
+      Settlement settlement = ServerSettlementsStore.INSTANCE.get(building.getSettlementId());
+      // count coins - certain tabs might need them
+      int availableCoins = CurrencyItem.countCurrency(ServerRequirementContexts.coinStorage(settlement, player));
+
       player.openMenu(new MenuProvider() {
 
          @Override
@@ -55,16 +62,22 @@ public class BuildingScreenOpener {
                   containerId,
                   inventory,
                   building,
-                  ServerSettlementsStore.INSTANCE.get(building.getSettlementId()),
+                  settlement,
                   permissions,
+                  availableCoins,
                   additionalData);
          }
-      }, buffer -> writeMenuData(buffer, building, additionalData));
+      }, buffer -> writeMenuData(buffer, building, availableCoins, additionalData));
    }
 
-   private static void writeMenuData(RegistryFriendlyByteBuf buffer, Building building, CompoundTag additionalData) {
+   private static void writeMenuData(
+         RegistryFriendlyByteBuf buffer,
+         Building building,
+         int availableCoins,
+         CompoundTag additionalData) {
       buffer.writeUUID(building.getBuildingId());
       buffer.writeUUID(building.getSettlementId());
+      buffer.writeVarInt(availableCoins);
       buffer.writeNbt(additionalData);
    }
 }
