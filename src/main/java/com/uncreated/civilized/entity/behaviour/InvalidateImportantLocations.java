@@ -55,7 +55,7 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
 
          villagerInfo.setHomeBuildingId(home.get().getBuildingId());
          // social class is not yet an active system
-//         villagerInfo.setSocialClass(home.get().getUpgradeLevel());
+         // villagerInfo.setSocialClass(home.get().getUpgradeLevel());
          villager.getBrain()
                .setMemory(MemoryModuleType.HOME, new GlobalPos(level.dimension(), home.get().getBlockPos()));
 
@@ -163,7 +163,7 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
       if (mainHomeOwner.isPresent()) {
          // try move to wherever the spouse's partner is staying
          Optional<Building> building = ServerBuildingsStore.INSTANCE.find(mainHomeOwner.get().getHomeBuildingId());
-         if (building.isPresent())
+         if (building.isPresent() && building.get().getBuildingType().isSpouseResidence())
             return building;
       }
 
