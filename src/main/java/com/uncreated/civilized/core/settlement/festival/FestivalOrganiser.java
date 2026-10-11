@@ -35,8 +35,8 @@ import net.minecraft.world.item.Items;
 /** Runs a settlement's festivals once they've been started: brings in suitors, and wraps the festival up at the end. */
 public class FestivalOrganiser {
 
-   private static final float SUITORS_PER_SINGLE_WORKER = 1.25F;
-   private static final int MINIMUM_FESTIVAL_VISITORS = 6;
+   private static final float SUITORS_PER_SINGLE_WORKER = 1.1F;
+   private static final int MINIMUM_FESTIVAL_VISITORS = 2;
    private final LoadedSettlement loadedSettlement;
    private @Nullable DailyEventScheduler visitorArrivalScheduler;
    private long visitorArrivalsFestivalStartTime = SettlementState.NOT_SCHEDULED;
@@ -87,7 +87,7 @@ public class FestivalOrganiser {
       case NONE -> end(level, dayTime);
       case GATHERING -> {
          if (visitorArrivalScheduler == null || visitorArrivalsFestivalStartTime != state.getFestivalStartTime())
-            visitorArrivalScheduler = scheduleSuitorArrivals(state);
+            visitorArrivalScheduler = scheduleVisitorArrivals(state);
          visitorArrivalScheduler.tick(level, gameTime, () -> trySpawnVisitor(level, state));
       }
       case CELEBRATING -> {
@@ -106,19 +106,29 @@ public class FestivalOrganiser {
       return ServerBuildingsStore.INSTANCE.findTownSquare(settlement().getSettlementId());
    }
 
-   private DailyEventScheduler scheduleSuitorArrivals(SettlementState state) {
+   private DailyEventScheduler scheduleVisitorArrivals(SettlementState state) {
       int numberOfSingleWorkers =
             (int) ServerVillagerStore.INSTANCE.getCitizens(settlement().getSettlementId())
                   .stream()
                   .filter(villager -> villager.getNpcRole().is(VillagerNpcRoles.WORKER) && !villager.isTaken())
                   .count();
-      int numberOfVisitors =
-            Math.max(Mth.ceil(numberOfSingleWorkers * SUITORS_PER_SINGLE_WORKER), MINIMUM_FESTIVAL_VISITORS);
+      // there may already be visitors at the town square - take these into account to avoid spawning too may visitors
+      Optional<Building> townSquare = findTownSquare();
+      long existingVisitors = 0;
+      if (townSquare.isPresent())
+         existingVisitors =
+               BuildingUtil.getVisitors(townSquare.get(), ServerVillagerStore.INSTANCE)
+                     .stream()
+                     .filter(v -> v.getNpcRole().is(VillagerNpcRoles.SUITOR))
+                     .count();
+
+      int numberOfNewVisitors = Mth.ceil(numberOfSingleWorkers * SUITORS_PER_SINGLE_WORKER) - (int) existingVisitors;
+      numberOfNewVisitors = Math.max(numberOfNewVisitors, MINIMUM_FESTIVAL_VISITORS);
 
       int gatheringStartTime = (int) (state.getFestivalStartTime() % 24000);
       int gatheringEndTime = gatheringStartTime + Festival.GATHERING_DURATION;
       visitorArrivalsFestivalStartTime = state.getFestivalStartTime();
-      return new DailyEventScheduler(numberOfVisitors, gatheringStartTime, gatheringEndTime, 1F);
+      return new DailyEventScheduler(numberOfNewVisitors, gatheringStartTime, gatheringEndTime, 1F);
    }
 
    private void trySpawnVisitor(ServerLevel level, SettlementState state) {
