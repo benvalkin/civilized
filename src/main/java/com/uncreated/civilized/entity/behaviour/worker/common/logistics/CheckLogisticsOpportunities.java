@@ -12,6 +12,7 @@ import com.uncreated.civilized.core.building.logistics.hauling.requirement.Build
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.ItemStockRequirement;
 import com.uncreated.civilized.core.building.logistics.orders.LogisticsOrder;
 import com.uncreated.civilized.entity.CivilizedVillager;
+import com.uncreated.civilized.entity.behaviour.BehaviourStateMachine;
 import com.uncreated.civilized.entity.behaviour.Cooldowns;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
 import com.uncreated.civilized.entity.behaviour.worker.WorkTaskBehaviour;
@@ -81,8 +82,11 @@ public class CheckLogisticsOpportunities extends WorkTaskBehaviour {
          if (transferToBuildingInstruction.isPresent()) {
             getBehaviourCooldowns()
                   .startCooldown(Cooldowns.EXPORT_RUN, Duration.of(2, ChronoUnit.MINUTES), level.getGameTime());
-            villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), transferToBuildingInstruction);
-            getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
+
+            tryDelegateToSpouse(villager, (v, s) -> {
+               v.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), transferToBuildingInstruction);
+               s.queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
+            });
          }
       } else if (!getSharedCooldowns().hasCooldown(Cooldowns.IMPORT_RUN, level.getGameTime())
             && checkForImportOrders(storehouseChests, homeChests)) {

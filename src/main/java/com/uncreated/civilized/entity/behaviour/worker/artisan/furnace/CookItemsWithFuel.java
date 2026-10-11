@@ -156,6 +156,10 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
       if (storehouse.isEmpty())
          return false; // cannot import anything if the storehouse doesn't exist
 
+      if (getBehaviourCooldowns().hasCooldown(Cooldowns.AWAITING_DELIVERY, level.getGameTime()))
+         return false; // the spouse is still bringing ingredients over, we can wait a while before trying to reattempt
+                       // the delivery
+
       List<BuildingStockRequirement> allRecipeStockRequirements =
             createIngredientsRequirementsForAllRecipes(storehouseAndWorksiteChests, level);
       // ensure that no-one can take away ingredients from this building, including this villager when taking items
@@ -172,9 +176,17 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
                   getWorksite(),
                   List.of(storehouse.get()));
       if (fetchFromStorehouse.isPresent()) {
-         villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), fetchFromStorehouse.get());
-         getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
-         getStateMachine().queueActionOnce(this.getState());
+         boolean delegated = tryDelegateToSpouse(villager, (hauler, haulerStateMachine) -> {
+            hauler.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), fetchFromStorehouse.get());
+            haulerStateMachine.queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
+         });
+
+         if (delegated)
+            // start waiting for the delivery (do not try to delegate again as the items should arrive soon)
+            getBehaviourCooldowns()
+                  .startCooldown(Cooldowns.AWAITING_DELIVERY, AWAITING_DELIVERY_DURATION, level.getGameTime());
+         else
+            getStateMachine().queueActionOnce(this.getState());
       } else if (!allRecipeStockRequirements.isEmpty()) {
          // there are requirements for bills that we aren't able to fetch from anywhere at the moment
          int randomIndex = villager.getRandom().nextInt(allRecipeStockRequirements.size());

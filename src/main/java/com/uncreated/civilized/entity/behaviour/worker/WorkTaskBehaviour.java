@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 
 import javax.annotation.Nullable;
 
@@ -27,10 +28,14 @@ import com.uncreated.civilized.core.notifications.Notification;
 import com.uncreated.civilized.core.notifications.NotificationService;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlement;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
+import com.uncreated.civilized.core.settlement.entity.LoadedVillagers;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
+import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.BehaviourState;
+import com.uncreated.civilized.entity.behaviour.BehaviourStateMachine;
 import com.uncreated.civilized.entity.behaviour.StatefulBehaviour;
+import com.uncreated.civilized.entity.behaviour.StatefulBehaviourControl;
 import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 import com.uncreated.civilized.util.ContainerHelper;
 
@@ -47,6 +52,12 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 public abstract class WorkTaskBehaviour extends StatefulBehaviour {
+
+   /**
+    * How long a villager waits for its spouse to deliver what it was asked to fetch, before it would fetch the same
+    * items again. A spouse that hasn't made it back by then may end up bringing a few more items than were needed.
+    */
+   protected static final Duration AWAITING_DELIVERY_DURATION = Duration.of(2, ChronoUnit.MINUTES);
 
    private final boolean requiresWorksite;
    private final boolean requiresHome;
@@ -160,6 +171,57 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
       return ServerBuildingsStore.INSTANCE.findStorehouse(settlement.getSettlement().getSettlementId())
             .flatMap(LoadedBuildings::checkLoaded);
 
+   }
+
+   /**
+    * Tries to delegate the specified action to villager's spouse. If the spouse is unavailable (they must exist and be
+    * free to run an errand), the villager will instead complete the action themselves. Useful for getting the
+    * villager's spouse to do things (e.g. pick up resources) so that the villager doesn't have to.
+    *
+    * @param action
+    *           given whichever villager ends up doing it, and that villager's state machine. Make sure to use those
+    *           rather than this behaviour's villager and state machine.
+    * @return whether the spouse is doing it
+    */
+   protected boolean tryDelegateToSpouse(
+         CivilizedVillager villager,
+         BiConsumer<CivilizedVillager, BehaviourStateMachine> action) {
+      Optional<CivilizedVillager> freeSpouse = findSpouse(villager).filter(WorkTaskBehaviour::isFreeToHaul);
+      if (freeSpouse.isPresent()) {
+         Optional<StatefulBehaviourControl<?>> spouseBehaviourControl = freeSpouse.get().getCurrentBehaviourControl();
+         if (spouseBehaviourControl.isPresent()) {
+            action.accept(freeSpouse.get(), spouseBehaviourControl.get().getStateMachine());
+            return true;
+         }
+      }
+
+      action.accept(villager, getStateMachine());
+      return false;
+   }
+
+   protected Optional<CivilizedVillager> findSpouse(CivilizedVillager villager) {
+      UUID partnerId = villager.getInfo().getPartnerId();
+      if (partnerId == null)
+         return Optional.empty();
+
+      return LoadedVillagers.find(partnerId)
+            .filter(
+                  spouse -> spouse.isAlive() && spouse.level() == villager.level()
+                        && spouse.getInfo().getNpcRole().is(VillagerNpcRoles.SPOUSE));
+   }
+
+   private static boolean isFreeToHaul(CivilizedVillager villager) {
+      if (!villager.getBrain().isActive(Activity.IDLE))
+         return false;
+
+      // not a good idea to interrupt a villager who is already doing something or minor importance
+      boolean runningIdleTask =
+            villager.getCurrentBehaviourControl().map(StatefulBehaviourControl::isRunningIdleTask).orElse(false);
+      // not a good idea to interrupt a villager who is already fulfilling another hauling instruction
+      boolean alreadyHasHaulingInstruction =
+            villager.getBrain().hasMemoryValue(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get())
+                  || villager.getBrain().hasMemoryValue(AIRegistry.MM_DROP_OFF_ITEMS_INSTRUCTION.get());
+      return runningIdleTask && !alreadyHasHaulingInstruction;
    }
 
    @Override

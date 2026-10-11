@@ -10,6 +10,7 @@ import com.google.common.collect.ImmutableList;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.util.CooldownTracker;
 
+import lombok.Getter;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.behavior.Behavior;
@@ -27,6 +28,7 @@ public abstract class StatefulBehaviourControl<StateMachine extends BehaviourSta
    StatefulBehaviour currentBehaviour;
    private Behavior.Status status = Behavior.Status.STOPPED;
 
+   @Getter
    private final StateMachine stateMachine;
 
    private final CooldownTracker<Cooldown> sharedCooldowns;
