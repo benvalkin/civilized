@@ -33,7 +33,7 @@ public class Socialize extends StatefulBehaviour {
    /** How long the host has to reach its partner before it gives up. */
    private static final int MAX_TICKS_TO_MEET = 10 * 20;
    /** How long a villager waits after a conversation before starting another one itself. */
-   private static final Duration COOLDOWN = Duration.of(20, ChronoUnit.SECONDS);
+   private static final Duration COOLDOWN = Duration.of(10, ChronoUnit.SECONDS);
 
    private final float speedModifier;
 
