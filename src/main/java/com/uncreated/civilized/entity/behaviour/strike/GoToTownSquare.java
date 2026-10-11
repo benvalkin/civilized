@@ -4,11 +4,13 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.entity.LoadedBuildings;
+import com.uncreated.civilized.core.settlement.festival.Festival;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.BehaviourStates;
 import com.uncreated.civilized.entity.behaviour.VisitBuilding;
@@ -30,10 +32,11 @@ public class GoToTownSquare extends VisitBuilding {
    }
 
    public static Optional<Building> findTownSquare(CivilizedVillager villager) {
-      if (villager.getInfo().getSettlementId() == null)
+      UUID settlementId = Festival.findHostSettlementId(villager.getInfo(), ServerBuildingsStore.INSTANCE);
+      if (settlementId == null)
          return Optional.empty();
 
-      return ServerBuildingsStore.INSTANCE.findTownSquare(villager.getInfo().getSettlementId());
+      return ServerBuildingsStore.INSTANCE.findTownSquare(settlementId);
    }
 
    public static Optional<LoadedBuilding> findLoadedTownSquare(CivilizedVillager villager) {

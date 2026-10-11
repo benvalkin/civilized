@@ -35,6 +35,9 @@ public class AIRegistry {
 
    public static final Supplier<Activity> A_STRIKE = ACTIVITIES.register("strike", () -> new Activity("strike"));
 
+   public static final Supplier<Activity> A_ATTENDING_FESTIVAL =
+         ACTIVITIES.register("attending_festival", () -> new Activity("attending_festival"));
+
    public static DeferredRegister<MemoryModuleType<?>> MEMORY_MODULES =
          DeferredRegister.create(BuiltInRegistries.MEMORY_MODULE_TYPE, CIVILIZED_MOD_ID);
 

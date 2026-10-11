@@ -54,7 +54,8 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
             villagerInfo.setOccupation(VillagerOccupations.UNEMPLOYED);
 
          villagerInfo.setHomeBuildingId(home.get().getBuildingId());
-         villagerInfo.setSocialClass(home.get().getUpgradeLevel());
+         // social class is not yet an active system
+//         villagerInfo.setSocialClass(home.get().getUpgradeLevel());
          villager.getBrain()
                .setMemory(MemoryModuleType.HOME, new GlobalPos(level.dimension(), home.get().getBlockPos()));
 

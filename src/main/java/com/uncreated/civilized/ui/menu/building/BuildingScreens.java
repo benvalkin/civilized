@@ -13,6 +13,7 @@ import com.uncreated.civilized.ui.menu.building.residence.artisan.ButcheryBuildi
 import com.uncreated.civilized.ui.menu.building.residence.artisan.CraftsmanHouseBuildingScreen;
 import com.uncreated.civilized.ui.menu.building.residence.artisan.MasonBuildingScreen;
 import com.uncreated.civilized.ui.menu.building.townhall.TownHallBuildingScreen;
+import com.uncreated.civilized.ui.menu.building.townsquare.TownSquareBuildingScreen;
 import com.uncreated.civilized.ui.menu.building.worksite.WorksiteBuildingScreen;
 import com.uncreated.civilized.ui.menu.building.worksite.animalfarm.AnimalFarmBuildingScreen;
 import com.uncreated.civilized.ui.menu.building.worksite.cropfarm.CropFarmBuildingScreen;
@@ -35,6 +36,7 @@ public final class BuildingScreens {
    static {
       register(BuildingTypes.TOWN_HALL, TownHallBuildingScreen::new);
       register(BuildingTypes.INN, InnBuildingScreen::new);
+      register(BuildingTypes.TOWN_SQUARE, TownSquareBuildingScreen::new);
 
       register(BuildingTypes.BAKER_HOUSE, BakeryBuildingScreen::new);
       register(BuildingTypes.BUTCHER_HOUSE, ButcheryBuildingScreen::new);

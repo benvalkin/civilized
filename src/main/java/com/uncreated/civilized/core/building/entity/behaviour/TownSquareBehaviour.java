@@ -44,7 +44,7 @@ public class TownSquareBehaviour extends BuildingBehaviour {
       eventScheduler = new DailyEventScheduler(7, 0, 6000, 0.2f);
    }
 
-   private static final int MAX_VISITORS = 12;
+   public static final int MAX_VISITORS = 12;
    private static final int SPAWN_SPOT_ATTEMPTS = 16;
 
    // visitors may leave at any time from 8pm, and are guaranteed to be gone by 10pm

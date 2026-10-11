@@ -27,6 +27,7 @@ import com.uncreated.civilized.networking.packets.OpenRedrawBoundsScreen;
 import com.uncreated.civilized.networking.packets.PreviewProductionBill;
 import com.uncreated.civilized.networking.packets.RequestEstablishBuilding;
 import com.uncreated.civilized.networking.packets.UpgradeBuilding;
+import com.uncreated.civilized.networking.packets.StartFestival;
 import com.uncreated.civilized.networking.packets.RequirementsChecked;
 import com.uncreated.civilized.networking.packets.ProductionBillPreview;
 import com.uncreated.civilized.networking.packets.SaveProductionBill;
@@ -123,6 +124,11 @@ public class PacketRegistry {
             UpgradeBuilding.TYPE,
             UpgradeBuilding.STREAM_CODEC,
             UpgradeBuilding::serverReceiveUpgradeBuilding);
+
+      registrar.playToServer(
+            StartFestival.TYPE,
+            StartFestival.STREAM_CODEC,
+            StartFestival::serverReceiveStartFestival);
 
       registrar.playToServer(
             CheckUpgradeRequirements.TYPE,

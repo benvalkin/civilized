@@ -3,6 +3,7 @@ package com.uncreated.civilized.entity.behaviour;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.mojang.datafixers.util.Pair;
+import com.uncreated.civilized.core.settlement.festival.Festival;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.social.Flirt;
 import com.uncreated.civilized.entity.behaviour.social.Socialize;
@@ -13,6 +14,7 @@ import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
 import com.uncreated.civilized.entity.behaviour.worker.common.logistics.CheckOffloadInventoriesAtHome;
 import com.uncreated.civilized.entity.behaviour.worker.common.logistics.DropOffItemsAtBuilding;
 import com.uncreated.civilized.entity.behaviour.worker.common.logistics.TakeItemsToInventory;
+import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 import com.uncreated.civilized.neoforge.registration.entity.EntityRegistry;
 
 import net.minecraft.world.entity.EntityType;
@@ -69,6 +71,8 @@ public class CivilizedVillagerActivities {
                   new DropOffItemsAtBuilding(),
                   new IdleStrollAroundSettlement(5, 3, speedModifier),
                   new Socialize(speedModifier),
+                  // never started by the villager itself, but lets suitors invite it to flirt
+                  new Flirt(speedModifier),
                   new VisitEntertainmentPlace(0.4F)),
             ImmutableList.of(
                   WorkStates.OFFLOAD_INVENTORIES_AFTER_WORK,
@@ -98,6 +102,43 @@ public class CivilizedVillagerActivities {
                   .add(BehaviourStates.SOCIALISING, 8)
                   .add(BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT, 3)
                   .add(BehaviourStates.VISITING_ENTERTAINMENT, 1));
+   }
+
+   public static IdleBehaviourControl createFestivalBehaviourControl(float speedModifier) {
+      return new IdleBehaviourControl(
+            AIRegistry.A_ATTENDING_FESTIVAL.get(),
+            ImmutableList.of(
+                  new EatFood(BehaviourStates.EATING_FOOD),
+                  // EatFood queues this when the villager has to fetch food first
+                  new TakeItemsToInventory(),
+                  new GoToTownSquare(0.5F),
+                  new Socialize(speedModifier),
+                  new Flirt(speedModifier),
+                  new AttendFestival(speedModifier),
+                  new IdleStrollAroundSettlement(5, 3, speedModifier)),
+            ImmutableList.of(BehaviourStates.EATING_FOOD, BehaviourStates.GOING_TO_TOWN_SQUARE),
+            new ShufflingList<BehaviourState>().add(BehaviourStates.SOCIALISING, 10)
+                  .add(BehaviourStates.CELEBRATING, 6)
+                  // the fallback for when the town square isn't loaded, since there must always be an idle task
+                  .add(BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT, 1));
+   }
+
+   public static IdleBehaviourControl createSuitorFestivalBehaviourControl(float speedModifier) {
+      return new IdleBehaviourControl(
+            AIRegistry.A_ATTENDING_FESTIVAL.get(),
+            ImmutableList.of(
+                  new EatFood(BehaviourStates.EATING_FOOD),
+                  new TakeItemsToInventory(),
+                  new GoToTownSquare(0.5F),
+                  new Flirt(speedModifier, Flirt.BASE_RELATIONSHIP_SUCCESS_ODDS / Festival.FLIRTING_SUCCESS_MULTIPLIER),
+                  new Socialize(speedModifier),
+                  new AttendFestival(speedModifier),
+                  new IdleStrollAroundSettlement(5, 3, speedModifier)),
+            ImmutableList.of(BehaviourStates.EATING_FOOD, BehaviourStates.GOING_TO_TOWN_SQUARE),
+            new ShufflingList<BehaviourState>().add(BehaviourStates.FLIRTING, 32)
+                  .add(BehaviourStates.SOCIALISING, 6)
+                  .add(BehaviourStates.CELEBRATING, 4)
+                  .add(BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT, 1));
    }
 
    /**

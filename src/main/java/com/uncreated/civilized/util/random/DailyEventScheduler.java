@@ -33,7 +33,8 @@ public class DailyEventScheduler {
       this.eventWindowStartTime = eventWindowStartTime;
       this.eventWindowCutoffTime = eventWindowCutoffTime;
       this.eventRollChance = eventRollChance;
-      this.eventQueue = new PriorityQueue<>(this.eventsRollsPerDay);
+      // the capacity must be at least 1, even when there are no events to roll
+      this.eventQueue = new PriorityQueue<>(Math.max(1, this.eventsRollsPerDay));
       this.needNewEvents = true;
    }
 

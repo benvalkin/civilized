@@ -10,11 +10,22 @@ import net.minecraft.world.entity.schedule.Activity;
 
 public class IdleBehaviourControl extends StatefulBehaviourControl<BehaviourStateMachine> {
 
+   private final Activity activity;
+
    public IdleBehaviourControl(
          ImmutableList<StatefulBehaviour> tasks,
          ImmutableList<BehaviourState> coreTasks,
          ShufflingList<BehaviourState> idleTasks) {
+      this(Activity.IDLE, tasks, coreTasks, idleTasks);
+   }
+
+   public IdleBehaviourControl(
+         Activity activity,
+         ImmutableList<StatefulBehaviour> tasks,
+         ImmutableList<BehaviourState> coreTasks,
+         ShufflingList<BehaviourState> idleTasks) {
       super(tasks, coreTasks, idleTasks, GateBehavior.OrderPolicy.SHUFFLED);
+      this.activity = activity;
    }
 
    @Override
@@ -24,6 +35,6 @@ public class IdleBehaviourControl extends StatefulBehaviourControl<BehaviourStat
 
    @Override
    protected boolean canContinueToUse(ServerLevel serverLevel, CivilizedVillager civilizedVillager, long currentTicks) {
-      return civilizedVillager.getBrain().isActive(Activity.IDLE);
+      return civilizedVillager.getBrain().isActive(activity);
    }
 }

@@ -27,6 +27,8 @@ import com.uncreated.civilized.core.dialogue.context.DialogueContext;
 import com.uncreated.civilized.core.dialogue.controller.DialogueController;
 import com.uncreated.civilized.core.dialogue.controller.DialogueFlow;
 import com.uncreated.civilized.core.dialogue.specialized.ItemDepotDialogue;
+import com.uncreated.civilized.core.building.ServerBuildingsStore;
+import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.defense.CombatTarget;
 import com.uncreated.civilized.core.settlement.defense.ICombatCommand;
 import com.uncreated.civilized.core.settlement.defense.SettlementDefenseHighCommand;
@@ -34,6 +36,7 @@ import com.uncreated.civilized.core.settlement.defense.TargetRequestResult;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlement;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
 import com.uncreated.civilized.core.settlement.entity.LoadedVillagers;
+import com.uncreated.civilized.core.settlement.festival.Festival;
 import com.uncreated.civilized.core.trading.CurrencyStock;
 import com.uncreated.civilized.core.trading.TradeItem;
 import com.uncreated.civilized.core.trading.TradingScreenOpener;
@@ -137,10 +140,11 @@ public class CivilizedVillager extends AgeableMob
    private final Map<Activity, StatefulBehaviourControl<?>> behaviourControls = new HashMap<>();
 
    public boolean tryJoinConversation(Conversation conversation) {
-      if (!isAlive() || isSleeping() || !getBrain().isActive(Activity.IDLE))
+      if (!isAlive() || isSleeping())
          return false;
 
-      StatefulBehaviourControl<?> idleBehaviourControl = behaviourControls.get(Activity.IDLE);
+      // whichever activity the villager is doing, e.g. idling or attending a festival, as long as it's free to talk
+      StatefulBehaviourControl<?> idleBehaviourControl = getCurrentBehaviourControl().orElse(null);
       if (idleBehaviourControl == null || !idleBehaviourControl.isRunningIdleTask())
          return false;
 
@@ -547,6 +551,14 @@ public class CivilizedVillager extends AgeableMob
       brain.addActivity(
             AIRegistry.A_STRIKE.get(),
             registerStatefulControls(AIRegistry.A_STRIKE.get(), getStrikePackage(createStrikeBehaviourControl(0.25f))));
+      IdleBehaviourControl festivalBehaviourControl;
+      if (info.getNpcRole().is(VillagerNpcRoles.SUITOR))
+         festivalBehaviourControl = createSuitorFestivalBehaviourControl(0.25f);
+      else
+         festivalBehaviourControl = createFestivalBehaviourControl(0.25f);
+      brain.addActivity(
+            AIRegistry.A_ATTENDING_FESTIVAL.get(),
+            registerStatefulControls(AIRegistry.A_ATTENDING_FESTIVAL.get(), getIdlePackage(festivalBehaviourControl)));
       IdleBehaviourControl idleBehaviourControl;
       if (info.getNpcRole().is(VillagerNpcRoles.SUITOR))
          idleBehaviourControl = createSuitorBehaviourControl(0.25f);
@@ -767,6 +779,12 @@ public class CivilizedVillager extends AgeableMob
          return;
       }
 
+      // festivals can run late, so they keep villagers up past their bedtime
+      if (isFestivalCelebrating(dayTime)) {
+         getBrain().setActiveActivityIfPossible(AIRegistry.A_ATTENDING_FESTIVAL.get());
+         return;
+      }
+
       if (todayTime >= WORK_START_DAY_TIME && todayTime < WORK_FINISH_DAY_TIME) { // 7am-3pm
          getBrain().setActiveActivityIfPossible(Activity.WORK);
       } else if (todayTime >= REST_TIME) { // 10pm-6am
@@ -782,6 +800,17 @@ public class CivilizedVillager extends AgeableMob
     */
    public boolean shouldStrike() {
       return info.getSettlementId() != null && hunger.isHungryEnoughToStrike();
+   }
+
+   /** Whether the settlement the villager lives in or is visiting is celebrating a festival. */
+   private boolean isFestivalCelebrating(long dayTime) {
+      UUID settlementId = Festival.findHostSettlementId(info, ServerBuildingsStore.INSTANCE);
+      if (settlementId == null)
+         return false;
+
+      return ServerSettlementsStore.INSTANCE.find(settlementId)
+            .filter(settlement -> Festival.phase(settlement.getState(), dayTime) == Festival.Phase.CELEBRATING)
+            .isPresent();
    }
 
    public boolean isOnStrike() {

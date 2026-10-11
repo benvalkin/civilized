@@ -25,14 +25,20 @@ import net.minecraft.world.entity.player.Player;
 public class Flirt extends Socialize {
 
    private static final double INVITE_RANGE = 30;
-   /** On average, how often the suitor shows a heart while flirting. */
+   /** How often to show a particle effect hearts during flirting */
    private static final int TICKS_PER_FLIRTING_HEART = 60;
    private static final int HEARTS_WHEN_DATING = 7;
-   /** the odds of a relationship forming after this behaviour ends are 1 in this number. */
-   public static final int RELATIONSHIP_SUCCESS_ODDS = 4;
+   public static final int BASE_RELATIONSHIP_SUCCESS_ODDS = 4;
+
+   private final int relationshipSuccessOdds;
 
    public Flirt(float speedModifier) {
+      this(speedModifier, BASE_RELATIONSHIP_SUCCESS_ODDS);
+   }
+
+   public Flirt(float speedModifier, int relationshipSuccessOdds) {
       super(BehaviourStates.FLIRTING, speedModifier, 30 * 20, 120 * 20, 0);
+      this.relationshipSuccessOdds = relationshipSuccessOdds;
    }
 
    @Override
@@ -70,8 +76,9 @@ public class Flirt extends Socialize {
 
    @Override
    protected void stop(ServerLevel level, CivilizedVillager villager, long gameTime) {
-      // check if taken because the partner's behaviour may have already run this part
-      if (!villager.getInfo().isTaken() && isMet() && villager.getRandom().nextInt(RELATIONSHIP_SUCCESS_ODDS) == 0) {
+      boolean isSuitor = villager.getInfo().getNpcRole().is(VillagerNpcRoles.SUITOR);
+      if (isSuitor && !villager.getInfo().isTaken() && isMet()
+            && villager.getRandom().nextInt(relationshipSuccessOdds) == 0) {
          Optional<Conversation> conversation = villager.getBrain().getMemory(AIRegistry.MM_CONVERSATION.get());
          if (conversation.isPresent() && conversation.get().getPastMembers().size() == 2) {
             CivilizedVillager suitor = conversation.get().getPastMembers().getFirst();

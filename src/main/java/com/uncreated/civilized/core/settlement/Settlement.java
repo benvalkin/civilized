@@ -5,6 +5,7 @@ import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
@@ -41,6 +42,7 @@ public class Settlement {
             .citizenIds(buffer.readCollection(ArrayList::new, b -> b.readUUID()))
             .settlementLevel(SettlementLevel.valueOf(buffer.readInt()))
             .bounds(SettlementBounds.decode(buffer))
+            .state(SettlementState.fromNbt(Objects.requireNonNull(buffer.readNbt())))
             .build();
    }
 
@@ -53,6 +55,7 @@ public class Settlement {
       buffer.writeCollection(citizenIds, (b, i) -> b.writeUUID(i));
       buffer.writeInt(settlementLevel.getLevel());
       bounds.encode(buffer);
+      buffer.writeNbt(state.toNbt());
    }
 
    public static final String FIELD_SETTLEMENT_ID = "settlement_id";
@@ -76,7 +79,6 @@ public class Settlement {
    @Builder.Default
    public SettlementLevel settlementLevel = SettlementLevel.OUTPOST;
    private SettlementBounds bounds;
-   /** Only used on the server at the moment */
    @Builder.Default
    private SettlementState state = new SettlementState();
 
