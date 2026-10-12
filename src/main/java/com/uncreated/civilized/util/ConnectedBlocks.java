@@ -79,7 +79,7 @@ public final class ConnectedBlocks {
       return found;
    }
 
-   private static List<BlockPos> neighbours(BlockPos pos, Adjacency adjacency) {
+   public static List<BlockPos> neighbours(BlockPos pos, Adjacency adjacency) {
       List<BlockPos> neighbours = new ArrayList<>(adjacency == Adjacency.ALL ? 26 : 6);
 
       if (adjacency == Adjacency.FACES) {
