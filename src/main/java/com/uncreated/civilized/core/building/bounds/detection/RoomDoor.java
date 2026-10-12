@@ -1,4 +1,4 @@
-package com.uncreated.civilized.core.building.bounds;
+package com.uncreated.civilized.core.building.bounds.detection;
 
 import java.util.Optional;
 import java.util.Set;
@@ -30,7 +30,13 @@ public record RoomDoor(BlockPos doorOrigin, BlockPos inside, BlockPos outside) {
 
       boolean aInside = seen.contains(sideA);
       boolean bInside = seen.contains(sideB);
-      if (aInside == bInside)
+      // not a valid room door if it leads somewhere we've already seen - this means the door doesn't actually go
+      // anywhere
+      if (aInside && bInside)
+         return Optional.empty();
+
+      // not a valid room door if for some reason we've never known either side of the door to be part of a room
+      if (!aInside && !bInside)
          return Optional.empty();
 
       if (aInside)

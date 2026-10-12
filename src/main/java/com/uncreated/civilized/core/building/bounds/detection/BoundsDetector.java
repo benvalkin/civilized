@@ -1,4 +1,4 @@
-package com.uncreated.civilized.core.building.bounds;
+package com.uncreated.civilized.core.building.bounds.detection;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -27,7 +27,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class BoundsDetector {
 
-   public List<Room> detect(BlockPos start, Level level) {
+   public BoundsDetectionResult detect(BlockPos start, Level level) {
 
       BlockPos first = start.immutable();
 
@@ -41,11 +41,14 @@ public class BoundsDetector {
       while (!rooms.isEmpty()) {
          Room room = rooms.poll();
 
+         if (visited.contains(room.origin()))
+            continue; // room is already visited. This may happen if one room has two doors that lead to the same room.
+
          floodFillDetectRoomFeatures(level, room, visited);
 
          finalRooms.add(room);
 
-         if (!room.enclosed())
+         if (!room.enclosed() || room.tooLarge())
             continue; // don't bother trying to explore adjacent doors for a room that's unenclosed
 
          for (RoomDoor door : room.doors()) {
@@ -55,7 +58,7 @@ public class BoundsDetector {
          }
       }
 
-      return finalRooms;
+      return new  BoundsDetectionResult(finalRooms, mainRoom);
    }
 
    private static final double MAX_STEP_OVER_HEIGHT = 0.25;
@@ -92,9 +95,15 @@ public class BoundsDetector {
 
    private static final int ROOM_MAX_VOLUME = 5000;
 
-   private static void floodFillDetectRoomFeatures(LevelReader level, Room room, Set<BlockPos> visited) {
+   private static void floodFillDetectRoomFeatures(Level level, Room room, Set<BlockPos> visited) {
 
       BlockPos start = room.origin();
+
+      if (isOutside(level, start)) {
+         // room immediately leads outside - don't bother trying to explore it
+         room.enclosed(false);
+         return;
+      }
 
       if (!isPassable(level, start, level.getBlockState(start))) {
          room.originObstructed(true);
@@ -119,11 +128,10 @@ public class BoundsDetector {
             if (alreadyVisited)
                continue;
 
-            // edge case handling for if this chunk is not loaded: make sure to call isOutside (which does not load
-            // unloaded chunks) before getBlockState (which loads unloaded chunks) so that unloaded chunks are treated
-            // as "outside". Do we really need to do this?
             if (isOutside(level, neighbour)) {
-               if (isPassable(level, neighbour, level.getBlockState(neighbour)))
+               // it's better to treat unloaded chunks as "outside" so that we don't have to load them in using
+               // getBlockState
+               if (!level.isLoaded(neighbour) || isPassable(level, neighbour, level.getBlockState(neighbour)))
                   room.enclosed(false);
                continue;
             }
@@ -143,9 +151,8 @@ public class BoundsDetector {
          }
       }
 
-      if (explored >= ROOM_MAX_VOLUME) {
-         room.enclosed(false);
-      }
+      if (!toSearch.isEmpty())
+         room.tooLarge(true);
 
       // we can only populate RoomDoors do this at the end because we need to have a complete "visited" set to know
       // which way doors are facing relative to the current room
@@ -153,9 +160,13 @@ public class BoundsDetector {
          BlockState doorState = level.getBlockState(doorPosition);
          Optional<RoomDoor> roomDoor = RoomDoor.fromDoorPos(doorPosition, doorState, visited);
 
-         // don't add the door if it leads somewhere we've already seen - this means the door doesn't actually go
-         // anywhere
-         if (roomDoor.isEmpty() || visited.contains(roomDoor.get().outside()))
+         if (roomDoor.isEmpty())
+            continue; // invalid room door
+
+         // there could be an obstructing block on the other side of this door for some reason (practical case a trap
+         // door used as a window shutter), in which case it's best to treat it as not valid
+         BlockPos outside = roomDoor.get().outside();
+         if (!isOutside(level, outside) && !isPassable(level, outside, level.getBlockState(outside)))
             continue;
 
          room.doors().add(roomDoor.get());

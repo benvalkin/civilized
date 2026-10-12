@@ -1,7 +1,7 @@
-package com.uncreated.civilized.core.building.bounds;
+package com.uncreated.civilized.core.building.bounds.detection;
 
-import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -19,33 +19,33 @@ public final class Room {
    private final BlockPos origin;
    private boolean enclosed;
    private boolean originObstructed;
+   private boolean tooLarge;
    private List<BlockPos> passableBlocks;
    private List<RoomDoor> doors;
    private List<BlockPos> validFloorBlocks;
    private List<BlockPos> solidBlocks;
    private Set<Vector2i> roofedBlocks;
 
-   public Room(
-         BlockPos origin,
-         List<BlockPos> passableBlocks,
-         List<BlockPos> validFloorBlocks,
-         List<BlockPos> solidBlocks,
-         Set<Vector2i> roofedBlocks) {
+   public Room(BlockPos origin) {
       this.origin = origin;
       this.enclosed = true;
       this.originObstructed = false;
-      this.passableBlocks = passableBlocks;
-      this.validFloorBlocks = validFloorBlocks;
-      this.solidBlocks = solidBlocks;
-      this.roofedBlocks = roofedBlocks;
-   }
-
-   public Room(BlockPos origin) {
-      this(origin, new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new HashSet<>());
+      this.tooLarge = false;
+      this.passableBlocks = new LinkedList<>();
+      this.doors = new LinkedList<>();
+      this.validFloorBlocks = new LinkedList<>();
+      this.solidBlocks = new LinkedList<>();
+      this.roofedBlocks = new HashSet<>();
    }
 
    @Override
    public String toString() {
-      return String.format("Room[passableBlocks: %s", passableBlocks);
+      return String.format(
+            "Room[passableBlocks: %s doors: %s enclosed: %s originObstructed: %s, tooLarge: %s]",
+            passableBlocks.size(),
+            doors.size(),
+            enclosed,
+            originObstructed,
+            tooLarge);
    }
 }
