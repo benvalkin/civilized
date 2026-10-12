@@ -58,7 +58,7 @@ public class BoundsDetector {
          }
       }
 
-      return new  BoundsDetectionResult(finalRooms, mainRoom);
+      return new BoundsDetectionResult(finalRooms, mainRoom);
    }
 
    private static final double MAX_STEP_OVER_HEIGHT = 0.25;
@@ -101,7 +101,7 @@ public class BoundsDetector {
 
       if (isOutside(level, start)) {
          // room immediately leads outside - don't bother trying to explore it
-         room.enclosed(false);
+         room.markLeak(start);
          return;
       }
 
@@ -114,6 +114,8 @@ public class BoundsDetector {
       BlockPos first = start.immutable();
       visited.add(first);
       toSearch.add(first);
+      room.passableBlocks().add(first);
+      room.roofedBlocks().add(new Vector2i(first.getX(), first.getZ()));
 
       List<BlockPos> doorPositions = new ArrayList<>();
 
@@ -132,7 +134,7 @@ public class BoundsDetector {
                // it's better to treat unloaded chunks as "outside" so that we don't have to load them in using
                // getBlockState
                if (!level.isLoaded(neighbour) || isPassable(level, neighbour, level.getBlockState(neighbour)))
-                  room.enclosed(false);
+                  room.markLeak(neighbour);
                continue;
             }
 
@@ -153,6 +155,8 @@ public class BoundsDetector {
 
       if (!toSearch.isEmpty())
          room.tooLarge(true);
+
+      room.detectFloorBlocks(level);
 
       // we can only populate RoomDoors do this at the end because we need to have a complete "visited" set to know
       // which way doors are facing relative to the current room
