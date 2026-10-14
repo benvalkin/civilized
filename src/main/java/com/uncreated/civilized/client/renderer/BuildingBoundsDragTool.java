@@ -49,8 +49,6 @@ public final class BuildingBoundsDragTool {
    private static @Nullable Player player;
 
    private static boolean showDraggedBounds;
-   /** true if dragging while not holding a building deed item. */
-   private static boolean draggingExternally;
 
    private static final Map<ItemStack, SavedDraggedBounds> savedDraggedBounds = new HashMap<>();
 
@@ -120,31 +118,6 @@ public final class BuildingBoundsDragTool {
       }
 
       return InteractionResult.PASS;
-   }
-
-   /**
-    * Starts dragging bounds without a deed in hand, e.g. to redraw a building. A held deed's bounds are put aside until
-    * {@link #endExternalDrag()}.
-    */
-   public static void beginExternalDrag() {
-      if (currentItem != null)
-         saveAndHideDraggedBounds(currentItem);
-
-      resetDragging();
-      player = Minecraft.getInstance().player;
-      draggingExternally = true;
-      showDraggedBounds = true;
-   }
-
-   public static void endExternalDrag() {
-      resetDragging();
-      draggingExternally = false;
-      showDraggedBounds = false;
-
-      // brings back the bounds of a deed the player is still holding
-      Player localPlayer = Minecraft.getInstance().player;
-      if (localPlayer != null && localPlayer.getMainHandItem().getItem() instanceof BuildingDeedItem)
-         loadAndShowDraggedBounds(localPlayer.getMainHandItem());
    }
 
    public static void startDraggingBounds(BlockPos origin) {
@@ -309,10 +282,6 @@ public final class BuildingBoundsDragTool {
 
    @SubscribeEvent
    public static void onPlayerChangeEquipment(PlayerChangedEquipment event) {
-      // deeds don't take over while the player is dragging bounds for something else
-      if (draggingExternally)
-         return;
-
       Optional<EquipmentChange> equipmentChange = event.getEquipmentChange(EquipmentSlot.MAINHAND);
       if (equipmentChange.isEmpty())
          equipmentChange = event.getEquipmentChange(EquipmentSlot.OFFHAND);

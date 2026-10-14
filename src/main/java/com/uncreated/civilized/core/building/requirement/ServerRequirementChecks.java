@@ -1,6 +1,5 @@
 package com.uncreated.civilized.core.building.requirement;
 
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,27 +40,19 @@ public class ServerRequirementChecks {
    }
 
    /**
-    * Checks if a new building can be upgraded to its next upgrade level, if one exists. Returns empty if it's already
-    * at its highest level.
+    * Checks if a building can be upgraded to its next upgrade level, if one exists. Returns empty if it's already at
+    * its highest level.
+    *
+    * @param bounds
+    *           the bounds to check, e.g. the building's rooms as they've just been detected again, which may have grown
+    *           since it was placed
     */
    public static Optional<List<IBuildingRequirementResult>> checkUpgradeToNextLevel(
          ServerPlayer player,
-         Building building) {
-      return BuildingRequirements.find(building.getBuildingType(), building.getUpgradeLevel() + 1)
-            .map(requirements -> requirements.evaluate(contextFor(player, building, building.getBounds())));
-   }
-
-   /**
-    * Checks if a building's redrawn new bounds are valid according the building's structural requirements.
-    * Prerequisites and costs aren't checked here, as they were already checked when creating/upgrading the building.
-    */
-   public static List<IBuildingRequirementResult> checkRedrawnBounds(
-         ServerPlayer player,
          Building building,
-         BuildingBounds newBounds) {
-
-      return BuildingRequirements.getBuildingRequirements(building.getBuildingType(), building.getUpgradeLevel())
-            .evaluate(contextFor(player, building, newBounds), EnumSet.of(RequirementKind.STRUCTURAL));
+         BuildingBounds bounds) {
+      return BuildingRequirements.find(building.getBuildingType(), building.getUpgradeLevel() + 1)
+            .map(requirements -> requirements.evaluate(contextFor(player, building, bounds)));
    }
 
    /**

@@ -2,7 +2,6 @@ package com.uncreated.civilized.ui.menu.building;
 
 import java.util.List;
 
-import com.uncreated.civilized.client.BuildingRedrawSession;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.requirement.IBuildingRequirementResult;
 import com.uncreated.civilized.core.building.requirement.registry.BuildingRequirements;
@@ -16,7 +15,6 @@ import com.uncreated.civilized.ui.tabs.ITabHost;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -33,8 +31,6 @@ public class UpgradeBuildingTab extends ABuildingScreenTab implements IRequireme
 
    private final BuildingRequirementsView requirementsView;
    private final Button upgradeButton;
-   /** For when the next level needs more room than the building has, e.g. more floor space. */
-   private final Button redrawButton;
    private int requestId;
    /** The level the shown requirements were checked at, so they're only checked again once the building changes. */
    private int checkedLevel;
@@ -55,16 +51,6 @@ public class UpgradeBuildingTab extends ABuildingScreenTab implements IRequireme
                   .pos(getRight() - BUTTON_WIDTH, getBottom() - BUTTON_HEIGHT)
                   .size(BUTTON_WIDTH, BUTTON_HEIGHT)
                   .build();
-
-      redrawButton =
-            Button.builder(
-                  Component.translatable("menu.building.redraw.button"),
-                  button -> BuildingRedrawSession.startFromMenu(building()))
-                  .pos(upgradeButton.getX() - BUTTON_WIDTH - 4, getBottom() - BUTTON_HEIGHT)
-                  .size(BUTTON_WIDTH, BUTTON_HEIGHT)
-                  .tooltip(Tooltip.create(Component.translatable("menu.building.redraw.button.tooltip")))
-                  .build();
-      redrawButton.active = AlterBuildingPermissions.hasPermission(context);
 
       checkRequirements();
    }
@@ -141,7 +127,6 @@ public class UpgradeBuildingTab extends ABuildingScreenTab implements IRequireme
 
       requirementsView.render(graphics, mouseX, mouseY, partialTicks);
       upgradeButton.render(graphics, mouseX, mouseY, partialTicks);
-      redrawButton.render(graphics, mouseX, mouseY, partialTicks);
    }
 
    @Override
@@ -149,6 +134,6 @@ public class UpgradeBuildingTab extends ABuildingScreenTab implements IRequireme
       if (isAtHighestLevel())
          return List.of();
 
-      return List.of(requirementsView, upgradeButton, redrawButton);
+      return List.of(requirementsView, upgradeButton);
    }
 }

@@ -10,7 +10,6 @@ import com.uncreated.civilized.networking.packets.BuildingPlacementRejected;
 import com.uncreated.civilized.networking.packets.VisualizeBoundsInstruction;
 import com.uncreated.civilized.networking.packets.NotificationToast;
 import com.uncreated.civilized.networking.packets.OpenEstablishBuildingScreen;
-import com.uncreated.civilized.networking.packets.OpenRedrawBoundsScreen;
 import com.uncreated.civilized.networking.packets.ProductionBillPreview;
 import com.uncreated.civilized.networking.packets.RequirementsChecked;
 import com.uncreated.civilized.networking.packets.SettlementAccessLevelDenied;
@@ -18,7 +17,6 @@ import com.uncreated.civilized.networking.packets.TradeSlotUpdated;
 import com.uncreated.civilized.ui.menu.building.ABuildingMenuScreen;
 import com.uncreated.civilized.ui.menu.building.EstablishBuildingScreen;
 import com.uncreated.civilized.ui.menu.building.IRequirementsCheckListener;
-import com.uncreated.civilized.ui.menu.building.ConfirmRedrawnBoundsScreen;
 import com.uncreated.civilized.ui.menu.building.residence.artisan.EditProductionBillTab;
 import com.uncreated.civilized.ui.menu.building.townhall.tabs.ManagePermissionsTab;
 import com.uncreated.civilized.ui.menu.trading.TradingMenuScreen;
@@ -85,18 +83,6 @@ public final class ClientPacketHandlers {
    public static void openEstablishBuildingScreen(OpenEstablishBuildingScreen packet, IPayloadContext context) {
       Minecraft.getInstance()
             .setScreen(new EstablishBuildingScreen(packet.buildingType(), packet.placement(), packet.requirements()));
-   }
-
-   public static void openRedrawBoundsScreen(OpenRedrawBoundsScreen packet, IPayloadContext context) {
-      ClientBuildingStore.INSTANCE.find(packet.buildingId())
-            .ifPresent(
-                  building -> Minecraft.getInstance()
-                        .setScreen(
-                              new ConfirmRedrawnBoundsScreen(
-                                    packet.buildingId(),
-                                    building.getBuildingType(),
-                                    packet.bounds(),
-                                    packet.requirements())));
    }
 
    public static void receiveRequirementsChecked(RequirementsChecked packet, IPayloadContext context) {

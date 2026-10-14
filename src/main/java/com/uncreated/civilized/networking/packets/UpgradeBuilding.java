@@ -9,6 +9,8 @@ import java.util.UUID;
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
+import com.uncreated.civilized.core.building.bounds.BuildingBounds;
+import com.uncreated.civilized.core.building.placement.BuildingRedetection;
 import com.uncreated.civilized.core.building.requirement.IBuildingRequirementResult;
 import com.uncreated.civilized.core.building.requirement.ServerRequirementChecks;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
@@ -22,6 +24,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
@@ -65,18 +68,39 @@ public record UpgradeBuilding(UUID buildingId) implements CustomPacketPayload {
          return;
       }
 
-      Optional<List<IBuildingRequirementResult>> requirements =
-            ServerRequirementChecks.checkUpgradeToNextLevel(player, building);
-      if (requirements.isEmpty()) {
+      ServerLevel level = player.server.getLevel(building.getDimension());
+      if (level == null)
+         return;
+
+      // re-detect bounds before applying requirements.
+      BuildingRedetection.Result redetection = BuildingRedetection.redetect(level, building);
+      BuildingBounds bounds;
+      if (redetection instanceof BuildingRedetection.Changed(BuildingBounds newBounds))
+         bounds = newBounds;
+      else
+         bounds = building.getBounds();
+
+      Optional<List<IBuildingRequirementResult>> nextLevelRequirements =
+            ServerRequirementChecks.checkUpgradeToNextLevel(player, building, bounds);
+      if (nextLevelRequirements.isEmpty()) {
          fail(player, "message.building.upgrade.failed.highest_level", building.getBuildingType().translation());
          return;
       }
 
-      // the client only lets players confirm when the requirements are met, but they could have changed since
-      if (!ServerRequirementChecks.allSatisfied(requirements.get())) {
-         fail(player, "message.building.upgrade.failed.requirements_not_met", building.getBuildingType().translation());
+      // recheck new requirements
+      if (!ServerRequirementChecks.allSatisfied(nextLevelRequirements.get())) {
+         if (redetection instanceof BuildingRedetection.Failed(com.uncreated.civilized.core.building.placement.PlacementResult.Failure failure))
+            player.displayClientMessage(failure.reason(), true);
+         else
+            fail(
+                  player,
+                  "message.building.upgrade.failed.requirements_not_met",
+                  building.getBuildingType().translation());
          return;
       }
+
+      if (redetection instanceof BuildingRedetection.Changed)
+         BuildingRedetection.applyBounds(level, building, bounds);
 
       int newLevel = building.getUpgradeLevel() + 1;
       ServerRequirementChecks.payCosts(building.getBuildingType(), newLevel, settlement.get(), player);

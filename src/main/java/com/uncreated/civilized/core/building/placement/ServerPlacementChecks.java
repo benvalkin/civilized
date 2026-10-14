@@ -139,62 +139,50 @@ public class ServerPlacementChecks {
    }
 
    /**
-    * Whether an existing building can be redrawn to these bounds. Like a new building, it can't overlap other buildings
-    * or settlements, and it has to stay within reach of its own settlement.
-    *
-    * @param confirming
-    *           as for {@link #checkEstablish}
+    * Whether the proposed new building bounds are valid. Like a new building, they can't overlap other buildings or
+    * settlements, and must stay within reach of the settlement. Permissions aren't checked here.
     */
-   public static PlacementResult checkRedraw(
-         ServerPlayer player,
+   public static Optional<PlacementResult.Failure> checkResize(
+         ServerLevel level,
          Building building,
-         BuildingBounds bounds,
-         boolean confirming) {
-      ServerLevel level = player.serverLevel();
-
+         BuildingBounds newBounds) {
       Optional<Settlement> found = ServerSettlementsStore.INSTANCE.find(building.getSettlementId());
-      // the bounds are dragged out in the player's level, so it has to be the one the building is in
       if (found.isEmpty() || !building.getDimension().equals(level.dimension()))
-         return failure("message.building.placement.validation.invalid_bounds");
+         return Optional.of(failure("message.building.placement.validation.invalid_bounds"));
 
       Settlement settlement = found.get();
-      if (!ServerSettlementPermissionStore.INSTANCE.getOrCreate(settlement.getSettlementId())
-            .hasCreateBuildingsPermission(player.getUUID()))
-         return failure("message.building.redraw.failed.no_permission", settlement.displayNameTranslation());
-
-      Optional<PlacementResult.Failure> boundsFailure = checkBounds(level, bounds, building);
+      Optional<PlacementResult.Failure> boundsFailure = checkBounds(level, newBounds, building);
       if (boundsFailure.isPresent())
-         return boundsFailure.get();
+         return boundsFailure;
 
-      // the sign is how players get to the building's menu, so it can't be left outside the building
-      if (building.getPrimarySignPos() != null && !bounds.contains(building.getPrimarySignPos()))
-         return failure("message.building.redraw.failed.sign_outside");
+      // the sign cannot be left outside the building bounds
+      if (building.getPrimarySignPos() != null && !newBounds.contains(building.getPrimarySignPos()))
+         return Optional.of(failure("message.building.placement.validation.sign_outside"));
 
-      List<Settlement> dimensionSettlements = ServerSettlementsStore.INSTANCE.findInDimension(level.dimension());
-      Optional<Settlement> nearbySettlement = findNearbySettlement(level, bounds);
+      Optional<Settlement> nearbySettlement = findNearbySettlement(level, newBounds);
       if (nearbySettlement.isEmpty())
-         return failure("message.settlement.create_building.failed.too_far_from_settlement");
-      if (nearbySettlement.get() != settlement)
-         return failure(
-               "message.settlement.create_building.failed.too_close_to_other_settlement",
-               nearbySettlement.get().displayNameTranslation());
+         return Optional.of(failure("message.settlement.create_building.failed.too_far_from_settlement"));
 
-      // the settlement's bounds as they'd be with the building's new bounds instead of its old ones
+      if (nearbySettlement.get() != settlement)
+         return Optional.of(
+               failure(
+                     "message.settlement.create_building.failed.too_close_to_other_settlement",
+                     nearbySettlement.get().displayNameTranslation()));
+
+      // check if the new building bounds would cause the settlement to overlap another settlement
       List<BuildingBounds> settlementBuildings = new ArrayList<>();
       ServerBuildingsStore.INSTANCE.findForSettlement(settlement.getSettlementId())
             .stream()
             .filter(other -> other != building)
             .forEach(other -> settlementBuildings.add(other.getBounds()));
-      settlementBuildings.add(bounds);
+      settlementBuildings.add(newBounds);
 
       SettlementBounds newSettlementBounds =
             Settlement.calculateBounds(settlement.getBounds().getOrigin(), settlementBuildings);
-      Optional<PlacementResult.Failure> overlap =
-            checkSettlementOverlap(newSettlementBounds, dimensionSettlements, settlement);
-      if (overlap.isPresent())
-         return overlap.get();
-
-      return new PlacementResult.Confirmed(settlement, bounds, List.of(), confirming);
+      return checkSettlementOverlap(
+            newSettlementBounds,
+            ServerSettlementsStore.INSTANCE.findInDimension(level.dimension()),
+            settlement);
    }
 
    /** The settlement close enough to these bounds for a new building there to join it. */
@@ -209,7 +197,7 @@ public class ServerPlacementChecks {
     * Checks that the proposed bounds themselves are a sensible size, don't overlap other buildings, and more.
     *
     * @param existing
-    *           if these bounds are for an existing building and are being redrawn, otherwise null for new building
+    *           if these bounds are for an existing building that's changing size, otherwise null for new building
     */
    static Optional<PlacementResult.Failure> checkBounds(
          ServerLevel level,

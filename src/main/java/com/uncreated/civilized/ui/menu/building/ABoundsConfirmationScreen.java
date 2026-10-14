@@ -20,7 +20,7 @@ import net.minecraft.resources.ResourceLocation;
 
 /**
  * Shows the requirements for bounds a player dragged out, which the server has already checked, and lets them confirm
- * the bounds once every requirement is met. Used when establishing a building and when redrawing one.
+ * the bounds once every requirement is met. Used when establishing a building.
  */
 public abstract class ABoundsConfirmationScreen extends Screen {
    private static final ResourceLocation BACKGROUND_TEXTURE =

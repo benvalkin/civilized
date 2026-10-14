@@ -3,9 +3,14 @@ package com.uncreated.civilized.networking.packets;
 import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
+import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
+import com.uncreated.civilized.core.building.bounds.BuildingBounds;
+import com.uncreated.civilized.core.building.placement.BuildingRedetection;
+import com.uncreated.civilized.core.building.requirement.IBuildingRequirementResult;
 import com.uncreated.civilized.core.building.requirement.RequirementResultData;
 import com.uncreated.civilized.core.building.requirement.ServerRequirementChecks;
 
@@ -13,6 +18,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -61,11 +67,18 @@ public record CheckUpgradeRequirements(int requestId, UUID buildingId) implement
       // unknown buildings, and buildings already at their highest level, are answered with no results
       List<RequirementResultData> results =
             ServerBuildingsStore.INSTANCE.find(packet.buildingId())
-                  .flatMap(building -> ServerRequirementChecks.checkUpgradeToNextLevel(player, building))
+                  .flatMap(building -> checkUpgrade(player, building))
                   .orElse(List.of())
                   .stream()
                   .map(RequirementResultData::from)
                   .toList();
       PacketDistributor.sendToPlayer(player, new RequirementsChecked(packet.requestId(), results));
+   }
+
+   private static Optional<List<IBuildingRequirementResult>> checkUpgrade(ServerPlayer player, Building building) {
+      ServerLevel level = player.server.getLevel(building.getDimension());
+      BuildingBounds bounds =
+            level != null ? BuildingRedetection.currentBounds(level, building) : building.getBounds();
+      return ServerRequirementChecks.checkUpgradeToNextLevel(player, building, bounds);
    }
 }
