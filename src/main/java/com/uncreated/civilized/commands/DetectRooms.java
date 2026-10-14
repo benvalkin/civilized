@@ -1,19 +1,23 @@
 package com.uncreated.civilized.commands;
 
+import static com.uncreated.civilized.core.building.bounds.detection.BuildingDetectionType.PEN;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.uncreated.civilized.CivilizedMod;
 import com.uncreated.civilized.core.building.bounds.BuildingBounds;
 import com.uncreated.civilized.core.building.bounds.detection.BoundsDetectionResult;
 import com.uncreated.civilized.core.building.bounds.detection.BoundsDetector;
-import com.uncreated.civilized.core.building.bounds.detection.PenDetector;
+import com.uncreated.civilized.core.building.bounds.detection.BuildingDetectionType;
 import com.uncreated.civilized.core.building.bounds.detection.Room;
 import com.uncreated.civilized.core.building.bounds.detection.RoomDoor;
 
@@ -68,16 +72,21 @@ public class DetectRooms {
    private static final Map<UUID, Display> DISPLAYS = new HashMap<>();
 
    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-      dispatcher.register(
+      LiteralArgumentBuilder<CommandSourceStack> command =
             Commands.literal("detectrooms")
                   .requires(source -> source.hasPermission(2))
-                  .executes(context -> detect(context.getSource(), false))
-                  .then(Commands.literal("pen").executes(context -> detect(context.getSource(), true)))
-                  .then(Commands.literal("clear").executes(context -> clear(context.getSource()))));
+                  .executes(context -> detect(context.getSource(), BuildingDetectionType.ROOMS))
+                  .then(Commands.literal("clear").executes(context -> clear(context.getSource())));
+
+      for (BuildingDetectionType type : BuildingDetectionType.values())
+         command.then(
+               Commands.literal(type.name().toLowerCase(Locale.ROOT))
+                     .executes(context -> detect(context.getSource(), type)));
+
+      dispatcher.register(command);
    }
 
-   /** @param pen whether to detect an animal pen, rather than a building's rooms */
-   private static int detect(CommandSourceStack source, boolean pen) throws CommandSyntaxException {
+   private static int detect(CommandSourceStack source, BuildingDetectionType type) throws CommandSyntaxException {
       ServerPlayer player = source.getPlayer();
       if (player == null)
          throw ERROR_NOT_PLAYER.create();
@@ -91,7 +100,7 @@ public class DetectRooms {
       ServerLevel level = player.serverLevel();
 
       long startedAt = System.nanoTime();
-      BoundsDetector detector = pen ? new PenDetector() : new BoundsDetector();
+      BoundsDetector detector = type.createDetector();
       BoundsDetectionResult result = detector.detect(start, level);
       double tookMs = (System.nanoTime() - startedAt) / 1_000_000.0;
 
@@ -105,12 +114,12 @@ public class DetectRooms {
             ? result.createBounds(enclosedRooms)
             : null;
 
-      List<Marker> markers = createMarkers(rooms, bounds, pen);
+      List<Marker> markers = createMarkers(rooms, bounds, type);
       DISPLAYS.put(
             player.getUUID(),
             new Display(level.dimension(), markers, level.getGameTime() + DISPLAY_DURATION_TICKS));
 
-      sendSummary(source, start, rooms, result.mainRoom(), bounds, tookMs, pen);
+      sendSummary(source, start, rooms, result.mainRoom(), bounds, tookMs, type);
       return rooms.size();
    }
 
@@ -124,7 +133,7 @@ public class DetectRooms {
       return 1;
    }
 
-   private static List<Marker> createMarkers(List<Room> rooms, BuildingBounds bounds, boolean pen) {
+   private static List<Marker> createMarkers(List<Room> rooms, BuildingBounds bounds, BuildingDetectionType type) {
       List<Marker> markers = new ArrayList<>();
       for (Room room : rooms) {
          DustParticleOptions floor = room.enclosed() ? ENCLOSED_FLOOR : UNENCLOSED_FLOOR;
@@ -135,7 +144,7 @@ public class DetectRooms {
             markers.add(new Marker(door.doorOrigin().getCenter(), DOOR));
 
          // a pen's fences and the terrain walling it in, which is what decides where it ends
-         if (pen)
+         if (type == PEN)
             for (BlockPos pos : room.solidBlocks())
                markers.add(new Marker(pos.getCenter(), PEN_BOUNDARY));
 
@@ -177,9 +186,9 @@ public class DetectRooms {
          Room mainRoom,
          BuildingBounds bounds,
          double tookMs,
-         boolean pen) {
+         BuildingDetectionType type) {
       long enclosed = rooms.stream().filter(Room::enclosed).filter(room -> !room.tooLarge()).count();
-      String heading = pen
+      String heading = type == PEN
             ? String.format("Detected a pen from %s in %.1fms:", start.toShortString(), tookMs)
             : String.format(
                   "Detected %d room(s) from %s in %.1fms, %d of them enclosed:",
@@ -191,8 +200,8 @@ public class DetectRooms {
 
       for (int i = 0; i < rooms.size(); i++) {
          Room room = rooms.get(i);
-         String label = pen ? "pen" : room == mainRoom ? "main" : "#" + i;
-         source.sendSuccess(() -> describeRoom(label, room, pen), false);
+         String label = type == PEN ? "pen" : room == mainRoom ? "main" : "#" + i;
+         source.sendSuccess(() -> describeRoom(label, room, type), false);
       }
 
       if (bounds != null) {
@@ -201,7 +210,7 @@ public class DetectRooms {
                () -> Component.literal(
                      String.format(
                            "Bounds of the %s: %dx%dx%d, from %s to %s",
-                           pen ? "pen" : "enclosed rooms",
+                           type == PEN ? "pen" : "enclosed rooms",
                            size.getX(),
                            size.getY(),
                            size.getZ(),
@@ -210,17 +219,17 @@ public class DetectRooms {
                false);
       }
 
-      String legend = pen
+      String legend = type == PEN
             ? "Green: enclosed floor, orange: unenclosed floor, grey: fences and walls, yellow: gate, red: leak, blue: start, white: bounds"
             : "Green: enclosed floor, orange: unenclosed floor, yellow: door, red: leak, blue: room start, white: bounds";
       source.sendSuccess(() -> Component.literal(legend).withStyle(ChatFormatting.GRAY), false);
    }
 
-   private static Component describeRoom(String label, Room room, boolean pen) {
+   private static Component describeRoom(String label, Room room, BuildingDetectionType type) {
       String status;
       ChatFormatting colour;
       if (room.originObstructed()) {
-         status = pen ? "starts somewhere animals can't stand" : "starts inside a block";
+         status = type == PEN ? "starts somewhere animals can't stand" : "starts inside a block";
          colour = ChatFormatting.RED;
       } else if (room.tooLarge()) {
          status = "too large";
@@ -230,7 +239,7 @@ public class DetectRooms {
             status = "leaks at " + room.leak().toShortString();
          else
             // a pen's search only runs out of room to explore when it's fenced in
-            status = pen ? "not fenced in, or too large" : "not enclosed";
+            status = type == PEN ? "not fenced in, or too large" : "not enclosed";
          colour = ChatFormatting.GOLD;
       } else {
          status = "enclosed";
@@ -246,7 +255,7 @@ public class DetectRooms {
                   room.passableBlocks().size(),
                   room.validFloorBlocks().size(),
                   room.doors().size(),
-                  pen ? "gate(s)" : "door(s)"))
+                  type == PEN ? "gate(s)" : "door(s)"))
             .withStyle(colour);
    }
 
