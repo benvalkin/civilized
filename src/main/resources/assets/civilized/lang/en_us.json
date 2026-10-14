@@ -236,7 +236,7 @@
   "menu.building.worksite.workers.heading.empty": "There are no available workers who can be assigned to this site.",
   "menu.building.worksite.workers.tab.heading": "Manage Workers",
   "menu.title.civilized.mymenu": "Settlement Menu",
-  "message.building.placement.help.detected": "Found the %s's rooms. Right-click inside them again to establish it. Shift + Right-click to cancel.",
+  "message.building.placement.help.detected": "Successfully detected rooms for %s. Right-click inside to establish it. Shift + Right-click to cancel.",
   "message.building.placement.detection.start_obstructed": "Invalid placement - building origin appears to be obstructed.",
   "message.building.placement.detection.start_outside": "Invalid placement - building origin must be inside. Try clicking inside a building with a roof.",
   "message.building.placement.detection.indoor.too_large": "Invalid placement - indoor space appears to be too large. Make sure its walls are enclosed.",

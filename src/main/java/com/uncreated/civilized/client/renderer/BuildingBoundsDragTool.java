@@ -18,7 +18,6 @@ import com.uncreated.civilized.ui.style.Colors;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.ShapeRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -333,26 +332,6 @@ public final class BuildingBoundsDragTool {
          Vec3 camera,
          BlockPos pos1,
          BlockPos pos2) {
-      drawBox(poseStack, consumer, camera, pos1, pos2, 0.67F, 0.85F, 0.96F);
-   }
-
-   /** Draws the outline of the box between two blocks, e.g. a building's bounds. */
-   public static void drawBox(
-         PoseStack poseStack,
-         VertexConsumer consumer,
-         Vec3 camera,
-         BlockPos pos1,
-         BlockPos pos2,
-         float red,
-         float green,
-         float blue) {
-      AABB aabb =
-            AABB.encapsulatingFullBlocks(pos1, pos2)
-                  .move((double) (-pos1.getX()), (double) (-pos1.getY()), (double) (-pos1.getZ()));
-      Vec3 offset = Vec3.atLowerCornerOf(pos1).subtract(camera);
-      poseStack.pushPose();
-      poseStack.translate(offset.x, offset.y, offset.z);
-      ShapeRenderer.renderLineBox(poseStack, consumer, aabb, red, green, blue, 1F);
-      poseStack.popPose();
+      BuildingBoundsVisualizer.drawBox(poseStack, consumer, camera, pos1, pos2, 0.67F, 0.85F, 0.96F);
    }
 }

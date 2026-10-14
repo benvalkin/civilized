@@ -82,7 +82,9 @@ public final class BuildingDetectionTool {
          return;
 
       player.displayClientMessage(
-            Component.translatable("message.building.placement.help.detected", packet.buildingType().translation())
+            Component.translatable(
+                  "message.building.placement.help.detected",
+                  packet.buildingType().translation())
                   .withColor(Colors.VALIDATION_PARTIAL_SUCCESS),
             true);
    }
@@ -114,7 +116,7 @@ public final class BuildingDetectionTool {
 
       // the same colour as dragged bounds
       if (showPreview)
-         BuildingBoundsDragTool.drawBox(
+         BuildingBoundsVisualizer.drawBox(
                poseStack,
                consumer,
                camera,
@@ -125,7 +127,7 @@ public final class BuildingDetectionTool {
                0.96F);
 
       if (showHighlight)
-         BuildingBoundsDragTool.drawBox(poseStack, consumer, camera, highlight, highlight, 1.0F, 0.2F, 0.2F);
+         BuildingBoundsVisualizer.drawBox(poseStack, consumer, camera, highlight, highlight, 1.0F, 0.2F, 0.2F);
    }
 
    private static boolean isClientPlayerHoldingDeed(BuildingType buildingType) {

@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.uncreated.civilized.client.renderer.BuildingBoundsDragTool;
+import com.uncreated.civilized.client.renderer.BuildingBoundsVisualizer;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.bounds.BuildingBounds;
 import com.uncreated.civilized.networking.packets.RequestRedrawBuilding;
@@ -29,6 +30,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
  * Lets the player drag out new bounds for an existing building without holding a building deed item.
  */
 // todo: we should probably make the building dead use this system as well
+   // todo: I actually don't think we need to have a redraw button anymore
 @EventBusSubscriber(value = Dist.CLIENT, modid = CIVILIZED_MOD_ID)
 public final class BuildingRedrawSession {
 
@@ -112,7 +114,7 @@ public final class BuildingRedrawSession {
 
       VertexConsumer consumer = Minecraft.getInstance().renderBuffers().bufferSource().getBuffer(RenderType.lines());
       // drawn in a different colour to the bounds being dragged out, so the two can be told apart
-      BuildingBoundsDragTool.drawBox(
+      BuildingBoundsVisualizer.drawBox(
             event.getPoseStack(),
             consumer,
             event.getCamera().getPosition(),
