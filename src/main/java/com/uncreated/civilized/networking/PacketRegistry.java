@@ -17,7 +17,7 @@ import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.networking.packets.BuildingDetected;
-import com.uncreated.civilized.networking.packets.TellClientVisualizeBounds;
+import com.uncreated.civilized.networking.packets.VisualizeBoundsInstruction;
 import com.uncreated.civilized.networking.packets.BuildingPlacementRejected;
 import com.uncreated.civilized.networking.packets.BuyItem;
 import com.uncreated.civilized.networking.packets.CheckUpgradeRequirements;
@@ -108,8 +108,8 @@ public class PacketRegistry {
             ClientPacketHandlers::receiveBuildingDetected);
 
       registrar.playToClient(
-            TellClientVisualizeBounds.TYPE,
-            TellClientVisualizeBounds.STREAM_CODEC,
+            VisualizeBoundsInstruction.TYPE,
+            VisualizeBoundsInstruction.STREAM_CODEC,
             ClientPacketHandlers::receiveShowBoundsDetection);
 
       registrar.playToServer(

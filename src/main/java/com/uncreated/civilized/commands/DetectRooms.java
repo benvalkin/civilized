@@ -17,9 +17,9 @@ import com.uncreated.civilized.core.building.bounds.detection.BoundsDetector;
 import com.uncreated.civilized.core.building.bounds.detection.BuildingDetectionType;
 import com.uncreated.civilized.core.building.bounds.detection.Room;
 import com.uncreated.civilized.core.building.bounds.detection.RoomDoor;
-import com.uncreated.civilized.networking.packets.TellClientVisualizeBounds;
-import com.uncreated.civilized.networking.packets.TellClientVisualizeBounds.Marker;
-import com.uncreated.civilized.networking.packets.TellClientVisualizeBounds.MarkerType;
+import com.uncreated.civilized.networking.packets.VisualizeBoundsInstruction;
+import com.uncreated.civilized.networking.packets.VisualizeBoundsInstruction.Marker;
+import com.uncreated.civilized.networking.packets.VisualizeBoundsInstruction.MarkerType;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
@@ -50,10 +50,15 @@ public class DetectRooms {
                   .executes(context -> detect(context.getSource(), BuildingDetectionType.ROOMS))
                   .then(Commands.literal("clear").executes(context -> clear(context.getSource())));
 
-      for (BuildingDetectionType type : BuildingDetectionType.values())
+      for (BuildingDetectionType type : BuildingDetectionType.values()) {
+         // dragged bounds do not require any detection
+         if (!type.autoDetected())
+            continue;
+
          command.then(
                Commands.literal(type.name().toLowerCase(Locale.ROOT))
                      .executes(context -> detect(context.getSource(), type)));
+      }
 
       dispatcher.register(command);
    }
@@ -88,8 +93,9 @@ public class DetectRooms {
                   : null;
 
       // the client draws what was found, for a while
-      PacketDistributor
-            .sendToPlayer(player, new TellClientVisualizeBounds(createMarkers(rooms, type), Optional.ofNullable(bounds)));
+      PacketDistributor.sendToPlayer(
+            player,
+            new VisualizeBoundsInstruction(createMarkers(rooms, type), Optional.ofNullable(bounds)));
 
       sendSummary(source, start, rooms, result.mainRoom(), bounds, tookMs, type);
       return rooms.size();
@@ -100,7 +106,7 @@ public class DetectRooms {
       if (player == null)
          throw ERROR_NOT_PLAYER.create();
 
-      PacketDistributor.sendToPlayer(player, TellClientVisualizeBounds.CLEAR);
+      PacketDistributor.sendToPlayer(player, VisualizeBoundsInstruction.CLEAR);
       source.sendSuccess(() -> Component.literal("Cleared the room detection display."), false);
       return 1;
    }

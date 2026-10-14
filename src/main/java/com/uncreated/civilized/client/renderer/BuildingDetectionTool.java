@@ -2,46 +2,44 @@ package com.uncreated.civilized.client.renderer;
 
 import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
+import java.time.Duration;
+import java.util.List;
+
 import javax.annotation.Nullable;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.uncreated.civilized.core.building.BuildingType;
 import com.uncreated.civilized.core.building.bounds.BuildingBounds;
 import com.uncreated.civilized.core.building.placement.BuildingPlacement;
 import com.uncreated.civilized.item.BuildingDeedItem;
 import com.uncreated.civilized.networking.packets.BuildingDetected;
 import com.uncreated.civilized.networking.packets.RequestEstablishBuilding;
+import com.uncreated.civilized.networking.packets.VisualizeBoundsInstruction;
 import com.uncreated.civilized.ui.style.Colors;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
-import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
-import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 @EventBusSubscriber(value = Dist.CLIENT, modid = CIVILIZED_MOD_ID)
 public final class BuildingDetectionTool {
 
-   private static final long HIGHLIGHT_DURATION_MS = 10_000;
+   private static final Duration PROBLEM_HIGHLIGHT_DURATION = Duration.ofSeconds(10);
+   private static final int PREVIEW_BOUNDS_COLOUR = 0xABD9F5;
 
    private record Preview(BuildingType buildingType, BlockPos start, BuildingBounds bounds) {
    }
 
    private static @Nullable Preview preview;
-   private static @Nullable BlockPos highlight;
-   private static long highlightUntil;
 
    private BuildingDetectionTool() {
    }
@@ -65,69 +63,68 @@ public final class BuildingDetectionTool {
          return InteractionResult.SUCCESS;
       }
 
-      // air block above clicked pos
+      // air block above clicked pos - this serves as the building's origin
       BlockPos start = clicked.relative(hit.getDirection());
-      highlight = null;
+      BuildingBoundsVisualizer.hide(BuildingBoundsVisualizer.Channel.PLACEMENT_PROBLEM);
       PacketDistributor
             .sendToServer(new RequestEstablishBuilding(buildingType, new BuildingPlacement.Detected(start), false));
       return InteractionResult.SUCCESS;
    }
 
    public static void receiveDetected(BuildingDetected packet) {
-      preview = new Preview(packet.buildingType(), packet.buildingOrigin(), packet.bounds());
-      highlight = null;
+      setPreview(new Preview(packet.buildingType(), packet.buildingOrigin(), packet.bounds()));
+      BuildingBoundsVisualizer.hide(BuildingBoundsVisualizer.Channel.PLACEMENT_PROBLEM);
 
       LocalPlayer player = Minecraft.getInstance().player;
       if (player == null)
          return;
 
       player.displayClientMessage(
-            Component.translatable(
-                  "message.building.placement.help.detected",
-                  packet.buildingType().translation())
+            Component.translatable("message.building.placement.help.detected", packet.buildingType().translation())
                   .withColor(Colors.VALIDATION_PARTIAL_SUCCESS),
             true);
    }
 
+   /**
+    * @param highlight
+    *           a problematic block to highlight for the player.
+    */
    public static void receiveRejected(@Nullable BlockPos highlight) {
-      preview = null;
-      BuildingDetectionTool.highlight = highlight;
-      highlightUntil = System.currentTimeMillis() + HIGHLIGHT_DURATION_MS;
+      setPreview(null);
+
+      if (highlight == null) {
+         BuildingBoundsVisualizer.hide(BuildingBoundsVisualizer.Channel.PLACEMENT_PROBLEM);
+         return;
+      }
+
+      BuildingBoundsVisualizer.show(
+            BuildingBoundsVisualizer.Channel.PLACEMENT_PROBLEM,
+            List.of(new VisualizeBoundsInstruction.Marker(highlight, VisualizeBoundsInstruction.MarkerType.LEAK)),
+            null,
+            0,
+            PROBLEM_HIGHLIGHT_DURATION,
+            () -> true);
    }
 
    public static void reset() {
-      preview = null;
-      highlight = null;
+      setPreview(null);
+      BuildingBoundsVisualizer.hide(BuildingBoundsVisualizer.Channel.PLACEMENT_PROBLEM);
    }
 
-   @SubscribeEvent
-   public static void onRenderLevelStage(RenderLevelStageEvent event) {
-      if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_ENTITIES)
+   private static void setPreview(@Nullable Preview newPreview) {
+      preview = newPreview;
+      if (newPreview == null) {
+         BuildingBoundsVisualizer.hide(BuildingBoundsVisualizer.Channel.PLACEMENT_PREVIEW);
          return;
+      }
 
-      boolean showPreview = preview != null && isClientPlayerHoldingDeed(preview.buildingType());
-      boolean showHighlight = highlight != null && System.currentTimeMillis() < highlightUntil;
-      if (!showPreview && !showHighlight)
-         return;
-
-      PoseStack poseStack = event.getPoseStack();
-      Vec3 camera = event.getCamera().getPosition();
-      VertexConsumer consumer = Minecraft.getInstance().renderBuffers().bufferSource().getBuffer(RenderType.lines());
-
-      // the same colour as dragged bounds
-      if (showPreview)
-         BuildingBoundsVisualizer.drawBox(
-               poseStack,
-               consumer,
-               camera,
-               preview.bounds().getLowerCorner(),
-               preview.bounds().getUpperCorner(),
-               0.67F,
-               0.85F,
-               0.96F);
-
-      if (showHighlight)
-         BuildingBoundsVisualizer.drawBox(poseStack, consumer, camera, highlight, highlight, 1.0F, 0.2F, 0.2F);
+      BuildingBoundsVisualizer.show(
+            BuildingBoundsVisualizer.Channel.PLACEMENT_PREVIEW,
+            List.of(),
+            newPreview.bounds(),
+            PREVIEW_BOUNDS_COLOUR,
+            null,
+            () -> isClientPlayerHoldingDeed(newPreview.buildingType()));
    }
 
    private static boolean isClientPlayerHoldingDeed(BuildingType buildingType) {

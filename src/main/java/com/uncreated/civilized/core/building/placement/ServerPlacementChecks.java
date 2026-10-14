@@ -63,14 +63,14 @@ public class ServerPlacementChecks {
       BuildingBounds bounds;
       switch (placement) {
       case BuildingPlacement.Dragged dragged -> {
-         if (buildingType.usesRoomDetection())
+         if (buildingType.detectionType().autoDetected())
             return failure("message.building.placement.validation.invalid_bounds");
          bounds = dragged.bounds();
       }
       case BuildingPlacement.Detected detected -> {
          BlockPos start = detected.start();
          // the clicked block comes from the client, so it has to be somewhere the player could have clicked
-         if (!buildingType.usesRoomDetection() || !level.isLoaded(start)
+         if (!buildingType.detectionType().autoDetected() || !level.isLoaded(start)
                || !start.closerToCenterThan(player.position(), MAX_DETECTION_START_DISTANCE))
             return failure("message.building.placement.validation.invalid_bounds");
 

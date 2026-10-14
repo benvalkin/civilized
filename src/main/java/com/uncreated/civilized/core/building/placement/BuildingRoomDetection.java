@@ -9,7 +9,7 @@ import com.uncreated.civilized.core.building.BuildingType;
 import com.uncreated.civilized.core.building.BuildingTypes;
 import com.uncreated.civilized.core.building.bounds.BuildingBounds;
 import com.uncreated.civilized.core.building.bounds.detection.BoundsDetectionResult;
-import com.uncreated.civilized.core.building.bounds.detection.BoundsDetector;
+import com.uncreated.civilized.core.building.bounds.detection.BuildingDetectionType;
 import com.uncreated.civilized.core.building.bounds.detection.Room;
 import com.uncreated.civilized.ui.style.Colors;
 
@@ -17,7 +17,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
 
-/** Works out a building's bounds from its rooms, as detected from where the player clicked inside it. */
 public final class BuildingRoomDetection {
 
    private BuildingRoomDetection() {
@@ -26,7 +25,6 @@ public final class BuildingRoomDetection {
    public sealed interface Result {
    }
 
-   /** @param rooms the rooms the building is made of */
    public record Detected(BuildingBounds bounds, List<Room> rooms) implements Result {
    }
 
@@ -34,7 +32,18 @@ public final class BuildingRoomDetection {
    }
 
    public static Result detect(Level level, BuildingType buildingType, BlockPos start) {
-      BoundsDetectionResult result = new BoundsDetector().detect(start, level);
+      BuildingDetectionType detectionType = buildingType.detectionType();
+      BoundsDetectionResult result = detectionType.createDetector().detect(start, level);
+
+      return switch (detectionType) {
+      case ROOMS -> detectRooms(buildingType, result);
+      case PEN -> detectPen(result);
+      case MANUAL_DRAG ->
+         throw new IllegalArgumentException(buildingType + " does not support automatic bounds detection.");
+      };
+   }
+
+   private static Result detectRooms(BuildingType buildingType, BoundsDetectionResult result) {
       Room mainRoom = result.mainRoom();
 
       if (mainRoom.originObstructed())
@@ -45,29 +54,40 @@ public final class BuildingRoomDetection {
          return reject("message.building.placement.detection.start_outside", null);
 
       if (mainRoom.tooLarge())
-         return reject("message.building.placement.detection.too_large", null);
+         return reject("message.building.placement.detection.indoor.too_large", null);
 
       List<Room> rooms;
       if (requiresEnclosure(buildingType)) {
          if (!mainRoom.enclosed()) {
             BlockPos leak = mainRoom.leak();
             return reject(
-                  "message.building.placement.detection.not_enclosed",
+                  "message.building.placement.detection.indoor.not_enclosed",
                   leak,
                   leak != null ? leak.toShortString() : "?");
          }
 
          rooms = result.enclosedRooms();
       } else {
-         // only the room that was clicked in has to be roofed, e.g. an open-sided storehouse. Enclosed rooms through its
-         // doors are still part of it
+         // only the room that was clicked in has to be roofed, e.g. an open-sided storehouse. Enclosed rooms through
+         // its doors are still part of it
          rooms = Stream.concat(Stream.of(mainRoom), result.enclosedRooms().stream()).distinct().toList();
       }
 
       return new Detected(result.createBounds(rooms), rooms);
    }
 
-   /** Some buildings only need a roof over them, rather than walls all the way around. */
+   private static Result detectPen(BoundsDetectionResult result) {
+      Room pen = result.mainRoom();
+
+      if (pen.originObstructed())
+         return reject("message.building.placement.detection.start_obstructed", null);
+
+      if (!pen.enclosed())
+         return reject("message.building.placement.detection.pen.not_enclosed", pen.leak());
+
+      return new Detected(result.createBounds(List.of(pen)), List.of(pen));
+   }
+
    private static boolean requiresEnclosure(BuildingType buildingType) {
       return !buildingType.is(BuildingTypes.STOREHOUSE);
    }

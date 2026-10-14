@@ -7,6 +7,7 @@ import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
+import com.uncreated.civilized.core.building.bounds.detection.BuildingDetectionType;
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.entity.behaviour.BuildingBehaviour;
 import com.uncreated.civilized.core.building.production.bills.ProductionType;
@@ -42,6 +43,8 @@ public class BuildingType {
    private final Function<LoadedBuilding, BuildingBehaviour> createBehaviour = BuildingBehaviour::new;
    @Builder.Default
    private final List<ProductionType> supportedProductionTypes = List.of();
+   @Builder.Default
+   private final BuildingDetectionType detectionType = BuildingDetectionType.ROOMS;
    @Getter(AccessLevel.NONE)
    @Builder.Default
    private final Supplier<VillagerOccupation> occupation = () -> VillagerOccupations.UNEMPLOYED;
@@ -60,10 +63,6 @@ public class BuildingType {
 
    public boolean is(BuildingType other) {
       return this.equals(other);
-   }
-
-   public boolean usesRoomDetection() {
-      return !isWorksite && !is(BuildingTypes.TOWN_SQUARE);
    }
 
    public boolean isArtisanHouse() {

@@ -13,10 +13,10 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 
-public record TellClientVisualizeBounds(List<Marker> markers,
-                                        Optional<BuildingBounds> bounds) implements CustomPacketPayload {
+public record VisualizeBoundsInstruction(List<Marker> markers,
+                                         Optional<BuildingBounds> bounds) implements CustomPacketPayload {
 
-   public static final TellClientVisualizeBounds CLEAR = new TellClientVisualizeBounds(List.of(), Optional.empty());
+   public static final VisualizeBoundsInstruction CLEAR = new VisualizeBoundsInstruction(List.of(), Optional.empty());
 
    public enum MarkerType {
       ENCLOSED_FLOOR, UNENCLOSED_FLOOR, DOOR, BOUNDARY, START, LEAK
@@ -25,21 +25,21 @@ public record TellClientVisualizeBounds(List<Marker> markers,
    public record Marker(BlockPos pos, MarkerType type) {
    }
 
-   public static final CustomPacketPayload.Type<TellClientVisualizeBounds> TYPE =
+   public static final CustomPacketPayload.Type<VisualizeBoundsInstruction> TYPE =
          new CustomPacketPayload.Type<>(
                ResourceLocation.fromNamespaceAndPath(CIVILIZED_MOD_ID, "show_bounds_detection"));
 
-   public static final StreamCodec<FriendlyByteBuf, TellClientVisualizeBounds> STREAM_CODEC =
-         StreamCodec.ofMember(TellClientVisualizeBounds::encode, TellClientVisualizeBounds::decode);
+   public static final StreamCodec<FriendlyByteBuf, VisualizeBoundsInstruction> STREAM_CODEC =
+         StreamCodec.ofMember(VisualizeBoundsInstruction::encode, VisualizeBoundsInstruction::decode);
 
    public boolean isClear() {
       return markers.isEmpty() && bounds.isEmpty();
    }
 
-   public static TellClientVisualizeBounds decode(FriendlyByteBuf buffer) {
+   public static VisualizeBoundsInstruction decode(FriendlyByteBuf buffer) {
       List<Marker> markers = buffer.readList(b -> new Marker(BlockPos.of(b.readLong()), b.readEnum(MarkerType.class)));
       Optional<BuildingBounds> bounds = buffer.readOptional(BuildingBounds::decode);
-      return new TellClientVisualizeBounds(markers, bounds);
+      return new VisualizeBoundsInstruction(markers, bounds);
    }
 
    public void encode(FriendlyByteBuf buffer) {
