@@ -3,8 +3,9 @@ package com.uncreated.civilized.ui.menu.building;
 import java.util.List;
 
 import com.uncreated.civilized.client.renderer.BuildingBoundsDragTool;
+import com.uncreated.civilized.client.renderer.BuildingDetectionTool;
 import com.uncreated.civilized.core.building.BuildingType;
-import com.uncreated.civilized.core.building.bounds.BuildingBounds;
+import com.uncreated.civilized.core.building.placement.BuildingPlacement;
 import com.uncreated.civilized.core.building.requirement.IBuildingRequirementResult;
 import com.uncreated.civilized.item.BuildingDeedItem;
 import com.uncreated.civilized.networking.packets.CreateNewBuilding;
@@ -20,17 +21,17 @@ import net.neoforged.neoforge.network.PacketDistributor;
 public class EstablishBuildingScreen extends ABoundsConfirmationScreen {
 
    private final BuildingType buildingType;
-   private final BuildingBounds bounds;
+   private final BuildingPlacement placement;
 
    public EstablishBuildingScreen(
          BuildingType buildingType,
-         BuildingBounds bounds,
+         BuildingPlacement placement,
          List<? extends IBuildingRequirementResult> requirements) {
       super(
             Component.translatable("menu.building.management.create.heading", buildingType.translationDark()),
             requirements);
       this.buildingType = buildingType;
-      this.bounds = bounds;
+      this.placement = placement;
    }
 
    @Override
@@ -43,14 +44,19 @@ public class EstablishBuildingScreen extends ABoundsConfirmationScreen {
       ItemStack itemInHand = player.getMainHandItem();
       if (itemInHand.getItem() instanceof BuildingDeedItem buildingDeed
             && buildingDeed.getBuildingType() == buildingType)
-         PacketDistributor.sendToServer(new CreateNewBuilding(buildingType, bounds));
+         PacketDistributor.sendToServer(new CreateNewBuilding(buildingType, placement));
 
       BuildingBoundsDragTool.resetDragging();
+      BuildingDetectionTool.reset();
    }
 
    @Override
    protected Component closedWithoutConfirmingMessage() {
-      return Component.translatable("message.building.placement.help.placed_destination")
+      String translationKey = switch (placement) {
+         case BuildingPlacement.Detected ignore -> "message.building.placement.help.detected";
+         case BuildingPlacement.Dragged ignore -> "message.building.placement.help.placed_destination";
+      };
+      return Component.translatable(translationKey, buildingType.translation())
             .withColor(Colors.VALIDATION_PARTIAL_SUCCESS);
    }
 }

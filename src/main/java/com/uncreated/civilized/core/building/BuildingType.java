@@ -62,6 +62,10 @@ public class BuildingType {
       return this.equals(other);
    }
 
+   public boolean usesRoomDetection() {
+      return !isWorksite && !is(BuildingTypes.TOWN_SQUARE);
+   }
+
    public boolean isArtisanHouse() {
       return !supportedProductionTypes.isEmpty();
    }

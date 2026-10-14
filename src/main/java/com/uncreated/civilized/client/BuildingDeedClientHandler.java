@@ -2,8 +2,10 @@ package com.uncreated.civilized.client;
 
 
 import com.uncreated.civilized.client.renderer.BuildingBoundsDragTool;
+import com.uncreated.civilized.client.renderer.BuildingDetectionTool;
 import com.uncreated.civilized.core.building.BuildingType;
 import com.uncreated.civilized.core.building.bounds.BuildingBounds;
+import com.uncreated.civilized.core.building.placement.BuildingPlacement;
 import com.uncreated.civilized.networking.packets.RequestEstablishBuilding;
 
 import net.minecraft.client.Minecraft;
@@ -27,15 +29,20 @@ public final class BuildingDeedClientHandler {
       if (player != Minecraft.getInstance().player)
          return InteractionResult.PASS;
 
+      if (buildingType.usesRoomDetection())
+         return BuildingDetectionTool.handleUse(player, buildingType);
+
       return BuildingBoundsDragTool.handleUse(player, level, new BuildingBoundsDragTool.IBoundsDragListener() {
          @Override
          public void onSecondCornerPlaced(BuildingBounds bounds) {
-            PacketDistributor.sendToServer(new RequestEstablishBuilding(buildingType, bounds, false));
+            PacketDistributor
+                  .sendToServer(new RequestEstablishBuilding(buildingType, new BuildingPlacement.Dragged(bounds), false));
          }
 
          @Override
          public void onBoundsConfirmed(BuildingBounds bounds) {
-            PacketDistributor.sendToServer(new RequestEstablishBuilding(buildingType, bounds, true));
+            PacketDistributor
+                  .sendToServer(new RequestEstablishBuilding(buildingType, new BuildingPlacement.Dragged(bounds), true));
          }
       });
    }

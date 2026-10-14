@@ -13,6 +13,7 @@ import com.uncreated.civilized.CivilizedMod;
 import com.uncreated.civilized.core.building.bounds.BuildingBounds;
 import com.uncreated.civilized.core.building.bounds.detection.BoundsDetectionResult;
 import com.uncreated.civilized.core.building.bounds.detection.BoundsDetector;
+import com.uncreated.civilized.core.building.bounds.detection.PenDetector;
 import com.uncreated.civilized.core.building.bounds.detection.Room;
 import com.uncreated.civilized.core.building.bounds.detection.RoomDoor;
 
@@ -50,6 +51,7 @@ public class DetectRooms {
    private static final DustParticleOptions LEAK = new DustParticleOptions(0xFF2222, 2.5F);
    private static final DustParticleOptions ROOM_ORIGIN = new DustParticleOptions(0x5555FF, 2.0F);
    private static final DustParticleOptions BOUNDS = new DustParticleOptions(0xFFFFFF, 0.7F);
+   private static final DustParticleOptions PEN_BOUNDARY = new DustParticleOptions(0x888888, 1.0F);
 
    private static final SimpleCommandExceptionType ERROR_NOT_PLAYER =
          new SimpleCommandExceptionType(Component.literal("This command can only be used by players."));
@@ -62,18 +64,20 @@ public class DetectRooms {
    private record Display(ResourceKey<Level> dimension, List<Marker> markers, long expiresAt) {
    }
 
-   /** What each player is being shown, by player ID. */
+   /** Stores a display for each player (playerId) */
    private static final Map<UUID, Display> DISPLAYS = new HashMap<>();
 
    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
       dispatcher.register(
             Commands.literal("detectrooms")
                   .requires(source -> source.hasPermission(2))
-                  .executes(context -> detect(context.getSource()))
+                  .executes(context -> detect(context.getSource(), false))
+                  .then(Commands.literal("pen").executes(context -> detect(context.getSource(), true)))
                   .then(Commands.literal("clear").executes(context -> clear(context.getSource()))));
    }
 
-   private static int detect(CommandSourceStack source) throws CommandSyntaxException {
+   /** @param pen whether to detect an animal pen, rather than a building's rooms */
+   private static int detect(CommandSourceStack source, boolean pen) throws CommandSyntaxException {
       ServerPlayer player = source.getPlayer();
       if (player == null)
          throw ERROR_NOT_PLAYER.create();
@@ -87,7 +91,8 @@ public class DetectRooms {
       ServerLevel level = player.serverLevel();
 
       long startedAt = System.nanoTime();
-      BoundsDetectionResult result = new BoundsDetector().detect(start, level);
+      BoundsDetector detector = pen ? new PenDetector() : new BoundsDetector();
+      BoundsDetectionResult result = detector.detect(start, level);
       double tookMs = (System.nanoTime() - startedAt) / 1_000_000.0;
 
       // too large rooms aren't in the result's rooms, but the main room being too large is worth knowing about
@@ -100,12 +105,12 @@ public class DetectRooms {
             ? result.createBounds(enclosedRooms)
             : null;
 
-      List<Marker> markers = createMarkers(rooms, bounds);
+      List<Marker> markers = createMarkers(rooms, bounds, pen);
       DISPLAYS.put(
             player.getUUID(),
             new Display(level.dimension(), markers, level.getGameTime() + DISPLAY_DURATION_TICKS));
 
-      sendSummary(source, start, rooms, result.mainRoom(), bounds, tookMs);
+      sendSummary(source, start, rooms, result.mainRoom(), bounds, tookMs, pen);
       return rooms.size();
    }
 
@@ -119,7 +124,7 @@ public class DetectRooms {
       return 1;
    }
 
-   private static List<Marker> createMarkers(List<Room> rooms, BuildingBounds bounds) {
+   private static List<Marker> createMarkers(List<Room> rooms, BuildingBounds bounds, boolean pen) {
       List<Marker> markers = new ArrayList<>();
       for (Room room : rooms) {
          DustParticleOptions floor = room.enclosed() ? ENCLOSED_FLOOR : UNENCLOSED_FLOOR;
@@ -128,6 +133,11 @@ public class DetectRooms {
 
          for (RoomDoor door : room.doors())
             markers.add(new Marker(door.doorOrigin().getCenter(), DOOR));
+
+         // a pen's fences and the terrain walling it in, which is what decides where it ends
+         if (pen)
+            for (BlockPos pos : room.solidBlocks())
+               markers.add(new Marker(pos.getCenter(), PEN_BOUNDARY));
 
          markers.add(new Marker(room.origin().getCenter(), ROOM_ORIGIN));
          if (room.leak() != null)
@@ -166,22 +176,23 @@ public class DetectRooms {
          List<Room> rooms,
          Room mainRoom,
          BuildingBounds bounds,
-         double tookMs) {
+         double tookMs,
+         boolean pen) {
       long enclosed = rooms.stream().filter(Room::enclosed).filter(room -> !room.tooLarge()).count();
-      source.sendSuccess(
-            () -> Component.literal(
-                  String.format(
-                        "Detected %d room(s) from %s in %.1fms, %d of them enclosed:",
-                        rooms.size(),
-                        start.toShortString(),
-                        tookMs,
-                        enclosed)),
-            false);
+      String heading = pen
+            ? String.format("Detected a pen from %s in %.1fms:", start.toShortString(), tookMs)
+            : String.format(
+                  "Detected %d room(s) from %s in %.1fms, %d of them enclosed:",
+                  rooms.size(),
+                  start.toShortString(),
+                  tookMs,
+                  enclosed);
+      source.sendSuccess(() -> Component.literal(heading), false);
 
       for (int i = 0; i < rooms.size(); i++) {
          Room room = rooms.get(i);
-         String label = room == mainRoom ? "main" : "#" + i;
-         source.sendSuccess(() -> describeRoom(label, room), false);
+         String label = pen ? "pen" : room == mainRoom ? "main" : "#" + i;
+         source.sendSuccess(() -> describeRoom(label, room, pen), false);
       }
 
       if (bounds != null) {
@@ -189,7 +200,8 @@ public class DetectRooms {
          source.sendSuccess(
                () -> Component.literal(
                      String.format(
-                           "Bounds of the enclosed rooms: %dx%dx%d, from %s to %s",
+                           "Bounds of the %s: %dx%dx%d, from %s to %s",
+                           pen ? "pen" : "enclosed rooms",
                            size.getX(),
                            size.getY(),
                            size.getZ(),
@@ -198,25 +210,27 @@ public class DetectRooms {
                false);
       }
 
-      source.sendSuccess(
-            () -> Component
-                  .literal(
-                        "Green: enclosed floor, orange: unenclosed floor, yellow: door, red: leak, blue: room start, white: bounds")
-                  .withStyle(ChatFormatting.GRAY),
-            false);
+      String legend = pen
+            ? "Green: enclosed floor, orange: unenclosed floor, grey: fences and walls, yellow: gate, red: leak, blue: start, white: bounds"
+            : "Green: enclosed floor, orange: unenclosed floor, yellow: door, red: leak, blue: room start, white: bounds";
+      source.sendSuccess(() -> Component.literal(legend).withStyle(ChatFormatting.GRAY), false);
    }
 
-   private static Component describeRoom(String label, Room room) {
+   private static Component describeRoom(String label, Room room, boolean pen) {
       String status;
       ChatFormatting colour;
       if (room.originObstructed()) {
-         status = "starts inside a block";
+         status = pen ? "starts somewhere animals can't stand" : "starts inside a block";
          colour = ChatFormatting.RED;
       } else if (room.tooLarge()) {
          status = "too large";
          colour = ChatFormatting.RED;
       } else if (!room.enclosed()) {
-         status = room.leak() != null ? "leaks at " + room.leak().toShortString() : "not enclosed";
+         if (room.leak() != null)
+            status = "leaks at " + room.leak().toShortString();
+         else
+            // a pen's search only runs out of room to explore when it's fenced in
+            status = pen ? "not fenced in, or too large" : "not enclosed";
          colour = ChatFormatting.GOLD;
       } else {
          status = "enclosed";
@@ -225,13 +239,14 @@ public class DetectRooms {
 
       return Component.literal(
             String.format(
-                  " %s at %s: %s, %d blocks, %d floor, %d door(s)",
+                  " %s at %s: %s, %d blocks, %d floor, %d %s",
                   label,
                   room.origin().toShortString(),
                   status,
                   room.passableBlocks().size(),
                   room.validFloorBlocks().size(),
-                  room.doors().size()))
+                  room.doors().size(),
+                  pen ? "gate(s)" : "door(s)"))
             .withStyle(colour);
    }
 

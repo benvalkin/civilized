@@ -1,6 +1,7 @@
 package com.uncreated.civilized.core.building.bounds.detection;
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -24,10 +25,10 @@ public final class Room {
    private boolean enclosed;
    private boolean originObstructed;
    private boolean tooLarge;
-   private List<BlockPos> passableBlocks;
-   private List<RoomDoor> doors;
-   private List<BlockPos> validFloorBlocks;
-   private List<BlockPos> solidBlocks;
+   private Set<BlockPos> passableBlocks;
+   private Set<RoomDoor> doors;
+   private Set<BlockPos> validFloorBlocks;
+   private Set<BlockPos> solidBlocks;
    private Set<Vector2i> roofedBlocks;
    /** The first block that leads outside if the room is not enclosed. */
    @Setter(AccessLevel.NONE)
@@ -38,11 +39,11 @@ public final class Room {
       this.enclosed = true;
       this.originObstructed = false;
       this.tooLarge = false;
-      this.passableBlocks = new LinkedList<>();
-      this.doors = new LinkedList<>();
-      this.validFloorBlocks = new LinkedList<>();
-      this.solidBlocks = new LinkedList<>();
-      this.roofedBlocks = new HashSet<>();
+      this.passableBlocks = new LinkedHashSet<>();
+      this.doors = new LinkedHashSet<>();
+      this.validFloorBlocks = new LinkedHashSet<>();
+      this.solidBlocks = new LinkedHashSet<>();
+      this.roofedBlocks = new LinkedHashSet<>();
    }
 
    public void markLeak(BlockPos outsidePos) {

@@ -39,18 +39,20 @@ public class ServerPlacementChecks {
    /** The tallest a building can be, in blocks. */
    public static final int MAX_HEIGHT = 32;
 
+   /** How far from the player the click block pos can be. */
+   private static final double MAX_DETECTION_START_DISTANCE = 16;
+
    /**
     * Whether a new building of this type can be placed at these bounds.
     *
     * @param confirming
-    *           whether the player is confirming the bounds, e.g. by right-clicking inside them, rather than having just
-    *           finished dragging them out. Valid bounds are {@link PlacementResult.Confirmed} if so, and only
-    *           {@link PlacementResult.Accepted} otherwise
+    *           whether the player is confirming the proposed bounds (e.g. of right-clicking a second time during the
+    *           bounds set-up process
     */
    public static PlacementResult checkEstablish(
          ServerPlayer player,
          BuildingType buildingType,
-         BuildingBounds bounds,
+         BuildingPlacement placement,
          boolean confirming) {
       ServerLevel level = player.serverLevel();
 
@@ -58,7 +60,32 @@ public class ServerPlacementChecks {
       if (!(deed.getItem() instanceof BuildingDeedItem deedItem && deedItem.getBuildingType() == buildingType))
          return failure("message.settlement.create_building.failed.no_deed", buildingType.translation());
 
-      Optional<PlacementResult.Failure> boundsFailure = checkBounds(level, buildingType, bounds, null);
+      BuildingBounds bounds;
+      switch (placement) {
+      case BuildingPlacement.Dragged dragged -> {
+         if (buildingType.usesRoomDetection())
+            return failure("message.building.placement.validation.invalid_bounds");
+         bounds = dragged.bounds();
+      }
+      case BuildingPlacement.Detected detected -> {
+         BlockPos start = detected.start();
+         // the clicked block comes from the client, so it has to be somewhere the player could have clicked
+         if (!buildingType.usesRoomDetection() || !level.isLoaded(start)
+               || !start.closerToCenterThan(player.position(), MAX_DETECTION_START_DISTANCE))
+            return failure("message.building.placement.validation.invalid_bounds");
+
+         switch (BuildingRoomDetection.detect(level, buildingType, start)) {
+         case BuildingRoomDetection.Rejected rejected -> {
+            return rejected.failure();
+         }
+         case BuildingRoomDetection.Detected rooms -> bounds = rooms.bounds();
+         }
+      }
+      }
+
+      // detected rooms have already been checked to be clear and roofed where the player clicked
+      boolean checkCenter = placement instanceof BuildingPlacement.Dragged;
+      Optional<PlacementResult.Failure> boundsFailure = checkBounds(level, buildingType, bounds, null, checkCenter);
       if (boundsFailure.isPresent())
          return boundsFailure.get();
 
@@ -82,7 +109,7 @@ public class ServerPlacementChecks {
          if (overlap.isPresent())
             return overlap.get();
 
-         return new PlacementResult.Confirmed(null, confirming);
+         return new PlacementResult.Confirmed(null, bounds, confirming);
       }
 
       if (nearbySettlement.isEmpty())
@@ -105,7 +132,7 @@ public class ServerPlacementChecks {
       if (overlap.isPresent())
          return overlap.get();
 
-      return new PlacementResult.Confirmed(settlement, confirming);
+      return new PlacementResult.Confirmed(settlement, bounds, confirming);
    }
 
    /**
@@ -132,7 +159,8 @@ public class ServerPlacementChecks {
             .hasCreateBuildingsPermission(player.getUUID()))
          return failure("message.building.redraw.failed.no_permission", settlement.displayNameTranslation());
 
-      Optional<PlacementResult.Failure> boundsFailure = checkBounds(level, building.getBuildingType(), bounds, building);
+      Optional<PlacementResult.Failure> boundsFailure =
+            checkBounds(level, building.getBuildingType(), bounds, building, true);
       if (boundsFailure.isPresent())
          return boundsFailure.get();
 
@@ -164,7 +192,7 @@ public class ServerPlacementChecks {
       if (overlap.isPresent())
          return overlap.get();
 
-      return new PlacementResult.Confirmed(settlement, confirming);
+      return new PlacementResult.Confirmed(settlement, bounds, confirming);
    }
 
    /** The settlement close enough to these bounds for a new building there to join it. */
@@ -180,12 +208,15 @@ public class ServerPlacementChecks {
     *
     * @param existing
     *           if these bounds are for an existing building and are being redrawn, otherwise null for new building
+    * @param checkCenter
+    *           whether to check that the bounds' center is clear and roofed, which detected rooms already are
     */
    static Optional<PlacementResult.Failure> checkBounds(
          ServerLevel level,
          BuildingType buildingType,
          BuildingBounds bounds,
-         @Nullable Building existing) {
+         @Nullable Building existing,
+         boolean checkCenter) {
 
       BlockPos lower = bounds.getLowerCorner();
       BlockPos upper = bounds.getUpperCorner();
@@ -210,7 +241,7 @@ public class ServerPlacementChecks {
                      overlapping.get().getBuildingType().translation()));
 
       // worksites are open areas like farms, so they don't need a clear, roofed center like other buildings
-      if (!buildingType.isWorksite()) {
+      if (checkCenter && !buildingType.isWorksite()) {
          BlockPos center = bounds.getCenter();
          if (!level.getBlockState(center).isAir())
             return Optional

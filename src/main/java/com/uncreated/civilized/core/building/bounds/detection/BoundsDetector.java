@@ -44,7 +44,7 @@ public class BoundsDetector {
          if (visited.contains(room.origin()))
             continue; // room is already visited. This may happen if one room has two doors that lead to the same room.
 
-         floodFillDetectRoomFeatures(level, room, visited);
+         bfsFloodFillDetectRoomFeatures(room, visited, level);
 
          finalRooms.add(room);
 
@@ -63,11 +63,11 @@ public class BoundsDetector {
 
    private static final double MAX_STEP_OVER_HEIGHT = 0.25;
 
-   private static boolean isOutside(LevelReader level, BlockPos pos) {
+   protected static boolean isOutside(LevelReader level, BlockPos pos) {
       return pos.getY() >= level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, pos.getX(), pos.getZ());
    }
 
-   private static boolean isPassable(BlockGetter level, BlockPos pos, BlockState state) {
+   protected static boolean isPassable(BlockGetter level, BlockPos pos, BlockState state) {
       if (state.is(BlockTags.DOORS) || state.is(BlockTags.TRAPDOORS) || state.is(BlockTags.FENCE_GATES))
          return false; // doors count as parts of walls.
 
@@ -84,18 +84,19 @@ public class BoundsDetector {
       return collisionShape.max(Direction.Axis.Y) <= MAX_STEP_OVER_HEIGHT;
    }
 
-   private static boolean isDoor(BlockState state) {
-      return state.is(BlockTags.DOORS) || state.is(BlockTags.TRAPDOORS) || state.is(BlockTags.FENCE_GATES);
+   protected static boolean isDoor(BlockState state, boolean includeTrapDoors) {
+      return state.is(BlockTags.DOORS) || state.is(BlockTags.FENCE_GATES)
+            || (includeTrapDoors && state.is(BlockTags.TRAPDOORS));
    }
 
-   private static boolean isDoorOrigin(BlockState state) {
-      return isDoor(state) && (!state.hasProperty(BlockStateProperties.DOUBLE_BLOCK_HALF)
+   protected static boolean isDoorOrigin(BlockState state, boolean includeTrapDoors) {
+      return isDoor(state, includeTrapDoors) && (!state.hasProperty(BlockStateProperties.DOUBLE_BLOCK_HALF)
             || state.getValue(BlockStateProperties.DOUBLE_BLOCK_HALF) == DoubleBlockHalf.LOWER);
    }
 
    private static final int ROOM_MAX_VOLUME = 5000;
 
-   private static void floodFillDetectRoomFeatures(Level level, Room room, Set<BlockPos> visited) {
+   protected void bfsFloodFillDetectRoomFeatures(Room room, Set<BlockPos> visited, Level level) {
 
       BlockPos start = room.origin();
 
@@ -117,7 +118,7 @@ public class BoundsDetector {
       room.passableBlocks().add(first);
       room.roofedBlocks().add(new Vector2i(first.getX(), first.getZ()));
 
-      List<BlockPos> doorPositions = new ArrayList<>();
+      Set<BlockPos> doorPositions = new HashSet<>();
 
       int explored = 0;
       while (!toSearch.isEmpty() && explored < ROOM_MAX_VOLUME) {
@@ -145,9 +146,9 @@ public class BoundsDetector {
                room.roofedBlocks().add(new Vector2i(neighbour.getX(), neighbour.getZ()));
                toSearch.add(neighbour);
             } else {
-               if (!isDoor(blockState))
+               if (!isDoor(blockState, true))
                   room.solidBlocks().add(neighbour);
-               else if (isDoorOrigin(blockState))
+               else if (isDoorOrigin(blockState, true))
                   doorPositions.add(neighbour);
             }
          }
@@ -158,8 +159,13 @@ public class BoundsDetector {
 
       room.detectFloorBlocks(level);
 
-      // we can only populate RoomDoors do this at the end because we need to have a complete "visited" set to know
+      // we can only populate RoomDoors at the end because we need to have a complete "visited" set to know
       // which way doors are facing relative to the current room
+
+      detectDoors(room, doorPositions, visited, level);
+   }
+
+   protected static void detectDoors(Room room, Set<BlockPos> doorPositions, Set<BlockPos> visited, Level level) {
       for (BlockPos doorPosition : doorPositions) {
          BlockState doorState = level.getBlockState(doorPosition);
          Optional<RoomDoor> roomDoor = RoomDoor.fromDoorPos(doorPosition, doorState, visited);

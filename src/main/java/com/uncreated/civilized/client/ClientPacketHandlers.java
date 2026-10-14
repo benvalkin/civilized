@@ -1,8 +1,10 @@
 package com.uncreated.civilized.client;
 
 import com.uncreated.civilized.client.renderer.BuildingBoundsDragTool;
+import com.uncreated.civilized.client.renderer.BuildingDetectionTool;
 import com.uncreated.civilized.client.toast.SettlementNotificationToast;
 import com.uncreated.civilized.core.building.ClientBuildingStore;
+import com.uncreated.civilized.networking.packets.BuildingDetected;
 import com.uncreated.civilized.networking.packets.BuildingPlacementRejected;
 import com.uncreated.civilized.networking.packets.NotificationToast;
 import com.uncreated.civilized.networking.packets.OpenEstablishBuildingScreen;
@@ -67,11 +69,16 @@ public final class ClientPacketHandlers {
          player.displayClientMessage(packet.reason(), true);
 
       BuildingBoundsDragTool.resetDragging();
+      BuildingDetectionTool.receiveRejected(packet.highlight().orElse(null));
+   }
+
+   public static void receiveBuildingDetected(BuildingDetected packet, IPayloadContext context) {
+      BuildingDetectionTool.receiveDetected(packet);
    }
 
    public static void openEstablishBuildingScreen(OpenEstablishBuildingScreen packet, IPayloadContext context) {
       Minecraft.getInstance()
-            .setScreen(new EstablishBuildingScreen(packet.buildingType(), packet.bounds(), packet.requirements()));
+            .setScreen(new EstablishBuildingScreen(packet.buildingType(), packet.placement(), packet.requirements()));
    }
 
    public static void openRedrawBoundsScreen(OpenRedrawBoundsScreen packet, IPayloadContext context) {

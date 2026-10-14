@@ -15,10 +15,11 @@ import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.bounds.BuildingBounds;
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.entity.LoadedBuildings;
+import com.uncreated.civilized.core.building.placement.BuildingPlacement;
 import com.uncreated.civilized.core.building.placement.PlacementResult;
 import com.uncreated.civilized.core.building.placement.ServerPlacementChecks;
-import com.uncreated.civilized.core.building.requirement.ServerRequirementChecks;
 import com.uncreated.civilized.core.building.requirement.IBuildingRequirementResult;
+import com.uncreated.civilized.core.building.requirement.ServerRequirementChecks;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
@@ -37,8 +38,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-public record CreateNewBuilding(BuildingType buildingType,
-      BuildingBounds buildingBounds) implements CustomPacketPayload {
+public record CreateNewBuilding(BuildingType buildingType, BuildingPlacement placement) implements CustomPacketPayload {
 
    public static final CustomPacketPayload.Type<CreateNewBuilding> TYPE =
          new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(CIVILIZED_MOD_ID, "create_new_building"));
@@ -49,12 +49,12 @@ public record CreateNewBuilding(BuildingType buildingType,
    public static CreateNewBuilding decode(FriendlyByteBuf buffer) {
       return new CreateNewBuilding(
             BuildingTypes.getFromResourceLocation(buffer.readResourceLocation()),
-            BuildingBounds.decode(buffer));
+            BuildingPlacement.STREAM_CODEC.decode(buffer));
    }
 
    public void encode(FriendlyByteBuf buffer) {
       buffer.writeResourceLocation(buildingType.resourceLocation());
-      buildingBounds.encode(buffer);
+      BuildingPlacement.STREAM_CODEC.encode(buffer, placement);
    }
 
    @Override
@@ -67,19 +67,20 @@ public record CreateNewBuilding(BuildingType buildingType,
       ServerPlayer placer = (ServerPlayer) context.player();
       ServerLevel serverLevel = placer.serverLevel();
 
-      // sanity check the bounds placement again
+      // sanity check the bounds placement again. Detected rooms are detected again, in case the building has changed
       PlacementResult placement =
-            ServerPlacementChecks.checkEstablish(placer, packet.buildingType(), packet.buildingBounds(), true);
+            ServerPlacementChecks.checkEstablish(placer, packet.buildingType(), packet.placement(), true);
       if (placement instanceof PlacementResult.Failure failure) {
-         PacketDistributor.sendToPlayer(placer, new BuildingPlacementRejected(failure.reason()));
+         PacketDistributor.sendToPlayer(placer, new BuildingPlacementRejected(failure));
          return;
       }
+      PlacementResult.Confirmed confirmed = (PlacementResult.Confirmed) placement;
       @Nullable
-      Settlement nearbySettlement = ((PlacementResult.Confirmed) placement).settlement();
+      Settlement nearbySettlement = confirmed.settlement();
+      BuildingBounds bounds = confirmed.bounds();
 
       List<IBuildingRequirementResult> requirements =
-            ServerRequirementChecks
-                  .checkEstablish(placer, packet.buildingType(), packet.buildingBounds(), nearbySettlement);
+            ServerRequirementChecks.checkEstablish(placer, packet.buildingType(), bounds, nearbySettlement);
       if (!ServerRequirementChecks.allSatisfied(requirements)) {
          placer.displayClientMessage(
                Component
@@ -95,7 +96,7 @@ public record CreateNewBuilding(BuildingType buildingType,
       Settlement argumentSettlement;
       BlockPos settlementOrigin;
       if (nearbySettlement == null) {
-         settlementOrigin = packet.buildingBounds().getCenter();
+         settlementOrigin = bounds.getCenter();
          argumentSettlement =
                ServerSettlementsStore.INSTANCE.createNew(placer.getUUID(), settlementOrigin, serverLevel.dimension());
          ServerSettlementPermissionStore.INSTANCE
@@ -112,7 +113,7 @@ public record CreateNewBuilding(BuildingType buildingType,
                   argumentSettlement.getSettlementId(),
                   placer.getUUID(),
                   packet.buildingType(),
-                  packet.buildingBounds());
+                  bounds);
 
       if (serverLevel.isLoaded(building.getBlockPos())) {
          LoadedBuilding loadedBuilding = LoadedBuildings.load(building, serverLevel);
