@@ -88,9 +88,7 @@ public class ServerPlacementChecks {
       }
       }
 
-      // detected rooms have already been checked to be clear and roofed where the player clicked
-      boolean checkCenter = placement instanceof BuildingPlacement.Dragged;
-      Optional<PlacementResult.Failure> boundsFailure = checkBounds(level, buildingType, bounds, null, checkCenter);
+      Optional<PlacementResult.Failure> boundsFailure = checkBounds(level, bounds, null);
       if (boundsFailure.isPresent())
          return boundsFailure.get();
 
@@ -164,8 +162,7 @@ public class ServerPlacementChecks {
             .hasCreateBuildingsPermission(player.getUUID()))
          return failure("message.building.redraw.failed.no_permission", settlement.displayNameTranslation());
 
-      Optional<PlacementResult.Failure> boundsFailure =
-            checkBounds(level, building.getBuildingType(), bounds, building, true);
+      Optional<PlacementResult.Failure> boundsFailure = checkBounds(level, bounds, building);
       if (boundsFailure.isPresent())
          return boundsFailure.get();
 
@@ -213,15 +210,11 @@ public class ServerPlacementChecks {
     *
     * @param existing
     *           if these bounds are for an existing building and are being redrawn, otherwise null for new building
-    * @param checkCenter
-    *           whether to check that the bounds' center is clear and roofed, which detected rooms already are
     */
    static Optional<PlacementResult.Failure> checkBounds(
          ServerLevel level,
-         BuildingType buildingType,
          BuildingBounds bounds,
-         @Nullable Building existing,
-         boolean checkCenter) {
+         @Nullable Building existing) {
 
       BlockPos lower = bounds.getLowerCorner();
       BlockPos upper = bounds.getUpperCorner();
@@ -244,17 +237,6 @@ public class ServerPlacementChecks {
                failure(
                      "message.building.placement.validation.building_overlapping",
                      overlapping.get().getBuildingType().translation()));
-
-      // worksites are open areas like farms, so they don't need a clear, roofed center like other buildings
-      if (checkCenter && !buildingType.isWorksite()) {
-         BlockPos center = bounds.getCenter();
-         if (!level.getBlockState(center).isAir())
-            return Optional
-                  .of(failure("message.building.placement.validation.center_obstructed", center.toShortString()));
-
-         if (!buildingType.is(BuildingTypes.TOWN_SQUARE) && level.canSeeSky(center))
-            return Optional.of(failure("message.building.placement.validation.center_no_roof", center.toShortString()));
-      }
 
       return Optional.empty();
    }
