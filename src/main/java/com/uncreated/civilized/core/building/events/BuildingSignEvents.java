@@ -17,6 +17,7 @@ import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.core.villagerinfo.events.model.VillagerInfoUpdatedEvent;
 import com.uncreated.civilized.neoforge.registration.attachments.DataAttachments;
 
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.SignText;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -70,12 +71,18 @@ public class BuildingSignEvents {
 
       SignBlockEntity primarySign = building.getPrimarySign(loadedBuilding.get().getLevel());
       if (primarySign == null) {
+         Level level = loadedBuilding.get().getLevel();
+         // this building has no sign, we need to find a new sign and link it to this building
+         // BAD IMPLEMENTATION: I don't like how much querying this method is doing. Might be time to start rethinking
+         // how we store linked signs.
          List<SignBlockEntity> signs =
                building.getBounds()
-                     .getBlockEntitiesInsideBuilding(loadedBuilding.get().getLevel(), true)
+                     .signArea()
+                     .getBlockEntitiesInsideBuilding(level, true)
                      .stream()
                      .filter(b -> b instanceof SignBlockEntity)
                      .map(b -> (SignBlockEntity) b)
+                     .filter(sign -> signBelongsToBuilding(sign, building, level))
                      .toList();
 
          if (signs.isEmpty())
@@ -102,9 +109,13 @@ public class BuildingSignEvents {
       SignHelper.serverTriggerBuildingSignUpdate(primarySign);
    }
 
+  private static boolean signBelongsToBuilding(SignBlockEntity sign, Building building, Level level) {
+      Optional<Building> owner = ServerBuildingsStore.INSTANCE.findBuildingForSign(sign.getBlockPos(), level);
+      return owner.isPresent() && owner.get() == building;
+   }
+
    @SubscribeEvent
    private static void onBuildingDeleted(BuildingDeletedEvent event) {
-
 
       if (event.isClientside())
          return;

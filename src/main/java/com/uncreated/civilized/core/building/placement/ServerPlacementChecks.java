@@ -155,8 +155,8 @@ public class ServerPlacementChecks {
       if (boundsFailure.isPresent())
          return boundsFailure;
 
-      // the sign cannot be left outside the building bounds
-      if (building.getPrimarySignPos() != null && !newBounds.contains(building.getPrimarySignPos()))
+      // the sign cannot be left outside the building's allowed sign area
+      if (building.getPrimarySignPos() != null && !newBounds.isInSignArea(building.getPrimarySignPos()))
          return Optional.of(failure("message.building.placement.validation.sign_outside"));
 
       Optional<Settlement> nearbySettlement = findNearbySettlement(level, newBounds);

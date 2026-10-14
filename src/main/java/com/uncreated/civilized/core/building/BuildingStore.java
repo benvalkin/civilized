@@ -4,6 +4,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -125,6 +126,25 @@ public abstract class BuildingStore extends SavedData {
             return enclosing;
       }
 
+      return Optional.empty();
+   }
+
+   public Optional<Building> findBuildingForSign(BlockPos signPos, Level level) {
+      Optional<Building> enclosing = findEnclosingBuilding(signPos, level);
+      if (enclosing.isPresent())
+         return enclosing;
+
+      Stream<ChunkPos> possibleChunks = ChunkPos.rangeClosed(new ChunkPos(signPos), ENCLOSING_SEARCH_CHUNK_RADIUS);
+
+      Set<Building> candidates =
+            possibleChunks.flatMap(chunk -> buildings.getChunkIndex().getValues(chunk).stream())
+                  .filter(b -> b.getDimension().equals(level.dimension()) && b.getBounds().isInSignArea(signPos))
+                  .collect(Collectors.toSet());
+
+      if (candidates.size() == 1)
+         return candidates.stream().findFirst();
+
+      // if there are multiple buildings where this sign could belong, it is treated as a non-building sign
       return Optional.empty();
    }
 

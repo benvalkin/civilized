@@ -88,7 +88,7 @@ public abstract class SignBlockEntityMixin extends BlockEntity {
    @Unique
    private Optional<Building> tryLinkWithEnclosingBuilding(ServerLevel level) {
 
-      Optional<Building> enclosingBuilding = ServerBuildingsStore.INSTANCE.findEnclosingBuilding(getBlockPos(), level);
+      Optional<Building> enclosingBuilding = ServerBuildingsStore.INSTANCE.findBuildingForSign(getBlockPos(), level);
       if (enclosingBuilding.isEmpty())
          return Optional.empty();
 

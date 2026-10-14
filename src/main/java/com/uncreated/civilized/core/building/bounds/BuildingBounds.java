@@ -57,6 +57,24 @@ public class BuildingBounds {
       return encapsulatingAABB.contains(pos.getCenter());
    }
 
+   /**
+    * How far away a building's sign can be from its bounds. Detected bounds stop at the building's walls which would
+    * otherwise leave out signs placed outside the building.
+    */
+   public static final int SIGN_MARGIN = 1;
+
+   public boolean isInSignArea(BlockPos pos) {
+      return encapsulatingAABB.inflate(SIGN_MARGIN, 0, SIGN_MARGIN).contains(pos.getCenter());
+   }
+
+   /** Signs are allowed to be in this area which is a little horizontally bigger than the actual building bounds. */
+   public BuildingBounds signArea() {
+      return new BuildingBounds(
+            center,
+            lowerCorner.offset(-SIGN_MARGIN, 0, -SIGN_MARGIN),
+            upperCorner.offset(SIGN_MARGIN, 0, SIGN_MARGIN));
+   }
+
    public boolean isOverlapping(BuildingBounds other) {
       return encapsulatingAABB.intersects(other.getEncapsulatingAABB());
    }
