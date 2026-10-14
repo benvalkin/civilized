@@ -1,8 +1,11 @@
 package com.uncreated.civilized.core.building.placement;
 
+import java.util.List;
+
 import javax.annotation.Nullable;
 
 import com.uncreated.civilized.core.building.bounds.BuildingBounds;
+import com.uncreated.civilized.core.building.bounds.detection.Room;
 import com.uncreated.civilized.core.settlement.Settlement;
 
 import net.minecraft.core.BlockPos;
@@ -36,11 +39,13 @@ public sealed interface PlacementResult {
     *           the settlement the building belongs to, or null for a new town hall with no settlement yet.
     * @param bounds
     *           the building's bounds, e.g. as detected from its rooms
+    * @param rooms
+    *           the rooms the bounds were detected from, or none for bounds the player dragged out
     * @param confirmed
     *           if this is true, this result will proceed to the next step (e.g. opening the building requirements GUI),
     *           otherwise it will display an "accepted" chat message.
     */
-   record Confirmed(@Nullable Settlement settlement, BuildingBounds bounds,
+   record Confirmed(@Nullable Settlement settlement, BuildingBounds bounds, List<Room> rooms,
          boolean confirmed) implements PlacementResult {
    }
 }

@@ -2,11 +2,19 @@ package com.uncreated.civilized.client.renderer;
 
 import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
+import java.time.Duration;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.BooleanSupplier;
+
 import javax.annotation.Nullable;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.uncreated.civilized.networking.packets.TellClientVisualizeBounds;
+import com.uncreated.civilized.core.building.bounds.BuildingBounds;
+import com.uncreated.civilized.networking.packets.VisualizeBoundsInstruction;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderType;
@@ -26,28 +34,68 @@ import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 @EventBusSubscriber(value = Dist.CLIENT, modid = CIVILIZED_MOD_ID)
 public final class BuildingBoundsVisualizer {
 
-   private static final long DETECTION_DISPLAY_DURATION_MS = 60_000;
-
-   private record DetectionDisplay(TellClientVisualizeBounds detection, ResourceKey<Level> dimension, long until) {
+   /** What's being shown. */
+   public enum Channel {
+      /** Result of {@code /detectrooms}. */
+      DEBUG_DETECTION,
+      /** Preview bounds of a building that the player is busy placing - they are not confirmed yet. */
+      PLACEMENT_PREVIEW,
+      /** Visualization of problematic bounds (usually leaks etc.). */
+      PLACEMENT_PROBLEM
    }
 
-   private static @Nullable DetectionDisplay detectionDisplay;
+   private static final Duration DEBUG_DETECTION_DURATION = Duration.ofMinutes(1);
+   private static final int DEBUG_BOUNDS_COLOUR = 0xFFFFFF;
+
+   private record Display(List<VisualizeBoundsInstruction.Marker> markers, Optional<BuildingBounds> bounds,
+                          int boundsColour, ResourceKey<Level> dimension, long untilMillis, BooleanSupplier showWhile) {
+   }
+
+   private static final Map<Channel, Display> DISPLAYS = new EnumMap<>(Channel.class);
 
    private BuildingBoundsVisualizer() {
    }
 
-   public static void showDetection(TellClientVisualizeBounds detection) {
+   public static void show(
+         Channel channel,
+         List<VisualizeBoundsInstruction.Marker> markers,
+         @Nullable BuildingBounds bounds,
+         int boundsColour,
+         @Nullable Duration duration,
+         BooleanSupplier showWhile) {
       Level level = Minecraft.getInstance().level;
-      if (detection.isClear() || level == null) {
-         detectionDisplay = null;
+      if (level == null)
+         return;
+
+      long until = duration == null ? Long.MAX_VALUE : System.currentTimeMillis() + duration.toMillis();
+      DISPLAYS.put(
+            channel,
+            new Display(
+                  List.copyOf(markers),
+                  Optional.ofNullable(bounds),
+                  boundsColour,
+                  level.dimension(),
+                  until,
+                  showWhile));
+   }
+
+   public static void hide(Channel channel) {
+      DISPLAYS.remove(channel);
+   }
+
+   public static void showFromPacket(VisualizeBoundsInstruction detection) {
+      if (detection.isClear()) {
+         hide(Channel.DEBUG_DETECTION);
          return;
       }
 
-      detectionDisplay =
-            new DetectionDisplay(
-                  detection,
-                  level.dimension(),
-                  System.currentTimeMillis() + DETECTION_DISPLAY_DURATION_MS);
+      show(
+            Channel.DEBUG_DETECTION,
+            detection.markers(),
+            detection.bounds().orElse(null),
+            DEBUG_BOUNDS_COLOUR,
+            DEBUG_DETECTION_DURATION,
+            () -> true);
    }
 
    public static void drawBox(
@@ -78,7 +126,7 @@ public final class BuildingBoundsVisualizer {
          PoseStack poseStack,
          VertexConsumer consumer,
          Vec3 camera,
-         TellClientVisualizeBounds.Marker marker) {
+         VisualizeBoundsInstruction.Marker marker) {
       BlockPos pos = marker.pos();
       AABB block = new AABB(pos);
       AABB shape = switch (marker.type()) {
@@ -120,39 +168,45 @@ public final class BuildingBoundsVisualizer {
 
    @SubscribeEvent
    public static void onRenderLevelStage(RenderLevelStageEvent event) {
-      if (detectionDisplay == null || event.getStage() != RenderLevelStageEvent.Stage.AFTER_ENTITIES)
+      if (DISPLAYS.isEmpty() || event.getStage() != RenderLevelStageEvent.Stage.AFTER_ENTITIES)
          return;
 
       Level level = Minecraft.getInstance().level;
-      if (level == null || !level.dimension().equals(detectionDisplay.dimension())
-            || System.currentTimeMillis() >= detectionDisplay.until()) {
-         detectionDisplay = null;
+      if (level == null)
          return;
-      }
+
+      long now = System.currentTimeMillis();
+      DISPLAYS.values().removeIf(display -> now >= display.untilMillis());
 
       PoseStack poseStack = event.getPoseStack();
       Vec3 camera = event.getCamera().getPosition();
       VertexConsumer consumer = Minecraft.getInstance().renderBuffers().bufferSource().getBuffer(RenderType.lines());
 
-      TellClientVisualizeBounds detection = detectionDisplay.detection();
-      for (TellClientVisualizeBounds.Marker marker : detection.markers())
-         drawMarker(poseStack, consumer, camera, marker);
+      for (Display display : DISPLAYS.values()) {
+         // shown again when the player comes back to its level
+         if (!level.dimension().equals(display.dimension()) || !display.showWhile().getAsBoolean())
+            continue;
 
-      detection.bounds()
-            .ifPresent(
-                  bounds -> drawBox(
-                        poseStack,
-                        consumer,
-                        camera,
-                        bounds.getLowerCorner(),
-                        bounds.getUpperCorner(),
-                        1F,
-                        1F,
-                        1F));
+         for (VisualizeBoundsInstruction.Marker marker : display.markers())
+            drawMarker(poseStack, consumer, camera, marker);
+
+         int colour = display.boundsColour();
+         display.bounds()
+               .ifPresent(
+                     bounds -> drawBox(
+                           poseStack,
+                           consumer,
+                           camera,
+                           bounds.getLowerCorner(),
+                           bounds.getUpperCorner(),
+                           ARGB.red(colour) / 255F,
+                           ARGB.green(colour) / 255F,
+                           ARGB.blue(colour) / 255F));
+      }
    }
 
    @SubscribeEvent
    public static void onLoggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
-      detectionDisplay = null;
+      DISPLAYS.clear();
    }
 }

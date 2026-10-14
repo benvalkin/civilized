@@ -29,7 +29,7 @@ public final class BuildingDeedClientHandler {
       if (player != Minecraft.getInstance().player)
          return InteractionResult.PASS;
 
-      if (buildingType.usesRoomDetection())
+      if (buildingType.detectionType().autoDetected())
          return BuildingDetectionTool.handleUse(player, buildingType);
 
       return BuildingBoundsDragTool.handleUse(player, level, new BuildingBoundsDragTool.IBoundsDragListener() {

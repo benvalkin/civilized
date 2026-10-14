@@ -70,7 +70,13 @@ public record RequestEstablishBuilding(BuildingType buildingType, BuildingPlacem
          if (!success.confirmed()) {
             if (packet.placement() instanceof BuildingPlacement.Detected(net.minecraft.core.BlockPos start))
                PacketDistributor
-                     .sendToPlayer(player, new BuildingDetected(packet.buildingType(), start, success.bounds()));
+                     .sendToPlayer(
+                           player,
+                           new BuildingDetected(
+                                 packet.buildingType(),
+                                 start,
+                                 success.bounds(),
+                                 VisualizeBoundsInstruction.floorAndDoorMarkers(success.rooms())));
             else
                player.displayClientMessage(
                      Component.translatable("message.building.placement.help.placed_destination")

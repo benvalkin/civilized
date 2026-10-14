@@ -7,7 +7,7 @@ import com.uncreated.civilized.client.toast.SettlementNotificationToast;
 import com.uncreated.civilized.core.building.ClientBuildingStore;
 import com.uncreated.civilized.networking.packets.BuildingDetected;
 import com.uncreated.civilized.networking.packets.BuildingPlacementRejected;
-import com.uncreated.civilized.networking.packets.TellClientVisualizeBounds;
+import com.uncreated.civilized.networking.packets.VisualizeBoundsInstruction;
 import com.uncreated.civilized.networking.packets.NotificationToast;
 import com.uncreated.civilized.networking.packets.OpenEstablishBuildingScreen;
 import com.uncreated.civilized.networking.packets.OpenRedrawBoundsScreen;
@@ -78,8 +78,8 @@ public final class ClientPacketHandlers {
       BuildingDetectionTool.receiveDetected(packet);
    }
 
-   public static void receiveShowBoundsDetection(TellClientVisualizeBounds packet, IPayloadContext context) {
-      BuildingBoundsVisualizer.showDetection(packet);
+   public static void receiveShowBoundsDetection(VisualizeBoundsInstruction packet, IPayloadContext context) {
+      BuildingBoundsVisualizer.showFromPacket(packet);
    }
 
    public static void openEstablishBuildingScreen(OpenEstablishBuildingScreen packet, IPayloadContext context) {

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.uncreated.civilized.core.building.bounds.detection.BuildingDetectionType;
 import com.uncreated.civilized.CivilizedMod;
 import com.uncreated.civilized.core.building.entity.behaviour.ArtisanHouseBehaviour;
 import com.uncreated.civilized.core.building.entity.behaviour.TownSquareBehaviour;
@@ -101,6 +102,7 @@ public class BuildingTypes {
    public static BuildingType TOWN_SQUARE =
          declare(
                BuildingType.builder(createResourceKey("town_square"))
+                     .detectionType(BuildingDetectionType.MANUAL_DRAG)
                      .createBehaviour(TownSquareBehaviour::new)
                      .build());
    public static BuildingType STOREHOUSE = declare(BuildingType.builder(createResourceKey("storehouse")).build());
@@ -342,6 +344,7 @@ public class BuildingTypes {
          declare(
                BuildingType.builder(createResourceKey("crop_farm"))
                      .isWorksite(true)
+                     .detectionType(BuildingDetectionType.MANUAL_DRAG)
                      .createState(CropFarmState::new)
                      .occupation(() -> VillagerOccupations.FARMER)
                      .build());
@@ -350,6 +353,7 @@ public class BuildingTypes {
          declare(
                BuildingType.builder(createResourceKey("cow_farm"))
                      .isWorksite(true)
+                     .detectionType(BuildingDetectionType.MANUAL_DRAG)
                      .animalFarmMobType(Cow.class)
                      .shouldSlaughterAnimals(true)
                      .createState(CowFarmState::new)
@@ -360,6 +364,7 @@ public class BuildingTypes {
          declare(
                BuildingType.builder(createResourceKey("sheep_farm"))
                      .isWorksite(true)
+                     .detectionType(BuildingDetectionType.MANUAL_DRAG)
                      .animalFarmMobType(Sheep.class)
                      .shouldSlaughterAnimals(true)
                      .createState(SheepFarmState::new)
@@ -370,6 +375,7 @@ public class BuildingTypes {
          declare(
                BuildingType.builder(createResourceKey("pig_farm"))
                      .isWorksite(true)
+                     .detectionType(BuildingDetectionType.MANUAL_DRAG)
                      .animalFarmMobType(Pig.class)
                      .shouldSlaughterAnimals(true)
                      .createState(PigFarmState::new)
@@ -380,6 +386,7 @@ public class BuildingTypes {
          declare(
                BuildingType.builder(createResourceKey("chicken_farm"))
                      .isWorksite(true)
+                     .detectionType(BuildingDetectionType.MANUAL_DRAG)
                      .animalFarmMobType(Chicken.class)
                      .shouldSlaughterAnimals(true)
                      .createState(ChickenFarmState::new)
@@ -390,6 +397,7 @@ public class BuildingTypes {
          declare(
                BuildingType.builder(createResourceKey("bee_farm"))
                      .isWorksite(true)
+                     .detectionType(BuildingDetectionType.MANUAL_DRAG)
                      .animalFarmMobType(Bee.class)
                      .createState(BeeFarmState::new)
                      .occupation(() -> VillagerOccupations.BEEKEEPER)
@@ -398,24 +406,28 @@ public class BuildingTypes {
          declare(
                BuildingType.builder(createResourceKey("fishing_spot"))
                      .isWorksite(true)
+                     .detectionType(BuildingDetectionType.MANUAL_DRAG)
                      .occupation(() -> VillagerOccupations.FISHERMAN)
                      .build());
    public static BuildingType MINE =
          declare(
                BuildingType.builder(createResourceKey("mine"))
                      .isWorksite(true)
+                     .detectionType(BuildingDetectionType.MANUAL_DRAG)
                      .occupation(() -> VillagerOccupations.MINER)
                      .build());
    public static BuildingType QUARRY =
          declare(
                BuildingType.builder(createResourceKey("quarry"))
                      .isWorksite(true)
+                     .detectionType(BuildingDetectionType.MANUAL_DRAG)
                      .occupation(() -> VillagerOccupations.STONECUTTER)
                      .build());
    public static BuildingType GROVE =
          declare(
                BuildingType.builder(createResourceKey("grove"))
                      .isWorksite(true)
+                     .detectionType(BuildingDetectionType.MANUAL_DRAG)
                      .createState(GroveState::new)
                      .occupation(() -> VillagerOccupations.WOODCUTTER)
                      .build());

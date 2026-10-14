@@ -11,6 +11,7 @@ import com.uncreated.civilized.core.building.BuildingType;
 import com.uncreated.civilized.core.building.BuildingTypes;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.bounds.BuildingBounds;
+import com.uncreated.civilized.core.building.bounds.detection.Room;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
 import com.uncreated.civilized.core.settlement.SettlementBounds;
@@ -61,16 +62,17 @@ public class ServerPlacementChecks {
          return failure("message.settlement.create_building.failed.no_deed", buildingType.translation());
 
       BuildingBounds bounds;
+      List<Room> rooms = List.of();
       switch (placement) {
       case BuildingPlacement.Dragged dragged -> {
-         if (buildingType.usesRoomDetection())
+         if (buildingType.detectionType().autoDetected())
             return failure("message.building.placement.validation.invalid_bounds");
          bounds = dragged.bounds();
       }
       case BuildingPlacement.Detected detected -> {
          BlockPos start = detected.start();
          // the clicked block comes from the client, so it has to be somewhere the player could have clicked
-         if (!buildingType.usesRoomDetection() || !level.isLoaded(start)
+         if (!buildingType.detectionType().autoDetected() || !level.isLoaded(start)
                || !start.closerToCenterThan(player.position(), MAX_DETECTION_START_DISTANCE))
             return failure("message.building.placement.validation.invalid_bounds");
 
@@ -78,7 +80,10 @@ public class ServerPlacementChecks {
          case BuildingRoomDetection.Rejected rejected -> {
             return rejected.failure();
          }
-         case BuildingRoomDetection.Detected rooms -> bounds = rooms.bounds();
+         case BuildingRoomDetection.Detected detectedRooms -> {
+            bounds = detectedRooms.bounds();
+            rooms = detectedRooms.rooms();
+         }
          }
       }
       }
@@ -109,7 +114,7 @@ public class ServerPlacementChecks {
          if (overlap.isPresent())
             return overlap.get();
 
-         return new PlacementResult.Confirmed(null, bounds, confirming);
+         return new PlacementResult.Confirmed(null, bounds, rooms, confirming);
       }
 
       if (nearbySettlement.isEmpty())
@@ -132,7 +137,7 @@ public class ServerPlacementChecks {
       if (overlap.isPresent())
          return overlap.get();
 
-      return new PlacementResult.Confirmed(settlement, bounds, confirming);
+      return new PlacementResult.Confirmed(settlement, bounds, rooms, confirming);
    }
 
    /**
@@ -192,7 +197,7 @@ public class ServerPlacementChecks {
       if (overlap.isPresent())
          return overlap.get();
 
-      return new PlacementResult.Confirmed(settlement, bounds, confirming);
+      return new PlacementResult.Confirmed(settlement, bounds, List.of(), confirming);
    }
 
    /** The settlement close enough to these bounds for a new building there to join it. */

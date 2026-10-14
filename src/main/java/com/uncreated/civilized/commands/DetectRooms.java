@@ -16,10 +16,7 @@ import com.uncreated.civilized.core.building.bounds.detection.BoundsDetectionRes
 import com.uncreated.civilized.core.building.bounds.detection.BoundsDetector;
 import com.uncreated.civilized.core.building.bounds.detection.BuildingDetectionType;
 import com.uncreated.civilized.core.building.bounds.detection.Room;
-import com.uncreated.civilized.core.building.bounds.detection.RoomDoor;
-import com.uncreated.civilized.networking.packets.TellClientVisualizeBounds;
-import com.uncreated.civilized.networking.packets.TellClientVisualizeBounds.Marker;
-import com.uncreated.civilized.networking.packets.TellClientVisualizeBounds.MarkerType;
+import com.uncreated.civilized.networking.packets.VisualizeBoundsInstruction;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
@@ -35,8 +32,6 @@ import net.neoforged.neoforge.network.PacketDistributor;
 public class DetectRooms {
 
    private static final double LOOK_DISTANCE = 20;
-   /** Keeps huge rooms from sending the player more than it's worth drawing. */
-   private static final int MAX_MARKERS = 10_000;
 
    private static final SimpleCommandExceptionType ERROR_NOT_PLAYER =
          new SimpleCommandExceptionType(Component.literal("This command can only be used by players."));
@@ -50,10 +45,15 @@ public class DetectRooms {
                   .executes(context -> detect(context.getSource(), BuildingDetectionType.ROOMS))
                   .then(Commands.literal("clear").executes(context -> clear(context.getSource())));
 
-      for (BuildingDetectionType type : BuildingDetectionType.values())
+      for (BuildingDetectionType type : BuildingDetectionType.values()) {
+         // dragged bounds do not require any detection
+         if (!type.autoDetected())
+            continue;
+
          command.then(
                Commands.literal(type.name().toLowerCase(Locale.ROOT))
                      .executes(context -> detect(context.getSource(), type)));
+      }
 
       dispatcher.register(command);
    }
@@ -88,8 +88,10 @@ public class DetectRooms {
                   : null;
 
       // the client draws what was found, for a while
-      PacketDistributor
-            .sendToPlayer(player, new TellClientVisualizeBounds(createMarkers(rooms, type), Optional.ofNullable(bounds)));
+      PacketDistributor.sendToPlayer(
+            player,
+            new VisualizeBoundsInstruction(VisualizeBoundsInstruction.allMarkerTypes(rooms, type), Optional.ofNullable(bounds)));
+
 
       sendSummary(source, start, rooms, result.mainRoom(), bounds, tookMs, type);
       return rooms.size();
@@ -100,32 +102,9 @@ public class DetectRooms {
       if (player == null)
          throw ERROR_NOT_PLAYER.create();
 
-      PacketDistributor.sendToPlayer(player, TellClientVisualizeBounds.CLEAR);
+      PacketDistributor.sendToPlayer(player, VisualizeBoundsInstruction.CLEAR);
       source.sendSuccess(() -> Component.literal("Cleared the room detection display."), false);
       return 1;
-   }
-
-   private static List<Marker> createMarkers(List<Room> rooms, BuildingDetectionType type) {
-      List<Marker> markers = new ArrayList<>();
-      for (Room room : rooms) {
-         MarkerType floor = room.enclosed() ? MarkerType.ENCLOSED_FLOOR : MarkerType.UNENCLOSED_FLOOR;
-         for (BlockPos pos : room.validFloorBlocks())
-            markers.add(new Marker(pos, floor));
-
-         for (RoomDoor door : room.doors())
-            markers.add(new Marker(door.doorOrigin(), MarkerType.DOOR));
-
-         // a pen's fences and the terrain walling it in, which is what decides where it ends
-         if (type == PEN)
-            for (BlockPos pos : room.solidBlocks())
-               markers.add(new Marker(pos, MarkerType.BOUNDARY));
-
-         markers.add(new Marker(room.origin(), MarkerType.START));
-         if (room.leak() != null)
-            markers.add(new Marker(room.leak(), MarkerType.LEAK));
-      }
-
-      return markers.size() > MAX_MARKERS ? markers.subList(0, MAX_MARKERS) : markers;
    }
 
    private static void sendSummary(
