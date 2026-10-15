@@ -18,7 +18,7 @@ import net.minecraft.world.entity.ai.behavior.ShufflingList;
 
 public class VisitEntertainmentPlace extends VisitBuilding {
 
-   private static final int TAVERN_WEIGHT = 6;
+   private static final int TAVERN_WEIGHT = 5;
    private static final int TOWN_SQUARE_WEIGHT = 2;
    private static final int OTHER_FOOD_VENDOR_WEIGHT = 2;
 
@@ -31,10 +31,22 @@ public class VisitEntertainmentPlace extends VisitBuilding {
    }
 
    @Override
+   protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
+      if (super.checkExtraStartConditions(level, villager))
+         return false;
+
+      long todayTime = level.getDayTime() % 24000;
+      if (!(todayTime >= CivilizedVillager.WORK_FINISH_DAY_TIME && todayTime <= CivilizedVillager.REST_TIME))
+         return false; // can only go visit entertainment after work
+
+      return false;
+   }
+
+   @Override
    protected List<Building> chooseBuildings(ServerLevel level, CivilizedVillager villager) {
       ShufflingList<Building> places = new ShufflingList<>();
       for (Building building : ServerBuildingsStore.INSTANCE.findForSettlement(villager.getInfo().getSettlementId())) {
-         int weight = entertainmentWeight(building.getBuildingType());
+         int weight = entertainmentWeight(building.getBuildingType(), level.dayTime());
          if (weight > 0)
             places.add(building, weight);
       }
@@ -44,10 +56,18 @@ public class VisitEntertainmentPlace extends VisitBuilding {
       return shuffled;
    }
 
-   private static int entertainmentWeight(BuildingType type) {
+   private static int entertainmentWeight(BuildingType type, long dayTime) {
+
+      long todayTime = dayTime % 24000;
+
       // checked first, since a tavern is also a food vendor
-      if (type.is(BuildingTypes.TAVERN))
-         return TAVERN_WEIGHT;
+      if (type.is(BuildingTypes.TAVERN)) {
+
+         if (todayTime >= 12000 && todayTime <= CivilizedVillager.REST_TIME)
+            return TAVERN_WEIGHT;
+
+         return 0;
+      }
       if (type.is(BuildingTypes.TOWN_SQUARE))
          return TOWN_SQUARE_WEIGHT;
       if (type.isFoodVendor())
