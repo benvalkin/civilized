@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.mojang.logging.LogUtils;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.production.RecipeProductionMachine;
 import com.uncreated.civilized.core.building.production.bills.ItemFilters;
@@ -59,17 +60,21 @@ public abstract class ArtisanHouseState extends BuildingState {
             this.productionLines.getOrDefault(machine.getProductionType(), new ArrayList<>());
 
       for (int i = 0; i < productionBills.size(); i++) {
-
-         ProductionBill bill = productionBills.get(i);
-
-         Optional<RecipeHolder<?>> recipe = bill.resolveRecipe(recipeManager);
-
-         if (recipe.isEmpty())
-            continue;
-
          String key = "productionBill_" + i;
-         Order order = machine.createOrderFromBill(key, bill, serverLevel);
-         machine.registerOrder(order);
+         try {
+            ProductionBill bill = productionBills.get(i);
+
+            Optional<RecipeHolder<?>> recipe = bill.resolveRecipe(recipeManager);
+
+            if (recipe.isEmpty())
+               continue;
+
+            Order order = machine.createOrderFromBill(key, bill, serverLevel);
+            machine.registerOrder(order);
+         } catch (Exception e) {
+             LogUtils.getLogger()
+                     .error("Could not create production order for {} production bill: {}", this.building.getBuildingType(), key, e);
+         }
       }
    }
 
@@ -292,6 +297,7 @@ public abstract class ArtisanHouseState extends BuildingState {
          String recipe,
          ProductionType productionType,
          List<ItemStack> inputItems,
+         ItemFilters itemFilters,
          ItemStack displayItem) {
       return new ProductionBill(
             recipe,
@@ -299,6 +305,19 @@ public abstract class ArtisanHouseState extends BuildingState {
             ProductionStrategyType.PRODUCE_UP_TO,
             64,
             true,
+            inputItems,
+            itemFilters,
+            displayItem);
+   }
+
+   protected static ProductionBill createDefaultBill(
+         String recipe,
+         ProductionType productionType,
+         List<ItemStack> inputItems,
+         ItemStack displayItem) {
+      return createDefaultBill(
+            recipe,
+            productionType,
             inputItems,
             productionType.createDefaultIngredientFilters(),
             displayItem);

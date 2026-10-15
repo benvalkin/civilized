@@ -1,5 +1,6 @@
 package com.uncreated.civilized.core.building.entity.behaviour;
 
+import com.mojang.logging.LogUtils;
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.production.RecipeProductionMachine;
 import com.uncreated.civilized.core.building.production.RecipeProductionSystem;
@@ -39,8 +40,14 @@ public class ArtisanHouseBehaviour extends BuildingBehaviour {
 
    private void refreshProductionOrders() {
       ArtisanHouseState artisanHouseState = (ArtisanHouseState) getBuilding().getState();
-      for (RecipeProductionMachine<?> machine : recipeProductionSystem.registeredMachines()) {
-         artisanHouseState.createProductionOrders(machine, (ServerLevel) getEntity().getLevel());
+
+      try {
+         for (RecipeProductionMachine<?> machine : recipeProductionSystem.registeredMachines()) {
+            artisanHouseState.createProductionOrders(machine, (ServerLevel) getEntity().getLevel());
+         }
+      } catch (Exception e) {
+         LogUtils.getLogger().error("Could not refresh production orders due an exception", e);
+
       }
    }
 

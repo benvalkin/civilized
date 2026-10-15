@@ -60,6 +60,7 @@ public class MineOres extends WorkTaskBehaviour {
    private static final int MAX_VEIN_SIZE = 64;
    private static final long REMINE_COOLDOWN_TICKS = 20 * 60 * 10;
    private static final int MINING_DEPTH = 0;
+   public static final int ODDS_OF_MINING_STONE_BLOCK = 8;
 
    private static final ToolRequirement PICKAXE_REQUIREMENT =
          new ToolRequirement("pickaxe", i -> i.getItem() instanceof PickaxeItem);
@@ -127,8 +128,8 @@ public class MineOres extends WorkTaskBehaviour {
    }
 
    private int getRequiredToolHits() {
-      int blocksPerDay = 28;
-      return CivilizedVillager.WORK_DAY_DURATION_SECONDS / blocksPerDay;
+      int sampleAttemptsPerDay = 128;
+      return CivilizedVillager.WORK_DAY_DURATION_SECONDS / sampleAttemptsPerDay;
    }
 
    private int toolHits = 0;
@@ -184,7 +185,7 @@ public class MineOres extends WorkTaskBehaviour {
 
       if (!isOreAndMinable(level, sample, gameTime)) {
          // mine stone or whatever else - hopefully we'll find an ore vein next work tick
-         if (isStoneBlock(level, sample))
+         if (isStoneBlock(level, sample) && villager.getRandom().nextInt(ODDS_OF_MINING_STONE_BLOCK) == 0)
             mineBlock(sample, villager, level, gameTime);
          return;
       }

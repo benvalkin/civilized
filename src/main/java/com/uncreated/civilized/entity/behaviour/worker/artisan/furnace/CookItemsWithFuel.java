@@ -224,7 +224,11 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
 
          // A better solution would be to let the RecipeType influence the batch size
          BuildingStockRequirement createFuelRequirement =
-               createFuelRequirement(1, productionOrder, finalProductDeficit, level);
+               createFuelRequirement(
+                     1,
+                     productionOrder,
+                     3 /* Currently, fuel is quite a competed-for resource so it's best not to take too much */,
+                     level);
 
          allRecipeStockRequirements.add(createFuelRequirement);
 

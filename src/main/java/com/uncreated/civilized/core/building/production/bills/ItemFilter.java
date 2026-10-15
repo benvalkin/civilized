@@ -61,9 +61,15 @@ public class ItemFilter {
 
    // production lines that take burnable fuel should start with coal & charcoal default filters to avoid burning all
    // the village's wood until sensible filters are set
-   public static ItemFilter defaultBurnableFuel() {
+   public static ItemFilter coalAndCharcoal() {
       return new ItemFilter(
             ItemFilterMode.WHITELIST,
             List.of(new ItemStack(Items.COAL), new ItemStack(Items.CHARCOAL)));
+   }
+
+   public static ItemFilter logs() {
+      return new ItemFilter(
+              ItemFilterMode.WHITELIST,
+              List.of(new ItemStack(Items.OAK_LOG), new ItemStack(Items.BIRCH_LOG), new ItemStack(Items.SPRUCE_LOG)));
    }
 }

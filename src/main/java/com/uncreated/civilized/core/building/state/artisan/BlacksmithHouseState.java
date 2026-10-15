@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.List;
 
 import com.uncreated.civilized.core.building.Building;
+import com.uncreated.civilized.core.building.production.bills.ItemFilter;
+import com.uncreated.civilized.core.building.production.bills.ItemFilters;
 import com.uncreated.civilized.core.building.production.bills.ProductionBill;
 import com.uncreated.civilized.core.building.production.bills.ProductionType;
 import com.uncreated.civilized.core.building.production.bills.ProductionTypes;
@@ -24,7 +26,7 @@ public class BlacksmithHouseState extends ArtisanHouseState {
 
    @Override
    protected List<ProductionType> getSupportedProductionTypes() {
-      return List.of(ProductionTypes.CRAFTING, ProductionTypes.SMELTING);
+      return List.of(ProductionTypes.CRAFTING, ProductionTypes.BLASTING);
    }
 
    @Override
@@ -32,27 +34,27 @@ public class BlacksmithHouseState extends ArtisanHouseState {
       if (productionType.is(ProductionTypes.CRAFTING))
          return List.of(
                createDefaultBill(
-                     "minecraft:iron_ingot",
+                     "minecraft:iron_ingot_from_nuggets",
                      ProductionTypes.CRAFTING,
                      Collections.nCopies(9, new ItemStack(Items.IRON_NUGGET)),
                      new ItemStack(Items.IRON_INGOT)));
-      if (productionType.is(ProductionTypes.SMELTING))
+      if (productionType.is(ProductionTypes.BLASTING))
          return List.of(
                createDefaultBill(
-                     "minecraft:charcoal",
-                     ProductionTypes.SMELTING,
-                     List.of(new ItemStack(Items.OAK_LOG)),
-                     new ItemStack(Items.CHARCOAL)),
-               createDefaultBill(
-                     "minecraft:iron_ingot",
-                     ProductionTypes.SMELTING,
-                     List.of(new ItemStack(Items.IRON_ORE)),
+                     "minecraft:iron_ingot_from_blasting_raw_iron",
+                     ProductionTypes.BLASTING,
+                     List.of(new ItemStack(Items.RAW_IRON)),
                      new ItemStack(Items.IRON_INGOT)),
                createDefaultBill(
-                     "minecraft:copper_ingot",
-                     ProductionTypes.SMELTING,
-                     List.of(new ItemStack(Items.COPPER_ORE)),
-                     new ItemStack(Items.COPPER_INGOT)));
+                     "minecraft:copper_ingot_from_blasting_raw_copper",
+                     ProductionTypes.BLASTING,
+                     List.of(new ItemStack(Items.RAW_COPPER)),
+                     new ItemStack(Items.COPPER_INGOT)),
+               createDefaultBill(
+                     "minecraft:gold_ingot_from_blasting_raw_gold",
+                     ProductionTypes.BLASTING,
+                     List.of(new ItemStack(Items.RAW_GOLD)),
+                     new ItemStack(Items.GOLD_INGOT)));
       return List.of();
    }
 
@@ -71,6 +73,6 @@ public class BlacksmithHouseState extends ArtisanHouseState {
    @Override
    public Component getAllowedRecipeHelp() {
       return Component.translatable(
-                  "menu.building.residence.production_bills.edit_recipe.tooltip.allowed_recipe_help.blacksmith");
+            "menu.building.residence.production_bills.edit_recipe.tooltip.allowed_recipe_help.blacksmith");
    }
 }

@@ -6,8 +6,8 @@ import com.uncreated.civilized.core.building.production.bills.ProductionTypes;
 import com.uncreated.civilized.ui.components.buttons.buildingtab.HomeTabButton;
 import com.uncreated.civilized.ui.components.buttons.buildingtab.ManageResidentsTabButton;
 import com.uncreated.civilized.ui.components.buttons.buildingtab.SettingsTabButton;
+import com.uncreated.civilized.ui.components.buttons.buildingtab.production.BlastingProductionTabButton;
 import com.uncreated.civilized.ui.components.buttons.buildingtab.production.CraftingProductionTabButton;
-import com.uncreated.civilized.ui.components.buttons.buildingtab.production.SmeltingProductionTabButton;
 import com.uncreated.civilized.ui.menu.building.ABuildingMenuScreen;
 import com.uncreated.civilized.ui.menu.building.BuildingMenu;
 import com.uncreated.civilized.ui.menu.building.BuildingSettingsTab;
@@ -45,14 +45,14 @@ public class BlacksmithBuildingScreen extends ABuildingMenuScreen {
                         ProductionTypes.CRAFTING,
                         EditProductionBillLayout.CRAFTING,
                         this)),
-            new SmeltingProductionTabButton(
+            new BlastingProductionTabButton(
                   tabHost,
                   2,
                   host -> new ManageProductionBillsTab(
                         host,
                         font,
                         context,
-                        ProductionTypes.SMELTING,
+                        ProductionTypes.BLASTING,
                         EditProductionBillLayout.COOKING,
                         this)),
             new ManageResidentsTabButton(tabHost, 3, host -> new ManageResidentsTab(host, font, context)),

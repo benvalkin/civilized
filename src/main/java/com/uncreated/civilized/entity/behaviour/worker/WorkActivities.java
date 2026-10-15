@@ -9,6 +9,7 @@ import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.BehaviourStates;
 import com.uncreated.civilized.entity.behaviour.IdleStrollAroundSettlement;
 import com.uncreated.civilized.entity.behaviour.worker.artisan.CraftItems;
+import com.uncreated.civilized.entity.behaviour.worker.artisan.furnace.BlastItems;
 import com.uncreated.civilized.entity.behaviour.worker.artisan.furnace.SmeltItems;
 import com.uncreated.civilized.entity.behaviour.worker.artisan.furnace.SmokeItems;
 import com.uncreated.civilized.entity.behaviour.worker.beekeeper.HarvestHoneyAndHoneyComb;
@@ -169,6 +170,7 @@ public class WorkActivities {
                         ImmutableList.of(
                               new SmeltItems(),
                               new SmokeItems(),
+                              new BlastItems(),
                               new CraftItems(),
                               new CheckLogisticsOpportunities(),
                               new TakeItemsToInventory(),
@@ -179,6 +181,7 @@ public class WorkActivities {
                               WorkStates.CHECK_LOGISTICS_OPPORTUNITIES,
                               WorkStates.SMELTING_ITEMS,
                               WorkStates.SMOKING_ITEMS,
+                              WorkStates.BLASTING_ITEMS,
                               WorkStates.CRAFTING_ITEMS),
                         ImmutableList.of(WorkStates.MONITOR_WORKSITE, BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT))));
    }
