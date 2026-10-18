@@ -24,7 +24,7 @@ public class CivilizedVillagerEnemySensor extends NearestVisibleLivingEntitySens
                .build();
 
    protected boolean isMatchingEntity(ServerLevel serverLevel, LivingEntity attacker, LivingEntity target) {
-      return this.isHostile(target) && this.isClose(attacker, target);
+      return isHostile(target) && this.isClose(attacker, target);
    }
 
    private boolean isClose(LivingEntity attacker, LivingEntity target) {
@@ -36,7 +36,7 @@ public class CivilizedVillagerEnemySensor extends NearestVisibleLivingEntitySens
       return MemoryModuleType.NEAREST_HOSTILE;
    }
 
-   private boolean isHostile(LivingEntity entity) {
+   public static boolean isHostile(LivingEntity entity) {
       return ACCEPTABLE_DISTANCE_FROM_HOSTILES.containsKey(entity.getType());
    }
 }

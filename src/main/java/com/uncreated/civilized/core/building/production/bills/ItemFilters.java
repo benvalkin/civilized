@@ -20,7 +20,7 @@ import net.minecraft.world.item.ItemStack;
 
 public class ItemFilters {
 
-   /** Nothing has this many recipe slots; the cap is only here so that a bad packet cannot ask for a huge list. */
+   /** Max number of a slots a single ItemFilters can have. Mostly exists to make network packets safer. */
    private static final int MAX_FILTERS = 16;
 
    @Getter
@@ -35,31 +35,31 @@ public class ItemFilters {
       this.filters = Arrays.stream(filters).collect(Collectors.toCollection(ArrayList::new));
    }
 
-   public static ItemFilters emptyItemFilters(int numberOfRecipeSlots) {
+   public static ItemFilters emptyItemFilters(int numberOfSlots) {
       List<ItemFilter> filters = new LinkedList<>();
-      for (int i = 0; i < numberOfRecipeSlots; i++) {
+      for (int i = 0; i < numberOfSlots; i++) {
          filters.add(ItemFilter.allowAllItems());
       }
       return new ItemFilters(filters);
    }
 
    /**
-    * Gets the {@link ItemFilter} corresponding to one "recipe slot" of a recipe. For example, Crafting recipes only
-    * ever one single recipe slot index (0), whereas Furnace recipe have two indices: 0 for the item to smelt, and 1 for
-    * the fuel item.
+    * Gets the {@link ItemFilter} corresponding to a particular "slot". "Slots" are commonly used in the context of
+    * crafting recipes. For example, Crafting recipes only ever one single recipe slot index (0), whereas Furnace recipe
+    * have two indices: 0 for the item to smelt, and 1 for the fuel item.
     * 
-    * @param recipeSlot
-    *           Which "recipe slot" to get the corresponding {@link ItemFilter} for.
+    * @param slot
+    *           Which "slot" to get the corresponding {@link ItemFilter} for.
     */
-   public @NotNull ItemFilter getFilter(int recipeSlot) {
-      if (recipeSlot < 0 || recipeSlot >= this.filters.size())
+   public @NotNull ItemFilter getFilter(int slot) {
+      if (slot < 0 || slot >= this.filters.size())
          throw new IndexOutOfBoundsException(
                String.format(
                      "Cannot get item filter. No item filter corresponds to recipe slot index %s (%s filters)",
-                     recipeSlot,
+                     slot,
                      filters.size()));
 
-      return filters.get(recipeSlot);
+      return filters.get(slot);
    }
 
    public void setFilter(int recipeSlot, ItemFilter filter) {

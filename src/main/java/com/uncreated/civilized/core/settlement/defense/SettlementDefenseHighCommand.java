@@ -51,8 +51,9 @@ public class SettlementDefenseHighCommand implements ICombatCommand {
       findAvailableDefenders(defenders);
 
       for (CivilizedVillager defender : defenders) {
-         if (!hostiles.isEmpty() && !defender.isDrafted()) {
-            defender.draft(this);
+         if (!hostiles.isEmpty()) {
+            if (!defender.isDrafted())
+               defender.draft(this);
          } else if (defender.isDrafted()) {
             defender.undraft();
          }

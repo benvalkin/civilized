@@ -1,6 +1,7 @@
 package com.uncreated.civilized.core.building.logistics;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -45,6 +46,10 @@ public class AggregateItemStack {
 
    public AggregateItemStack(AggregateItemStack... aggregateItemStacks) {
       this(false, aggregateItemStacks);
+   }
+
+   public void orderBy(Comparator<ItemStack> preferenceFunction) {
+      itemStacks.sort(preferenceFunction);
    }
 
    public void add(ItemStack itemStack) {

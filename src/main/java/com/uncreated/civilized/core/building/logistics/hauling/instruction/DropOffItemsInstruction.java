@@ -1,20 +1,20 @@
 package com.uncreated.civilized.core.building.logistics.hauling.instruction;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
-import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventoryType;
+import com.uncreated.civilized.entity.CivilizedVillager;
 
 import lombok.experimental.Accessors;
+import net.minecraft.world.Container;
 
 @Accessors(fluent = true)
 public record DropOffItemsInstruction(LoadedBuilding destinationBuilding,
-      List<VillagerInventoryType> inventoriesToOffload) implements IHaulingInstruction {
+      List<Function<CivilizedVillager, Container>> inventoriesToOffload) implements IHaulingInstruction {
 
    @Override
    public String toString() {
-      return "[" + inventoriesToOffload.stream().map(Enum::toString).collect(Collectors.joining(", ")) + "] -> "
-            + destinationBuilding;
+      return "[" + inventoriesToOffload.size() + " inventories] -> " + destinationBuilding;
    }
 }

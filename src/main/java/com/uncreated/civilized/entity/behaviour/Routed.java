@@ -8,8 +8,10 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import com.mojang.datafixers.util.Pair;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
+import com.uncreated.civilized.core.building.util.BuildingUtil;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
 import com.uncreated.civilized.entity.CivilizedVillager;
@@ -77,7 +79,7 @@ public class Routed extends Behavior<CivilizedVillager> {
    private boolean fleeing;
    private long nextFleeRepath;
    @Nullable
-   private BlockPos hidingSpot;
+   private Pair<Building, BlockPos> hidingSpot;
    private long nextHidingSpotSearch;
    @Nullable
    private MediumDistanceTravelTask travelToHidingSpot;
@@ -93,6 +95,7 @@ public class Routed extends Behavior<CivilizedVillager> {
       hidingSpot = null;
       nextHidingSpotSearch = 0;
       travelToHidingSpot = null;
+      doorsLocked = false;
    }
 
    @Override
@@ -100,6 +103,8 @@ public class Routed extends Behavior<CivilizedVillager> {
       villager.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
       villager.getBrain().eraseMemory(MemoryModuleType.LOOK_TARGET);
    }
+
+   private boolean doorsLocked;
 
    @Override
    protected void tick(ServerLevel level, CivilizedVillager villager, long currentTicks) {
@@ -134,7 +139,7 @@ public class Routed extends Behavior<CivilizedVillager> {
          travelToHidingSpot =
                new MediumDistanceTravelTask(
                      villager,
-                     hidingSpot,
+                     hidingSpot.getSecond(),
                      (v, destination, closeEnough) -> destination.pos().distManhattan(v.blockPosition()) <= closeEnough,
                      moveSpeed,
                      1,
@@ -143,6 +148,11 @@ public class Routed extends Behavior<CivilizedVillager> {
       }
 
       travelToHidingSpot.walkToPoi(currentTicks);
+
+      if (travelToHidingSpot.isJourneySuccessful() && !doorsLocked) {
+         BuildingUtil.ensureBuildingDoorsAreClosed(villager, hidingSpot.getFirst(), level);
+         doorsLocked = true;
+      }
    }
 
    private void fleeFrom(CivilizedVillager villager, LivingEntity hostile, long currentTicks) {
@@ -180,7 +190,7 @@ public class Routed extends Behavior<CivilizedVillager> {
     * Picks a spot inside the nearest settlement building that has a roof. Buildings in unloaded chunks are skipped, to
     * avoid loading chunks while searching them.
     */
-   private static Optional<BlockPos> findHidingSpot(ServerLevel level, CivilizedVillager villager) {
+   private static Optional<Pair<Building, BlockPos>> findHidingSpot(ServerLevel level, CivilizedVillager villager) {
       Set<Building> buildings = ServerBuildingsStore.INSTANCE.findForSettlement(villager.getInfo().getSettlementId());
 
       List<Building> nearestFirst =
@@ -194,8 +204,10 @@ public class Routed extends Behavior<CivilizedVillager> {
 
       for (Building building : nearestFirst) {
          List<BlockPos> floorBlocks = building.getBounds().findValidInsideFloorBlocks(level).stream().toList();
-         if (!floorBlocks.isEmpty())
-            return Optional.of(floorBlocks.get(villager.getRandom().nextInt(floorBlocks.size())));
+         if (!floorBlocks.isEmpty()) {
+            BlockPos randomPos = floorBlocks.get(villager.getRandom().nextInt(floorBlocks.size()));
+            return Optional.of(Pair.of(building, randomPos));
+         }
       }
 
       return Optional.empty();

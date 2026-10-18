@@ -20,7 +20,7 @@ import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.entity.LoadedBuildings;
 import com.uncreated.civilized.core.building.logistics.hauling.ItemReservation;
 import com.uncreated.civilized.core.building.logistics.hauling.ReservationKey;
-import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventoryType;
+import com.uncreated.civilized.entity.equipment.VillagerInventoryType;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.DropOffItemsInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.ItemStockRequirement;
 import com.uncreated.civilized.core.notifications.Delay;
@@ -114,12 +114,16 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
 
    protected void notifyMissingItem(Notification.NotificationBuilder notification) {
       missingItemNotification = notification.build();
-      NotificationService.INSTANCE.sendNotification(missingItemNotification);
+      NotificationService.INSTANCE.sendNotification(
+            missingItemNotification,
+            Delay.of(Duration.of(10, ChronoUnit.SECONDS), p -> this.getStatus() != Status.STOPPED));
    }
 
-   protected void notifyMissingItem(Notification.NotificationBuilder notification, Delay delay) {
+   protected void notifyMissingItem(Notification.NotificationBuilder notification, Duration delayDuration) {
       missingItemNotification = notification.build();
-      NotificationService.INSTANCE.sendNotification(missingItemNotification, delay);
+      NotificationService.INSTANCE.sendNotification(
+            missingItemNotification,
+            Delay.of(delayDuration, p -> this.getStatus() != Status.STOPPED));
    }
 
    protected void resolveMissingItemNotification() {
@@ -143,7 +147,7 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
             noWorksiteNotification = noWorksiteNotification(villager.getInfo()).build();
             NotificationService.INSTANCE.sendNotification(
                   noWorksiteNotification,
-                  new Delay(Duration.of(1, ChronoUnit.MINUTES), p -> villager.getBrain().isActive(Activity.WORK)));
+                  Delay.of(Duration.of(1, ChronoUnit.MINUTES), p -> villager.getBrain().isActive(Activity.WORK)));
             return false;
          }
 
@@ -277,7 +281,7 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
          return;
 
       DropOffItemsInstruction dropOffItemsInstruction =
-            new DropOffItemsInstruction(homeBuilding.get(), List.of(VillagerInventoryType.WORK_OUTPUT));
+            new DropOffItemsInstruction(homeBuilding.get(), List.of(CivilizedVillager::getWorkOutputInventory));
       villager.getBrain().setMemory(AIRegistry.MM_DROP_OFF_ITEMS_INSTRUCTION.get(), dropOffItemsInstruction);
       getStateMachine().queueActionOnce(WorkStates.DROPPING_OFF_ITEMS_AT_BUILDING);
    }

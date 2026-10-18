@@ -52,7 +52,7 @@ public class Flirt extends Socialize {
                   CivilizedVillager.class,
                   villager.getBoundingBox().inflate(INVITE_RANGE),
                   // TODO: eventually need to filter out hostile villagers
-                  other -> other != villager && other.isAlive()
+                  other -> other != villager && other.isAlive() && !other.isDrafted()
                         && other.getInfo().getGender() == villager.getInfo().getGender().opposite()
                         && !other.getInfo().isTaken() && other.getInfo().getNpcRole().is(VillagerNpcRoles.WORKER)
                         && other.getInfo().getSettlementId() != null /* && villager.hasLineOfSight(other) */)

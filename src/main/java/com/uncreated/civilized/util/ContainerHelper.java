@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+import org.jetbrains.annotations.NotNull;
+
 import com.uncreated.civilized.core.building.logistics.AggregateItemStack;
 
 import net.minecraft.world.Container;
@@ -100,17 +102,7 @@ public class ContainerHelper {
       if (upTo <= 0)
          return new AggregateItemStack();
 
-      List<ContainerItemReference> items = new LinkedList<>();
-      for (int c = 0; c < fromContainers.size(); c++) {
-         Container container = fromContainers.get(c);
-         for (int i = 0; i < container.getContainerSize(); i++) {
-            ItemStack item = container.getItem(i);
-            if (!searchFunction.test(item))
-               continue;
-
-            items.add(new ContainerItemReference(item, c, i));
-         }
-      }
+      List<ContainerItemReference> items = findMatching(fromContainers, searchFunction);
 
       if (preferenceFunction != NO_PREFERENCE)
          items.sort((i1, i2) -> preferenceFunction.compare(i1.item(), i2.item()));
@@ -148,17 +140,7 @@ public class ContainerHelper {
       if (upTo <= 0)
          return 0;
 
-      List<ContainerItemReference> items = new LinkedList<>();
-      for (int c = 0; c < fromContainers.size(); c++) {
-         Container container = fromContainers.get(c);
-         for (int i = 0; i < container.getContainerSize(); i++) {
-            ItemStack item = container.getItem(i);
-            if (!searchFunction.test(item))
-               continue;
-
-            items.add(new ContainerItemReference(item, c, i));
-         }
-      }
+      List<ContainerItemReference> items = findMatching(fromContainers, searchFunction);
 
       if (preferenceFunction != NO_PREFERENCE)
          items.sort((i1, i2) -> preferenceFunction.compare(i1.item(), i2.item()));
@@ -186,20 +168,53 @@ public class ContainerHelper {
       return addedSoFar;
    }
 
-   public static Optional<ItemSearchResult> findItem(Container container, Predicate<ItemStack> itemSearch) {
-      return findItem(List.of(container), itemSearch);
-   }
-
-   public static Optional<ItemSearchResult> findItem(List<Container> containers, Predicate<ItemStack> itemSearch) {
-      for (Container container : containers) {
+   private static @NotNull List<ContainerItemReference> findMatching(
+         List<Container> fromContainers,
+         Predicate<ItemStack> searchFunction) {
+      List<ContainerItemReference> items = new LinkedList<>();
+      for (int c = 0; c < fromContainers.size(); c++) {
+         Container container = fromContainers.get(c);
          for (int i = 0; i < container.getContainerSize(); i++) {
             ItemStack item = container.getItem(i);
-            if (itemSearch.test(item))
-               return Optional.of(new ItemSearchResult(item, i));
+            if (!searchFunction.test(item))
+               continue;
+
+            items.add(new ContainerItemReference(item, c, i));
          }
       }
+      return items;
+   }
 
-      return Optional.empty();
+   public static Optional<ContainerItemReference> findItem(Container container, Predicate<ItemStack> searchFunction) {
+      return findItem(List.of(container), searchFunction, NO_PREFERENCE);
+   }
+
+   public static Optional<ContainerItemReference> findItem(
+         List<Container> containers,
+         Predicate<ItemStack> searchFunction) {
+      return findItem(containers, searchFunction, NO_PREFERENCE);
+   }
+
+   public static Optional<ContainerItemReference> findItem(
+         Container container,
+         Predicate<ItemStack> searchFunction,
+         Comparator<ItemStack> preferenceFunction) {
+      return findItem(List.of(container), searchFunction, preferenceFunction);
+   }
+
+   public static Optional<ContainerItemReference> findItem(
+         List<Container> containers,
+         Predicate<ItemStack> searchFunction,
+         Comparator<ItemStack> preferenceFunction) {
+      List<ContainerItemReference> items = findMatching(containers, searchFunction);
+
+      if (items.isEmpty())
+         return Optional.empty();
+
+      if (preferenceFunction != NO_PREFERENCE)
+         items.sort((i1, i2) -> preferenceFunction.compare(i1.item(), i2.item()));
+
+      return Optional.ofNullable(items.getFirst());
    }
 
    public static AggregateItemStack countItems(Container container, Predicate<ItemStack> itemSearch) {

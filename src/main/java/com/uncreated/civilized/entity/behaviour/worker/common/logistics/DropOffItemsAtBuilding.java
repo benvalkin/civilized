@@ -3,7 +3,7 @@ package com.uncreated.civilized.entity.behaviour.worker.common.logistics;
 import java.util.List;
 import java.util.Optional;
 
-import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventoryType;
+import com.uncreated.civilized.entity.equipment.VillagerInventoryType;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.DropOffItemsInstruction;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
@@ -56,13 +56,17 @@ public class DropOffItemsAtBuilding extends WorkTaskBehaviour {
    }
 
    private void findSampleItemForActivityDesc(CivilizedVillager villager) {
-      for (VillagerInventoryType inventoryType : haulingInstruction.inventoriesToOffload()) {
-         SimpleContainer inventory = villager.getInventory(inventoryType);
-         Optional<ItemStack> item = inventory.getItems().stream().filter(i -> !i.isEmpty()).findFirst();
-         if (item.isPresent()) {
-            sampleItemName = item.get().getItemName();
-            break;
-         }
+      for (var inventoryGetter : haulingInstruction.inventoriesToOffload()) {
+         Container inventory = inventoryGetter.apply(villager);
+         if (inventory.isEmpty())
+            continue;
+
+         ItemStack item = inventory.getItem(0);
+         if (item.isEmpty())
+            continue;
+
+         sampleItemName = item.getItemName();
+         break;
       }
    }
 
@@ -89,8 +93,8 @@ public class DropOffItemsAtBuilding extends WorkTaskBehaviour {
 
       List<Container> chests = haulingInstruction.destinationBuilding().chests();
 
-      for (VillagerInventoryType villagerInventoryType : haulingInstruction.inventoriesToOffload()) {
-         SimpleContainer inventory = villager.getInventory(villagerInventoryType);
+      for (var inventoryGetter : haulingInstruction.inventoriesToOffload()) {
+         Container inventory = inventoryGetter.apply(villager);
          dumpInventoryToChests(inventory, chests);
       }
    }

@@ -22,7 +22,6 @@ import com.mojang.serialization.Dynamic;
 import com.uncreated.civilized.client.VillagerDialogueClientHandler;
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
-import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventoryType;
 import com.uncreated.civilized.core.dialogue.IVillageDialogue;
 import com.uncreated.civilized.core.dialogue.context.DialogueContext;
 import com.uncreated.civilized.core.dialogue.controller.DialogueController;
@@ -54,6 +53,8 @@ import com.uncreated.civilized.entity.behaviour.social.Conversation;
 import com.uncreated.civilized.entity.behaviour.worker.soldier.ArrowLineOfFire;
 import com.uncreated.civilized.entity.control.CivilizedVillagerLookControl;
 import com.uncreated.civilized.entity.data.VillagerHunger;
+import com.uncreated.civilized.entity.equipment.VillagerEquipment;
+import com.uncreated.civilized.entity.equipment.VillagerInventoryType;
 import com.uncreated.civilized.entity.pathfinding.VillagerGroundPathNavigation;
 import com.uncreated.civilized.entity.stats.ClothingTextureRegistry;
 import com.uncreated.civilized.entity.stats.HairTextureRegistry;
@@ -169,7 +170,8 @@ public class CivilizedVillager extends AgeableMob
    private final SimpleContainer workInputInventory = new SimpleContainer(8);
    private final SimpleContainer workOutputInventory = new SimpleContainer(8);
    private final SimpleContainer logisticsInventory = new SimpleContainer(8);
-   private final SimpleContainer weaponInventory = new SimpleContainer(8);
+   @Getter
+   private final VillagerEquipment equipment = new VillagerEquipment(this);
 
    private long lifetimeSeed;
 
@@ -282,6 +284,7 @@ public class CivilizedVillager extends AgeableMob
       compound.put(VillagerRoleBehaviour.FIELD_ROLE_BEHAVIOUR_STATE, roleBehaviourTag);
       hunger.save(compound);
       this.writeInventoryToTag(compound, this.registryAccess());
+      equipment.save(compound, this.registryAccess());
    }
 
    @Override
@@ -299,6 +302,8 @@ public class CivilizedVillager extends AgeableMob
       hunger.load(compound);
 
       this.readInventoryFromTag(compound, this.registryAccess());
+
+      equipment.load(compound, this.registryAccess());
    }
 
    @Override
@@ -320,9 +325,6 @@ public class CivilizedVillager extends AgeableMob
       if (tag.contains("Logistics", 9)) {
          logisticsInventory.fromTag(tag.getList("Logistics", 10), levelRegistry);
       }
-      if (tag.contains("Weapons", 9)) {
-         weaponInventory.fromTag(tag.getList("Weapons", 10), levelRegistry);
-      }
 
    }
 
@@ -330,7 +332,6 @@ public class CivilizedVillager extends AgeableMob
       tag.put("Inventory", workOutputInventory.createTag(levelRegistry));
       tag.put("WorkInput", workInputInventory.createTag(levelRegistry));
       tag.put("Logistics", logisticsInventory.createTag(levelRegistry));
-      tag.put("Weapons", weaponInventory.createTag(levelRegistry));
    }
 
    @Getter
@@ -395,12 +396,7 @@ public class CivilizedVillager extends AgeableMob
       case WORK_TASK -> workInputInventory;
       case WORK_OUTPUT -> workOutputInventory;
       case LOGISTICS -> logisticsInventory;
-      case WEAPONS -> weaponInventory;
       };
-   }
-
-   public @NotNull SimpleContainer getWeaponInventory() {
-      return weaponInventory;
    }
 
    @Override
@@ -718,6 +714,10 @@ public class CivilizedVillager extends AgeableMob
          lastDamageTime = level.getGameTime();
          if (!isRouted() && shouldRout())
             rout();
+         // else if (source.getEntity() instanceof LivingEntity livingEntity
+         // && CivilizedVillagerEnemySensor.isHostile(livingEntity)) {
+         // setTarget(livingEntity);
+         // }
       }
       return hurt;
    }
@@ -973,6 +973,7 @@ public class CivilizedVillager extends AgeableMob
    }
 
    public ItemStack findBow() {
+
       return new ItemStack(Items.BOW);
       // return weaponInventory.getItems()
       // .stream()

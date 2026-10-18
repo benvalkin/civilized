@@ -13,7 +13,6 @@ import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.entity.LoadedBuildings;
 import com.uncreated.civilized.core.building.logistics.hauling.ReservationKey;
-import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventoryType;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.TakeToInventoryInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
 import com.uncreated.civilized.entity.CivilizedVillager;
@@ -51,7 +50,7 @@ public class EatFood extends StatefulBehaviour {
                bestFoodFirst(),
                1,
                1,
-               VillagerInventoryType.LOGISTICS);
+               CivilizedVillager::getLogisticsInventory);
 
    private static @NotNull Comparator<ItemStack> bestFoodFirst() {
       return (i1, i2) -> -compareFood(i1, i2);

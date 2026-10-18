@@ -1,12 +1,13 @@
 package com.uncreated.civilized.core.building.logistics.hauling.requirement;
 
 import java.util.Comparator;
+import java.util.List;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.jetbrains.annotations.NotNull;
 
 import com.uncreated.civilized.core.building.logistics.AggregateItemStack;
-import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventoryType;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.util.ContainerHelper;
 
@@ -19,7 +20,7 @@ import net.minecraft.world.item.ItemStack;
 @Getter
 public class InventoryStockRequirement extends ItemStockRequirement {
 
-   private final VillagerInventoryType inventoryType;
+   private final Function<CivilizedVillager, Container> getInventory;
 
    public InventoryStockRequirement(
          String key,
@@ -27,9 +28,9 @@ public class InventoryStockRequirement extends ItemStockRequirement {
          Comparator<ItemStack> preference,
          int minimumAcceptableAmount,
          int idealAmount,
-         VillagerInventoryType inventoryType) {
+         Function<CivilizedVillager, Container> getInventory) {
       super(key, test, preference, minimumAcceptableAmount, idealAmount);
-      this.inventoryType = inventoryType;
+      this.getInventory = getInventory;
    }
 
    public InventoryStockRequirement(
@@ -37,8 +38,8 @@ public class InventoryStockRequirement extends ItemStockRequirement {
          Predicate<ItemStack> test,
          int minimumAcceptableAmount,
          int idealAmount,
-         VillagerInventoryType inventoryType) {
-      this(key, test, ContainerHelper.NO_PREFERENCE, minimumAcceptableAmount, idealAmount, inventoryType);
+         Function<CivilizedVillager, Container> getInventory) {
+      this(key, test, ContainerHelper.NO_PREFERENCE, minimumAcceptableAmount, idealAmount, getInventory);
    }
 
    public StockResult evaluate(CivilizedVillager villager) {
@@ -50,9 +51,13 @@ public class InventoryStockRequirement extends ItemStockRequirement {
 
    @Override
    public @NotNull Container getHaulInventory(CivilizedVillager villager) {
-      return villager.getInventory(inventoryType);
+      return getInventory.apply(villager);
    }
 
    public record StockResult(boolean satisfied, AggregateItemStack stock) {
+   }
+
+   public static List<InventoryStockRequirement> cast(List<EquipmentRequirement> requirements) {
+      return requirements.stream().map(e -> (InventoryStockRequirement) e).toList();
    }
 }

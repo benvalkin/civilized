@@ -12,6 +12,7 @@ import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.BehaviourStates;
 import com.uncreated.civilized.entity.behaviour.VisitBuilding;
+import com.uncreated.civilized.entity.equipment.VillagerEquipment;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.behavior.ShufflingList;
@@ -32,14 +33,17 @@ public class VisitEntertainmentPlace extends VisitBuilding {
 
    @Override
    protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
-      if (super.checkExtraStartConditions(level, villager))
-         return false;
-
       long todayTime = level.getDayTime() % 24000;
       if (!(todayTime >= CivilizedVillager.WORK_FINISH_DAY_TIME && todayTime <= CivilizedVillager.REST_TIME))
          return false; // can only go visit entertainment after work
 
-      return false;
+      return super.checkExtraStartConditions(level, villager);
+   }
+
+   @Override
+   protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
+      super.start(level, villager, gameTime);
+      villager.getEquipment().unequip(VillagerEquipment.COMBAT_SLOTS);
    }
 
    @Override

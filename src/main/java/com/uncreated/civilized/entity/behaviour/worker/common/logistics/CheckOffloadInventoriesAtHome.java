@@ -3,8 +3,8 @@ package com.uncreated.civilized.entity.behaviour.worker.common.logistics;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.function.Function;
 
-import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventoryType;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.DropOffItemsInstruction;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.Cooldowns;
@@ -13,7 +13,7 @@ import com.uncreated.civilized.entity.behaviour.worker.WorkTaskBehaviour;
 import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.Container;
 
 /**
  * Checks if the villager should go dump all their inventories at home. Intended to trigger once when the villager gets
@@ -30,8 +30,11 @@ public class CheckOffloadInventoriesAtHome extends WorkTaskBehaviour {
       return false; // stop immediately (once-off behaviour)
    }
 
-   private final List<VillagerInventoryType> inventoryTypesToOffload =
-         List.of(VillagerInventoryType.WORK_TASK, VillagerInventoryType.WORK_OUTPUT, VillagerInventoryType.LOGISTICS);
+   private final List<Function<CivilizedVillager, Container>> inventoryTypesToOffload =
+         List.of(
+               CivilizedVillager::getWorkInputInventory,
+               CivilizedVillager::getWorkOutputInventory,
+               CivilizedVillager::getLogisticsInventory);
 
    @Override
    protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
@@ -44,8 +47,8 @@ public class CheckOffloadInventoriesAtHome extends WorkTaskBehaviour {
       getBehaviourCooldowns()
             .startCooldown(Cooldowns.CHECK_START, Duration.of(10, ChronoUnit.SECONDS), level.getGameTime());
 
-      for (VillagerInventoryType value : inventoryTypesToOffload) {
-         SimpleContainer inventory = villager.getInventory(value);
+      for (var inventoryGetter : inventoryTypesToOffload) {
+         Container inventory = inventoryGetter.apply(villager);
          if (inventory.hasAnyMatching(i -> !i.isEmpty()))
             return true;
       }

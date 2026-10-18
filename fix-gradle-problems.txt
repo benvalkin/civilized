@@ -4,7 +4,7 @@ intellij Unable to load class 'Class 'ijJvmDebugger1_d080tv64n6pkctrq33jomyrt1$_
 
 
 Try run this to stop Gradle Daemons. Corrupted daemon processes can cause class loading issues. Open your terminal and run:
-./gradlew --stop.
+./gradlew --stop
 
 
 also try deleting the .gradle folder at the top of the project.

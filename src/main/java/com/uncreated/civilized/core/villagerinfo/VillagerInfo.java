@@ -45,7 +45,8 @@ public class VillagerInfo {
                   .npcRole(VillagerNpcRoles.getFromResourceLocation(buffer.readResourceLocation()))
                   .gender(buffer.readEnum(Gender.class))
                   .partnerId(buffer.readNullable((b -> b.readUUID())))
-                  .socialClass(buffer.readVarInt());
+                  .socialClass(buffer.readVarInt())
+                  .loadoutId(buffer.readNullable((b -> b.readUUID())));
 
       return builder.build();
    }
@@ -64,6 +65,7 @@ public class VillagerInfo {
       buffer.writeEnum(gender);
       buffer.writeNullable(partnerId, (b, v) -> b.writeUUID(v));
       buffer.writeVarInt(socialClass);
+      buffer.writeNullable(loadoutId, (b, v) -> b.writeUUID(v));
    }
 
    public static final String FIELD_VILLAGER_ID = "villager_id";
@@ -77,6 +79,7 @@ public class VillagerInfo {
    public static final String FIELD_VILLAGER_GENDER = "field_villager_gender";
    public static final String FIELD_PARTNER_ID = "field_spouse_id";
    public static final String FIELD_SOCIAL_CLASS = "social_class";
+   public static final String FIELD_LOADOUT_ID = "loadout_id";
 
    private UUID villagerId;
    @Setter
@@ -104,6 +107,8 @@ public class VillagerInfo {
    private @Nullable UUID partnerId;
    @Builder.Default
    private int socialClass = 1;
+   @Setter
+   private @Nullable UUID loadoutId;
 
    public boolean hasName() {
       return !firstName.isEmpty() && !lastName.isEmpty();
@@ -234,6 +239,7 @@ public class VillagerInfo {
       gender = other.gender;
       partnerId = other.partnerId;
       socialClass = other.socialClass;
+      loadoutId = other.loadoutId;
    }
 
    public String toStringLite() {

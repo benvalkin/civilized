@@ -6,7 +6,10 @@ import com.uncreated.civilized.core.settlement.defense.TargetRequestResult;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.BehaviourState;
 import com.uncreated.civilized.entity.behaviour.StatefulBehaviour;
+import com.uncreated.civilized.entity.equipment.CarriedEquipmentSlot;
+import com.uncreated.civilized.entity.equipment.VillagerEquipment;
 
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
@@ -24,9 +27,25 @@ public class MeleeAttackTarget extends StatefulBehaviour {
       this.moveSpeed = moveSpeed;
    }
 
+   private CarriedEquipmentSlot weaponSlot = CarriedEquipmentSlot.PRIMARY_WEAPON;
+
    @Override
    protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
-      return villager.requestTargetFromCommand().targetFound();
+
+      VillagerEquipment equipment = villager.getEquipment();
+      ItemStack equippedOrCarried = equipment.getEquippedOrCarried(weaponSlot);
+      if (!equippedOrCarried.has(DataComponents.TOOL)) {
+         weaponSlot = CarriedEquipmentSlot.SECONDARY_WEAPON;
+         equippedOrCarried = equipment.getEquippedOrCarried(weaponSlot);
+      }
+
+      if (!equippedOrCarried.has(DataComponents.TOOL))
+         return false;
+
+      if (!villager.requestTargetFromCommand().targetFound())
+         return false;
+
+      return true;
    }
 
    @Override
@@ -36,14 +55,13 @@ public class MeleeAttackTarget extends StatefulBehaviour {
       villager.getBrain().setMemory(MemoryModuleType.LOOK_TARGET, new EntityTracker(villager.getTarget(), true));
       nextAttack = 0;
       nextRerequestTarget = 0;
-      villager.setItemInHand(InteractionHand.MAIN_HAND, villager.findMeleeWeapon());
+      villager.getEquipment().equip(weaponSlot);
    }
 
    @Override
    protected void stop(ServerLevel level, CivilizedVillager villager, long gameTime) {
       villager.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
       villager.getBrain().eraseMemory(MemoryModuleType.LOOK_TARGET);
-      villager.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
    }
 
    @Override

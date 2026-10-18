@@ -1,8 +1,8 @@
 package com.uncreated.civilized.core.building.state;
 
 import com.uncreated.civilized.core.building.Building;
-import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventoryType;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
+import com.uncreated.civilized.entity.CivilizedVillager;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -36,7 +36,7 @@ public class GroveState extends BuildingState implements IEyeDropperSlotState {
                   this::isCorrectSapling,
                   1,
                   16,
-                  VillagerInventoryType.WORK_TASK);
+                  CivilizedVillager::getWorkInputInventory);
    }
 
    public void applyNbt(CompoundTag compoundTag, HolderLookup.Provider registryAccess) {

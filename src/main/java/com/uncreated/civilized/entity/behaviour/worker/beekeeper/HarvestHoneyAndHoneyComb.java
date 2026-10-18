@@ -6,7 +6,6 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 import com.uncreated.civilized.core.building.logistics.hauling.ReservationKey;
-import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventoryType;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.TakeToInventoryInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.ToolRequirement;
@@ -17,6 +16,7 @@ import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
 import com.uncreated.civilized.entity.behaviour.worker.WorkTaskBehaviour;
 import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 import com.uncreated.civilized.util.ContainerHelper;
+import com.uncreated.civilized.util.ContainerItemReference;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -55,7 +55,7 @@ public class HarvestHoneyAndHoneyComb extends WorkTaskBehaviour {
                i -> i.is(Items.GLASS_BOTTLE),
                1,
                4,
-               VillagerInventoryType.WORK_TASK);
+               CivilizedVillager::getWorkInputInventory);
 
    public HarvestHoneyAndHoneyComb() {
       super(WorkStates.HARVESTING_HONEY, true, true, 120 * 20, 30 * 20);
@@ -139,7 +139,7 @@ public class HarvestHoneyAndHoneyComb extends WorkTaskBehaviour {
       }
 
       Optional<ItemStack> shears = findShears(villager);
-      Optional<ContainerHelper.ItemSearchResult> bottle = findGlassBottle(villager);
+      Optional<ContainerItemReference> bottle = findGlassBottle(villager);
 
       if (shears.isEmpty() && bottle.isEmpty()) {
          doStop(level, villager, tickTime);
@@ -162,10 +162,7 @@ public class HarvestHoneyAndHoneyComb extends WorkTaskBehaviour {
       hasWorkOutputItems = true;
    }
 
-   private void fillBottleWithHoney(
-         ServerLevel level,
-         CivilizedVillager villager,
-         ContainerHelper.ItemSearchResult bottle) {
+   private void fillBottleWithHoney(ServerLevel level, CivilizedVillager villager, ContainerItemReference bottle) {
       villager.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.GLASS_BOTTLE));
       villager.swing(InteractionHand.MAIN_HAND, true);
       villager.addWorkExhaustion(1);
@@ -191,10 +188,10 @@ public class HarvestHoneyAndHoneyComb extends WorkTaskBehaviour {
 
    private Optional<ItemStack> findShears(CivilizedVillager villager) {
       return ContainerHelper.findItem(villager.getWorkInputInventory(), i -> i.getItem() instanceof ShearsItem)
-            .map(ContainerHelper.ItemSearchResult::itemStack);
+            .map(ContainerItemReference::item);
    }
 
-   private Optional<ContainerHelper.ItemSearchResult> findGlassBottle(CivilizedVillager villager) {
+   private Optional<ContainerItemReference> findGlassBottle(CivilizedVillager villager) {
       return ContainerHelper.findItem(villager.getWorkInputInventory(), i -> i.is(Items.GLASS_BOTTLE));
    }
 

@@ -4,7 +4,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import org.jetbrains.annotations.NotNull;
@@ -73,12 +72,19 @@ public abstract class ItemStockRequirement {
                calculateBuildingStock(chests, candidateBuilding.getReservationsExcluding(party));
 
          if (buildingStock.getCount() > 0) {
+            if (preference != ContainerHelper.NO_PREFERENCE)
+               buildingStock.orderBy(preference);
+
             grossStock.add(buildingStock);
             satisfiedBuildings.put(candidateBuilding, buildingStock);
          }
       }
 
       boolean satisfied = grossStock.getCount() >= minimumAcceptableAmount;
+
+      if (preference != ContainerHelper.NO_PREFERENCE)
+         grossStock.orderBy(preference);
+
       return new BuildingStockRequirement.StockResult(satisfied, grossStock, satisfiedBuildings);
    }
 

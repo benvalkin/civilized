@@ -5,6 +5,7 @@ import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.BehaviourState;
 import com.uncreated.civilized.entity.behaviour.StatefulBehaviour;
 import com.uncreated.civilized.entity.behaviour.StatefulBehaviourControl;
+import com.uncreated.civilized.entity.equipment.VillagerEquipment;
 import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 
 import net.minecraft.server.level.ServerLevel;
@@ -25,5 +26,14 @@ public class CombatBehaviourControl extends StatefulBehaviourControl<CombatState
    @Override
    protected boolean canContinueToUse(ServerLevel serverLevel, CivilizedVillager civilizedVillager, long currentTicks) {
       return civilizedVillager.getBrain().isActive(AIRegistry.A_DRAFTED.get());
+   }
+
+   @Override
+   public boolean tryStart(ServerLevel serverLevel, CivilizedVillager villager, long currentTicks) {
+      if (!super.tryStart(serverLevel, villager, currentTicks))
+         return false;
+
+      villager.getEquipment().equip(VillagerEquipment.COMBAT_SLOTS);
+      return true;
    }
 }

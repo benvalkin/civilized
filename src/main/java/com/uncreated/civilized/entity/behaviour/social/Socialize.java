@@ -93,7 +93,7 @@ public class Socialize extends StatefulBehaviour {
                   CivilizedVillager.class,
                   villager.getBoundingBox().inflate(INVITE_RANGE),
                   // TODO: eventually need to filter out hostile villagers
-                  other -> other != villager && other.isAlive() && villager.hasLineOfSight(other))
+                  other -> other != villager && other.isAlive() && !other.isDrafted() && villager.hasLineOfSight(other))
                   .stream()
                   .sorted(Comparator.comparingDouble(villager::distanceToSqr))
                   .toList();

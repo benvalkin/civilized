@@ -1,10 +1,10 @@
 package com.uncreated.civilized.core.building.state.animalfarm;
 
 import com.uncreated.civilized.core.building.Building;
-import com.uncreated.civilized.core.building.logistics.hauling.VillagerInventoryType;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
 import com.uncreated.civilized.core.building.state.BuildingState;
 import com.uncreated.civilized.core.building.state.IEyeDropperSlotState;
+import com.uncreated.civilized.entity.CivilizedVillager;
 
 import lombok.Getter;
 import net.minecraft.core.HolderLookup;
@@ -36,7 +36,7 @@ public abstract class AnimalFarmState extends BuildingState implements IEyeDropp
                   this::isCorrectAnimalFood,
                   2,
                   8,
-                  VillagerInventoryType.WORK_TASK);
+                  CivilizedVillager::getWorkInputInventory);
    }
 
    public void applyNbt(CompoundTag compoundTag, HolderLookup.Provider registryAccess) {

@@ -54,7 +54,7 @@ public class TakeToInventoryInstruction extends ConditionalHaulingInstruction<In
          List<InventoryStockRequirement> requirements,
          List<LoadedBuilding> candidateSourceBuildings) {
 
-      // the instruction can't be made from nothing, and there would be nothing to fetch anyway
+      // doesn't make sense to have 0 requirements or no buildings to fetch from
       if (requirements.isEmpty() || candidateSourceBuildings.isEmpty())
          return Optional.empty();
 
@@ -126,7 +126,6 @@ public class TakeToInventoryInstruction extends ConditionalHaulingInstruction<In
             + sourceBuildings.stream()
                   .map(b -> b.getBuilding().getBuildingType().toString())
                   .collect(Collectors.joining(", "))
-            + "] -> "
-            + requirements.stream().map(r -> r.inventoryType().toString()).distinct().collect(Collectors.joining(", "));
+            + "]";
    }
 }

@@ -11,6 +11,7 @@ import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.data.VillagerHunger;
 import com.uncreated.civilized.entity.renderer.layer.ClothingLayer;
 import com.uncreated.civilized.entity.renderer.layer.HairLayer;
+import com.uncreated.civilized.entity.renderer.layer.VillagerArmorLayer;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -46,6 +47,7 @@ public class CivilizedVillagerRenderer extends
 
       this.addLayer(new ClothingLayer(this, context.getModelSet()));
       this.addLayer(new HairLayer(this, context.getModelSet())); // hair renders over clothing
+      this.addLayer(new VillagerArmorLayer(this, context)); // armour obviously renders over everything
    }
 
    @Override

@@ -25,5 +25,6 @@ public class WorkStates {
          new BehaviourState("offload_inventories_after_work");
    public static BehaviourState TAKING_ITEMS_TO_INVENTORY = new BehaviourState("taking_items_to_inventory");
    public static BehaviourState DROPPING_OFF_ITEMS_AT_BUILDING = new BehaviourState("dropping_off_items_at_building");
-
+   public static BehaviourState CHECKING_FOR_NEW_EQUIPMENT = new BehaviourState("checking_for_new_equipment");
+   public static BehaviourState SUIT_UP = new BehaviourState("suit_up");
 }

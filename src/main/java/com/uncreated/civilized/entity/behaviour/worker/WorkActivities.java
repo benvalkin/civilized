@@ -14,6 +14,7 @@ import com.uncreated.civilized.entity.behaviour.worker.artisan.furnace.SmeltItem
 import com.uncreated.civilized.entity.behaviour.worker.artisan.furnace.SmokeItems;
 import com.uncreated.civilized.entity.behaviour.worker.beekeeper.HarvestHoneyAndHoneyComb;
 import com.uncreated.civilized.entity.behaviour.worker.common.MonitorWorksite;
+import com.uncreated.civilized.entity.behaviour.worker.common.logistics.CheckForNewEquipment;
 import com.uncreated.civilized.entity.behaviour.worker.common.logistics.CheckLogisticsOpportunities;
 import com.uncreated.civilized.entity.behaviour.worker.common.logistics.DropOffItemsAtBuilding;
 import com.uncreated.civilized.entity.behaviour.worker.common.logistics.TakeItemsToInventory;
@@ -24,6 +25,8 @@ import com.uncreated.civilized.entity.behaviour.worker.miner.MineOres;
 import com.uncreated.civilized.entity.behaviour.worker.rancher.BreedAnimals;
 import com.uncreated.civilized.entity.behaviour.worker.rancher.ShearSheep;
 import com.uncreated.civilized.entity.behaviour.worker.rancher.SlaughterAnimals;
+import com.uncreated.civilized.entity.behaviour.worker.soldier.SoldierWorkBehaviourControl;
+import com.uncreated.civilized.entity.behaviour.worker.soldier.SuitUp;
 import com.uncreated.civilized.entity.behaviour.worker.woodcutter.CutDownTrees;
 import com.uncreated.civilized.entity.behaviour.worker.woodcutter.ReplantSaplings;
 
@@ -191,14 +194,19 @@ public class WorkActivities {
             getMinimalLookBehavior(),
             Pair.of(
                   1,
-                  new WorkBehaviourControl(
+                  new SoldierWorkBehaviourControl(
                         ImmutableList.of(
+                              new CheckForNewEquipment(),
+                              new SuitUp(),
                               new CheckLogisticsOpportunities(),
                               new TakeItemsToInventory(),
                               new DropOffItemsAtBuilding(),
                               new MonitorWorksite(4, 3, 0.25f, true),
                               new IdleStrollAroundSettlement(5, 3, 0.25f)),
-                        ImmutableList.of(WorkStates.CHECK_LOGISTICS_OPPORTUNITIES),
+                        ImmutableList.of(
+                              WorkStates.CHECKING_FOR_NEW_EQUIPMENT,
+                              WorkStates.SUIT_UP,
+                              WorkStates.CHECK_LOGISTICS_OPPORTUNITIES),
                         ImmutableList.of(WorkStates.MONITOR_WORKSITE, BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT))));
    }
 }

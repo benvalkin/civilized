@@ -1,5 +1,6 @@
 package com.uncreated.civilized.entity.behaviour;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +17,7 @@ import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.entity.LoadedBuildings;
 import com.uncreated.civilized.core.building.util.BuildingUtil;
 import com.uncreated.civilized.entity.CivilizedVillager;
+import com.uncreated.civilized.entity.equipment.CarriedEquipmentSlot;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -116,6 +118,7 @@ public class SleepInBed extends Behavior<CivilizedVillager> {
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
       villager.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
       goToSpot(level, villager, sleepingSpot, gameTime);
+      villager.getEquipment().unequip(Arrays.stream(CarriedEquipmentSlot.values()).toList());
    }
 
    @Override

@@ -15,7 +15,6 @@ import com.uncreated.civilized.core.building.logistics.orders.imports.ImportUpTo
 import com.uncreated.civilized.core.building.logistics.orders.task.TaskConsumableItemRequirement;
 import com.uncreated.civilized.core.building.logistics.orders.task.TaskItemRequirement;
 import com.uncreated.civilized.core.building.state.CropFarmState;
-import com.uncreated.civilized.core.notifications.Delay;
 import com.uncreated.civilized.core.notifications.Notification;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
@@ -31,7 +30,6 @@ import net.minecraft.world.Container;
 import net.minecraft.world.entity.ai.behavior.BlockPosTracker;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.WalkTarget;
-import net.minecraft.world.entity.schedule.Activity;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -91,7 +89,7 @@ public class PlantCrops extends WorkTaskBehaviour {
                      Component.translatable("notification.worker.item.seeds"),
                      new ItemStack(Items.WHEAT_SEEDS)),
                // only sent after a while, since haulers may already be bringing seeds
-               new Delay(Duration.of(3, ChronoUnit.MINUTES), p -> villager.getBrain().isActive(Activity.WORK)));
+               Duration.of(3, ChronoUnit.MINUTES));
          return false;
       }
 

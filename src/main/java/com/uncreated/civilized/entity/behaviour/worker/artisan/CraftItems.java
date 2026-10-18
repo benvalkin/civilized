@@ -141,7 +141,7 @@ public class CraftItems extends WorkTaskBehaviour {
                         .build();
             NotificationService.INSTANCE.sendNotification(
                   missingIngredientsNotification,
-                  new Delay(Duration.of(3, ChronoUnit.MINUTES), p -> villager.getBrain().isActive(Activity.WORK)));
+                  Delay.of(Duration.of(3, ChronoUnit.MINUTES), p -> villager.getBrain().isActive(Activity.WORK)));
          }
 
          return false;

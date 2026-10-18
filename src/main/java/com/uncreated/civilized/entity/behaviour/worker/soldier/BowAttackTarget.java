@@ -7,9 +7,10 @@ import com.uncreated.civilized.core.settlement.defense.TargetRequestResult;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.BehaviourState;
 import com.uncreated.civilized.entity.behaviour.StatefulBehaviour;
+import com.uncreated.civilized.entity.equipment.CarriedEquipmentSlot;
+import com.uncreated.civilized.entity.equipment.VillagerEquipment;
 
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.behavior.EntityTracker;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
@@ -76,9 +77,33 @@ public class BowAttackTarget extends StatefulBehaviour {
       this.attackCooldown = attackCooldown;
    }
 
+   private CarriedEquipmentSlot weaponSlot = CarriedEquipmentSlot.PRIMARY_WEAPON;
+
    @Override
    protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
-      return !villager.findBow().isEmpty() && villager.requestTargetFromCommand().targetFound();
+
+      VillagerEquipment equipment = villager.getEquipment();
+      ItemStack equippedOrCarried = equipment.getEquippedOrCarried(weaponSlot);
+      if (!(equippedOrCarried.getItem() instanceof BowItem)) {
+         weaponSlot = CarriedEquipmentSlot.SECONDARY_WEAPON;
+         equippedOrCarried = equipment.getEquippedOrCarried(weaponSlot);
+      }
+      if (!(equippedOrCarried.getItem() instanceof BowItem)) {
+         weaponSlot = CarriedEquipmentSlot.OFFHAND_WEAPON;
+         equippedOrCarried = equipment.getEquippedOrCarried(weaponSlot);
+      }
+
+      if (!(equippedOrCarried.getItem() instanceof BowItem))
+         return false;
+
+      TargetRequestResult targetRequestResult = villager.requestTargetFromCommand();
+      if (!targetRequestResult.targetFound())
+         return false;
+
+      if (villager.position().distanceToSqr(Objects.requireNonNull(villager.getTarget()).position()) < 6 * 6)
+         return false;
+
+      return true;
    }
 
    @Override
@@ -92,7 +117,7 @@ public class BowAttackTarget extends StatefulBehaviour {
       retreating = false;
       blockedTicks = 0;
       repositionUntil = 0;
-      villager.setItemInHand(InteractionHand.MAIN_HAND, villager.findBow());
+      villager.getEquipment().equip(weaponSlot);
       villager.setAggressive(true); // used by the renderer to raise the bow
    }
 
@@ -102,7 +127,6 @@ public class BowAttackTarget extends StatefulBehaviour {
       villager.getBrain().eraseMemory(MemoryModuleType.LOOK_TARGET);
       villager.stopUsingItem();
       villager.setAggressive(false);
-      villager.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
    }
 
    @Override

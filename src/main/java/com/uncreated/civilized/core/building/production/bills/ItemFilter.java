@@ -1,6 +1,7 @@
 package com.uncreated.civilized.core.building.production.bills;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -25,13 +26,27 @@ public class ItemFilter {
    }
 
    public boolean acceptsItem(ItemStack stack) {
-      if (items.isEmpty()) // everything is allowed unless the filter specifies an item
+      // everything is allowed unless the filter specifies an item (except for WHITELIST_STRICT which will not allow
+      // anything if empty)
+      if (mode != ItemFilterMode.WHITELIST_STRICT && items.isEmpty())
          return true;
 
       return switch (mode) {
-      case WHITELIST -> items.stream().anyMatch(i -> ItemStack.isSameItem(i, stack));
+      case WHITELIST, WHITELIST_STRICT -> items.stream().anyMatch(i -> ItemStack.isSameItem(i, stack));
       case BLACKLIST -> items.stream().noneMatch(i -> ItemStack.isSameItem(i, stack));
       };
+   }
+
+   public Comparator<ItemStack> leftMostPreferred() {
+      return Comparator.comparingInt(this::preferenceIndex);
+   }
+
+   public int preferenceIndex(ItemStack stack) {
+      for (int i = 0; i < items.size(); i++) {
+         if (ItemStack.isSameItem(items.get(i), stack))
+            return i;
+      }
+      return Integer.MAX_VALUE;
    }
 
    public static final int MAX_ITEMS = 8;
@@ -52,11 +67,19 @@ public class ItemFilter {
    }
 
    public boolean allowsEverything() {
-      return items.isEmpty();
+      return (mode == ItemFilterMode.WHITELIST || mode == ItemFilterMode.BLACKLIST) && items.isEmpty();
+   }
+
+   public boolean allowsNothing() {
+      return mode == ItemFilterMode.WHITELIST_STRICT && items.isEmpty();
    }
 
    public static ItemFilter allowAllItems() {
       return new ItemFilter(ItemFilterMode.WHITELIST, new LinkedList<>());
+   }
+
+   public static ItemFilter allowNothing() {
+      return new ItemFilter(ItemFilterMode.WHITELIST_STRICT, new LinkedList<>());
    }
 
    // production lines that take burnable fuel should start with coal & charcoal default filters to avoid burning all
@@ -69,7 +92,7 @@ public class ItemFilter {
 
    public static ItemFilter logs() {
       return new ItemFilter(
-              ItemFilterMode.WHITELIST,
-              List.of(new ItemStack(Items.OAK_LOG), new ItemStack(Items.BIRCH_LOG), new ItemStack(Items.SPRUCE_LOG)));
+            ItemFilterMode.WHITELIST,
+            List.of(new ItemStack(Items.OAK_LOG), new ItemStack(Items.BIRCH_LOG), new ItemStack(Items.SPRUCE_LOG)));
    }
 }
