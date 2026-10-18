@@ -6,6 +6,7 @@ import java.util.Map;
 import com.uncreated.civilized.core.building.BuildingType;
 import com.uncreated.civilized.core.building.BuildingTypes;
 import com.uncreated.civilized.ui.menu.building.inn.InnBuildingScreen;
+import com.uncreated.civilized.ui.menu.building.military.MilitaryBuildingScreen;
 import com.uncreated.civilized.ui.menu.building.residence.ResidenceBuildingScreen;
 import com.uncreated.civilized.ui.menu.building.residence.artisan.BakeryBuildingScreen;
 import com.uncreated.civilized.ui.menu.building.residence.artisan.BlacksmithBuildingScreen;
@@ -37,6 +38,8 @@ public final class BuildingScreens {
       register(BuildingTypes.TOWN_HALL, TownHallBuildingScreen::new);
       register(BuildingTypes.INN, InnBuildingScreen::new);
       register(BuildingTypes.TOWN_SQUARE, TownSquareBuildingScreen::new);
+      register(BuildingTypes.GUARD_POST, MilitaryBuildingScreen::new);
+      register(BuildingTypes.BARRACKS, MilitaryBuildingScreen::new);
 
       register(BuildingTypes.BAKER_HOUSE, BakeryBuildingScreen::new);
       register(BuildingTypes.BUTCHER_HOUSE, ButcheryBuildingScreen::new);
