@@ -93,7 +93,7 @@ public class ServerLoadoutsStore extends LoadoutsStore {
             continue;
 
          UUID loadoutId = settlementTag.getUUID(FIELD_LOADOUT_ID);
-         String displayName = settlementTag.getString(FIELD_LOADOUT_ID);
+         String displayName = settlementTag.getString(FIELD_DISPLAY_NAME);
          ItemFilters itemFilters =
                ItemFilters.fromNbt(settlementTag.getList(FIELD_ITEM_FILTERS, Tag.TAG_COMPOUND), lookupProvider);
          Loadout loadout = new Loadout(loadoutId, displayName, itemFilters);
