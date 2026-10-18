@@ -2,9 +2,11 @@ package com.uncreated.civilized.entity.equipment;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -32,14 +34,14 @@ public class VillagerEquipment {
    private static final String FIELD_EQUIPPED_FROM = "equipped_from";
 
    public static final List<CarriedEquipmentSlot> COMBAT_SLOTS =
-           List.of(
-                   CarriedEquipmentSlot.PRIMARY_WEAPON,
-                   CarriedEquipmentSlot.SECONDARY_WEAPON,
-                   CarriedEquipmentSlot.OFFHAND_WEAPON,
-                   CarriedEquipmentSlot.HEAD,
-                   CarriedEquipmentSlot.CHEST,
-                   CarriedEquipmentSlot.LEGS,
-                   CarriedEquipmentSlot.FEET);
+         List.of(
+               CarriedEquipmentSlot.PRIMARY_WEAPON,
+               CarriedEquipmentSlot.SECONDARY_WEAPON,
+               CarriedEquipmentSlot.OFFHAND_WEAPON,
+               CarriedEquipmentSlot.HEAD,
+               CarriedEquipmentSlot.CHEST,
+               CarriedEquipmentSlot.LEGS,
+               CarriedEquipmentSlot.FEET);
 
    public VillagerEquipment(CivilizedVillager villager) {
       this.villager = villager;
@@ -321,8 +323,16 @@ public class VillagerEquipment {
    }
 
    public void equip(List<CarriedEquipmentSlot> equipmentSlots) {
-      for (CarriedEquipmentSlot slot : equipmentSlots)
-         villager.getEquipment().equip(slot);
+      Set<EquipmentSlot> alreadyEquipped = new HashSet<>();
+      for (CarriedEquipmentSlot slot : equipmentSlots) {
+         EquipmentSlot equipmentSlot = equipment.get(slot);
+         if (alreadyEquipped.contains(equipmentSlot))
+            continue;
+
+         boolean success = equip(slot);
+         if (success)
+            alreadyEquipped.add(equipmentSlot);
+      }
    }
 
    public boolean moveOutCurrentEquipment(CarriedEquipmentSlot carriedEquipmentSlot) {

@@ -17,6 +17,8 @@ import com.uncreated.civilized.ui.components.widget.EyeDropperSlotWidget;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
 import com.uncreated.civilized.ui.menu.building.ABuildingScreenTab;
 import com.uncreated.civilized.ui.menu.building.military.ILoadoutListener;
+import com.uncreated.civilized.ui.menu.building.military.LoadoutSlotLayout;
+import com.uncreated.civilized.ui.menu.building.military.LoadoutSlotLayout.GridCell;
 import com.uncreated.civilized.ui.style.Colors;
 import com.uncreated.civilized.ui.tabs.ITabHost;
 
@@ -29,7 +31,6 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -117,13 +118,13 @@ public class EditLoadoutTab extends ABuildingScreenTab implements ILoadoutListen
 
       for (int slotIndex = 0; slotIndex < Loadout.SUPPORTED_SLOTS.size(); slotIndex++) {
          CarriedEquipmentSlot slot = Loadout.SUPPORTED_SLOTS.get(slotIndex);
-         GridCell cell = gridCellFor(slot);
+         GridCell cell = LoadoutSlotLayout.gridCellFor(slot);
          int setX = getX() + 1 + cell.column() * setWidth;
          int setY = getY() + ROWS_TOP + cell.row() * ROW_SPACING;
 
          // centred against the item slots' frames
          int iconInset = (SLOT_SPACING - CarriedSlotIconWidget.SIZE) / 2;
-         slotIcons.add(new CarriedSlotIconWidget(setX, setY + iconInset, iconFor(slot), tooltipFor(slot)));
+         slotIcons.add(new CarriedSlotIconWidget(setX, setY + iconInset, LoadoutSlotLayout.watermarkIconFor(slot), tooltipFor(slot)));
 
          for (int itemIndex = 0; itemIndex < ITEMS_PER_SLOT; itemIndex++) {
             int slotItems = slotIndex;
@@ -138,22 +139,6 @@ public class EditLoadoutTab extends ABuildingScreenTab implements ILoadoutListen
                         stack -> items[slotItems][item] = stack));
          }
       }
-   }
-
-   private record GridCell(int column, int row) {
-   }
-
-   private static GridCell gridCellFor(CarriedEquipmentSlot slot) {
-      return switch (slot) {
-      case PRIMARY_WEAPON -> new GridCell(0, 0);
-      case SECONDARY_WEAPON -> new GridCell(1, 0);
-      case OFFHAND_WEAPON -> new GridCell(0, 1);
-      case HEAD -> new GridCell(2, 0);
-      case CHEST -> new GridCell(3, 0);
-      case LEGS -> new GridCell(2, 1);
-      case FEET -> new GridCell(3, 1);
-      case TOOL -> throw new IllegalArgumentException("Loadouts don't have a tool slot");
-      };
    }
 
    private void copyItemsFrom(Loadout loadout) {
@@ -184,22 +169,9 @@ public class EditLoadoutTab extends ABuildingScreenTab implements ILoadoutListen
       return player != null && player.getEquipmentSlotForItem(stack) == armourSlot;
    }
 
-   private static ResourceLocation iconFor(CarriedEquipmentSlot slot) {
-      String sprite = switch (slot) {
-      case PRIMARY_WEAPON -> "sword";
-      case SECONDARY_WEAPON -> "axe";
-      case OFFHAND_WEAPON -> "shield";
-      case HEAD -> "helmet";
-      case CHEST -> "chestplate";
-      case LEGS -> "leggings";
-      case FEET -> "boots";
-      case TOOL -> "pickaxe";
-      };
-      return ResourceLocation.withDefaultNamespace("container/slot/" + sprite);
-   }
-
    private static Component tooltipFor(CarriedEquipmentSlot slot) {
-      return Component.translatable("menu.building.military.loadout.edit.slot." + slot.name().toLowerCase())
+      return LoadoutSlotLayout.nameOf(slot)
+            .copy()
             .append("\n\n")
             .append(Component.translatable("menu.building.military.loadout.edit.slot.preference_help", ITEMS_PER_SLOT));
    }

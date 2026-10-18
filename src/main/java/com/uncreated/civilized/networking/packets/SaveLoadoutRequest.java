@@ -4,12 +4,9 @@ import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
 import java.util.Optional;
 
-import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
-import com.uncreated.civilized.core.settlement.Settlement;
 import com.uncreated.civilized.core.settlement.loadouts.Loadout;
 import com.uncreated.civilized.core.settlement.loadouts.ServerLoadoutsStore;
 import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermissionStore;
-import com.uncreated.civilized.core.settlement.permission.SettlementPermissions;
 import com.uncreated.civilized.ui.style.Colors;
 
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -49,15 +46,8 @@ public record SaveLoadoutRequest(Loadout loadout) implements CustomPacketPayload
          return;
       }
 
-      Optional<Settlement> settlement = ServerSettlementsStore.INSTANCE.find(sanitized.settlementId());
-      if (settlement.isEmpty()) {
-         failure(sanitized, context, "Loadout could not be saved - specified settlement does not exist.");
-         return;
-      }
-
-      SettlementPermissions permissions =
-            ServerSettlementPermissionStore.INSTANCE.getOrCreate(settlement.get().getSettlementId());
-      if (!permissions.hasEditBuildingPermission(context.player().getUUID())) {
+      if (!ServerSettlementPermissionStore.INSTANCE.getOrCreate(sanitized.settlementId())
+            .hasEditBuildingPermission(context.player().getUUID())) {
          failure(
                sanitized,
                context,

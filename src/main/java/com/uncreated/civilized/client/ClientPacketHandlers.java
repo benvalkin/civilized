@@ -7,6 +7,7 @@ import com.uncreated.civilized.client.toast.SettlementNotificationToast;
 import com.uncreated.civilized.networking.packets.BuildingDetected;
 import com.uncreated.civilized.networking.packets.BuildingPlacementRejected;
 import com.uncreated.civilized.networking.packets.ListSettlementLoadouts;
+import com.uncreated.civilized.networking.packets.ListSoldierEquipment;
 import com.uncreated.civilized.networking.packets.LoadoutSavedResult;
 import com.uncreated.civilized.networking.packets.NotificationToast;
 import com.uncreated.civilized.networking.packets.OpenEstablishBuildingScreen;
@@ -19,6 +20,7 @@ import com.uncreated.civilized.ui.menu.building.ABuildingMenuScreen;
 import com.uncreated.civilized.ui.menu.building.EstablishBuildingScreen;
 import com.uncreated.civilized.ui.menu.building.IRequirementsCheckListener;
 import com.uncreated.civilized.ui.menu.building.military.ILoadoutListener;
+import com.uncreated.civilized.ui.menu.building.military.tabs.ManageSoldierTab;
 import com.uncreated.civilized.ui.menu.building.residence.artisan.EditProductionBillTab;
 import com.uncreated.civilized.ui.menu.building.townhall.tabs.ManagePermissionsTab;
 import com.uncreated.civilized.ui.menu.trading.TradingMenuScreen;
@@ -116,6 +118,13 @@ public final class ClientPacketHandlers {
             && buildingScreen.getCurrentTab() instanceof ILoadoutListener listener) {
          listener.receiveListLoadouts(packet.requestId(), packet.results());
       }
+   }
+
+   public static void receiveListSoldierEquipment(ListSoldierEquipment packet, IPayloadContext context) {
+      // the player may have left the soldier's tab or closed the screen while the server was answering
+      if (Minecraft.getInstance().screen instanceof ABuildingMenuScreen screen
+            && screen.getCurrentTab() instanceof ManageSoldierTab soldierTab)
+         soldierTab.receiveEquipment(packet.requestId(), packet.items().orElse(null));
    }
 
    public static void receiveLoadoutSavedResult(LoadoutSavedResult packet, IPayloadContext context) {

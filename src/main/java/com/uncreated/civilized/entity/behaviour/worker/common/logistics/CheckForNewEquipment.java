@@ -4,9 +4,7 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Stream;
 
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
@@ -20,6 +18,7 @@ import com.uncreated.civilized.core.building.logistics.hauling.requirement.Inven
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.ItemStockRequirement;
 import com.uncreated.civilized.core.building.production.bills.ItemFilter;
 import com.uncreated.civilized.core.settlement.loadouts.Loadout;
+import com.uncreated.civilized.core.settlement.loadouts.ServerLoadoutsStore;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.Cooldowns;
 import com.uncreated.civilized.entity.behaviour.StatefulBehaviour;
@@ -30,7 +29,6 @@ import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 
 public class CheckForNewEquipment extends StatefulBehaviour {
 
@@ -56,25 +54,10 @@ public class CheckForNewEquipment extends StatefulBehaviour {
       return true;
    }
 
-   private static final Loadout PLACEHOLDER_LOADOUT =
-         Loadout.create(
-               // placeholders aren't any settlement's
-               new UUID(0, 0),
-               "Placeholder",
-               Map.of(
-                     CarriedEquipmentSlot.PRIMARY_WEAPON,
-                     List.of(
-                           new ItemStack(Items.IRON_SWORD),
-                           new ItemStack(Items.STONE_SWORD),
-                           new ItemStack(Items.WOODEN_SWORD)),
-                     CarriedEquipmentSlot.CHEST,
-                     List.of(new ItemStack(Items.IRON_CHESTPLATE), new ItemStack(Items.LEATHER_CHESTPLATE))));
-
    @Override
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
 
-      Optional<Loadout> loadout = Optional.of(PLACEHOLDER_LOADOUT);
-      // ServerLoadoutsStore.INSTANCE.find(villager.getInfo().getLoadoutId());
+      Optional<Loadout> loadout = ServerLoadoutsStore.INSTANCE.find(villager.getInfo().getLoadoutId());
       if (loadout.isEmpty())
          return;
 
@@ -150,14 +133,16 @@ public class CheckForNewEquipment extends StatefulBehaviour {
             continue;
          }
 
+         ItemFilter allowedSanitized = allowedItems.get().sanitized();
+
          boolean equipmentNotAllowedByLoadout =
-               !currentEquipment.isEmpty() && !allowedItems.get().acceptsItem(currentEquipment);
+               !currentEquipment.isEmpty() && !allowedSanitized.acceptsItem(currentEquipment);
          if (equipmentNotAllowedByLoadout) {
             equipment.moveOutCurrentEquipment(slot);
             continue;
          }
 
-         EquipmentRequirement allowedEquipment = EquipmentRequirement.allowedBy(slot, allowedItems.get());
+         EquipmentRequirement allowedEquipment = EquipmentRequirement.allowedBy(slot, allowedSanitized);
          ItemStockRequirement.StockResult bestEquipmentStock = allowedEquipment.evaluate(party, stockBuildings);
 
          if (!bestEquipmentStock.totalStock().hasItems())
@@ -167,15 +152,15 @@ public class CheckForNewEquipment extends StatefulBehaviour {
          // first in the stock result.
          ItemStack bestEquipment = bestEquipmentStock.totalStock().getItemStacks().getFirst();
 
-         int currentEquipmentScore = allowedItems.get().preferenceIndex(currentEquipment);
-         int bestEquipmentScore = allowedItems.get().preferenceIndex(bestEquipment);
+         int currentEquipmentScore = allowedSanitized.preferenceIndex(currentEquipment);
+         int bestEquipmentScore = allowedSanitized.preferenceIndex(bestEquipment);
 
          boolean betterEquipmentAvailable = currentEquipment.isEmpty() || bestEquipmentScore < currentEquipmentScore;
 
          if (betterEquipmentAvailable) {
             equipment.moveOutCurrentEquipment(slot);
             EquipmentRequirement onlyBestEquipment =
-                  EquipmentRequirement.onlyBestPossibleEquipment(slot, allowedItems.get(), bestEquipment);
+                  EquipmentRequirement.onlyBestPossibleEquipment(slot, allowedSanitized, bestEquipment);
             newEquipment.add(onlyBestEquipment);
          }
       }

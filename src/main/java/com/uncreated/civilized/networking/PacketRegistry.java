@@ -16,7 +16,10 @@ import com.uncreated.civilized.core.settlement.permission.SettlementPermissions;
 import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
+import com.uncreated.civilized.networking.packets.AssignLoadoutRequest;
 import com.uncreated.civilized.networking.packets.BuildingDetected;
+import com.uncreated.civilized.networking.packets.ListSoldierEquipment;
+import com.uncreated.civilized.networking.packets.RequestSoldierEquipment;
 import com.uncreated.civilized.networking.packets.ListSettlementLoadouts;
 import com.uncreated.civilized.networking.packets.LoadoutSavedResult;
 import com.uncreated.civilized.networking.packets.RequestSettlementLoadouts;
@@ -217,5 +220,20 @@ public class PacketRegistry {
               LoadoutSavedResult.TYPE,
               LoadoutSavedResult.STREAM_CODEC,
               ClientPacketHandlers::receiveLoadoutSavedResult);
+
+      registrar.playToServer(
+              AssignLoadoutRequest.TYPE,
+              AssignLoadoutRequest.STREAM_CODEC,
+              AssignLoadoutRequest::serverReceiveRequest);
+
+      registrar.playToServer(
+              RequestSoldierEquipment.TYPE,
+              RequestSoldierEquipment.STREAM_CODEC,
+              RequestSoldierEquipment::serverReceiveRequest);
+
+      registrar.playToClient(
+              ListSoldierEquipment.TYPE,
+              ListSoldierEquipment.STREAM_CODEC,
+              ClientPacketHandlers::receiveListSoldierEquipment);
    }
 }
