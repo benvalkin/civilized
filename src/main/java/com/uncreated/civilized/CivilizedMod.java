@@ -6,10 +6,11 @@ import com.mojang.logging.LogUtils;
 import com.uncreated.civilized.core.building.BuildingTypes;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.requirement.registry.BuildingRequirements;
+import com.uncreated.civilized.core.notifications.NotificationService;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.entity.events.SettlementLoadingEvents;
 import com.uncreated.civilized.core.settlement.events.SettlementStoreEvents;
-import com.uncreated.civilized.core.notifications.NotificationService;
+import com.uncreated.civilized.core.settlement.loadouts.ServerLoadoutsStore;
 import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermissionStore;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
@@ -145,6 +146,7 @@ public class CivilizedMod {
       ServerVillagerStore.loadServer(event.getLevel().getServer());
       ServerSettlementPermissionStore.loadServer(event.getLevel().getServer());
       NotificationService.loadServer(event.getLevel().getServer());
+      ServerLoadoutsStore.loadServer(event.getLevel().getServer());
       LOGGER.info("Loaded settlements");
    }
 

@@ -17,6 +17,8 @@ import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.networking.packets.BuildingDetected;
+import com.uncreated.civilized.networking.packets.ListSettlementLoadouts;
+import com.uncreated.civilized.networking.packets.RequestSettlementLoadouts;
 import com.uncreated.civilized.networking.packets.VisualizeBoundsInstruction;
 import com.uncreated.civilized.networking.packets.BuildingPlacementRejected;
 import com.uncreated.civilized.networking.packets.BuyItem;
@@ -193,5 +195,15 @@ public class PacketRegistry {
               TradeSlotUpdated.TYPE,
               TradeSlotUpdated.STREAM_CODEC,
               ClientPacketHandlers::receiveTradeSlotUpdated);
+
+      registrar.playToServer(
+              RequestSettlementLoadouts.TYPE,
+              RequestSettlementLoadouts.STREAM_CODEC,
+              RequestSettlementLoadouts::serverReceiveRequest);
+
+      registrar.playToClient(
+              ListSettlementLoadouts.TYPE,
+              ListSettlementLoadouts.STREAM_CODEC,
+              ClientPacketHandlers::receiveListSettlementLoadouts);
    }
 }

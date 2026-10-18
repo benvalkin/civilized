@@ -4,19 +4,20 @@ import com.uncreated.civilized.client.renderer.BuildingBoundsDragTool;
 import com.uncreated.civilized.client.renderer.BuildingBoundsVisualizer;
 import com.uncreated.civilized.client.renderer.BuildingDetectionTool;
 import com.uncreated.civilized.client.toast.SettlementNotificationToast;
-import com.uncreated.civilized.core.building.ClientBuildingStore;
 import com.uncreated.civilized.networking.packets.BuildingDetected;
 import com.uncreated.civilized.networking.packets.BuildingPlacementRejected;
-import com.uncreated.civilized.networking.packets.VisualizeBoundsInstruction;
+import com.uncreated.civilized.networking.packets.ListSettlementLoadouts;
 import com.uncreated.civilized.networking.packets.NotificationToast;
 import com.uncreated.civilized.networking.packets.OpenEstablishBuildingScreen;
 import com.uncreated.civilized.networking.packets.ProductionBillPreview;
 import com.uncreated.civilized.networking.packets.RequirementsChecked;
 import com.uncreated.civilized.networking.packets.SettlementAccessLevelDenied;
 import com.uncreated.civilized.networking.packets.TradeSlotUpdated;
+import com.uncreated.civilized.networking.packets.VisualizeBoundsInstruction;
 import com.uncreated.civilized.ui.menu.building.ABuildingMenuScreen;
 import com.uncreated.civilized.ui.menu.building.EstablishBuildingScreen;
 import com.uncreated.civilized.ui.menu.building.IRequirementsCheckListener;
+import com.uncreated.civilized.ui.menu.building.military.IListLoadoutsListener;
 import com.uncreated.civilized.ui.menu.building.residence.artisan.EditProductionBillTab;
 import com.uncreated.civilized.ui.menu.building.townhall.tabs.ManagePermissionsTab;
 import com.uncreated.civilized.ui.menu.trading.TradingMenuScreen;
@@ -88,11 +89,12 @@ public final class ClientPacketHandlers {
    public static void receiveRequirementsChecked(RequirementsChecked packet, IPayloadContext context) {
       // this response is intended for both standalone screens and also specialized building menu tabs
       Screen screen = Minecraft.getInstance().screen;
-      if (screen instanceof IRequirementsCheckListener listener)
+      if (screen instanceof IRequirementsCheckListener listener) {
          listener.receiveRequirementsChecked(packet.requestId(), packet.results());
-      else if (screen instanceof ABuildingMenuScreen buildingScreen
-            && buildingScreen.getCurrentTab() instanceof IRequirementsCheckListener listener)
+      } else if (screen instanceof ABuildingMenuScreen buildingScreen
+            && buildingScreen.getCurrentTab() instanceof IRequirementsCheckListener listener) {
          listener.receiveRequirementsChecked(packet.requestId(), packet.results());
+      }
    }
 
    public static void receiveTradeSlotUpdated(TradeSlotUpdated packet, IPayloadContext context) {
@@ -102,5 +104,16 @@ public final class ClientPacketHandlers {
                packet.slot(),
                packet.newStock(),
                packet.newAvailableVendorCurrency());
+   }
+
+   public static void receiveListSettlementLoadouts(ListSettlementLoadouts packet, IPayloadContext context) {
+      // this response is intended for both standalone screens and also specialized building menu tabs
+      Screen screen = Minecraft.getInstance().screen;
+      if (screen instanceof IListLoadoutsListener listener) {
+         listener.receiveListLoadouts(packet.requestId(), packet.results());
+      } else if (screen instanceof ABuildingMenuScreen buildingScreen
+            && buildingScreen.getCurrentTab() instanceof IListLoadoutsListener listener) {
+         listener.receiveListLoadouts(packet.requestId(), packet.results());
+      }
    }
 }

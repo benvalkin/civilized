@@ -2,6 +2,9 @@ package com.uncreated.civilized.ui.menu.building.military.tabs;
 
 import java.util.List;
 
+import javax.annotation.Nullable;
+
+import com.uncreated.civilized.core.settlement.loadouts.Loadout;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
 import com.uncreated.civilized.ui.menu.building.ABuildingScreenTab;
 import com.uncreated.civilized.ui.style.Colors;
@@ -20,9 +23,18 @@ public class EditLoadoutTab extends ABuildingScreenTab {
 
    private final Button cancelButton;
    private final Button saveButton;
+   /** The loadout being edited, or null when creating a new one. */
+   @Nullable
+   private final Loadout loadout;
 
+   /** Creates a new loadout. */
    public EditLoadoutTab(ITabHost tabHost, Font font, BuildingScreenContext context) {
+      this(tabHost, font, context, null);
+   }
+
+   public EditLoadoutTab(ITabHost tabHost, Font font, BuildingScreenContext context, @Nullable Loadout loadout) {
       super(tabHost, font, Component.translatable("menu.building.military.loadout.edit.tab.heading"), context);
+      this.loadout = loadout;
 
       cancelButton =
             Button.builder(Component.translatable("gui.misc.button.cancel"), button -> backToLoadouts(tabHost))
