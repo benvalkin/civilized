@@ -40,6 +40,7 @@ public class Loadout {
                CarriedEquipmentSlot.FEET);
 
    private final UUID loadoutId;
+   private final UUID settlementId;
    private String displayName;
    private ItemFilters loadoutItems;
 
@@ -47,19 +48,25 @@ public class Loadout {
          StreamCodec.composite(
                UUIDUtil.STREAM_CODEC,
                Loadout::loadoutId,
+               UUIDUtil.STREAM_CODEC,
+               Loadout::settlementId,
                ByteBufCodecs.STRING_UTF8,
                Loadout::displayName,
                ItemFilters.STREAM_CODEC,
                Loadout::loadoutItems,
                Loadout::new);
 
-   public Loadout(UUID loadoutId, String displayName, ItemFilters loadoutItems) {
+   public Loadout(UUID loadoutId, UUID settlementId, String displayName, ItemFilters loadoutItems) {
       this.loadoutId = loadoutId;
+      this.settlementId = settlementId;
       this.displayName = displayName;
       this.loadoutItems = loadoutItems;
    }
 
-   public static Loadout create(String displayName, Map<CarriedEquipmentSlot, List<ItemStack>> slots) {
+   public static Loadout create(
+         UUID settlementId,
+         String displayName,
+         Map<CarriedEquipmentSlot, List<ItemStack>> slots) {
 
       ItemFilters itemFilters = defaultLoadoutFilters();
       for (var slot : slots.entrySet()) {
@@ -70,7 +77,7 @@ public class Loadout {
          itemFilters.setFilter(i, new ItemFilter(ItemFilterMode.WHITELIST_STRICT, slot.getValue()));
       }
 
-      return new Loadout(UUID.randomUUID(), displayName, itemFilters);
+      return new Loadout(UUID.randomUUID(), settlementId, displayName, itemFilters);
    }
 
    void copyFrom(Loadout other) {

@@ -32,6 +32,7 @@ public class ServerLoadoutsStore extends LoadoutsStore {
    public static final String STORAGE_FILE_NAME = "civilized_loadout_store";
 
    private static final String FIELD_LOADOUT_ID = "loadout_id";
+   private static final String FIELD_SETTLEMENT_ID = "settlement_id";
    private static final String FIELD_DISPLAY_NAME = "display_name";
    private static final String FIELD_ITEM_FILTERS = "item_filters";
 
@@ -76,6 +77,7 @@ public class ServerLoadoutsStore extends LoadoutsStore {
       for (Loadout loadout : this.loadouts.all()) {
          CompoundTag loadoutTag = new CompoundTag();
          loadoutTag.putUUID(FIELD_LOADOUT_ID, loadout.loadoutId());
+         loadoutTag.putUUID(FIELD_SETTLEMENT_ID, loadout.settlementId());
          loadoutTag.putString(FIELD_DISPLAY_NAME, loadout.displayName());
          loadoutTag.put(FIELD_ITEM_FILTERS, loadout.loadoutItems().toNbt(provider));
          loadouts.add(loadoutTag);
@@ -93,10 +95,11 @@ public class ServerLoadoutsStore extends LoadoutsStore {
             continue;
 
          UUID loadoutId = settlementTag.getUUID(FIELD_LOADOUT_ID);
+         UUID settlementId = settlementTag.getUUID(FIELD_SETTLEMENT_ID);
          String displayName = settlementTag.getString(FIELD_DISPLAY_NAME);
          ItemFilters itemFilters =
                ItemFilters.fromNbt(settlementTag.getList(FIELD_ITEM_FILTERS, Tag.TAG_COMPOUND), lookupProvider);
-         Loadout loadout = new Loadout(loadoutId, displayName, itemFilters);
+         Loadout loadout = new Loadout(loadoutId, settlementId, displayName, itemFilters);
          store.loadouts.add(loadout);
       }
 

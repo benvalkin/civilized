@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
@@ -57,6 +58,8 @@ public class CheckForNewEquipment extends StatefulBehaviour {
 
    private static final Loadout PLACEHOLDER_LOADOUT =
          Loadout.create(
+               // placeholders aren't any settlement's
+               new UUID(0, 0),
                "Placeholder",
                Map.of(
                      CarriedEquipmentSlot.PRIMARY_WEAPON,

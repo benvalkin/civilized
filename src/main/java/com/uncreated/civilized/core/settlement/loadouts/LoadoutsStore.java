@@ -1,6 +1,7 @@
 package com.uncreated.civilized.core.settlement.loadouts;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -22,5 +23,9 @@ public abstract class LoadoutsStore extends SavedData {
 
    public ImmutableList<Loadout> all() {
       return loadouts.all();
+   }
+
+   public Set<Loadout> findForSettlement(UUID settlementId) {
+      return loadouts.getSettlementsToLoadoutsIndex().getValues(settlementId);
    }
 }
