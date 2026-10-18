@@ -7,6 +7,7 @@ import com.uncreated.civilized.client.toast.SettlementNotificationToast;
 import com.uncreated.civilized.networking.packets.BuildingDetected;
 import com.uncreated.civilized.networking.packets.BuildingPlacementRejected;
 import com.uncreated.civilized.networking.packets.ListSettlementLoadouts;
+import com.uncreated.civilized.networking.packets.LoadoutSavedResult;
 import com.uncreated.civilized.networking.packets.NotificationToast;
 import com.uncreated.civilized.networking.packets.OpenEstablishBuildingScreen;
 import com.uncreated.civilized.networking.packets.ProductionBillPreview;
@@ -17,7 +18,7 @@ import com.uncreated.civilized.networking.packets.VisualizeBoundsInstruction;
 import com.uncreated.civilized.ui.menu.building.ABuildingMenuScreen;
 import com.uncreated.civilized.ui.menu.building.EstablishBuildingScreen;
 import com.uncreated.civilized.ui.menu.building.IRequirementsCheckListener;
-import com.uncreated.civilized.ui.menu.building.military.IListLoadoutsListener;
+import com.uncreated.civilized.ui.menu.building.military.ILoadoutListener;
 import com.uncreated.civilized.ui.menu.building.residence.artisan.EditProductionBillTab;
 import com.uncreated.civilized.ui.menu.building.townhall.tabs.ManagePermissionsTab;
 import com.uncreated.civilized.ui.menu.trading.TradingMenuScreen;
@@ -109,11 +110,22 @@ public final class ClientPacketHandlers {
    public static void receiveListSettlementLoadouts(ListSettlementLoadouts packet, IPayloadContext context) {
       // this response is intended for both standalone screens and also specialized building menu tabs
       Screen screen = Minecraft.getInstance().screen;
-      if (screen instanceof IListLoadoutsListener listener) {
+      if (screen instanceof ILoadoutListener listener) {
          listener.receiveListLoadouts(packet.requestId(), packet.results());
       } else if (screen instanceof ABuildingMenuScreen buildingScreen
-            && buildingScreen.getCurrentTab() instanceof IListLoadoutsListener listener) {
+            && buildingScreen.getCurrentTab() instanceof ILoadoutListener listener) {
          listener.receiveListLoadouts(packet.requestId(), packet.results());
+      }
+   }
+
+   public static void receiveLoadoutSavedResult(LoadoutSavedResult packet, IPayloadContext context) {
+      // this response is intended for both standalone screens and also specialized building menu tabs
+      Screen screen = Minecraft.getInstance().screen;
+      if (screen instanceof ILoadoutListener listener) {
+         listener.receiveLoadoutSavedResult(packet);
+      } else if (screen instanceof ABuildingMenuScreen buildingScreen
+            && buildingScreen.getCurrentTab() instanceof ILoadoutListener listener) {
+         listener.receiveLoadoutSavedResult(packet);
       }
    }
 }

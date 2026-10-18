@@ -2,12 +2,12 @@ package com.uncreated.civilized.ui.menu.building.military.widgets;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import com.uncreated.civilized.core.building.production.bills.ItemFilter;
 import com.uncreated.civilized.core.settlement.loadouts.Loadout;
 import com.uncreated.civilized.entity.equipment.CarriedEquipmentSlot;
-import com.uncreated.civilized.ui.components.SlotFrameRenderer;
 import com.uncreated.civilized.ui.components.widget.ItemDisplayWidget;
 import com.uncreated.civilized.ui.style.Colors;
 
@@ -45,11 +45,12 @@ public class LoadoutRowWidget extends AbstractContainerWidget {
       for (int i = 0; i < Loadout.SUPPORTED_SLOTS.size(); i++) {
          CarriedEquipmentSlot slot = Loadout.SUPPORTED_SLOTS.get(i);
          ItemFilter allowedItems = loadout.loadoutItems().getFilter(i);
-         if (allowedItems.items().isEmpty())
+         Optional<ItemStack> firstNonEmpty = allowedItems.items().stream().filter(item -> !item.isEmpty()).findFirst();
+         if (firstNonEmpty.isEmpty())
             continue;
 
-         ItemStack first = allowedItems.items().getFirst();
-         previewSlots.add(new ItemDisplayWidget(x + 1 + iconNumber * SLOT_SPACING, y + SLOTS_TOP + 1, first));
+         previewSlots
+               .add(new ItemDisplayWidget(x + 1 + iconNumber * SLOT_SPACING, y + SLOTS_TOP + 1, firstNonEmpty.get()));
          iconNumber++;
       }
 

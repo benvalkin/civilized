@@ -3,16 +3,20 @@ package com.uncreated.civilized.ui.menu.building.military.tabs;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import com.uncreated.civilized.core.building.production.bills.ItemFilter;
 import com.uncreated.civilized.core.settlement.loadouts.Loadout;
 import com.uncreated.civilized.entity.equipment.CarriedEquipmentSlot;
+import com.uncreated.civilized.networking.packets.LoadoutSavedResult;
+import com.uncreated.civilized.networking.packets.SaveLoadoutRequest;
 import com.uncreated.civilized.ui.components.widget.CarriedSlotIconWidget;
 import com.uncreated.civilized.ui.components.widget.EyeDropperSlotWidget;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
 import com.uncreated.civilized.ui.menu.building.ABuildingScreenTab;
+import com.uncreated.civilized.ui.menu.building.military.ILoadoutListener;
 import com.uncreated.civilized.ui.style.Colors;
 import com.uncreated.civilized.ui.tabs.ITabHost;
 
@@ -28,8 +32,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.network.PacketDistributor;
 
-public class EditLoadoutTab extends ABuildingScreenTab {
+public class EditLoadoutTab extends ABuildingScreenTab implements ILoadoutListener {
 
    private static final int ITEMS_PER_SLOT = 3;
    private static final int NAME_Y = 11;
@@ -52,6 +57,7 @@ public class EditLoadoutTab extends ABuildingScreenTab {
 
    private final List<CarriedSlotIconWidget> slotIcons = new ArrayList<>();
    private final List<EyeDropperSlotWidget> itemSlots = new ArrayList<>();
+   private final ITabHost tabHost;
    private final EditBox nameBox;
    private final Button cancelButton;
    private final Button saveButton;
@@ -69,6 +75,7 @@ public class EditLoadoutTab extends ABuildingScreenTab {
                         : "menu.building.military.loadout.edit.tab.heading"),
             context);
       this.loadout = loadout;
+      this.tabHost = tabHost;
 
       for (ItemStack[] slotItems : items)
          Arrays.fill(slotItems, ItemStack.EMPTY);
@@ -99,7 +106,7 @@ public class EditLoadoutTab extends ABuildingScreenTab {
                   .build();
 
       saveButton =
-            Button.builder(Component.translatable("gui.misc.button.save"), button -> saveLoadout(tabHost))
+            Button.builder(Component.translatable("gui.misc.button.save"), button -> saveLoadout())
                   .pos(getRight() - BUTTON_WIDTH, getBottom() - BUTTON_HEIGHT)
                   .size(BUTTON_WIDTH, BUTTON_HEIGHT)
                   .build();
@@ -193,7 +200,7 @@ public class EditLoadoutTab extends ABuildingScreenTab {
 
    private static Component tooltipFor(CarriedEquipmentSlot slot) {
       return Component.translatable("menu.building.military.loadout.edit.slot." + slot.name().toLowerCase())
-            .append("\n")
+            .append("\n\n")
             .append(Component.translatable("menu.building.military.loadout.edit.slot.preference_help", ITEMS_PER_SLOT));
    }
 
@@ -201,9 +208,27 @@ public class EditLoadoutTab extends ABuildingScreenTab {
       tabHost.changeTab(new ManageLoadoutsTab(tabHost, font, context));
    }
 
-   private void saveLoadout(ITabHost tabHost) {
+   private void saveLoadout() {
 
-      goBack(tabHost);
+      UUID settlementId = context.settlement().getSettlementId();
+      String displayName = nameBox.getValue();
+
+      Loadout post;
+      if (loadout == null) {
+         post = Loadout.create(UUID.randomUUID(), settlementId, displayName, items);
+      } else {
+         post = Loadout.create(loadout.loadoutId(), settlementId, displayName, items);
+      }
+
+      PacketDistributor.sendToServer(new SaveLoadoutRequest(post));
+   }
+
+   @Override
+   public void receiveLoadoutSavedResult(LoadoutSavedResult result) {
+      if (result.success())
+         goBack(tabHost);
+      else
+         Minecraft.getInstance().screen = null;
    }
 
    @Override

@@ -18,7 +18,9 @@ import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.networking.packets.BuildingDetected;
 import com.uncreated.civilized.networking.packets.ListSettlementLoadouts;
+import com.uncreated.civilized.networking.packets.LoadoutSavedResult;
 import com.uncreated.civilized.networking.packets.RequestSettlementLoadouts;
+import com.uncreated.civilized.networking.packets.SaveLoadoutRequest;
 import com.uncreated.civilized.networking.packets.VisualizeBoundsInstruction;
 import com.uncreated.civilized.networking.packets.BuildingPlacementRejected;
 import com.uncreated.civilized.networking.packets.BuyItem;
@@ -205,5 +207,15 @@ public class PacketRegistry {
               ListSettlementLoadouts.TYPE,
               ListSettlementLoadouts.STREAM_CODEC,
               ClientPacketHandlers::receiveListSettlementLoadouts);
+
+      registrar.playToServer(
+              SaveLoadoutRequest.TYPE,
+              SaveLoadoutRequest.STREAM_CODEC,
+              SaveLoadoutRequest::serverSaveLoadoutRequest);
+
+      registrar.playToClient(
+              LoadoutSavedResult.TYPE,
+              LoadoutSavedResult.STREAM_CODEC,
+              ClientPacketHandlers::receiveLoadoutSavedResult);
    }
 }

@@ -2,6 +2,8 @@ package com.uncreated.civilized.core.settlement.loadouts;
 
 import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -63,6 +65,11 @@ public class Loadout {
       this.loadoutItems = loadoutItems;
    }
 
+   public void secureCopyFrom(Loadout other) {
+      this.displayName = other.displayName;
+      this.loadoutItems = other.loadoutItems.copy();
+   }
+
    public static Loadout create(
          UUID settlementId,
          String displayName,
@@ -78,6 +85,21 @@ public class Loadout {
       }
 
       return new Loadout(UUID.randomUUID(), settlementId, displayName, itemFilters);
+   }
+
+   public static Loadout create(
+           UUID loadoutId,
+           UUID settlementId,
+           String displayName,
+           ItemStack[][] slots) {
+
+      ItemFilters itemFilters = defaultLoadoutFilters();
+       for (int i = 0; i < slots.length; i++) {
+           List<ItemStack> items = Arrays.stream(slots[i]).toList();
+           itemFilters.setFilter(i, new ItemFilter(ItemFilterMode.WHITELIST_STRICT, items));
+       }
+
+      return new Loadout(loadoutId, settlementId, displayName, itemFilters);
    }
 
    void copyFrom(Loadout other) {
@@ -107,6 +129,15 @@ public class Loadout {
          return Optional.empty();
 
       return Optional.of(allowed);
+   }
+
+   public Loadout sanitized() {
+       List<ItemFilter> sanitized = new ArrayList<>(loadoutItems.size());
+       for (int i = 0; i < loadoutItems.size(); i++) {
+           ItemFilter filter = loadoutItems.getFilter(i);
+          sanitized.add(filter);
+       }
+       return new Loadout(loadoutId, settlementId, displayName, new ItemFilters(sanitized));
    }
 
    public record Packet(Loadout loadout, StoreOperation storeOperation) implements CustomPacketPayload {

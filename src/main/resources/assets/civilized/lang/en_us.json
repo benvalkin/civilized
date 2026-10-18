@@ -157,7 +157,7 @@
   "menu.building.military.loadout.edit.slot.chest": "Chestplate",
   "menu.building.military.loadout.edit.slot.legs": "Leggings",
   "menu.building.military.loadout.edit.slot.feet": "Boots",
-  "menu.building.military.loadout.edit.slot.preference_help": "§Up to %s equipment choices may be specified. Soldiers prefer to use the LEFT-MOST items over others.",
+  "menu.building.military.loadout.edit.slot.preference_help": "§7Up to %s§7 equipment choices may be specified. Soldiers prefer to use the §bLEFT-MOST§r items over others.",
   "menu.building.inn.visitors.count": "Visitors: %s",
   "menu.building.town_square.visitors.count": "Visitors: %s",
   "menu.building.town_square.festival.heading": "Festival",

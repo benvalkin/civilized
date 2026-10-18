@@ -12,7 +12,7 @@ import com.uncreated.civilized.ui.components.IListViewBuilder;
 import com.uncreated.civilized.ui.components.ScrollListView;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
 import com.uncreated.civilized.ui.menu.building.ABuildingScreenTab;
-import com.uncreated.civilized.ui.menu.building.military.IListLoadoutsListener;
+import com.uncreated.civilized.ui.menu.building.military.ILoadoutListener;
 import com.uncreated.civilized.ui.menu.building.military.widgets.LoadoutRowWidget;
 import com.uncreated.civilized.ui.style.Colors;
 import com.uncreated.civilized.ui.tabs.ITabHost;
@@ -24,7 +24,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-public class ManageLoadoutsTab extends ABuildingScreenTab implements IListLoadoutsListener {
+public class ManageLoadoutsTab extends ABuildingScreenTab implements ILoadoutListener {
 
    private static final int BUTTON_WIDTH = 80;
    private static final int BUTTON_HEIGHT = 18;
