@@ -11,6 +11,7 @@ import com.uncreated.civilized.core.settlement.loadouts.Loadout;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.entity.equipment.CarriedEquipmentSlot;
 import com.uncreated.civilized.networking.packets.AssignLoadoutRequest;
+import com.uncreated.civilized.networking.packets.AssignWorkerRequest;
 import com.uncreated.civilized.networking.packets.RequestSettlementLoadouts;
 import com.uncreated.civilized.networking.packets.RequestSoldierEquipment;
 import com.uncreated.civilized.ui.components.widget.ArrowSelectorWidget;
@@ -84,11 +85,14 @@ public class ManageSoldierTab extends ABuildingScreenTab implements ILoadoutList
                   .size(BUTTON_WIDTH, BUTTON_HEIGHT)
                   .build();
 
-      // FUTURE: send a request to dismiss the soldier, once it's decided what dismissing does
+      // a soldier is someone working at a military post, so dismissing them takes them off it
       dismissButton =
-            Button.builder(Component.translatable("menu.building.military.soldier.button.dismiss"), button -> {
-            }).pos(getRight() - BUTTON_WIDTH, getBottom() - BUTTON_HEIGHT).size(BUTTON_WIDTH, BUTTON_HEIGHT).build();
-      dismissButton.active = false;
+            Button.builder(
+                  Component.translatable("menu.building.military.soldier.button.dismiss"),
+                  button -> dismiss(tabHost, soldier))
+                  .pos(getRight() - BUTTON_WIDTH, getBottom() - BUTTON_HEIGHT)
+                  .size(BUTTON_WIDTH, BUTTON_HEIGHT)
+                  .build();
 
       equipmentRequestId = RequestSoldierEquipment.nextRequestId();
       PacketDistributor.sendToServer(new RequestSoldierEquipment(equipmentRequestId, soldier.getVillagerId()));
@@ -96,6 +100,11 @@ public class ManageSoldierTab extends ABuildingScreenTab implements ILoadoutList
       loadoutsRequestId = RequestSettlementLoadouts.nextRequestId();
       PacketDistributor
             .sendToServer(new RequestSettlementLoadouts(loadoutsRequestId, context.settlement().getSettlementId()));
+   }
+
+   private void dismiss(ITabHost tabHost, VillagerInfo soldier) {
+      PacketDistributor.sendToServer(new AssignWorkerRequest(soldier.getVillagerId(), Optional.empty()));
+      tabHost.changeTab(new ManageSoldiersTab(tabHost, font, context));
    }
 
    private int cellX(CarriedEquipmentSlot slot) {

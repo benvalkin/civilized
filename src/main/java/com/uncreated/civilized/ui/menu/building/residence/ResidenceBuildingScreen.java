@@ -2,13 +2,13 @@ package com.uncreated.civilized.ui.menu.building.residence;
 
 import java.util.List;
 
+import com.uncreated.civilized.ui.menu.building.occupants.ManageResidentsTab;
 import com.uncreated.civilized.ui.components.buttons.buildingtab.HomeTabButton;
 import com.uncreated.civilized.ui.components.buttons.buildingtab.ManageResidentsTabButton;
 import com.uncreated.civilized.ui.components.buttons.buildingtab.SettingsTabButton;
 import com.uncreated.civilized.ui.menu.building.ABuildingMenuScreen;
 import com.uncreated.civilized.ui.menu.building.BuildingMenu;
 import com.uncreated.civilized.ui.menu.building.BuildingSettingsTab;
-import com.uncreated.civilized.ui.menu.building.residence.tabs.ManageResidentsTab;
 import com.uncreated.civilized.ui.menu.building.residence.tabs.ResidenceInfoTab;
 import com.uncreated.civilized.ui.tabs.ATab;
 import com.uncreated.civilized.ui.tabs.ITabHost;

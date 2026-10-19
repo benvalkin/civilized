@@ -12,7 +12,6 @@ import com.uncreated.civilized.ui.components.widget.ItemDisplayWidget;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
 import com.uncreated.civilized.ui.menu.building.ABuildingScreenTab;
 import com.uncreated.civilized.ui.menu.building.IBuildingInfoTab;
-import com.uncreated.civilized.ui.menu.building.worksite.tabs.ManageWorkersTab;
 import com.uncreated.civilized.ui.style.Colors;
 import com.uncreated.civilized.ui.tabs.ATab;
 import com.uncreated.civilized.ui.tabs.ITabHost;
@@ -54,7 +53,7 @@ public class AnimalFarmInfoTab extends ABuildingScreenTab implements IBuildingIn
             Component.translatable(
                   "menu.building.worksite.workers.heading",
                   workers.size(),
-                  ManageWorkersTab.MAX_ASSIGNED_WORKERS),
+                  context.building().getBuildingType().maxWorkers()),
             getX(),
             getY() + 20,
             Colors.MENU_TEXT_DARK,

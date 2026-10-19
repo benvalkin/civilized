@@ -45,6 +45,8 @@ public class BuildingType {
    private final List<ProductionType> supportedProductionTypes = List.of();
    @Builder.Default
    private final BuildingDetectionType detectionType = BuildingDetectionType.ROOMS;
+   @Builder.Default
+   private final int maxWorkers = 1;
    @Getter(AccessLevel.NONE)
    @Builder.Default
    private final Supplier<VillagerOccupation> occupation = () -> VillagerOccupations.UNEMPLOYED;

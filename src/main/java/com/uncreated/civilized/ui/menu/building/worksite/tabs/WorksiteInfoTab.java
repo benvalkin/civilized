@@ -41,7 +41,7 @@ public class WorksiteInfoTab extends ABuildingScreenTab implements IBuildingInfo
             Component.translatable(
                   "menu.building.worksite.workers.heading",
                   workers.size(),
-                  ManageWorkersTab.MAX_ASSIGNED_WORKERS),
+                  context.building().getBuildingType().maxWorkers()),
             getX(),
             getY() + 20,
             Colors.MENU_TEXT_DARK,

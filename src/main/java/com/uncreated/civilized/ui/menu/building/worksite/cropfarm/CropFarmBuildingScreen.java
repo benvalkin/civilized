@@ -3,6 +3,7 @@ package com.uncreated.civilized.ui.menu.building.worksite.cropfarm;
 import java.util.List;
 import java.util.function.Function;
 
+import com.uncreated.civilized.ui.menu.building.occupants.ManageWorkersTab;
 import com.uncreated.civilized.ui.components.buttons.buildingtab.ManageWorkersTabButton;
 import com.uncreated.civilized.ui.components.buttons.buildingtab.SettingsTabButton;
 import com.uncreated.civilized.ui.components.buttons.buildingtab.WorksiteHomeTabButton;
@@ -11,7 +12,6 @@ import com.uncreated.civilized.ui.menu.building.BuildingMenu;
 import com.uncreated.civilized.ui.menu.building.BuildingSettingsTab;
 import com.uncreated.civilized.ui.menu.building.worksite.cropfarm.tabs.CropFarmInfoTab;
 import com.uncreated.civilized.ui.menu.building.worksite.cropfarm.tabs.CropsTab;
-import com.uncreated.civilized.ui.menu.building.worksite.tabs.ManageWorkersTab;
 import com.uncreated.civilized.ui.tabs.ATab;
 import com.uncreated.civilized.ui.tabs.ITabHost;
 

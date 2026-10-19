@@ -23,4 +23,12 @@ public class ManageWorkersTabButton extends BuildingTabButton {
             ICON,
             Tooltip.create(Component.translatable("menu.building.worksite.workers.tab.heading")), createTab);
    }
+
+   public ManageWorkersTabButton(
+         ITabHost tabHost,
+         int buttonTabIndex,
+         Function<ITabHost, ATab> createTab,
+         Tooltip tooltip) {
+      super(tabHost, buttonTabIndex, ICON, tooltip, createTab);
+   }
 }

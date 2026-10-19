@@ -116,8 +116,8 @@ public class BuildingUtil {
       return true;
    }
 
-   public static boolean worksiteHasAssignedWorker(Building building, VillagerStore store) {
-      return store.getCitizens(building.getSettlementId()).stream().anyMatch(v -> v.isAssignedWorkerOf(building));
+   public static boolean worksiteHasFreeWorkerSlot(Building building, VillagerStore store) {
+      return getAssignedWorkers(building, store).size() < building.getBuildingType().maxWorkers();
    }
 
    public static Optional<Building> findUnoccupiedWorkerHome(
@@ -139,7 +139,7 @@ public class BuildingUtil {
 
       return buildingStore.findForSettlement(settlementId)
             .stream()
-            .filter(b -> filter.test(b.getBuildingType()) && !worksiteHasAssignedWorker(b, villagerStore))
+            .filter(b -> filter.test(b.getBuildingType()) && worksiteHasFreeWorkerSlot(b, villagerStore))
             .findFirst();
    }
 

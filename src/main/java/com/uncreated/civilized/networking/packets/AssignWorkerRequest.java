@@ -83,10 +83,10 @@ public record AssignWorkerRequest(UUID villagerId, Optional<UUID> worksiteId) im
          }
 
          boolean alreadyWorksHere = worker.get().isAssignedWorkerOf(worksite.get());
-         boolean worksiteHasAssignedWorker =
-               BuildingUtil.worksiteHasAssignedWorker(worksite.get(), ServerVillagerStore.INSTANCE);
+         boolean worksiteIsFull =
+               !BuildingUtil.worksiteHasFreeWorkerSlot(worksite.get(), ServerVillagerStore.INSTANCE);
 
-         if (!alreadyWorksHere && worksiteHasAssignedWorker) {
+         if (!alreadyWorksHere && worksiteIsFull) {
             failure(context, "Worker could not be assigned - this worksite has no free worker slots.");
             return;
          }

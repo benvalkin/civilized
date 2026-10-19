@@ -52,7 +52,7 @@ public class SummonWorker {
       if (worksite.isEmpty())
          throw ERROR_NOT_INSIDE_WORKSITE.create();
 
-      if (BuildingUtil.worksiteHasAssignedWorker(worksite.get(), ServerVillagerStore.INSTANCE))
+      if (!BuildingUtil.worksiteHasFreeWorkerSlot(worksite.get(), ServerVillagerStore.INSTANCE))
          throw ERROR_WORKSITE_FULL.create();
 
       BlockPos insidePos = worksite.get().getBounds().findRandomInsideFloorBlock(level);

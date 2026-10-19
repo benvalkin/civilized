@@ -6,8 +6,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.uncreated.civilized.core.building.bounds.detection.BuildingDetectionType;
 import com.uncreated.civilized.CivilizedMod;
+import com.uncreated.civilized.core.building.bounds.detection.BuildingDetectionType;
 import com.uncreated.civilized.core.building.entity.behaviour.ArtisanHouseBehaviour;
 import com.uncreated.civilized.core.building.entity.behaviour.TownSquareBehaviour;
 import com.uncreated.civilized.core.building.production.bills.ProductionTypes;
@@ -114,20 +114,19 @@ public class BuildingTypes {
                      .occupation(() -> VillagerOccupations.PRIEST)
                      .build());
    public static BuildingType TOWN_HOUSE =
-         declare(
-               BuildingType.builder(createResourceKey("town_house"))
-                     .isSpouseResidence(true)
-                     .build());
+         declare(BuildingType.builder(createResourceKey("town_house")).isSpouseResidence(true).build());
    public static BuildingType GUARD_POST =
          declare(
                BuildingType.builder(createResourceKey("guard_post"))
                      .isWorkerResidence(true)
+                     .maxWorkers(1)
                      .occupation(() -> VillagerOccupations.SOLDIER)
                      .build());
    public static BuildingType BARRACKS =
          declare(
                BuildingType.builder(createResourceKey("barracks"))
                      .isWorkerResidence(true)
+                     .maxWorkers(2)
                      .occupation(() -> VillagerOccupations.SOLDIER)
                      .build());
    public static BuildingType MILITARY_HOUSE =

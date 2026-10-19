@@ -1,6 +1,5 @@
 package com.uncreated.civilized.core.building.signs;
 
-import static com.uncreated.civilized.ui.menu.building.worksite.tabs.ManageWorkersTab.MAX_ASSIGNED_WORKERS;
 
 import java.util.Arrays;
 import java.util.List;
@@ -97,7 +96,7 @@ public class SignHelper {
       } else if (building.getBuildingType().isWorksite()) {
          List<VillagerInfo> workers = BuildingUtil.getAssignedWorkers(building, villagerStore);
          return new Component[] { building.getBuildingType().shortName(),
-               Component.translatable("menu.building.worksite.workers.count", workers.size(), MAX_ASSIGNED_WORKERS),
+               Component.translatable("menu.building.worksite.workers.count", workers.size(), building.getBuildingType().maxWorkers()),
                Component.empty(), Component.empty() };
       }
       return new Component[] { building.getBuildingType().translation(), Component.empty(), Component.empty(),

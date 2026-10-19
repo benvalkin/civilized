@@ -2,6 +2,7 @@ package com.uncreated.civilized.ui.menu.building.worksite.animalfarm;
 
 import java.util.List;
 
+import com.uncreated.civilized.ui.menu.building.occupants.ManageWorkersTab;
 import com.uncreated.civilized.ui.components.buttons.buildingtab.ManageWorkersTabButton;
 import com.uncreated.civilized.ui.components.buttons.buildingtab.SettingsTabButton;
 import com.uncreated.civilized.ui.components.buttons.buildingtab.WorksiteHomeTabButton;
@@ -10,7 +11,6 @@ import com.uncreated.civilized.ui.menu.building.BuildingMenu;
 import com.uncreated.civilized.ui.menu.building.BuildingSettingsTab;
 import com.uncreated.civilized.ui.menu.building.worksite.animalfarm.tabs.AnimalFarmInfoTab;
 import com.uncreated.civilized.ui.menu.building.worksite.animalfarm.tabs.AnimalFoodTab;
-import com.uncreated.civilized.ui.menu.building.worksite.tabs.ManageWorkersTab;
 import com.uncreated.civilized.ui.tabs.ATab;
 import com.uncreated.civilized.ui.tabs.ITabHost;
 

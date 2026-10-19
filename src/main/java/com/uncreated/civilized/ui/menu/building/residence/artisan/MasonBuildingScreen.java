@@ -2,6 +2,9 @@ package com.uncreated.civilized.ui.menu.building.residence.artisan;
 
 import java.util.List;
 
+import com.uncreated.civilized.ui.menu.building.occupants.ManageResidentsTab;
+import com.uncreated.civilized.ui.menu.building.occupants.ManageWorkersTab;
+import com.uncreated.civilized.ui.components.buttons.buildingtab.ManageWorkersTabButton;
 import com.uncreated.civilized.core.building.production.bills.ProductionTypes;
 import com.uncreated.civilized.ui.components.buttons.buildingtab.HomeTabButton;
 import com.uncreated.civilized.ui.components.buttons.buildingtab.ManageResidentsTabButton;
@@ -11,7 +14,6 @@ import com.uncreated.civilized.ui.components.buttons.buildingtab.production.Smel
 import com.uncreated.civilized.ui.menu.building.ABuildingMenuScreen;
 import com.uncreated.civilized.ui.menu.building.BuildingMenu;
 import com.uncreated.civilized.ui.menu.building.BuildingSettingsTab;
-import com.uncreated.civilized.ui.menu.building.residence.tabs.ManageResidentsTab;
 import com.uncreated.civilized.ui.menu.building.residence.tabs.ResidenceInfoTab;
 import com.uncreated.civilized.ui.tabs.ATab;
 import com.uncreated.civilized.ui.tabs.ITabHost;
@@ -55,7 +57,8 @@ public class MasonBuildingScreen extends ABuildingMenuScreen {
                         ProductionTypes.SMELTING,
                         EditProductionBillLayout.COOKING,
                         this)),
-            new ManageResidentsTabButton(tabHost, 3, host -> new ManageResidentsTab(host, font, context)),
-            new SettingsTabButton(tabHost, 4, host -> new BuildingSettingsTab(host, font, context)));
+            new ManageWorkersTabButton(tabHost, 3, host -> new ManageWorkersTab(host, font, context)),
+            new ManageResidentsTabButton(tabHost, 4, host -> new ManageResidentsTab(host, font, context)),
+            new SettingsTabButton(tabHost, 5, host -> new BuildingSettingsTab(host, font, context)));
    }
 }
