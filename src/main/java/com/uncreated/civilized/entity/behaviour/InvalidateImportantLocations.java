@@ -161,6 +161,10 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
 
       Optional<VillagerInfo> mainHomeOwner = ServerVillagerStore.INSTANCE.find(spouse.getPartnerId());
       if (mainHomeOwner.isPresent()) {
+
+         // spouses inherits the last name of the main villager
+         spouse.setLastName(mainHomeOwner.get().getLastName());
+
          // try move to wherever the spouse's partner is staying
          Optional<Building> building = ServerBuildingsStore.INSTANCE.find(mainHomeOwner.get().getHomeBuildingId());
          if (building.isPresent() && building.get().getBuildingType().isSpouseResidence())

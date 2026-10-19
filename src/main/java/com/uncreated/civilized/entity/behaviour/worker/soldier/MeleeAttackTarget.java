@@ -89,7 +89,8 @@ public class MeleeAttackTarget extends StatefulBehaviour {
       }
 
       LivingEntity target = villager.getTarget();
-      Objects.requireNonNull(target);
+      if (target == null)
+         return;
 
       if (!villager.isWithinMeleeAttackRange(target))
          return;
