@@ -1,5 +1,7 @@
 package com.uncreated.civilized.core.dialogue.questline.migrant.context;
 
+import java.util.function.Predicate;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.uncreated.civilized.core.building.Building;
@@ -10,6 +12,8 @@ import com.uncreated.civilized.core.dialogue.context.DialogueContext;
 import com.uncreated.civilized.core.settlement.ClientSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
 import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
+import com.uncreated.civilized.core.villagerinfo.VillagerOccupation;
+import com.uncreated.civilized.core.villagerinfo.VillagerOccupations;
 import com.uncreated.civilized.entity.CivilizedVillager;
 
 import lombok.Getter;
@@ -20,35 +24,26 @@ import net.minecraft.world.entity.player.Player;
 @Setter
 public class JoinSettlementContext extends DialogueContext {
 
-   private @Nullable final BuildingType requiredBuildingType;
    private @Nullable final Settlement settlement;
-   private @Nullable Building unoccupiedBuilding;
+   private @Nullable Building freeWorksite;
 
    public JoinSettlementContext(CivilizedVillager villager, Player player, long gameTime, long dayTime) {
       super(villager, player, gameTime, gameTime);
 
-      this.requiredBuildingType = villager.getInfo().getOccupation().homeType();
       settlement = ClientSettlementsStore.INSTANCE.findFromOwner(player.getUUID()).orElse(null);
       if (settlement == null)
          return;
 
-      if (requiredBuildingType == null) {
-         unoccupiedBuilding =
-               BuildingUtil
-                     .findUnoccupiedWorkerHome(
-                           settlement.getSettlementId(),
-                           ClientBuildingStore.INSTANCE,
-                           ClientVillagerStore.INSTANCE)
-                     .orElse(null);
-      } else {
-         unoccupiedBuilding =
-               BuildingUtil
-                     .findUnoccupiedWorkerHome(
-                           settlement.getSettlementId(),
-                           requiredBuildingType,
-                           ClientBuildingStore.INSTANCE,
-                           ClientVillagerStore.INSTANCE)
-                     .orElse(null);
-      }
+      VillagerOccupation occupation = villager.getInfo().getOccupation();
+      Predicate<BuildingType> suitableWorksite =
+            occupation.is(VillagerOccupations.UNEMPLOYED) ? BuildingType::offersWork : occupation::isValidWorksite;
+      freeWorksite =
+            BuildingUtil
+                  .findUnoccupiedWorksite(
+                        settlement.getSettlementId(),
+                        suitableWorksite,
+                        ClientBuildingStore.INSTANCE,
+                        ClientVillagerStore.INSTANCE)
+                  .orElse(null);
    }
 }

@@ -7,6 +7,7 @@ import com.uncreated.civilized.core.building.util.BuildingUtil;
 import com.uncreated.civilized.core.settlement.Settlement;
 import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
+import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
 import com.uncreated.civilized.ui.menu.building.residence.tabs.ManageResidentsTab;
 import com.uncreated.civilized.ui.menu.building.widgets.ManageOccupantWidget;
@@ -51,8 +52,9 @@ public class ManageWorkersTab extends ManageResidentsTab {
 
    @Override
    protected List<VillagerInfo> getCandidateOccupants(Building building, Settlement settlement) {
+      // working here is what gives them this building's occupation, so any worker can take the job
       return super.getCandidateOccupants(building, settlement).stream()
-            .filter(v -> v.getOccupation() == building.getBuildingType().occupation())
+            .filter(v -> v.getNpcRole().is(VillagerNpcRoles.WORKER))
             .toList();
    }
 

@@ -1,16 +1,23 @@
 package com.uncreated.civilized.core.building.util;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
+import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.BuildingStore;
 import com.uncreated.civilized.core.building.BuildingType;
 import com.uncreated.civilized.core.building.BuildingTypes;
+import com.uncreated.civilized.core.building.ServerBuildingsStore;
+import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
+import com.uncreated.civilized.core.villagerinfo.VillagerOccupation;
 import com.uncreated.civilized.core.villagerinfo.VillagerStore;
 import com.uncreated.civilized.entity.CivilizedVillager;
 
@@ -28,6 +35,24 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
 
 public class BuildingUtil {
+
+   public static void serverRefreshAndReplicate(UUID... buildingId) {
+      Stream.of(buildingId)
+              .filter(Objects::nonNull)
+              .distinct() // remove duplicates
+              .forEach(b -> {
+         Optional<Building> building = ServerBuildingsStore.INSTANCE.find(b);
+         if (building.isEmpty())
+            return;
+
+         boolean success = BuildingUtil.refreshOccupantIds(building.get(), ServerVillagerStore.INSTANCE);
+         if (!success)
+            return;
+
+         ServerBuildingsStore.INSTANCE.setDirty();
+         ServerBuildingsStore.INSTANCE.replicateChange(building.get(), StoreOperation.UPDATE);
+      });
+   }
 
    public static List<VillagerInfo> getOccupants(Building building, VillagerStore store) {
       return store.getCitizens(building.getSettlementId()).stream().filter(v -> v.isOccupantOf(building)).toList();
@@ -50,6 +75,47 @@ public class BuildingUtil {
             .anyMatch(v -> v.getNpcRole().is(VillagerNpcRoles.WORKER) && v.isOccupantOf(building));
    }
 
+   public static boolean hasResidentWorker(Building building, VillagerStore store) {
+      return getOccupants(building, store).stream()
+            .anyMatch(
+                  v -> v.getNpcRole().is(VillagerNpcRoles.WORKER)
+                        && building.getBuildingType().isHousingFor(v.getOccupation()));
+   }
+
+   /** Housing for the given occupation that none of that occupation's workers live in yet. */
+   public static Optional<Building> findFreeHousingFor(
+         UUID settlementId,
+         VillagerOccupation occupation,
+         BuildingStore buildingStore,
+         VillagerStore villagerStore) {
+
+      return buildingStore.findForSettlement(settlementId)
+            .stream()
+            .filter(b -> b.getBuildingType().isHousingFor(occupation) && !hasResidentWorker(b, villagerStore))
+            .findFirst();
+   }
+
+   /**
+    * Rebuilds the building's occupant ids from who lives and works there, since they're only a copy of the villagers'
+    * home and worksite ids.
+    *
+    * @return whether the occupant ids changed
+    */
+   public static boolean refreshOccupantIds(Building building, VillagerStore store) {
+      List<UUID> occupantIds =
+            store.getCitizens(building.getSettlementId())
+                  .stream()
+                  .filter(v -> v.isOccupantOf(building) || v.isAssignedWorkerOf(building))
+                  .map(VillagerInfo::getVillagerId)
+                  .toList();
+      if (new HashSet<>(occupantIds).equals(new HashSet<>(building.getOccupantIds())))
+         return false;
+
+      building.getOccupantIds().clear();
+      building.getOccupantIds().addAll(occupantIds);
+      return true;
+   }
+
    public static boolean worksiteHasAssignedWorker(Building building, VillagerStore store) {
       return store.getCitizens(building.getSettlementId()).stream().anyMatch(v -> v.isAssignedWorkerOf(building));
    }
@@ -62,18 +128,6 @@ public class BuildingUtil {
       return buildingStore.findForSettlement(settlementId)
             .stream()
             .filter(b -> b.getBuildingType().isWorkerResidence() && !workResidenceHasWorker(b, villagerStore))
-            .findFirst();
-   }
-
-   public static Optional<Building> findUnoccupiedWorkerHome(
-         UUID settlementId,
-         BuildingType requiredBuildingType,
-         BuildingStore buildingStore,
-         VillagerStore villagerStore) {
-
-      return buildingStore.findForSettlement(settlementId)
-            .stream()
-            .filter(b -> b.getBuildingType() == requiredBuildingType && !workResidenceHasWorker(b, villagerStore))
             .findFirst();
    }
 

@@ -1,14 +1,15 @@
 package com.uncreated.civilized.ui.menu.building.widgets;
 
-import com.uncreated.civilized.core.StoreOperation;
+import java.util.Optional;
+
 import com.uncreated.civilized.core.building.Building;
-import com.uncreated.civilized.core.building.ClientBuildingStore;
-import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
+import com.uncreated.civilized.networking.packets.AssignWorkerRequest;
 
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 public class ManageWorkerWidget extends ManageOccupantWidget {
 
@@ -37,15 +38,12 @@ public class ManageWorkerWidget extends ManageOccupantWidget {
 
    @Override
    protected void onPressedAssign(Button button, VillagerInfo villagerInfo, Building building) {
-      villagerInfo.setPrimaryWorksiteId(building.getBuildingId());
-      ClientVillagerStore.INSTANCE.replicateChange(villagerInfo, StoreOperation.UPDATE);
-      ClientBuildingStore.INSTANCE.replicateChange(building, StoreOperation.UPDATE);
+      PacketDistributor.sendToServer(
+            new AssignWorkerRequest(villagerInfo.getVillagerId(), Optional.of(building.getBuildingId())));
    }
 
    @Override
    protected void onPressedUnassign(Button button, VillagerInfo villagerInfo, Building building) {
-      villagerInfo.setPrimaryWorksiteId(null);
-      ClientVillagerStore.INSTANCE.replicateChange(villagerInfo, StoreOperation.UPDATE);
-      ClientBuildingStore.INSTANCE.replicateChange(building, StoreOperation.UPDATE);
+      PacketDistributor.sendToServer(new AssignWorkerRequest(villagerInfo.getVillagerId(), Optional.empty()));
    }
 }

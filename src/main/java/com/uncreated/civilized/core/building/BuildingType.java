@@ -57,6 +57,15 @@ public class BuildingType {
       return occupation.get();
    }
 
+   public boolean offersWork() {
+      return occupation().isValidWorksite(this);
+   }
+
+   public boolean isHousingFor(VillagerOccupation villagerOccupation) {
+      return isWorkerResidence && !villagerOccupation.is(VillagerOccupations.UNEMPLOYED)
+            && occupation().is(villagerOccupation);
+   }
+
    public String name() {
       return resourceLocation.getPath();
    }

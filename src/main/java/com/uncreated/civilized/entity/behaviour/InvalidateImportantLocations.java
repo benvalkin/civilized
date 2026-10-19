@@ -2,6 +2,7 @@ package com.uncreated.civilized.entity.behaviour;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 
@@ -39,37 +40,23 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
    @Override
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTicks) {
       super.start(level, villager, gameTicks);
+      revalidate(level, villager);
+   }
 
+   /**
+    * Works out the villager's worksite, then occupation, then home building, in that order. Occupation is decided by
+    * their worksite, and where they live depends on their occupation.
+    */
+   public static void revalidate(ServerLevel level, CivilizedVillager villager) {
       VillagerInfo villagerInfo = villager.getInfo();
       VillagerOccupation oldOccupation = villagerInfo.getOccupation();
-      Optional<Building> oldHome = ServerBuildingsStore.INSTANCE.find(villagerInfo.getHomeBuildingId());
-      Optional<Building> oldWorksite = ServerBuildingsStore.INSTANCE.find(villagerInfo.getPrimaryWorksiteId());
+      UUID oldHomeId = villagerInfo.getHomeBuildingId();
+      UUID oldWorksiteId = villagerInfo.getPrimaryWorksiteId();
       int oldSocialClass = villagerInfo.getSocialClass();
-      Optional<Building> home = invalidateHome(villagerInfo);
-      if (home.isPresent()) {
 
-         if (villagerInfo.getNpcRole().is(VillagerNpcRoles.WORKER))
-            villagerInfo.setOccupation(home.get().getBuildingType().occupation());
-         else
-            villagerInfo.setOccupation(VillagerOccupations.UNEMPLOYED);
-
-         villagerInfo.setHomeBuildingId(home.get().getBuildingId());
-         // social class is not yet an active system
-         // villagerInfo.setSocialClass(home.get().getUpgradeLevel());
-         villager.getBrain()
-               .setMemory(MemoryModuleType.HOME, new GlobalPos(level.dimension(), home.get().getBlockPos()));
-
-         if (!villagerInfo.getOccupation().is(VillagerOccupations.UNEMPLOYED)) // take care not to make villagers think
-            // they can work if they are unemployed
-            villager.getBrain()
-                  .setMemory(AIRegistry.MM_VILLAGER_WORKTIME_OCCUPATION.get(), villagerInfo.getOccupation());
-      } else {
-         villagerInfo.setOccupation(VillagerOccupations.UNEMPLOYED);
-         villager.getBrain().eraseMemory(MemoryModuleType.HOME);
-         villager.getBrain().eraseMemory(AIRegistry.MM_VILLAGER_WORKTIME_OCCUPATION.get());
-      }
-
-      Optional<Building> worksite = invalidateWorksite(villagerInfo, level);
+      Optional<Building> worksite = invalidateWorksite(villagerInfo);
+      villagerInfo
+            .setOccupation(worksite.map(b -> b.getBuildingType().occupation()).orElse(VillagerOccupations.UNEMPLOYED));
       if (worksite.isPresent()) {
          villagerInfo.setPrimaryWorksiteId(worksite.get().getBuildingId());
          villager.getBrain()
@@ -79,44 +66,56 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
          villager.getBrain().eraseMemory(MemoryModuleType.JOB_SITE);
       }
 
-      boolean jobChanged = oldOccupation != villagerInfo.getOccupation();
+      // take care not to make villagers think they can work if they are unemployed
+      if (villagerInfo.getOccupation().is(VillagerOccupations.UNEMPLOYED))
+         villager.getBrain().eraseMemory(AIRegistry.MM_VILLAGER_WORKTIME_OCCUPATION.get());
+      else
+         villager.getBrain().setMemory(AIRegistry.MM_VILLAGER_WORKTIME_OCCUPATION.get(), villagerInfo.getOccupation());
+
+      Optional<Building> home = invalidateHome(villagerInfo);
+      if (home.isPresent()) {
+         villagerInfo.setHomeBuildingId(home.get().getBuildingId());
+         // social class is not yet an active system
+         // villagerInfo.setSocialClass(home.get().getUpgradeLevel());
+         villager.getBrain()
+               .setMemory(MemoryModuleType.HOME, new GlobalPos(level.dimension(), home.get().getBlockPos()));
+      } else {
+         villagerInfo.setHomeBuildingId(null);
+         villager.getBrain().eraseMemory(MemoryModuleType.HOME);
+      }
+
+      boolean jobChanged = !oldOccupation.is(villagerInfo.getOccupation());
       boolean socialClassChanged = oldSocialClass != villagerInfo.getSocialClass();
-      boolean homeChanged =
-            !Objects.equals(oldHome.map(Building::getBuildingId).orElse(null), villagerInfo.getHomeBuildingId());
-      boolean worksiteChanged =
-            !Objects.equals(oldWorksite.map(Building::getBuildingId).orElse(null), villagerInfo.getPrimaryWorksiteId());
-      boolean villagerChanged = jobChanged || homeChanged || worksiteChanged;
-      if (villagerChanged) {
+      boolean homeChanged = !Objects.equals(oldHomeId, villagerInfo.getHomeBuildingId());
+      boolean worksiteChanged = !Objects.equals(oldWorksiteId, villagerInfo.getPrimaryWorksiteId());
+      if (jobChanged || homeChanged || worksiteChanged) {
          ServerVillagerStore.INSTANCE.setDirty();
          ServerVillagerStore.INSTANCE.replicateChange(villagerInfo, StoreOperation.UPDATE);
       }
-      if (homeChanged) {
-         oldHome.ifPresent(b -> {
-            b.getOccupantIds().remove(villagerInfo.getVillagerId());
-            ServerBuildingsStore.INSTANCE.replicateChange(b, StoreOperation.UPDATE);
-         });
-         home.ifPresent(b -> {
-            b.getOccupantIds().add(villagerInfo.getVillagerId());
-            ServerBuildingsStore.INSTANCE.replicateChange(b, StoreOperation.UPDATE);
-         });
+      if (homeChanged || worksiteChanged) {
+         // update the buildings they left and the ones they joined
+         BuildingUtil.serverRefreshAndReplicate(
+               oldHomeId,
+               oldWorksiteId,
+               villagerInfo.getHomeBuildingId(),
+               villagerInfo.getPrimaryWorksiteId());
       }
       if (jobChanged || socialClassChanged) {
          villager.refreshBrain(level);
          villager.updateClothing();
       }
-      if (worksiteChanged) {
-         oldWorksite.ifPresent(b -> {
-            b.getOccupantIds().remove(villagerInfo.getVillagerId());
-            ServerBuildingsStore.INSTANCE.replicateChange(b, StoreOperation.UPDATE);
-         });
-         worksite.ifPresent(b -> {
-            b.getOccupantIds().add(villagerInfo.getVillagerId());
-            ServerBuildingsStore.INSTANCE.replicateChange(b, StoreOperation.UPDATE);
-         });
-      }
    }
 
-   private Optional<Building> invalidateHome(VillagerInfo villagerInfo) {
+   private static Optional<Building> invalidateWorksite(VillagerInfo villagerInfo) {
+      if (!villagerInfo.getNpcRole().is(VillagerNpcRoles.WORKER))
+         return Optional.empty();
+
+      return ServerBuildingsStore.INSTANCE.find(villagerInfo.getPrimaryWorksiteId())
+            .filter(b -> b.getBuildingType().offersWork())
+            .filter(b -> b.getSettlementId().equals(villagerInfo.getSettlementId()));
+   }
+
+   private static Optional<Building> invalidateHome(VillagerInfo villagerInfo) {
 
       if (villagerInfo.getNpcRole().is(VillagerNpcRoles.WORKER)) {
          return invalidateHomeForWorker(villagerInfo);
@@ -127,13 +126,30 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
       return Optional.empty();
    }
 
-   private Optional<Building> invalidateHomeForWorker(VillagerInfo worker) {
+   private static Optional<Building> invalidateHomeForWorker(VillagerInfo worker) {
 
       Optional<Building> currentHome = ServerBuildingsStore.INSTANCE.find(worker.getHomeBuildingId());
-      if (currentHome.isPresent())
+      VillagerOccupation occupation = worker.getOccupation();
+
+      // workers live in the housing that comes with their job if it exists
+      if (currentHome.isPresent() && currentHome.get().getBuildingType().isHousingFor(occupation))
          return currentHome;
 
-      // If their current home no longer exists, or they are already homeless, try to find a new worker home.
+      Optional<Building> housing =
+            BuildingUtil.findFreeHousingFor(
+                  worker.getSettlementId(),
+                  occupation,
+                  ServerBuildingsStore.INSTANCE,
+                  ServerVillagerStore.INSTANCE);
+      if (housing.isPresent())
+         return housing;
+
+      // Otherwise, they are no longer staying in a home that corresponds to their job.
+      // They can stay continue to stay here unless their this home has now been given to a different resident worker.
+      if (currentHome.isPresent() && !BuildingUtil.hasResidentWorker(currentHome.get(), ServerVillagerStore.INSTANCE))
+         return currentHome;
+
+      // If they're homeless, try to find a new worker home.
       Optional<Building> newWorkerHome =
             BuildingUtil.findUnoccupiedWorkerHome(
                   worker.getSettlementId(),
@@ -157,7 +173,7 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
       return Optional.empty();
    }
 
-   private Optional<Building> invalidateHomeForSpouse(VillagerInfo spouse) {
+   private static Optional<Building> invalidateHomeForSpouse(VillagerInfo spouse) {
 
       Optional<VillagerInfo> mainHomeOwner = ServerVillagerStore.INSTANCE.find(spouse.getPartnerId());
       if (mainHomeOwner.isPresent()) {
@@ -202,22 +218,5 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
 
       // Otherwise, they will roam around homeless at night :(
       return Optional.empty();
-   }
-
-   private Optional<Building> invalidateWorksite(VillagerInfo villagerInfo, ServerLevel level) {
-
-      if (villagerInfo.getOccupation().is(VillagerOccupations.UNEMPLOYED)
-            || !villagerInfo.getNpcRole().is(VillagerNpcRoles.WORKER))
-         return Optional.empty();
-
-      Optional<Building> currentWorksite = ServerBuildingsStore.INSTANCE.find(villagerInfo.getPrimaryWorksiteId());
-      if (currentWorksite.isPresent())
-         return currentWorksite;
-
-      return BuildingUtil.findUnoccupiedWorksite(
-            villagerInfo.getSettlementId(),
-            villagerInfo.getOccupation()::isValidWorksite,
-            ServerBuildingsStore.INSTANCE,
-            ServerVillagerStore.INSTANCE);
    }
 }

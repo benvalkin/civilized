@@ -359,7 +359,7 @@
   "villager.dialogue.quest.migrant_worker.farmer_1.page_1.response.accept": "We could use some extra hands.",
   "villager.dialogue.quest.migrant_worker.farmer_1.page_1.response.reject": "Sorry, we don't have any land available right now...",
   "villager.dialogue.quest.migrant_worker.misc.complete": "%s has joined your settlement as a permanent resident.",
-  "villager.dialogue.quest.migrant_worker.misc.response.accept.tooltip.option_disabled": "Your settlement does not have any unoccupied buildings that can house this worker.",
+  "villager.dialogue.quest.migrant_worker.misc.response.accept.tooltip.option_disabled": "Your settlement does not have any free worksites for this villager.",
   "villager.dialogue.quest.migrant_worker.generic.response.accept.tooltip.option_enabled": "This villager will join your settlement as a %s.",
   "villager.dialogue.quest.migrant_worker.woodcutter_1.accepted.page_1": "Appreciate the kind offer.",
   "villager.dialogue.quest.migrant_worker.woodcutter_1.accepted.page_1.response": "You're more than welcome.",

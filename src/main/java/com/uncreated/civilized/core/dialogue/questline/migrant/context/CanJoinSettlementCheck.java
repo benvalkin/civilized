@@ -19,7 +19,7 @@ public class CanJoinSettlementCheck implements ResponseOption.IResponseOptionEna
                      .withColor(Colors.VALIDATION_ERROR));
       }
 
-      if (joinSettlement.getUnoccupiedBuilding() == null) {
+      if (joinSettlement.getFreeWorksite() == null) {
          return ResponseOption.EnabledCheckResult.failed(
                translatable("villager.dialogue.quest.migrant_worker.misc.response.accept.tooltip.option_disabled")
                      .withColor(Colors.VALIDATION_ERROR));
