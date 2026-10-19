@@ -57,6 +57,8 @@ public class PlantCrops extends WorkTaskBehaviour {
       if (emptyFarmland.isEmpty())
          return false;
 
+      // todo: this behaviour uses mostly legacy functionality and needs modernising
+
       LogisticsManager logisticsManager = getSettlement().getBehaviour().getLogisticsManager();
       CropFarmState behaviour = (CropFarmState) getWorksite().getBuilding().getState();
       TaskItemRequirement taskItemRequirement =

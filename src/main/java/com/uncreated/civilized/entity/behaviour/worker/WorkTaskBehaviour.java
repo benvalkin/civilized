@@ -20,7 +20,6 @@ import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.entity.LoadedBuildings;
 import com.uncreated.civilized.core.building.logistics.hauling.ItemReservation;
 import com.uncreated.civilized.core.building.logistics.hauling.ReservationKey;
-import com.uncreated.civilized.entity.equipment.VillagerInventoryType;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.DropOffItemsInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.ItemStockRequirement;
 import com.uncreated.civilized.core.notifications.Delay;
@@ -276,6 +275,10 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
    protected void goDropOffWorkOutputAtHome(CivilizedVillager villager) {
       // the home is looked up rather than taken from getHome(), so that behaviours which don't require a home can drop
       // off what they picked up too
+
+      // todo: because villagers can now stay at other homes that aren't their worksite, this method will have to be
+      // converted to `goDropOffWorkOutputAtHome`. BuildingType will need a `isDepot` flag.
+
       Optional<LoadedBuilding> homeBuilding = LoadedBuildings.checkLoaded(villager.getInfo().getHomeBuildingId());
       if (homeBuilding.isEmpty())
          return;
