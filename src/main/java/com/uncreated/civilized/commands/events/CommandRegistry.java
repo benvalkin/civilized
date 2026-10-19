@@ -4,7 +4,7 @@ import com.uncreated.civilized.CivilizedMod;
 import com.uncreated.civilized.commands.DetectRooms;
 import com.uncreated.civilized.commands.OpenTradingMenu;
 import com.uncreated.civilized.commands.SetSettlementAccess;
-import com.uncreated.civilized.commands.SummonResident;
+import com.uncreated.civilized.commands.SummonWorker;
 import com.uncreated.civilized.commands.SummonVisitor;
 import com.uncreated.civilized.core.building.events.model.BuildingUpdatedEvent;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -16,7 +16,7 @@ public class CommandRegistry {
 
     @SubscribeEvent
     public static void registerCommands(RegisterCommandsEvent event) {
-        SummonResident.register(event.getDispatcher());
+        SummonWorker.register(event.getDispatcher());
         SetSettlementAccess.register(event.getDispatcher());
         OpenTradingMenu.register(event.getDispatcher());
         SummonVisitor.register(event.getDispatcher());
