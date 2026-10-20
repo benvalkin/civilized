@@ -52,18 +52,18 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
       VillagerInfo villagerInfo = villager.getInfo();
       VillagerOccupation oldOccupation = villagerInfo.getOccupation();
       UUID oldHomeId = villagerInfo.getHomeBuildingId();
-      UUID oldWorksiteId = villagerInfo.getPrimaryWorksiteId();
+      UUID oldWorksiteId = villagerInfo.getWorkBuildingId();
       int oldSocialClass = villagerInfo.getSocialClass();
 
       Optional<Building> worksite = invalidateWorksite(villagerInfo);
       villagerInfo
             .setOccupation(worksite.map(b -> b.getBuildingType().occupation()).orElse(VillagerOccupations.UNEMPLOYED));
       if (worksite.isPresent()) {
-         villagerInfo.setPrimaryWorksiteId(worksite.get().getBuildingId());
+         villagerInfo.setWorkBuildingId(worksite.get().getBuildingId());
          villager.getBrain()
                .setMemory(MemoryModuleType.JOB_SITE, new GlobalPos(level.dimension(), worksite.get().getBlockPos()));
       } else {
-         villagerInfo.setPrimaryWorksiteId(null);
+         villagerInfo.setWorkBuildingId(null);
          villager.getBrain().eraseMemory(MemoryModuleType.JOB_SITE);
       }
 
@@ -91,7 +91,7 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
       boolean jobChanged = !oldOccupation.is(villagerInfo.getOccupation());
       boolean socialClassChanged = oldSocialClass != villagerInfo.getSocialClass();
       boolean homeChanged = !Objects.equals(oldHomeId, villagerInfo.getHomeBuildingId());
-      boolean worksiteChanged = !Objects.equals(oldWorksiteId, villagerInfo.getPrimaryWorksiteId());
+      boolean worksiteChanged = !Objects.equals(oldWorksiteId, villagerInfo.getWorkBuildingId());
       boolean workAreaChanged = !Objects.equals(oldWorkAreaId, villagerInfo.getWorkAreaId());
       if (jobChanged || homeChanged || worksiteChanged || workAreaChanged) {
          ServerVillagerStore.INSTANCE.setDirty();
@@ -103,7 +103,7 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
                oldHomeId,
                oldWorksiteId,
                villagerInfo.getHomeBuildingId(),
-               villagerInfo.getPrimaryWorksiteId());
+               villagerInfo.getWorkBuildingId());
       }
       if (jobChanged || socialClassChanged) {
          villager.refreshBrain(level);
@@ -115,7 +115,7 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
       if (!villagerInfo.getNpcRole().is(VillagerNpcRoles.WORKER))
          return Optional.empty();
 
-      return ServerBuildingsStore.INSTANCE.find(villagerInfo.getPrimaryWorksiteId())
+      return ServerBuildingsStore.INSTANCE.find(villagerInfo.getWorkBuildingId())
             .filter(b -> b.getBuildingType().offersWork())
             .filter(b -> b.getSettlementId().equals(villagerInfo.getSettlementId()));
    }

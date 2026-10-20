@@ -6,9 +6,9 @@ import com.uncreated.civilized.ui.tabs.ITabHost;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
 
-public class ManageGarrisonTab extends ManageWorkersTab {
+public class ManageWorkBuildingGarrisonTab extends ManageWorkBuildingWorkersTab {
 
-   public ManageGarrisonTab(ITabHost tabHost, Font font, BuildingScreenContext context) {
+   public ManageWorkBuildingGarrisonTab(ITabHost tabHost, Font font, BuildingScreenContext context) {
       super(tabHost, font, Component.translatable("menu.building.occupants.garrison.tab.heading"), context);
    }
 

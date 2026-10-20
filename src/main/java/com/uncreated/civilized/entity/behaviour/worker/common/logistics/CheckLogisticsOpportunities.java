@@ -10,16 +10,13 @@ import com.uncreated.civilized.core.building.logistics.hauling.ReservationKey;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.TransferToBuildingInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.BuildingStockRequirement;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.ItemStockRequirement;
-import com.uncreated.civilized.core.building.logistics.orders.LogisticsOrder;
 import com.uncreated.civilized.entity.CivilizedVillager;
-import com.uncreated.civilized.entity.behaviour.BehaviourStateMachine;
 import com.uncreated.civilized.entity.behaviour.Cooldowns;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
 import com.uncreated.civilized.entity.behaviour.worker.WorkTaskBehaviour;
 import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 
 public class CheckLogisticsOpportunities extends WorkTaskBehaviour {
@@ -74,7 +71,7 @@ public class CheckLogisticsOpportunities extends WorkTaskBehaviour {
                      new ReservationKey(party, "everything"),
                      everything,
                      this.storehouse,
-                     List.of(getDepot()));
+                     List.of(getWorkBuilding()));
 
          if (transferToBuildingInstruction.isPresent()) {
             getBehaviourCooldowns()
@@ -89,6 +86,6 @@ public class CheckLogisticsOpportunities extends WorkTaskBehaviour {
    }
 
    private boolean checkForExportOrders() {
-      return getDepot().chests().stream().anyMatch(c -> !c.isEmpty());
+      return getWorkBuilding().chests().stream().anyMatch(c -> !c.isEmpty());
    }
 }

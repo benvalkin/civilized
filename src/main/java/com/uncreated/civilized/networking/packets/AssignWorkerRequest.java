@@ -94,8 +94,8 @@ public record AssignWorkerRequest(UUID villagerId, Optional<UUID> worksiteId) im
          }
       }
 
-      UUID oldWorksiteId = worker.get().getPrimaryWorksiteId();
-      worker.get().setPrimaryWorksiteId(worksite.map(Building::getBuildingId).orElse(null));
+      UUID oldWorksiteId = worker.get().getWorkBuildingId();
+      worker.get().setWorkBuildingId(worksite.map(Building::getBuildingId).orElse(null));
 
       // a loaded villager starts their new job and moves into its housing straight away
       Optional<CivilizedVillager> villager = LoadedVillagers.find(packet.villagerId());
@@ -111,7 +111,7 @@ public record AssignWorkerRequest(UUID villagerId, Optional<UUID> worksiteId) im
          ServerVillagerStore.INSTANCE.replicateChange(worker.get(), StoreOperation.UPDATE);
       }
 
-      BuildingUtil.serverRefreshAndReplicate(oldWorksiteId, worker.get().getPrimaryWorksiteId());
+      BuildingUtil.serverRefreshAndReplicate(oldWorksiteId, worker.get().getWorkBuildingId());
    }
 
    private static void failure(IPayloadContext context, String errorMessage) {

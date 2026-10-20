@@ -54,7 +54,7 @@ public class BuildingSignEvents {
       Stream.of(
             ServerBuildingsStore.INSTANCE.findTownHall(villager.getSettlementId()),
             ServerBuildingsStore.INSTANCE.find(villager.getHomeBuildingId()),
-            ServerBuildingsStore.INSTANCE.find(villager.getPrimaryWorksiteId()),
+            ServerBuildingsStore.INSTANCE.find(villager.getWorkBuildingId()),
             ServerBuildingsStore.INSTANCE.find(villager.getWorkAreaId()))
             .flatMap(Optional::stream)
             .distinct()

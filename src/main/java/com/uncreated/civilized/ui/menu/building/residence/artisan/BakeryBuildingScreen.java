@@ -3,7 +3,7 @@ package com.uncreated.civilized.ui.menu.building.residence.artisan;
 import java.util.List;
 
 import com.uncreated.civilized.ui.menu.building.occupants.ManageResidentsTab;
-import com.uncreated.civilized.ui.menu.building.occupants.ManageWorkersTab;
+import com.uncreated.civilized.ui.menu.building.occupants.ManageWorkBuildingWorkersTab;
 import com.uncreated.civilized.ui.components.buttons.buildingtab.ManageWorkersTabButton;
 import com.uncreated.civilized.core.building.production.bills.ProductionTypes;
 import com.uncreated.civilized.ui.components.buttons.buildingtab.HomeTabButton;
@@ -57,7 +57,7 @@ public class BakeryBuildingScreen extends ABuildingMenuScreen {
                         ProductionTypes.SMELTING,
                         EditProductionBillLayout.COOKING,
                         this)),
-            new ManageWorkersTabButton(tabHost, 3, host -> new ManageWorkersTab(host, font, context)),
+            new ManageWorkersTabButton(tabHost, 3, host -> new ManageWorkBuildingWorkersTab(host, font, context)),
             new ManageResidentsTabButton(tabHost, 4, host -> new ManageResidentsTab(host, font, context)),
             new SettingsTabButton(tabHost, 5, host -> new BuildingSettingsTab(host, font, context)));
    }

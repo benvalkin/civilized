@@ -85,7 +85,7 @@ public class Fish extends WorkTaskBehaviour {
                      villager,
                      new ReservationKey(party, fishingRodRequirement.key()),
                      fishingRodRequirement,
-                     depotAndStorehouseIfPresent());
+                     workBuildingAndStorehouseIfPresent());
          if (instruction.isPresent()) {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
@@ -121,7 +121,7 @@ public class Fish extends WorkTaskBehaviour {
       villager.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
 
       if (fishCaught > 0)
-         goDropOffWorkOutputAtDepot(villager);
+         goDropOffWorkOutputAtWorkBuilding(villager);
    }
 
    @Override

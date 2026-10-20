@@ -80,7 +80,7 @@ public class MonitorWorksite extends WorkTaskBehaviour {
          nextPickupTime = tickTime + PICKUP_INTERVAL_TICKS;
 
          if (pickUpDroppedItemsAtWorksite(level, villager))
-            goDropOffWorkOutputAtDepot(villager);
+            goDropOffWorkOutputAtWorkBuilding(villager);
       }
 
       stroller.tick(villager, getWorksite().getBuilding().getBounds(), tickTime);

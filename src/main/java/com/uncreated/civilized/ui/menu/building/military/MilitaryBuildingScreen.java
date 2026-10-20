@@ -3,7 +3,7 @@ package com.uncreated.civilized.ui.menu.building.military;
 import java.util.List;
 
 import com.uncreated.civilized.ui.menu.building.occupants.ManageResidentsTab;
-import com.uncreated.civilized.ui.menu.building.occupants.ManageGarrisonTab;
+import com.uncreated.civilized.ui.menu.building.occupants.ManageWorkBuildingGarrisonTab;
 import com.uncreated.civilized.ui.components.buttons.buildingtab.ManageWorkersTabButton;
 import com.uncreated.civilized.ui.components.buttons.buildingtab.HomeTabButton;
 import com.uncreated.civilized.ui.components.buttons.buildingtab.ManageResidentsTabButton;
@@ -40,7 +40,7 @@ public class MilitaryBuildingScreen extends ABuildingMenuScreen {
             new ManageWorkersTabButton(
                   tabHost,
                   1,
-                  host -> new ManageGarrisonTab(host, font, context),
+                  host -> new ManageWorkBuildingGarrisonTab(host, font, context),
                   Tooltip.create(Component.translatable("menu.building.occupants.garrison.tab.heading"))),
             new ManageResidentsTabButton(tabHost, 2, host -> new ManageResidentsTab(host, font, context)),
             new ManageSoldiersTabButton(tabHost, 3, host -> new ManageSoldiersTab(host, font, context)),

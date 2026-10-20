@@ -3,7 +3,6 @@ package com.uncreated.civilized.ui.menu.building.occupants;
 import java.util.Comparator;
 import java.util.List;
 
-import com.uncreated.civilized.core.building.BuildingType;
 import com.uncreated.civilized.core.building.ClientBuildingStore;
 import com.uncreated.civilized.core.building.util.BuildingUtil;
 import com.uncreated.civilized.core.building.util.WorkAreaUtil;
@@ -19,9 +18,9 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-public class WorkAreaWorkersTab extends AManageOccupantsTab {
+public class ManageWorkAreaWorkersTab extends ManageOccupantsTab {
 
-   public WorkAreaWorkersTab(ITabHost tabHost, Font font, BuildingScreenContext context) {
+   public ManageWorkAreaWorkersTab(ITabHost tabHost, Font font, BuildingScreenContext context) {
       super(tabHost, font, Component.translatable("menu.building.occupants.work_area.tab.heading"), context);
       refresh();
    }

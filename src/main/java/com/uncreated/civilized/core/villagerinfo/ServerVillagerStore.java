@@ -195,7 +195,7 @@ public class ServerVillagerStore extends VillagerStore {
       setDirty();
       replicateChange(info, StoreOperation.DELETE);
 
-      Stream.of(info.getHomeBuildingId(), info.getPrimaryWorksiteId())
+      Stream.of(info.getHomeBuildingId(), info.getWorkBuildingId())
             .filter(Objects::nonNull)
             .distinct()
             .map(ServerBuildingsStore.INSTANCE::find)

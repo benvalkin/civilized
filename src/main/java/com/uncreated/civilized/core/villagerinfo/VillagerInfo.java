@@ -41,7 +41,7 @@ public class VillagerInfo {
                   .occupation(VillagerOccupations.getFromResourceLocation(buffer.readResourceLocation()))
                   .settlementId(buffer.readNullable((b -> b.readUUID())))
                   .homeBuildingId(buffer.readNullable((b -> b.readUUID())))
-                  .primaryWorksiteId(buffer.readNullable((b -> b.readUUID())))
+                  .workBuildingId(buffer.readNullable((b -> b.readUUID())))
                   .npcRole(VillagerNpcRoles.getFromResourceLocation(buffer.readResourceLocation()))
                   .gender(buffer.readEnum(Gender.class))
                   .partnerId(buffer.readNullable((b -> b.readUUID())))
@@ -61,7 +61,7 @@ public class VillagerInfo {
       buffer.writeResourceLocation(occupation.resourceLocation());
       buffer.writeNullable(settlementId, (b, v) -> b.writeUUID(v));
       buffer.writeNullable(homeBuildingId, (b, v) -> b.writeUUID(v));
-      buffer.writeNullable(primaryWorksiteId, (b, v) -> b.writeUUID(v));
+      buffer.writeNullable(workBuildingId, (b, v) -> b.writeUUID(v));
       buffer.writeResourceLocation(npcRole.resourceLocation());
       buffer.writeEnum(gender);
       buffer.writeNullable(partnerId, (b, v) -> b.writeUUID(v));
@@ -104,7 +104,7 @@ public class VillagerInfo {
    @Setter
    private @Nullable UUID homeBuildingId;
    @Setter
-   private @Nullable UUID primaryWorksiteId;
+   private @Nullable UUID workBuildingId;
    private Gender gender;
    @Setter
    private @Nullable UUID partnerId;
@@ -239,7 +239,7 @@ public class VillagerInfo {
       occupation = other.occupation;
       settlementId = other.settlementId;
       homeBuildingId = other.homeBuildingId;
-      primaryWorksiteId = other.primaryWorksiteId;
+      workBuildingId = other.workBuildingId;
       npcRole = other.npcRole;
       gender = other.gender;
       partnerId = other.partnerId;
@@ -263,7 +263,7 @@ public class VillagerInfo {
    }
 
    public boolean isAssignedWorkerOf(Building building) {
-      return building.getBuildingId().equals(primaryWorksiteId) || building.getBuildingId().equals(workAreaId);
+      return building.getBuildingId().equals(workBuildingId) || building.getBuildingId().equals(workAreaId);
    }
 
    public record Packet(VillagerInfo villager, StoreOperation storeOperation) implements CustomPacketPayload {

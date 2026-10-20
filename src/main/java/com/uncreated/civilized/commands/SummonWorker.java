@@ -66,7 +66,7 @@ public class SummonWorker {
 
       villager.changeNpcRole(VillagerNpcRoles.WORKER);
       villager.getInfo().setSettlementId(worksite.get().getSettlementId());
-      villager.getInfo().setPrimaryWorksiteId(worksite.get().getBuildingId());
+      villager.getInfo().setWorkBuildingId(worksite.get().getBuildingId());
       ServerVillagerStore.INSTANCE.setDirty();
       ServerVillagerStore.INSTANCE.replicateChange(villager.getInfo(), StoreOperation.ADD_OR_OVERWRITE);
 

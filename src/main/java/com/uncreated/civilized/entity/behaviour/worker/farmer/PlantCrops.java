@@ -69,7 +69,7 @@ public class PlantCrops extends WorkTaskBehaviour {
                   StorehouseOrder.Origin.AUTOMATIC,
                   16);
       taskItemRequirement.setExpiry(12000);
-      logisticsManager.registerOrder(getDepot().getBuilding(), taskItemRequirement);
+      logisticsManager.registerOrder(getWorkBuilding().getBuilding(), taskItemRequirement);
       ImportUpTo importOrder =
             new ImportUpTo(
                   level,
@@ -80,7 +80,7 @@ public class PlantCrops extends WorkTaskBehaviour {
                   16,
                   32);
       importOrder.setExpiry(12000);
-      logisticsManager.registerOrder(getDepot().getBuilding(), importOrder);
+      logisticsManager.registerOrder(getWorkBuilding().getBuilding(), importOrder);
 
       if (!(hasSeedsInInventory(villager.getWorkInputInventory())
             || hasSeedsInInventory(villager.getWorkOutputInventory()))) {

@@ -19,13 +19,13 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-public class ManageWorkersTab extends AManageOccupantsTab {
+public class ManageWorkBuildingWorkersTab extends ManageOccupantsTab {
 
-   public ManageWorkersTab(ITabHost tabHost, Font font, BuildingScreenContext context) {
+   public ManageWorkBuildingWorkersTab(ITabHost tabHost, Font font, BuildingScreenContext context) {
       this(tabHost, font, Component.translatable("menu.building.occupants.workers.tab.heading"), context);
    }
 
-   protected ManageWorkersTab(ITabHost tabHost, Font font, Component heading, BuildingScreenContext context) {
+   protected ManageWorkBuildingWorkersTab(ITabHost tabHost, Font font, Component heading, BuildingScreenContext context) {
       super(tabHost, font, heading, context);
       refresh();
    }

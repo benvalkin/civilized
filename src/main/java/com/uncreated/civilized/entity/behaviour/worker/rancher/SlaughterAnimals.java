@@ -66,7 +66,7 @@ public class SlaughterAnimals<T extends Animal> extends WorkTaskBehaviour {
          pickUpDroppedItemsAtWorksite(level, villager);
 
       if (killedAnimals)
-         goDropOffWorkOutputAtDepot(villager);
+         goDropOffWorkOutputAtWorkBuilding(villager);
    }
 
    private boolean killedAnimals;

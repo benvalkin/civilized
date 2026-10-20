@@ -13,7 +13,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
 
 
-public class ManageResidentsTab extends AManageOccupantsTab {
+public class ManageResidentsTab extends ManageOccupantsTab {
 
    public ManageResidentsTab(ITabHost tabHost, Font font, BuildingScreenContext context) {
       super(tabHost, font, Component.translatable("menu.building.occupants.residents.tab.heading"), context);

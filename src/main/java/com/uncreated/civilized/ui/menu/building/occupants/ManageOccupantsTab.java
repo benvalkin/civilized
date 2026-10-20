@@ -17,7 +17,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
 
-public abstract class AManageOccupantsTab extends ABuildingScreenTab {
+public abstract class ManageOccupantsTab extends ABuildingScreenTab {
 
    private static final int SUB_HEADING_Y = 15;
    private static final int LIST_TOP = 30;
@@ -28,7 +28,7 @@ public abstract class AManageOccupantsTab extends ABuildingScreenTab {
    private List<VillagerInfo> occupants = List.of();
    private ScrollListView<VillagerInfo, OccupantRowWidget> occupantList;
 
-   protected AManageOccupantsTab(ITabHost tabHost, Font font, Component heading, BuildingScreenContext context) {
+   protected ManageOccupantsTab(ITabHost tabHost, Font font, Component heading, BuildingScreenContext context) {
       super(tabHost, font, heading, context);
       this.tabHost = tabHost;
       this.building = context.building();
@@ -71,7 +71,7 @@ public abstract class AManageOccupantsTab extends ABuildingScreenTab {
                      int elementWidth,
                      int elementHeight,
                      int elementSpacing) {
-                  return AManageOccupantsTab.this
+                  return ManageOccupantsTab.this
                         .buildElementWidgetFromModel(occupant, elementX, elementY, elementWidth);
                }
             });

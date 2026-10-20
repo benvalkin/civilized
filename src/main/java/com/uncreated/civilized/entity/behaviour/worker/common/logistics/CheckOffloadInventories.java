@@ -3,14 +3,8 @@ package com.uncreated.civilized.entity.behaviour.worker.common.logistics;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
 import java.util.function.Function;
 
-import javax.annotation.Nullable;
-
-import com.uncreated.civilized.core.building.entity.LoadedBuilding;
-import com.uncreated.civilized.core.building.entity.LoadedBuildings;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.DropOffItemsInstruction;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.Cooldowns;
@@ -63,7 +57,7 @@ public class CheckOffloadInventories extends WorkTaskBehaviour {
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
 
       DropOffItemsInstruction offloadInventoriesInstruction =
-            new DropOffItemsInstruction(getDepot(), inventoryTypesToOffload);
+            new DropOffItemsInstruction(getWorkBuilding(), inventoryTypesToOffload);
 
       villager.getBrain().setMemory(AIRegistry.MM_DROP_OFF_ITEMS_INSTRUCTION.get(), offloadInventoriesInstruction);
       getStateMachine().queueActionOnce(WorkStates.DROPPING_OFF_ITEMS_AT_BUILDING);

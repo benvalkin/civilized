@@ -65,7 +65,7 @@ public class CutDownTrees extends WorkTaskBehaviour {
                      villager,
                      new ReservationKey(party, AXE_REQUIREMENT.key()),
                      AXE_REQUIREMENT,
-                     depotAndStorehouseIfPresent());
+                     workBuildingAndStorehouseIfPresent());
          if (instruction.isPresent()) {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
@@ -105,7 +105,7 @@ public class CutDownTrees extends WorkTaskBehaviour {
          pickUpDroppedItemsAtWorksite(level, villager);
 
       if (hasWood)
-         goDropOffWorkOutputAtDepot(villager);
+         goDropOffWorkOutputAtWorkBuilding(villager);
    }
 
    @Override

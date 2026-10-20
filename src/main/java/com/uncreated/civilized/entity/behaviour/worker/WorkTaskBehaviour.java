@@ -60,12 +60,16 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
     */
    protected static final Duration AWAITING_DELIVERY_DURATION = Duration.of(2, ChronoUnit.MINUTES);
 
-   /** Whether this behaviour works somewhere: the villager's worksite, or the work area their worksite serves. */
+   /** Whether this behaviour needs some sort of worksite in order to start. */
    private final boolean requiresWorksite;
 
    @Getter
    private LoadedSettlement settlement;
 
+   /**
+    * The place where the villagers actually performs work tasks. Can be the same building as their Work Building, or
+    * their separate Work Area building.
+    */
    public LoadedBuilding getWorksite() {
       if (!requiresWorksite)
          throw new UnsupportedOperationException(
@@ -75,27 +79,26 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
    }
 
    /**
-    * The worksite the villager is assigned to, where they fetch and store what they work with, e.g. a farmer's Farmer's
-    * House. For jobs without work areas, it's the same building as {@link #getWorksite()}. Behaviours that require a
-    * worksite always have one. Others only do for villagers with a worksite, which e.g. spouses running errands don't.
+    * The main worker building where this worker is assigned. Their occupation originate from this building. All workers
+    * must have a Work Building
     */
-   public LoadedBuilding getDepot() {
-      if (depot == null)
+   public LoadedBuilding getWorkBuilding() {
+      if (workBuilding == null)
          throw new IllegalStateException(
-               "Cannot get villager's depot. They have no worksite, or it isn't loaded, and this behaviour is not configured to require one ('requiresWorksite' is set to 'false')");
+               "Cannot get villager's work building, either because they don't have one or it's not loaded. All workers must have a work building that is loaded in.");
 
-      return depot;
+      return workBuilding;
    }
 
    @Nullable
    private Notification missingItemNotification;
    @Nullable
-   private Notification noWorkAreaNotification;
+   private Notification noWorkSiteNotification;
 
    @Nullable
    protected LoadedBuilding worksite;
    @Nullable
-   private LoadedBuilding depot;
+   private LoadedBuilding workBuilding;
 
    public WorkTaskBehaviour(BehaviourState state, boolean requiresWorksite, int duration, int cooldownDuration) {
       this(state, requiresWorksite, duration, duration, cooldownDuration);
@@ -141,31 +144,34 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
 
       settlement = loadedSettlement.get();
 
-      UUID worksiteId = info.getPrimaryWorksiteId();
-      depot = LoadedBuildings.checkLoaded(worksiteId).orElse(null);
+      UUID worksiteId = info.getWorkBuildingId();
+      workBuilding = LoadedBuildings.checkLoaded(worksiteId).orElse(null);
+      // if the villager has no work building (they would be unemployed), or their work building is not loaded, they cannot
+      // start this activity
+      if (workBuilding == null)
+         return false;
+
       if (!requiresWorksite)
          return true;
 
-      // villagers without a worksite are unemployed
-      if (depot == null)
-         return false;
-
       if (info.getOccupation().workAreaTypes().isEmpty()) {
-         worksite = depot;
+         // worksite is the work building
+         worksite = workBuilding;
          return true;
       }
 
+      // worksite is the work area
       Optional<Building> workArea = WorkAreaUtil.findWorkArea(info, ServerBuildingsStore.INSTANCE);
       if (workArea.isEmpty()) {
-         noWorkAreaNotification = noWorkplaceNotification(info, info.getOccupation().workAreaTypes()).build();
+         noWorkSiteNotification = noWorkSiteNotification(info, info.getOccupation().workAreaTypes()).build();
          NotificationService.INSTANCE.sendNotification(
-               noWorkAreaNotification,
+               noWorkSiteNotification,
                Delay.of(Duration.of(1, ChronoUnit.MINUTES), p -> villager.getBrain().isActive(Activity.WORK)));
          return false;
       }
 
-      NotificationService.INSTANCE.resolveNotification(noWorkAreaNotification);
-      noWorkAreaNotification = null;
+      NotificationService.INSTANCE.resolveNotification(noWorkSiteNotification);
+      noWorkSiteNotification = null;
 
       Optional<LoadedBuilding> loadedWorkArea = LoadedBuildings.checkLoaded(workArea.get().getBuildingId());
       if (loadedWorkArea.isEmpty())
@@ -243,9 +249,9 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
       super.stop(level, villager, gameTime);
    }
 
-   protected @NotNull List<LoadedBuilding> depotAndStorehouseIfPresent() {
+   protected @NotNull List<LoadedBuilding> workBuildingAndStorehouseIfPresent() {
       List<LoadedBuilding> sourceBuildings = new ArrayList<>();
-      sourceBuildings.add(getDepot());
+      sourceBuildings.add(getWorkBuilding());
       findStorehouse(getSettlement()).ifPresent(sourceBuildings::add);
       return sourceBuildings;
    }
@@ -278,9 +284,9 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
       return itemTypesDumped;
    }
 
-   protected void goDropOffWorkOutputAtDepot(CivilizedVillager villager) {
+   protected void goDropOffWorkOutputAtWorkBuilding(CivilizedVillager villager) {
       DropOffItemsInstruction dropOffItemsInstruction =
-            new DropOffItemsInstruction(getDepot(), List.of(CivilizedVillager::getWorkOutputInventory));
+            new DropOffItemsInstruction(getWorkBuilding(), List.of(CivilizedVillager::getWorkOutputInventory));
       villager.getBrain().setMemory(AIRegistry.MM_DROP_OFF_ITEMS_INSTRUCTION.get(), dropOffItemsInstruction);
       getStateMachine().queueActionOnce(WorkStates.DROPPING_OFF_ITEMS_AT_BUILDING);
    }
@@ -344,9 +350,9 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
       return entries;
    }
 
-   private static Notification.NotificationBuilder noWorkplaceNotification(
+   private static Notification.NotificationBuilder noWorkSiteNotification(
          VillagerInfo info,
-         List<BuildingType> workplaceTypes) {
+         List<BuildingType> worksiteTypes) {
 
       if (info.getSettlementId() == null)
          throw new IllegalArgumentException("Villager's settlementId must not be null");
@@ -354,13 +360,13 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
       Component headline = Component.translatable("notification.worker.no_worksite");
 
       Component detail;
-      if (workplaceTypes.size() == 1)
+      if (worksiteTypes.size() == 1)
          detail =
                Component.translatable(
                      "notification.worker.no_worksite.specific.detail",
                      info.getFirstName(),
                      info.getOccupation().translation(),
-                     workplaceTypes.getFirst().translation());
+                     worksiteTypes.getFirst().translation());
       else
          detail =
                Component.translatable(

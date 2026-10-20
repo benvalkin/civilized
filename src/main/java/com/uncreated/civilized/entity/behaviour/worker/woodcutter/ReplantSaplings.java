@@ -67,7 +67,7 @@ public class ReplantSaplings extends WorkTaskBehaviour {
                      villager,
                      new ReservationKey(party, groveState.getSaplingRequirement().key()),
                      groveState.getSaplingRequirement(),
-                     depotAndStorehouseIfPresent());
+                     workBuildingAndStorehouseIfPresent());
          if (instruction.isPresent()) {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);

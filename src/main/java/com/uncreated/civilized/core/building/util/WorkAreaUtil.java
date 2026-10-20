@@ -41,7 +41,7 @@ public final class WorkAreaUtil {
       if (findWorkArea(worker, buildingStore).isPresent())
          return false;
       else {
-         Optional<Building> worksite = buildingStore.find(worker.getPrimaryWorksiteId());
+         Optional<Building> worksite = buildingStore.find(worker.getWorkBuildingId());
          if (worksite.isPresent()) {
             Optional<Building> nearestWorkArea =
                   buildingStore.findForSettlement(worker.getSettlementId())

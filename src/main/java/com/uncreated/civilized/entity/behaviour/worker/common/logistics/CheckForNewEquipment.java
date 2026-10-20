@@ -61,7 +61,7 @@ public class CheckForNewEquipment extends StatefulBehaviour {
       if (loadout.isEmpty())
          return;
 
-      Optional<LoadedBuilding> post = LoadedBuildings.checkLoaded(villager.getInfo().getPrimaryWorksiteId());
+      Optional<LoadedBuilding> post = LoadedBuildings.checkLoaded(villager.getInfo().getWorkBuildingId());
       Optional<LoadedBuilding> storehouse =
             ServerBuildingsStore.INSTANCE.findStorehouse(villager.getInfo().getSettlementId())
                   .flatMap(LoadedBuildings::checkLoaded);

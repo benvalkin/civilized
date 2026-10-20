@@ -82,7 +82,7 @@ public class MineOres extends WorkTaskBehaviour {
                      villager,
                      new ReservationKey(party, PICKAXE_REQUIREMENT.key()),
                      PICKAXE_REQUIREMENT,
-                     depotAndStorehouseIfPresent());
+                     workBuildingAndStorehouseIfPresent());
          if (instruction.isPresent()) {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
@@ -119,7 +119,7 @@ public class MineOres extends WorkTaskBehaviour {
       villager.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
 
       if (foundOres)
-         goDropOffWorkOutputAtDepot(villager);
+         goDropOffWorkOutputAtWorkBuilding(villager);
    }
 
    @Override
