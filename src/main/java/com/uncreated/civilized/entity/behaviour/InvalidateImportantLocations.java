@@ -12,6 +12,7 @@ import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.util.BuildingUtil;
+import com.uncreated.civilized.core.building.util.WorkAreaUtil;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
@@ -66,6 +67,9 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
          villager.getBrain().eraseMemory(MemoryModuleType.JOB_SITE);
       }
 
+      UUID oldWorkAreaId = villagerInfo.getWorkAreaId();
+      WorkAreaUtil.reassign(villagerInfo, ServerBuildingsStore.INSTANCE, ServerVillagerStore.INSTANCE);
+
       // take care not to make villagers think they can work if they are unemployed
       if (villagerInfo.getOccupation().is(VillagerOccupations.UNEMPLOYED))
          villager.getBrain().eraseMemory(AIRegistry.MM_VILLAGER_WORKTIME_OCCUPATION.get());
@@ -88,7 +92,8 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
       boolean socialClassChanged = oldSocialClass != villagerInfo.getSocialClass();
       boolean homeChanged = !Objects.equals(oldHomeId, villagerInfo.getHomeBuildingId());
       boolean worksiteChanged = !Objects.equals(oldWorksiteId, villagerInfo.getPrimaryWorksiteId());
-      if (jobChanged || homeChanged || worksiteChanged) {
+      boolean workAreaChanged = !Objects.equals(oldWorkAreaId, villagerInfo.getWorkAreaId());
+      if (jobChanged || homeChanged || worksiteChanged || workAreaChanged) {
          ServerVillagerStore.INSTANCE.setDirty();
          ServerVillagerStore.INSTANCE.replicateChange(villagerInfo, StoreOperation.UPDATE);
       }

@@ -14,6 +14,7 @@ import javax.annotation.Nullable;
 
 import org.jetbrains.annotations.NotNull;
 
+import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.BuildingType;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
@@ -22,6 +23,7 @@ import com.uncreated.civilized.core.building.logistics.hauling.ItemReservation;
 import com.uncreated.civilized.core.building.logistics.hauling.ReservationKey;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.DropOffItemsInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.ItemStockRequirement;
+import com.uncreated.civilized.core.building.util.WorkAreaUtil;
 import com.uncreated.civilized.core.notifications.Delay;
 import com.uncreated.civilized.core.notifications.Notification;
 import com.uncreated.civilized.core.notifications.NotificationService;
@@ -58,8 +60,8 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
     */
    protected static final Duration AWAITING_DELIVERY_DURATION = Duration.of(2, ChronoUnit.MINUTES);
 
+   /** Whether this behaviour works somewhere: the villager's worksite, or the work area their worksite serves. */
    private final boolean requiresWorksite;
-   private final boolean requiresHome;
 
    @Getter
    private LoadedSettlement settlement;
@@ -72,43 +74,41 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
       return worksite;
    }
 
-   public LoadedBuilding getHome() {
-      if (!requiresHome)
-         throw new UnsupportedOperationException(
-               "Cannot get villager's home. This behaviour is not configured to make use of the villager's home ('requiresHome' is set to 'false')");
+   /**
+    * The worksite the villager is assigned to, where they fetch and store what they work with, e.g. a farmer's Farmer's
+    * House. For jobs without work areas, it's the same building as {@link #getWorksite()}. Behaviours that require a
+    * worksite always have one. Others only do for villagers with a worksite, which e.g. spouses running errands don't.
+    */
+   public LoadedBuilding getDepot() {
+      if (depot == null)
+         throw new IllegalStateException(
+               "Cannot get villager's depot. They have no worksite, or it isn't loaded, and this behaviour is not configured to require one ('requiresWorksite' is set to 'false')");
 
-      return home;
+      return depot;
    }
 
    @Nullable
    private Notification missingItemNotification;
    @Nullable
-   private Notification noWorksiteNotification;
+   private Notification noWorkAreaNotification;
 
    @Nullable
    protected LoadedBuilding worksite;
    @Nullable
-   private LoadedBuilding home;
+   private LoadedBuilding depot;
 
-   public WorkTaskBehaviour(
-         BehaviourState state,
-         boolean requiresWorksite,
-         boolean requiresHome,
-         int duration,
-         int cooldownDuration) {
-      this(state, requiresWorksite, requiresHome, duration, duration, cooldownDuration);
+   public WorkTaskBehaviour(BehaviourState state, boolean requiresWorksite, int duration, int cooldownDuration) {
+      this(state, requiresWorksite, duration, duration, cooldownDuration);
    }
 
    public WorkTaskBehaviour(
          BehaviourState state,
          boolean requiresWorksite,
-         boolean requiresHome,
          int minDuration,
          int maxDuration,
          int cooldownDuration) {
       super(state, minDuration, maxDuration, cooldownDuration);
       this.requiresWorksite = requiresWorksite;
-      this.requiresHome = requiresHome;
    }
 
    protected void notifyMissingItem(Notification.NotificationBuilder notification) {
@@ -133,39 +133,45 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
    @Override
    protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
 
-      Optional<LoadedSettlement> loadedSettlement = LoadedSettlements.checkLoaded(villager.getInfo().getSettlementId());
-      if (loadedSettlement.isEmpty())
+      VillagerInfo info = villager.getInfo();
+      Optional<LoadedSettlement> loadedSettlement = LoadedSettlements.checkLoaded(info.getSettlementId());
+      if (loadedSettlement.isEmpty()) {
          return false;
+      }
 
       settlement = loadedSettlement.get();
 
-      if (requiresWorksite) {
-         UUID worksiteId = villager.getInfo().getPrimaryWorksiteId();
-         if (worksiteId == null) {
-            // only when it has no worksite at all. One that just isn't loaded, e.g. because it's far away, is fine
-            noWorksiteNotification = noWorksiteNotification(villager.getInfo()).build();
-            NotificationService.INSTANCE.sendNotification(
-                  noWorksiteNotification,
-                  Delay.of(Duration.of(1, ChronoUnit.MINUTES), p -> villager.getBrain().isActive(Activity.WORK)));
-            return false;
-         }
+      UUID worksiteId = info.getPrimaryWorksiteId();
+      depot = LoadedBuildings.checkLoaded(worksiteId).orElse(null);
+      if (!requiresWorksite)
+         return true;
 
-         NotificationService.INSTANCE.resolveNotification(noWorksiteNotification);
-         noWorksiteNotification = null;
+      // villagers without a worksite are unemployed
+      if (depot == null)
+         return false;
 
-         Optional<LoadedBuilding> building = LoadedBuildings.checkLoaded(worksiteId);
-         if (building.isEmpty())
-            return false;
-
-         worksite = building.get();
+      if (info.getOccupation().workAreaTypes().isEmpty()) {
+         worksite = depot;
+         return true;
       }
-      if (requiresHome) {
-         Optional<LoadedBuilding> building = LoadedBuildings.checkLoaded(villager.getInfo().getHomeBuildingId());
-         if (building.isEmpty())
-            return false;
 
-         home = building.get();
+      Optional<Building> workArea = WorkAreaUtil.findWorkArea(info, ServerBuildingsStore.INSTANCE);
+      if (workArea.isEmpty()) {
+         noWorkAreaNotification = noWorkplaceNotification(info, info.getOccupation().workAreaTypes()).build();
+         NotificationService.INSTANCE.sendNotification(
+               noWorkAreaNotification,
+               Delay.of(Duration.of(1, ChronoUnit.MINUTES), p -> villager.getBrain().isActive(Activity.WORK)));
+         return false;
       }
+
+      NotificationService.INSTANCE.resolveNotification(noWorkAreaNotification);
+      noWorkAreaNotification = null;
+
+      Optional<LoadedBuilding> loadedWorkArea = LoadedBuildings.checkLoaded(workArea.get().getBuildingId());
+      if (loadedWorkArea.isEmpty())
+         return false;
+
+      worksite = loadedWorkArea.get();
 
       return true;
    }
@@ -237,9 +243,9 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
       super.stop(level, villager, gameTime);
    }
 
-   protected @NotNull List<LoadedBuilding> homeAndStorehouseIfPresent() {
+   protected @NotNull List<LoadedBuilding> depotAndStorehouseIfPresent() {
       List<LoadedBuilding> sourceBuildings = new ArrayList<>();
-      sourceBuildings.add(getHome());
+      sourceBuildings.add(getDepot());
       findStorehouse(getSettlement()).ifPresent(sourceBuildings::add);
       return sourceBuildings;
    }
@@ -272,19 +278,9 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
       return itemTypesDumped;
    }
 
-   protected void goDropOffWorkOutputAtHome(CivilizedVillager villager) {
-      // the home is looked up rather than taken from getHome(), so that behaviours which don't require a home can drop
-      // off what they picked up too
-
-      // todo: because villagers can now stay at other homes that aren't their worksite, this method will have to be
-      // converted to `goDropOffWorkOutputAtHome`. BuildingType will need a `isDepot` flag.
-
-      Optional<LoadedBuilding> homeBuilding = LoadedBuildings.checkLoaded(villager.getInfo().getHomeBuildingId());
-      if (homeBuilding.isEmpty())
-         return;
-
+   protected void goDropOffWorkOutputAtDepot(CivilizedVillager villager) {
       DropOffItemsInstruction dropOffItemsInstruction =
-            new DropOffItemsInstruction(homeBuilding.get(), List.of(CivilizedVillager::getWorkOutputInventory));
+            new DropOffItemsInstruction(getDepot(), List.of(CivilizedVillager::getWorkOutputInventory));
       villager.getBrain().setMemory(AIRegistry.MM_DROP_OFF_ITEMS_INSTRUCTION.get(), dropOffItemsInstruction);
       getStateMachine().queueActionOnce(WorkStates.DROPPING_OFF_ITEMS_AT_BUILDING);
    }
@@ -348,23 +344,23 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
       return entries;
    }
 
-   private static Notification.NotificationBuilder noWorksiteNotification(VillagerInfo info) {
+   private static Notification.NotificationBuilder noWorkplaceNotification(
+         VillagerInfo info,
+         List<BuildingType> workplaceTypes) {
 
       if (info.getSettlementId() == null)
          throw new IllegalArgumentException("Villager's settlementId must not be null");
 
       Component headline = Component.translatable("notification.worker.no_worksite");
 
-      List<BuildingType> worksiteTypes = info.getOccupation().worksiteTypes();
-
       Component detail;
-      if (worksiteTypes.size() != 1)
+      if (workplaceTypes.size() == 1)
          detail =
                Component.translatable(
                      "notification.worker.no_worksite.specific.detail",
                      info.getFirstName(),
                      info.getOccupation().translation(),
-                     worksiteTypes.getFirst().translation());
+                     workplaceTypes.getFirst().translation());
       else
          detail =
                Component.translatable(

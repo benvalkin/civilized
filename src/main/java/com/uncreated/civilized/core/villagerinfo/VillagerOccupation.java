@@ -31,6 +31,8 @@ public class VillagerOccupation {
    private final BuildingType homeType;
    @Builder.Default
    private final List<BuildingType> worksiteTypes = List.of();
+   @Builder.Default
+   private final List<BuildingType> workAreaTypes = List.of();
    @Nullable
    private final Supplier<ImmutableList<Pair<Integer, ? extends BehaviorControl<CivilizedVillager>>>> workBehaviourPackage;
    @Builder.Default
@@ -38,6 +40,10 @@ public class VillagerOccupation {
 
    public boolean isValidWorksite(BuildingType buildingType) {
       return worksiteTypes.stream().anyMatch(buildingType::is);
+   }
+
+   public boolean isValidWorkArea(BuildingType buildingType) {
+      return workAreaTypes.stream().anyMatch(buildingType::is);
    }
 
    public static VillagerOccupation.VillagerOccupationBuilder builder(ResourceLocation key) {

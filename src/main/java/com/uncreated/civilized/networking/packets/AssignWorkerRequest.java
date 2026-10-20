@@ -9,6 +9,7 @@ import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.util.BuildingUtil;
+import com.uncreated.civilized.core.building.util.WorkAreaUtil;
 import com.uncreated.civilized.core.settlement.entity.LoadedVillagers;
 import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermissionStore;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
@@ -29,10 +30,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-/**
- * Asks the server to make a villager work at a building, which gives them that building's occupation, or to take their
- * job away when the worksite is empty. Assigning them somewhere new also takes them off their old worksite.
- */
 public record AssignWorkerRequest(UUID villagerId, Optional<UUID> worksiteId) implements CustomPacketPayload {
 
    public static final Type<AssignWorkerRequest> TYPE =
@@ -76,15 +73,20 @@ public record AssignWorkerRequest(UUID villagerId, Optional<UUID> worksiteId) im
       Optional<Building> worksite = Optional.empty();
       if (packet.worksiteId().isPresent()) {
          worksite = ServerBuildingsStore.INSTANCE.find(packet.worksiteId().get());
-         if (worksite.isEmpty() || !settlementId.equals(worksite.get().getSettlementId())
-               || !worksite.get().getBuildingType().offersWork()) {
-            failure(context, "Worker could not be assigned - this building is not a worksite in their settlement.");
+
+         boolean invalidWorksite =
+               worksite.isEmpty() || !settlementId.equals(worksite.get().getSettlementId())
+                     || !worksite.get().getBuildingType().offersWork();
+
+         if (invalidWorksite) {
+            failure(
+                  context,
+                  "Worker could not be assigned - building is not a worksite in the worker's settlement settlement.");
             return;
          }
 
          boolean alreadyWorksHere = worker.get().isAssignedWorkerOf(worksite.get());
-         boolean worksiteIsFull =
-               !BuildingUtil.worksiteHasFreeWorkerSlot(worksite.get(), ServerVillagerStore.INSTANCE);
+         boolean worksiteIsFull = !BuildingUtil.worksiteHasFreeWorkerSlot(worksite.get(), ServerVillagerStore.INSTANCE);
 
          if (!alreadyWorksHere && worksiteIsFull) {
             failure(context, "Worker could not be assigned - this worksite has no free worker slots.");
@@ -100,10 +102,11 @@ public record AssignWorkerRequest(UUID villagerId, Optional<UUID> worksiteId) im
       if (villager.isPresent()) {
          InvalidateImportantLocations.revalidate((ServerLevel) villager.get().level(), villager.get());
       } else {
-         // an unloaded one catches up on the rest when they're next loaded
+         // same for an unloaded one - they will have their new job set up when they load in again
          worker.get()
                .setOccupation(
                      worksite.map(b -> b.getBuildingType().occupation()).orElse(VillagerOccupations.UNEMPLOYED));
+         WorkAreaUtil.reassign(worker.get(), ServerBuildingsStore.INSTANCE, ServerVillagerStore.INSTANCE);
          ServerVillagerStore.INSTANCE.setDirty();
          ServerVillagerStore.INSTANCE.replicateChange(worker.get(), StoreOperation.UPDATE);
       }

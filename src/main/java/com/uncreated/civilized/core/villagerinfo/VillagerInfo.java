@@ -46,7 +46,8 @@ public class VillagerInfo {
                   .gender(buffer.readEnum(Gender.class))
                   .partnerId(buffer.readNullable((b -> b.readUUID())))
                   .socialClass(buffer.readVarInt())
-                  .loadoutId(buffer.readNullable((b -> b.readUUID())));
+                  .loadoutId(buffer.readNullable((b -> b.readUUID())))
+                  .workAreaId(buffer.readNullable((b -> b.readUUID())));
 
       return builder.build();
    }
@@ -66,6 +67,7 @@ public class VillagerInfo {
       buffer.writeNullable(partnerId, (b, v) -> b.writeUUID(v));
       buffer.writeVarInt(socialClass);
       buffer.writeNullable(loadoutId, (b, v) -> b.writeUUID(v));
+      buffer.writeNullable(workAreaId, (b, v) -> b.writeUUID(v));
    }
 
    public static final String FIELD_VILLAGER_ID = "villager_id";
@@ -80,6 +82,7 @@ public class VillagerInfo {
    public static final String FIELD_PARTNER_ID = "field_spouse_id";
    public static final String FIELD_SOCIAL_CLASS = "social_class";
    public static final String FIELD_LOADOUT_ID = "loadout_id";
+   public static final String FIELD_WORK_AREA_ID = "work_area_id";
 
    private UUID villagerId;
    @Setter
@@ -109,6 +112,8 @@ public class VillagerInfo {
    private int socialClass = 1;
    @Setter
    private @Nullable UUID loadoutId;
+   @Setter
+   private @Nullable UUID workAreaId;
 
    public boolean hasName() {
       return !firstName.isEmpty() && !lastName.isEmpty();
@@ -240,6 +245,7 @@ public class VillagerInfo {
       partnerId = other.partnerId;
       socialClass = other.socialClass;
       loadoutId = other.loadoutId;
+      workAreaId = other.workAreaId;
    }
 
    public String toStringLite() {
@@ -257,7 +263,7 @@ public class VillagerInfo {
    }
 
    public boolean isAssignedWorkerOf(Building building) {
-      return building.getBuildingId().equals(primaryWorksiteId);
+      return building.getBuildingId().equals(primaryWorksiteId) || building.getBuildingId().equals(workAreaId);
    }
 
    public record Packet(VillagerInfo villager, StoreOperation storeOperation) implements CustomPacketPayload {
