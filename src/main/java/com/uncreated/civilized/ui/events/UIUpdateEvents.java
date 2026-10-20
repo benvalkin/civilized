@@ -27,7 +27,8 @@ public class UIUpdateEvents {
       UUID viewedBuildingId = buildingScreen.getContext().building().getBuildingId();
 
       if (!(viewedBuildingId.equals(event.getVillagerInfo().getHomeBuildingId())
-            || viewedBuildingId.equals(event.getVillagerInfo().getPrimaryWorksiteId())))
+            || viewedBuildingId.equals(event.getVillagerInfo().getPrimaryWorksiteId())
+            || viewedBuildingId.equals(event.getVillagerInfo().getWorkAreaId())))
          return;
 
       buildingScreen.refresh();

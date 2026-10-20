@@ -11,7 +11,7 @@ import com.uncreated.civilized.entity.behaviour.social.VisitEntertainmentPlace;
 import com.uncreated.civilized.entity.behaviour.strike.GoToTownSquare;
 import com.uncreated.civilized.entity.behaviour.strike.StrikeBehaviourControl;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
-import com.uncreated.civilized.entity.behaviour.worker.common.logistics.CheckOffloadInventoriesAtHome;
+import com.uncreated.civilized.entity.behaviour.worker.common.logistics.CheckOffloadInventories;
 import com.uncreated.civilized.entity.behaviour.worker.common.logistics.DropOffItemsAtBuilding;
 import com.uncreated.civilized.entity.behaviour.worker.common.logistics.TakeItemsToInventory;
 import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
@@ -65,7 +65,7 @@ public class CivilizedVillagerActivities {
    public static IdleBehaviourControl createIdleBehaviourControl(float speedModifier) {
       return new IdleBehaviourControl(
             ImmutableList.of(
-                  new CheckOffloadInventoriesAtHome(),
+                  new CheckOffloadInventories(),
                   new EatFood(BehaviourStates.EATING_FOOD),
                   new TakeItemsToInventory(),
                   new DropOffItemsAtBuilding(),
@@ -89,7 +89,7 @@ public class CivilizedVillagerActivities {
                   new EatFood(BehaviourStates.EATING_FOOD),
                   new TakeItemsToInventory(),
                   new DropOffItemsAtBuilding(),
-                  new CheckOffloadInventoriesAtHome(),
+                  new CheckOffloadInventories(),
                   new IdleStrollAroundSettlement(5, 3, speedModifier),
                   new Flirt(speedModifier),
                   new Socialize(speedModifier),

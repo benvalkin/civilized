@@ -61,13 +61,13 @@ public class CheckForNewEquipment extends StatefulBehaviour {
       if (loadout.isEmpty())
          return;
 
-      Optional<LoadedBuilding> home = LoadedBuildings.checkLoaded(villager.getInfo().getHomeBuildingId());
+      Optional<LoadedBuilding> post = LoadedBuildings.checkLoaded(villager.getInfo().getPrimaryWorksiteId());
       Optional<LoadedBuilding> storehouse =
             ServerBuildingsStore.INSTANCE.findStorehouse(villager.getInfo().getSettlementId())
                   .flatMap(LoadedBuildings::checkLoaded);
       // todo: probably should add military buildings to this list later on
 
-      List<LoadedBuilding> weaponStockBuildings = Stream.of(storehouse, home).flatMap(Optional::stream).toList();
+      List<LoadedBuilding> weaponStockBuildings = Stream.of(storehouse, post).flatMap(Optional::stream).toList();
 
       List<EquipmentRequirement> newEquipment = invalidateEquipment(loadout.get(), weaponStockBuildings, villager);
       if (!villager.getEquipment().getOverflowInventory().isEmpty()) {

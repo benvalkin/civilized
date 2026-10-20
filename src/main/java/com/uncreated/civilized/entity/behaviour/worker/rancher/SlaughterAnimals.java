@@ -24,7 +24,7 @@ public class SlaughterAnimals<T extends Animal> extends WorkTaskBehaviour {
    private MediumDistanceTravelTask travelHelper;
 
    public SlaughterAnimals() {
-      super(WorkStates.SLAUGHTERING_ANIMALS, true, true, 120 * 20, 30 * 20);
+      super(WorkStates.SLAUGHTERING_ANIMALS, true, 120 * 20, 30 * 20);
    }
 
    @Override
@@ -66,7 +66,7 @@ public class SlaughterAnimals<T extends Animal> extends WorkTaskBehaviour {
          pickUpDroppedItemsAtWorksite(level, villager);
 
       if (killedAnimals)
-         goDropOffWorkOutputAtHome(villager);
+         goDropOffWorkOutputAtDepot(villager);
    }
 
    private boolean killedAnimals;

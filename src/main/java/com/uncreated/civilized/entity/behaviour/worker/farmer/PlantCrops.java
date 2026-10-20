@@ -44,7 +44,7 @@ public class PlantCrops extends WorkTaskBehaviour {
    private MediumDistanceTravelTask travelHelper;
 
    public PlantCrops() {
-      super(WorkStates.PLANTING_CROPS, true, true, 120 * 20, 30 * 20);
+      super(WorkStates.PLANTING_CROPS, true, 120 * 20, 30 * 20);
    }
 
    @Override
@@ -69,7 +69,7 @@ public class PlantCrops extends WorkTaskBehaviour {
                   StorehouseOrder.Origin.AUTOMATIC,
                   16);
       taskItemRequirement.setExpiry(12000);
-      logisticsManager.registerOrder(getHome().getBuilding(), taskItemRequirement);
+      logisticsManager.registerOrder(getDepot().getBuilding(), taskItemRequirement);
       ImportUpTo importOrder =
             new ImportUpTo(
                   level,
@@ -80,7 +80,7 @@ public class PlantCrops extends WorkTaskBehaviour {
                   16,
                   32);
       importOrder.setExpiry(12000);
-      logisticsManager.registerOrder(getHome().getBuilding(), importOrder);
+      logisticsManager.registerOrder(getDepot().getBuilding(), importOrder);
 
       if (!(hasSeedsInInventory(villager.getWorkInputInventory())
             || hasSeedsInInventory(villager.getWorkOutputInventory()))) {

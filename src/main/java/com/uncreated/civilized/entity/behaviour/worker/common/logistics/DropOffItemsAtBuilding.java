@@ -23,7 +23,7 @@ public class DropOffItemsAtBuilding extends WorkTaskBehaviour {
    private DropOffItemsInstruction haulingInstruction;
 
    public DropOffItemsAtBuilding() {
-      super(WorkStates.DROPPING_OFF_ITEMS_AT_BUILDING, false, false, 120 * 20, 30 * 20);
+      super(WorkStates.DROPPING_OFF_ITEMS_AT_BUILDING, false, 120 * 20, 30 * 20);
    }
 
    @Override

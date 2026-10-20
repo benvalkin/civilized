@@ -57,7 +57,7 @@ public class CraftItems extends WorkTaskBehaviour {
    private Notification missingIngredientsNotification;
 
    public CraftItems() {
-      super(WorkStates.CRAFTING_ITEMS, true, false, 90 * 20, 10 * 20);
+      super(WorkStates.CRAFTING_ITEMS, true, 90 * 20, 10 * 20);
    }
 
    @Override

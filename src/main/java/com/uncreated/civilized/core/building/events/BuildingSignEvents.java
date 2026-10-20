@@ -54,7 +54,8 @@ public class BuildingSignEvents {
       Stream.of(
             ServerBuildingsStore.INSTANCE.findTownHall(villager.getSettlementId()),
             ServerBuildingsStore.INSTANCE.find(villager.getHomeBuildingId()),
-            ServerBuildingsStore.INSTANCE.find(villager.getPrimaryWorksiteId()))
+            ServerBuildingsStore.INSTANCE.find(villager.getPrimaryWorksiteId()),
+            ServerBuildingsStore.INSTANCE.find(villager.getWorkAreaId()))
             .flatMap(Optional::stream)
             .distinct()
             .forEach(BuildingSignEvents::updateSign);
@@ -109,7 +110,7 @@ public class BuildingSignEvents {
       SignHelper.serverTriggerBuildingSignUpdate(primarySign);
    }
 
-  private static boolean signBelongsToBuilding(SignBlockEntity sign, Building building, Level level) {
+   private static boolean signBelongsToBuilding(SignBlockEntity sign, Building building, Level level) {
       Optional<Building> owner = ServerBuildingsStore.INSTANCE.findBuildingForSign(sign.getBlockPos(), level);
       return owner.isPresent() && owner.get() == building;
    }

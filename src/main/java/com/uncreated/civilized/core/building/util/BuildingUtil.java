@@ -70,6 +70,10 @@ public class BuildingUtil {
             .toList();
    }
 
+   public static List<VillagerInfo> getWorkers(Building building, VillagerStore store) {
+      return getAssignedWorkers(building, store);
+   }
+
    public static boolean workResidenceHasWorker(Building building, VillagerStore store) {
       return getOccupants(building, store).stream()
             .anyMatch(v -> v.getNpcRole().is(VillagerNpcRoles.WORKER) && v.isOccupantOf(building));

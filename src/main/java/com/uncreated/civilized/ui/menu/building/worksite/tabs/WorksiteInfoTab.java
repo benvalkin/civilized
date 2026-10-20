@@ -20,15 +20,8 @@ public class WorksiteInfoTab extends ABuildingScreenTab implements IBuildingInfo
 
    private List<VillagerInfo> workers;
 
-   public WorksiteInfoTab(
-         ITabHost tabHost,
-         Font font,
-         BuildingScreenContext context) {
-      super(
-            tabHost,
-            font,
-            Component.translatable("menu.building.info.tab.heading"),
-            context);
+   public WorksiteInfoTab(ITabHost tabHost, Font font, BuildingScreenContext context) {
+      super(tabHost, font, Component.translatable("menu.building.info.tab.heading"), context);
       this.workers = createOccupantsList();
    }
 
@@ -66,7 +59,7 @@ public class WorksiteInfoTab extends ABuildingScreenTab implements IBuildingInfo
    }
 
    private List<VillagerInfo> createOccupantsList() {
-      return BuildingUtil.getAssignedWorkers(context.building(), ClientVillagerStore.INSTANCE);
+      return BuildingUtil.getWorkers(context.building(), ClientVillagerStore.INSTANCE);
    }
 
    @Override

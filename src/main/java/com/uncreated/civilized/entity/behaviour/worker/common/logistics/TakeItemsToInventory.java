@@ -31,7 +31,7 @@ public class TakeItemsToInventory extends WorkTaskBehaviour {
    private MediumDistanceTravelTask travelHelper;
 
    public TakeItemsToInventory() {
-      super(WorkStates.TAKING_ITEMS_TO_INVENTORY, false, false, 120 * 20, 30 * 20);
+      super(WorkStates.TAKING_ITEMS_TO_INVENTORY, false, 120 * 20, 30 * 20);
    }
 
    private ConditionalHaulingInstruction<? extends ItemStockRequirement> haulingInstruction;

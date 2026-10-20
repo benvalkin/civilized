@@ -31,7 +31,7 @@ public class MonitorWorksite extends WorkTaskBehaviour {
          int maxVerticalDist,
          float strollSpeedModifier,
          boolean strollOutside) {
-      super(WorkStates.MONITOR_WORKSITE, true, false, 5 * 20, 0);
+      super(WorkStates.MONITOR_WORKSITE, true, 5 * 20, 0);
       this.maxHorizontalDist = maxHorizontalDist;
       this.strollOutside = strollOutside;
       this.stroller =
@@ -80,7 +80,7 @@ public class MonitorWorksite extends WorkTaskBehaviour {
          nextPickupTime = tickTime + PICKUP_INTERVAL_TICKS;
 
          if (pickUpDroppedItemsAtWorksite(level, villager))
-            goDropOffWorkOutputAtHome(villager);
+            goDropOffWorkOutputAtDepot(villager);
       }
 
       stroller.tick(villager, getWorksite().getBuilding().getBounds(), tickTime);

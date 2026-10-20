@@ -58,7 +58,7 @@ public class HarvestHoneyAndHoneyComb extends WorkTaskBehaviour {
                CivilizedVillager::getWorkInputInventory);
 
    public HarvestHoneyAndHoneyComb() {
-      super(WorkStates.HARVESTING_HONEY, true, true, 120 * 20, 30 * 20);
+      super(WorkStates.HARVESTING_HONEY, true, 120 * 20, 30 * 20);
    }
 
    @Override
@@ -82,7 +82,7 @@ public class HarvestHoneyAndHoneyComb extends WorkTaskBehaviour {
                      villager,
                      new ReservationKey(party, "shears_and_honeycomb"),
                      List.of(shearsRequirement, glassBottlesRequirement),
-                     homeAndStorehouseIfPresent());
+                     depotAndStorehouseIfPresent());
          if (instruction.isPresent()) {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
@@ -116,7 +116,7 @@ public class HarvestHoneyAndHoneyComb extends WorkTaskBehaviour {
       villager.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
 
       if (hasWorkOutputItems)
-         goDropOffWorkOutputAtHome(villager);
+         goDropOffWorkOutputAtDepot(villager);
    }
 
    @Override

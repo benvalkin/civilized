@@ -32,11 +32,7 @@ public class GroveInfoTab extends ABuildingScreenTab implements IBuildingInfoTab
          Font font,
          BuildingScreenContext context,
          Function<ITabHost, ATab> createSaplingTab) {
-      super(
-            tabHost,
-            font,
-            Component.translatable("menu.building.info.tab.heading"),
-            context);
+      super(tabHost, font, Component.translatable("menu.building.info.tab.heading"), context);
       this.workers = createOccupantsList();
 
       GroveState groveState = (GroveState) context.building().getState();
@@ -48,7 +44,10 @@ public class GroveInfoTab extends ABuildingScreenTab implements IBuildingInfoTab
                   // notice how if the button's 'x' is set to the parent's width, the button seems to render right to
                   // left...
                   // is this a feature??
-                  button -> tabHost.changeTab(createSaplingTab.apply(tabHost))).pos(getX(), getBottom() - 18).size(80, 18).build();
+                  button -> tabHost.changeTab(createSaplingTab.apply(tabHost)))
+                  .pos(getX(), getBottom() - 18)
+                  .size(80, 18)
+                  .build();
    }
 
    @Override
@@ -97,7 +96,7 @@ public class GroveInfoTab extends ABuildingScreenTab implements IBuildingInfoTab
    }
 
    private List<VillagerInfo> createOccupantsList() {
-      return BuildingUtil.getAssignedWorkers(context.building(), ClientVillagerStore.INSTANCE);
+      return BuildingUtil.getWorkers(context.building(), ClientVillagerStore.INSTANCE);
    }
 
    @Override

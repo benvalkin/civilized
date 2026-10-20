@@ -67,6 +67,8 @@ public class ServerVillagerStore extends VillagerStore {
          item.putInt(VillagerInfo.FIELD_SOCIAL_CLASS, villagerInfo.getSocialClass());
          if (villagerInfo.getLoadoutId() != null)
             item.putUUID(VillagerInfo.FIELD_LOADOUT_ID, villagerInfo.getLoadoutId());
+         if (villagerInfo.getWorkAreaId() != null)
+            item.putUUID(VillagerInfo.FIELD_WORK_AREA_ID, villagerInfo.getWorkAreaId());
 
          tags.add(item);
       }
@@ -108,6 +110,8 @@ public class ServerVillagerStore extends VillagerStore {
             builder.socialClass(itemTag.getInt(VillagerInfo.FIELD_SOCIAL_CLASS));
          if (itemTag.hasUUID(VillagerInfo.FIELD_LOADOUT_ID))
             builder.loadoutId(itemTag.getUUID(VillagerInfo.FIELD_LOADOUT_ID));
+         if (itemTag.hasUUID(VillagerInfo.FIELD_WORK_AREA_ID))
+            builder.workAreaId(itemTag.getUUID(VillagerInfo.FIELD_WORK_AREA_ID));
 
          VillagerInfo villagerInfo = builder.build();
          store.villagers.add(villagerInfo);

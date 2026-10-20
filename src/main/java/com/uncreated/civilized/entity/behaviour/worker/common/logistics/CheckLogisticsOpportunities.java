@@ -27,7 +27,7 @@ public class CheckLogisticsOpportunities extends WorkTaskBehaviour {
    private LoadedBuilding storehouse;
 
    public CheckLogisticsOpportunities() {
-      super(WorkStates.CHECK_LOGISTICS_OPPORTUNITIES, true, true, 0, 120 * 20);
+      super(WorkStates.CHECK_LOGISTICS_OPPORTUNITIES, true, 0, 120 * 20);
    }
 
    @Override
@@ -62,9 +62,6 @@ public class CheckLogisticsOpportunities extends WorkTaskBehaviour {
 
       this.storehouse = storehouse.get();
 
-      List<Container> homeChests = LogisticsOrder.findChests(level, getHome().getBuilding());
-      List<Container> storehouseChests = LogisticsOrder.findChests(level, this.storehouse.getBuilding());
-      List<LoadedBuilding> home = List.of(getHome());
       if (!getBehaviourCooldowns().hasCooldown(Cooldowns.EXPORT_RUN, level.getGameTime()) && checkForExportOrders()) {
 
          String party = reservationPartyKey(villager);
@@ -77,7 +74,7 @@ public class CheckLogisticsOpportunities extends WorkTaskBehaviour {
                      new ReservationKey(party, "everything"),
                      everything,
                      this.storehouse,
-                     home);
+                     List.of(getDepot()));
 
          if (transferToBuildingInstruction.isPresent()) {
             getBehaviourCooldowns()
@@ -88,32 +85,10 @@ public class CheckLogisticsOpportunities extends WorkTaskBehaviour {
                s.queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
             });
          }
-      } else if (!getSharedCooldowns().hasCooldown(Cooldowns.IMPORT_RUN, level.getGameTime())
-            && checkForImportOrders(storehouseChests, homeChests)) {
-         // todo: do we still need an import system?
-         // checkForImportOrders always returns false until then, so this branch never runs
       }
    }
 
    private boolean checkForExportOrders() {
-      return getHome().chests().stream().anyMatch(c -> !c.isEmpty());
-   }
-
-   private boolean checkForImportOrders(List<Container> source, List<Container> destination) {
-
-      return false;
-      // LogisticsManager logisticsManager = getSettlement().getBehaviour().getLogisticsManager();
-      // LogisticsOrders<ImportOrder> importOrders = logisticsManager.getImportOrders(getHome().getBuilding());
-      //
-      // for (ImportOrder order : importOrders.orders()) {
-      //
-      // PendingShipment shipment = order.getNextShipment(source, destination);
-      // if (shipment.shouldShip()) {
-      // getStateMachine().queueActionOnce(WorkStates.FETCHING_IMPORTS_FROM_STOREHOUSE);
-      // return true;
-      // }
-      // }
-      //
-      // return false;
+      return getDepot().chests().stream().anyMatch(c -> !c.isEmpty());
    }
 }

@@ -41,7 +41,7 @@ public class BreedAnimals<T extends Animal> extends WorkTaskBehaviour {
    private Notification missingLivestockNotification;
 
    public BreedAnimals() {
-      super(WorkStates.BREEDING_ANIMALS, true, true, 120 * 20, 30 * 20);
+      super(WorkStates.BREEDING_ANIMALS, true, 120 * 20, 30 * 20);
    }
 
    @Override
@@ -91,7 +91,7 @@ public class BreedAnimals<T extends Animal> extends WorkTaskBehaviour {
                      villager,
                      new ReservationKey(party, animalFoodRequirement.key()),
                      animalFoodRequirement,
-                     homeAndStorehouseIfPresent());
+                     depotAndStorehouseIfPresent());
          if (instruction.isPresent()) {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);

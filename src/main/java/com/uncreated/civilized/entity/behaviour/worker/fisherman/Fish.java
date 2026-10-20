@@ -36,10 +36,6 @@ import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 
-/**
- * Fishes at a fishing spot. The villager casts its line at a water block inside the worksite, waits a while for
- * something to bite, and reels in whatever the vanilla fishing loot table gives it.
- */
 public class Fish extends WorkTaskBehaviour {
 
    private static final int FISH_TO_CATCH_BEFORE_STOPPING = 5;
@@ -66,7 +62,7 @@ public class Fish extends WorkTaskBehaviour {
     *           longest wait between casting the line and catching something
     */
    public Fish(int minCatchTicks, int maxCatchTicks) {
-      super(WorkStates.FISHING, true, true, 120 * 20, 30 * 20);
+      super(WorkStates.FISHING, true, 120 * 20, 30 * 20);
       this.minCatchTicks = minCatchTicks;
       this.maxCatchTicks = maxCatchTicks;
    }
@@ -89,7 +85,7 @@ public class Fish extends WorkTaskBehaviour {
                      villager,
                      new ReservationKey(party, fishingRodRequirement.key()),
                      fishingRodRequirement,
-                     homeAndStorehouseIfPresent());
+                     depotAndStorehouseIfPresent());
          if (instruction.isPresent()) {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
@@ -125,7 +121,7 @@ public class Fish extends WorkTaskBehaviour {
       villager.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
 
       if (fishCaught > 0)
-         goDropOffWorkOutputAtHome(villager);
+         goDropOffWorkOutputAtDepot(villager);
    }
 
    @Override

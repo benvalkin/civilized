@@ -2,7 +2,7 @@ package com.uncreated.civilized.ui.menu.building.worksite;
 
 import java.util.List;
 
-import com.uncreated.civilized.ui.menu.building.occupants.ManageWorkersTab;
+import com.uncreated.civilized.ui.menu.building.occupants.WorkAreaWorkersTab;
 import com.uncreated.civilized.ui.components.buttons.buildingtab.ManageWorkersTabButton;
 import com.uncreated.civilized.ui.components.buttons.buildingtab.SettingsTabButton;
 import com.uncreated.civilized.ui.components.buttons.buildingtab.WorksiteHomeTabButton;
@@ -32,7 +32,7 @@ public class WorksiteBuildingScreen extends ABuildingMenuScreen {
    public List<Button> createTabButtons(ITabHost tabHost) {
       return List.of(
             new WorksiteHomeTabButton(tabHost, 0, this::createDefaultTab),
-            new ManageWorkersTabButton(tabHost, 1, host -> new ManageWorkersTab(host, font, context)),
+            new ManageWorkersTabButton(tabHost, 1, host -> new WorkAreaWorkersTab(host, font, context)),
             new SettingsTabButton(tabHost, 2, host -> new BuildingSettingsTab(host, font, context)));
    }
 }

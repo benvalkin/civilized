@@ -62,7 +62,7 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
    private Notification missingIngredientsNotification;
 
    public CookItemsWithFuel(BehaviourState state) {
-      super(state, true, false, 60 * 20, 20);
+      super(state, true, 60 * 20, 20);
    }
 
    private enum FurnaceUsageDecision {

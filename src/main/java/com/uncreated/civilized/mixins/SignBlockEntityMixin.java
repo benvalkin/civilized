@@ -81,8 +81,11 @@ public abstract class SignBlockEntityMixin extends BlockEntity {
          return;
 
       frontText =
-            SignHelper
-                  .getBuildingSignText(building.get(), ClientVillagerStore.INSTANCE, ClientSettlementsStore.INSTANCE);
+            SignHelper.getBuildingSignText(
+                  building.get(),
+                  ClientBuildingStore.INSTANCE,
+                  ClientVillagerStore.INSTANCE,
+                  ClientSettlementsStore.INSTANCE);
    }
 
    @Unique

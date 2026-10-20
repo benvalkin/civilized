@@ -55,7 +55,7 @@ public class ShearSheep extends WorkTaskBehaviour {
    private static final ToolRequirement shearsRequirement = new ToolRequirement("shears", i -> i.is(Items.SHEARS));
 
    public ShearSheep() {
-      super(WorkStates.SHEARING_SHEEP, true, true, 120 * 20, 30 * 20);
+      super(WorkStates.SHEARING_SHEEP, true, 120 * 20, 30 * 20);
    }
 
    @Override
@@ -77,7 +77,7 @@ public class ShearSheep extends WorkTaskBehaviour {
                      villager,
                      new ReservationKey(party, shearsRequirement.key()),
                      shearsRequirement,
-                     homeAndStorehouseIfPresent());
+                     depotAndStorehouseIfPresent());
          if (instruction.isPresent()) {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
@@ -120,7 +120,7 @@ public class ShearSheep extends WorkTaskBehaviour {
          pickUpDroppedItemsAtWorksite(level, villager);
 
       if (hasShearedSheep)
-         goDropOffWorkOutputAtHome(villager);
+         goDropOffWorkOutputAtDepot(villager);
    }
 
    @Override

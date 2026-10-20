@@ -44,7 +44,7 @@ public class ReplantSaplings extends WorkTaskBehaviour {
    private Predicate<ItemStack> saplingFilter;
 
    public ReplantSaplings() {
-      super(WorkStates.REPLANT_SAPLINGS, true, true, 60 * 20, 30 * 20);
+      super(WorkStates.REPLANT_SAPLINGS, true, 60 * 20, 30 * 20);
    }
 
    @Override
@@ -67,14 +67,13 @@ public class ReplantSaplings extends WorkTaskBehaviour {
                      villager,
                      new ReservationKey(party, groveState.getSaplingRequirement().key()),
                      groveState.getSaplingRequirement(),
-                     homeAndStorehouseIfPresent());
+                     depotAndStorehouseIfPresent());
          if (instruction.isPresent()) {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
             getStateMachine().queueActionOnce(this.getState());
          } else {
-            notifyMissingItem(
-                  missingSaplingsNotification(villager, groveState));
+            notifyMissingItem(missingSaplingsNotification(villager, groveState));
          }
          return false;
       }

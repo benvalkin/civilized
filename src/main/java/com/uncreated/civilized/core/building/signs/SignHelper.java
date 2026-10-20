@@ -1,16 +1,16 @@
 package com.uncreated.civilized.core.building.signs;
 
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
 import com.uncreated.civilized.core.building.Building;
+import com.uncreated.civilized.core.building.BuildingStore;
 import com.uncreated.civilized.core.building.BuildingTypes;
 import com.uncreated.civilized.core.building.util.BuildingUtil;
-import com.uncreated.civilized.core.settlement.SettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
+import com.uncreated.civilized.core.settlement.SettlementsStore;
 import com.uncreated.civilized.core.villagerinfo.Gender;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.core.villagerinfo.VillagerStore;
@@ -56,18 +56,19 @@ public class SignHelper {
       return Arrays.stream(signText.getMessages(false)).allMatch(c -> c.getString().isBlank());
    }
 
-
    public static SignText getBuildingSignText(
          Building building,
+         BuildingStore buildingStore,
          VillagerStore villagerStore,
          SettlementsStore settlementsStore) {
-      Component[] signTextComponents = getSignTextComponents(building, villagerStore, settlementsStore);
+      Component[] signTextComponents = getSignTextComponents(building, buildingStore, villagerStore, settlementsStore);
       return new SignText(signTextComponents, signTextComponents, DyeColor.BLACK, false);
 
    }
 
    private static Component[] getSignTextComponents(
          Building building,
+         BuildingStore buildingStore,
          VillagerStore villagerStore,
          SettlementsStore settlementsStore) {
       if (building.getBuildingType().is(BuildingTypes.TOWN_HALL)) {
@@ -75,7 +76,8 @@ public class SignHelper {
          Set<VillagerInfo> citizens = villagerStore.getCitizens(settlement.getSettlementId());
          return new Component[] { building.getBuildingType().shortName(),
                settlement.displayNameTranslation().withStyle(ChatFormatting.ITALIC),
-               Component.translatable("menu.building.info.town_hall.population.count", citizens.size()), Component.empty() };
+               Component.translatable("menu.building.info.town_hall.population.count", citizens.size()),
+               Component.empty() };
       } else if (building.getBuildingType().is(BuildingTypes.INN)) {
          List<VillagerInfo> visitors = BuildingUtil.getOccupants(building, villagerStore);
          return new Component[] { building.getBuildingType().shortName(),
@@ -94,9 +96,12 @@ public class SignHelper {
                Component.literal(ownerName).withStyle(ChatFormatting.ITALIC),
                Component.translatable("menu.building.residence.residents.count", residents.size()), Component.empty() };
       } else if (building.getBuildingType().isWorksite()) {
-         List<VillagerInfo> workers = BuildingUtil.getAssignedWorkers(building, villagerStore);
+         List<VillagerInfo> workers = BuildingUtil.getWorkers(building, villagerStore);
          return new Component[] { building.getBuildingType().shortName(),
-               Component.translatable("menu.building.worksite.workers.count", workers.size(), building.getBuildingType().maxWorkers()),
+               Component.translatable(
+                     "menu.building.worksite.workers.count",
+                     workers.size(),
+                     building.getBuildingType().maxWorkers()),
                Component.empty(), Component.empty() };
       }
       return new Component[] { building.getBuildingType().translation(), Component.empty(), Component.empty(),

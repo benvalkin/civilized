@@ -50,7 +50,7 @@ public class HarvestCrops extends WorkTaskBehaviour {
          new ToolRequirement("hoe", i -> i.getItem() instanceof HoeItem);
 
    public HarvestCrops() {
-      super(WorkStates.HARVESTING_CROPS, true, true, 120 * 20, 30 * 20);
+      super(WorkStates.HARVESTING_CROPS, true, 120 * 20, 30 * 20);
    }
 
    @Override
@@ -67,7 +67,7 @@ public class HarvestCrops extends WorkTaskBehaviour {
                      villager,
                      new ReservationKey(party, HOE_REQUIREMENT.key()),
                      HOE_REQUIREMENT,
-                     homeAndStorehouseIfPresent());
+                     depotAndStorehouseIfPresent());
          if (instruction.isPresent()) {
             villager.getBrain().setMemory(AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(), instruction.get());
             getStateMachine().queueActionOnce(WorkStates.TAKING_ITEMS_TO_INVENTORY);
@@ -105,7 +105,7 @@ public class HarvestCrops extends WorkTaskBehaviour {
       villager.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
 
       if (hasWorkOutputItems)
-         goDropOffWorkOutputAtHome(villager);
+         goDropOffWorkOutputAtDepot(villager);
 
    }
 

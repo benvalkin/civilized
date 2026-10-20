@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
+import com.uncreated.civilized.core.building.ClientBuildingStore;
 import com.uncreated.civilized.core.building.state.animalfarm.AnimalFarmState;
 import com.uncreated.civilized.core.building.util.BuildingUtil;
 import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
@@ -90,7 +91,7 @@ public class AnimalFarmInfoTab extends ABuildingScreenTab implements IBuildingIn
    }
 
    private List<VillagerInfo> createOccupantsList() {
-      return BuildingUtil.getAssignedWorkers(context.building(), ClientVillagerStore.INSTANCE);
+      return BuildingUtil.getWorkers(context.building(), ClientVillagerStore.INSTANCE);
    }
 
    @Override
