@@ -12,12 +12,9 @@ import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.BuildingStore;
 import com.uncreated.civilized.core.building.BuildingType;
-import com.uncreated.civilized.core.building.BuildingTypes;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
-import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
-import com.uncreated.civilized.core.villagerinfo.VillagerOccupation;
 import com.uncreated.civilized.core.villagerinfo.VillagerStore;
 import com.uncreated.civilized.entity.CivilizedVillager;
 
@@ -38,20 +35,20 @@ public class BuildingUtil {
 
    public static void serverRefreshAndReplicate(UUID... buildingId) {
       Stream.of(buildingId)
-              .filter(Objects::nonNull)
-              .distinct() // remove duplicates
-              .forEach(b -> {
-         Optional<Building> building = ServerBuildingsStore.INSTANCE.find(b);
-         if (building.isEmpty())
-            return;
+            .filter(Objects::nonNull)
+            .distinct() // remove duplicates
+            .forEach(b -> {
+               Optional<Building> building = ServerBuildingsStore.INSTANCE.find(b);
+               if (building.isEmpty())
+                  return;
 
-         boolean success = BuildingUtil.refreshOccupantIds(building.get(), ServerVillagerStore.INSTANCE);
-         if (!success)
-            return;
+               boolean success = BuildingUtil.refreshOccupantIds(building.get(), ServerVillagerStore.INSTANCE);
+               if (!success)
+                  return;
 
-         ServerBuildingsStore.INSTANCE.setDirty();
-         ServerBuildingsStore.INSTANCE.replicateChange(building.get(), StoreOperation.UPDATE);
-      });
+               ServerBuildingsStore.INSTANCE.setDirty();
+               ServerBuildingsStore.INSTANCE.replicateChange(building.get(), StoreOperation.UPDATE);
+            });
    }
 
    public static List<VillagerInfo> getOccupants(Building building, VillagerStore store) {
@@ -72,31 +69,6 @@ public class BuildingUtil {
 
    public static List<VillagerInfo> getWorkers(Building building, VillagerStore store) {
       return getAssignedWorkers(building, store);
-   }
-
-   public static boolean workResidenceHasWorker(Building building, VillagerStore store) {
-      return getOccupants(building, store).stream()
-            .anyMatch(v -> v.getNpcRole().is(VillagerNpcRoles.WORKER) && v.isOccupantOf(building));
-   }
-
-   public static boolean hasResidentWorker(Building building, VillagerStore store) {
-      return getOccupants(building, store).stream()
-            .anyMatch(
-                  v -> v.getNpcRole().is(VillagerNpcRoles.WORKER)
-                        && building.getBuildingType().isHousingFor(v.getOccupation()));
-   }
-
-   /** Housing for the given occupation that none of that occupation's workers live in yet. */
-   public static Optional<Building> findFreeHousingFor(
-         UUID settlementId,
-         VillagerOccupation occupation,
-         BuildingStore buildingStore,
-         VillagerStore villagerStore) {
-
-      return buildingStore.findForSettlement(settlementId)
-            .stream()
-            .filter(b -> b.getBuildingType().isHousingFor(occupation) && !hasResidentWorker(b, villagerStore))
-            .findFirst();
    }
 
    /**
@@ -124,17 +96,6 @@ public class BuildingUtil {
       return getAssignedWorkers(building, store).size() < building.getBuildingType().maxWorkers();
    }
 
-   public static Optional<Building> findUnoccupiedWorkerHome(
-         UUID settlementId,
-         BuildingStore buildingStore,
-         VillagerStore villagerStore) {
-
-      return buildingStore.findForSettlement(settlementId)
-            .stream()
-            .filter(b -> b.getBuildingType().isWorkerResidence() && !workResidenceHasWorker(b, villagerStore))
-            .findFirst();
-   }
-
    public static Optional<Building> findUnoccupiedWorksite(
          UUID settlementId,
          Predicate<BuildingType> filter,
@@ -147,23 +108,24 @@ public class BuildingUtil {
             .findFirst();
    }
 
-   public static Optional<Building> findEmptyAlternativeHomeForWorker(UUID settlementId, BuildingStore buildingStore) {
-
-      return buildingStore.findForSettlement(settlementId)
-            .stream()
-            .filter(b -> b.getBuildingType().is(BuildingTypes.TOWN_HALL) && b.getOccupantIds().isEmpty())
-            .findFirst();
-   }
-
-   public static Optional<Building> findEmptyAlternativeHomeForSpouse(
+   public static Optional<Building> findEmptyGeneralFamilyResidence(
          UUID settlementId,
          BuildingStore buildingStore,
          VillagerStore villagerStore) {
 
-      return buildingStore.findForSettlement(settlementId)
-            .stream()
-            .filter(b -> b.getBuildingType().isSpouseResidence() && b.getOccupantIds().isEmpty())
-            .findFirst();
+      for (Building building : buildingStore.findForSettlement(settlementId)) {
+         BuildingType type = building.getBuildingType();
+         if (!type.isFamilyResidence())
+            continue;
+
+         if (type.isWorkBuilding()) // explicitly not worker-based residence
+            continue;
+
+         if (getOccupants(building, villagerStore).isEmpty())
+            return Optional.of(building);
+      }
+
+      return Optional.empty();
    }
 
    public static void ensureBuildingDoorsAreClosed(CivilizedVillager doorCloser, Building building, ServerLevel level) {

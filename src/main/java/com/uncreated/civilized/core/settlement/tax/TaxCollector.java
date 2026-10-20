@@ -106,7 +106,7 @@ public class TaxCollector {
 
    public static boolean buildingPaysTax(Building building, VillagerStore villagerStore) {
       // currently, only buildings where a spouse can live will pay tax
-      if (!building.getBuildingType().isSpouseResidence())
+      if (!building.getBuildingType().isFamilyResidence())
          return false;
 
       List<VillagerInfo> residents =

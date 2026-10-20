@@ -122,55 +122,52 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
 
    private static Optional<Building> invalidateHome(VillagerInfo villagerInfo) {
 
-      if (villagerInfo.getNpcRole().is(VillagerNpcRoles.WORKER)) {
-         return invalidateHomeForWorker(villagerInfo);
-      } else if (villagerInfo.getNpcRole().is(VillagerNpcRoles.SPOUSE)) {
-         return invalidateHomeForSpouse(villagerInfo);
-      }
+      boolean isCitizen =
+            villagerInfo.getNpcRole().is(VillagerNpcRoles.WORKER)
+                  || villagerInfo.getNpcRole().is(VillagerNpcRoles.SPOUSE);
+      if (!isCitizen)
+         return Optional.empty();
 
-      return Optional.empty();
+      // spouses inherit their partner's last name
+      if (villagerInfo.getNpcRole().is(VillagerNpcRoles.SPOUSE))
+         ServerVillagerStore.INSTANCE.find(villagerInfo.getPartnerId())
+               .ifPresent(partner -> villagerInfo.setLastName(partner.getLastName()));
+
+      if (villagerInfo.getOccupation().is(VillagerOccupations.SOLDIER))
+         return invalidateHomeForSoldier(villagerInfo);
+      else
+         return invalidateHomeForCivilian(villagerInfo);
    }
 
-   private static Optional<Building> invalidateHomeForWorker(VillagerInfo worker) {
+   private static Optional<Building> invalidateHomeForCivilian(VillagerInfo civilian) {
 
-      Optional<Building> currentHome = ServerBuildingsStore.INSTANCE.find(worker.getHomeBuildingId());
-      VillagerOccupation occupation = worker.getOccupation();
+      // villagers live with their family when they can
+      Optional<Building> familyHome = findFamilyHome(civilian);
+      if (familyHome.isPresent())
+         return familyHome;
 
-      // workers live in the housing that comes with their job if it exists
-      if (currentHome.isPresent() && currentHome.get().getBuildingType().isHousingFor(occupation))
+      // otherwise, workers live where they work
+      Optional<Building> workBuilding = findWorkBuildingResidence(civilian);
+      if (workBuilding.isPresent())
+         return workBuilding;
+
+      // otherwise, they can stay wherever they're staying, provided it doesn't now belong to a stranger who has been
+      // assigned to work in their current home
+      Optional<Building> currentHome = ServerBuildingsStore.INSTANCE.find(civilian.getHomeBuildingId());
+      if (currentHome.isPresent() && !isClaimedByAnotherHousehold(currentHome.get(), civilian))
          return currentHome;
 
-      Optional<Building> housing =
-            BuildingUtil.findFreeHousingFor(
-                  worker.getSettlementId(),
-                  occupation,
+      // if they can't stay there, any empty family home will do (e.g. a town house)
+      Optional<Building> emptyHome =
+            BuildingUtil.findEmptyGeneralFamilyResidence(
+                  civilian.getSettlementId(),
                   ServerBuildingsStore.INSTANCE,
                   ServerVillagerStore.INSTANCE);
-      if (housing.isPresent())
-         return housing;
+      if (emptyHome.isPresent())
+         return emptyHome;
 
-      // Otherwise, they are no longer staying in a home that corresponds to their job.
-      // They can stay continue to stay here unless their this home has now been given to a different resident worker.
-      if (currentHome.isPresent() && !BuildingUtil.hasResidentWorker(currentHome.get(), ServerVillagerStore.INSTANCE))
-         return currentHome;
-
-      // If they're homeless, try to find a new worker home.
-      Optional<Building> newWorkerHome =
-            BuildingUtil.findUnoccupiedWorkerHome(
-                  worker.getSettlementId(),
-                  ServerBuildingsStore.INSTANCE,
-                  ServerVillagerStore.INSTANCE);
-      if (newWorkerHome.isPresent())
-         return newWorkerHome;
-
-      // Fallback option is to live in an alternative home (e.g. a town house)
-      Optional<Building> alternativeHome =
-            BuildingUtil.findEmptyAlternativeHomeForWorker(worker.getSettlementId(), ServerBuildingsStore.INSTANCE);
-      if (alternativeHome.isPresent())
-         return alternativeHome;
-
-      // or otherwise the town hall
-      Optional<Building> townHall = ServerBuildingsStore.INSTANCE.findTownHall(worker.getSettlementId());
+      // if there are not even any viable empty homes, they will stay in the town hall
+      Optional<Building> townHall = ServerBuildingsStore.INSTANCE.findTownHall(civilian.getSettlementId());
       if (townHall.isPresent())
          return townHall;
 
@@ -178,50 +175,121 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
       return Optional.empty();
    }
 
-   private static Optional<Building> invalidateHomeForSpouse(VillagerInfo spouse) {
+   private static Optional<Building> invalidateHomeForSoldier(VillagerInfo soldier) {
 
-      Optional<VillagerInfo> mainHomeOwner = ServerVillagerStore.INSTANCE.find(spouse.getPartnerId());
-      if (mainHomeOwner.isPresent()) {
+      // soldiers live with their family when they can. Their post is never their family's home.
+      Optional<Building> familyHome = findFamilyHome(soldier);
+      if (familyHome.isPresent())
+         return familyHome;
 
-         // spouses inherits the last name of the main villager
-         spouse.setLastName(mainHomeOwner.get().getLastName());
-
-         // try move to wherever the spouse's partner is staying
-         Optional<Building> building = ServerBuildingsStore.INSTANCE.find(mainHomeOwner.get().getHomeBuildingId());
-         if (building.isPresent() && building.get().getBuildingType().isSpouseResidence())
-            return building;
+      // a soldier who has a family but no suitable family home (can happen when two soldiers are partners) tries to
+      // move into an empty family home
+      if (soldier.getPartnerId() != null) {
+         Optional<Building> emptyHome =
+               BuildingUtil.findEmptyGeneralFamilyResidence(
+                     soldier.getSettlementId(),
+                     ServerBuildingsStore.INSTANCE,
+                     ServerVillagerStore.INSTANCE);
+         if (emptyHome.isPresent())
+            return emptyHome;
       }
 
-      // if we cannot stay where the partner is staying (partner is missing, or partner is homeless), they are allowed
-      // to remain in whatever building they're currently staying at, provided it doesn't now belong to another worker
-      // who is not their partner
-      Optional<Building> building = ServerBuildingsStore.INSTANCE.find(spouse.getHomeBuildingId());
-      if (building.isPresent()) {
-         boolean existingResidenceOccupiedByStranger =
-               BuildingUtil.getOccupants(building.get(), ServerVillagerStore.INSTANCE)
-                     .stream()
-                     .anyMatch(other -> other.getNpcRole().is(VillagerNpcRoles.WORKER) && !spouse.isPartnerOf(other));
+      // otherwise, they stay live at their assigned garrison
+      Optional<Building> post = findWorkBuildingResidence(soldier);
+      if (post.isPresent())
+         return post;
 
-         if (!existingResidenceOccupiedByStranger)
-            return building;
-      }
-
-      // if they have no partner, their partner is homeless, and they cannot stay in their current building, spouses can
-      // live in any empty building where spouses can usually live
-      Optional<Building> alternative =
-            BuildingUtil.findEmptyAlternativeHomeForSpouse(
-                  spouse.getSettlementId(),
-                  ServerBuildingsStore.INSTANCE,
-                  ServerVillagerStore.INSTANCE);
-      if (alternative.isPresent())
-         return alternative;
-
-      // if there are not even any viable empty buildings, they will still in the town hall
-      Optional<Building> townHall = ServerBuildingsStore.INSTANCE.findTownHall(spouse.getSettlementId());
+      // garrisons should always have beds, but just in case
+      Optional<Building> townHall = ServerBuildingsStore.INSTANCE.findTownHall(soldier.getSettlementId());
       if (townHall.isPresent())
          return townHall;
 
-      // Otherwise, they will roam around homeless at night :(
       return Optional.empty();
+   }
+
+   /**
+    * Where the villager's family lives together: whichever of the villager's and their partner's homes is a family
+    * residence that no other household has claimed. When both are, the one with the higher upgrade level wins.
+    */
+   private static Optional<Building> findFamilyHome(VillagerInfo villager) {
+
+      Optional<VillagerInfo> partner = ServerVillagerStore.INSTANCE.find(villager.getPartnerId());
+      if (partner.isEmpty())
+         return Optional.empty();
+
+      Optional<Building> ownHome = findUnclaimedFamilyResidence(villager.getHomeBuildingId(), villager);
+      Optional<Building> partnerHome = findUnclaimedFamilyResidence(partner.get().getHomeBuildingId(), villager);
+
+      if (ownHome.isPresent() && partnerHome.isPresent())
+         return Optional.of(chooseFamilyHome(ownHome.get(), partnerHome.get()));
+      if (partnerHome.isPresent())
+         return partnerHome;
+      return ownHome;
+   }
+
+   private static Optional<Building> findUnclaimedFamilyResidence(UUID buildingId, VillagerInfo villager) {
+
+      Optional<Building> building = ServerBuildingsStore.INSTANCE.find(buildingId);
+      if (building.isEmpty() || !building.get().getBuildingType().isFamilyResidence())
+         return Optional.empty();
+
+      if (isClaimedByAnotherHousehold(building.get(), villager))
+         return Optional.empty();
+
+      return building;
+   }
+
+   /**
+    * Given two viable family buildings belonging to two partners, chooses the one with the highest upgrade level
+    * (higher level = probably better). If it's a tie, one will be chosen deterministically by comparing the two
+    * buildingIds.
+    */
+   private static Building chooseFamilyHome(Building partner1building, Building partner2building) {
+
+      if (partner1building.getUpgradeLevel() != partner2building.getUpgradeLevel())
+         return partner1building.getUpgradeLevel() > partner2building.getUpgradeLevel() ? partner1building
+               : partner2building;
+
+      return partner1building.getBuildingId().compareTo(partner2building.getBuildingId()) <= 0 ? partner1building
+            : partner2building;
+   }
+
+   /**
+    *
+    * @return the specified worker's assigned work building, provided that it is a residence where they can live.
+    */
+   private static Optional<Building> findWorkBuildingResidence(VillagerInfo worker) {
+
+      Optional<Building> workBuilding = ServerBuildingsStore.INSTANCE.find(worker.getWorkBuildingId());
+      if (workBuilding.isEmpty() || !workBuilding.get().getBuildingType().isWorkerResidence())
+         return Optional.empty();
+
+      return workBuilding;
+   }
+
+   /**
+    * Whether a household other than the villager's family has a claim to the building, either because they already live
+    * there as residents, or because they are assigned workers and the building is a work building. Work buildings are
+    * only for assigned workers and their family).
+    */
+   private static boolean isClaimedByAnotherHousehold(Building building, VillagerInfo villager) {
+
+      if (building.getBuildingType().isWorkBuilding()) {
+         for (VillagerInfo worker : BuildingUtil.getAssignedWorkers(building, ServerVillagerStore.INSTANCE)) {
+            if (!isSameHousehold(villager, worker))
+               return true;
+         }
+         return false;
+      }
+
+      for (VillagerInfo resident : BuildingUtil.getOccupants(building, ServerVillagerStore.INSTANCE)) {
+         if (!isSameHousehold(villager, resident))
+            return true;
+      }
+      return false;
+   }
+
+   private static boolean isSameHousehold(VillagerInfo villager, VillagerInfo other) {
+      return villager.getVillagerId().equals(other.getVillagerId()) || villager.isPartnerOf(other);
    }
 }

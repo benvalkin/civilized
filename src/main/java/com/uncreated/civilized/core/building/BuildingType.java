@@ -31,7 +31,7 @@ import net.minecraft.world.entity.animal.Animal;
 public class BuildingType {
    private final ResourceLocation resourceLocation;
    private final boolean isWorkerResidence;
-   private final boolean isSpouseResidence;
+   private final boolean isFamilyResidence;
    private final boolean isWorksite;
    private final boolean isFoodVendor;
    @Nullable
@@ -61,11 +61,6 @@ public class BuildingType {
 
    public boolean isWorkBuilding() {
       return occupation().isValidWorksite(this);
-   }
-
-   public boolean isHousingFor(VillagerOccupation villagerOccupation) {
-      return isWorkerResidence && !villagerOccupation.is(VillagerOccupations.UNEMPLOYED)
-            && occupation().is(villagerOccupation);
    }
 
    public String name() {
