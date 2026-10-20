@@ -59,7 +59,7 @@ public class BuildingType {
       return occupation.get();
    }
 
-   public boolean offersWork() {
+   public boolean isWorkBuilding() {
       return occupation().isValidWorksite(this);
    }
 

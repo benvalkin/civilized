@@ -76,7 +76,7 @@ public record AssignWorkerRequest(UUID villagerId, Optional<UUID> worksiteId) im
 
          boolean invalidWorksite =
                worksite.isEmpty() || !settlementId.equals(worksite.get().getSettlementId())
-                     || !worksite.get().getBuildingType().offersWork();
+                     || !worksite.get().getBuildingType().isWorkBuilding();
 
          if (invalidWorksite) {
             failure(

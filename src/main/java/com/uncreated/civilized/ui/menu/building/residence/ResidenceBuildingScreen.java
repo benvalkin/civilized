@@ -35,7 +35,7 @@ public class ResidenceBuildingScreen extends ABuildingMenuScreen {
    public List<Button> createTabButtons(ITabHost tabHost) {
       List<Button> buttons = new ArrayList<>();
       buttons.add(new HomeTabButton(tabHost, buttons.size(), this::createDefaultTab));
-      if (context.building().getBuildingType().offersWork())
+      if (context.building().getBuildingType().isWorkBuilding())
          buttons.add(
                new ManageWorkersTabButton(tabHost, buttons.size(), host -> new ManageWorkBuildingWorkersTab(host, font, context)));
       buttons.add(

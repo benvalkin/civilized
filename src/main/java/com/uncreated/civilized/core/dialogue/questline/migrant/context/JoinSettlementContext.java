@@ -36,7 +36,7 @@ public class JoinSettlementContext extends DialogueContext {
 
       VillagerOccupation occupation = villager.getInfo().getOccupation();
       Predicate<BuildingType> suitableWorksite =
-            occupation.is(VillagerOccupations.UNEMPLOYED) ? BuildingType::offersWork : occupation::isValidWorksite;
+            occupation.is(VillagerOccupations.UNEMPLOYED) ? BuildingType::isWorkBuilding : occupation::isValidWorksite;
       freeWorksite =
             BuildingUtil
                   .findUnoccupiedWorksite(

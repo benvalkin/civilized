@@ -54,6 +54,10 @@ public class ServerVillagerStore extends VillagerStore {
             item.putUUID(VillagerInfo.FIELD_SETTLEMENT_ID, villagerInfo.getSettlementId());
          if (villagerInfo.getHomeBuildingId() != null)
             item.putUUID(VillagerInfo.FIELD_HOME_BUILDING_ID, villagerInfo.getHomeBuildingId());
+         if (villagerInfo.getWorkBuildingId() != null)
+            item.putUUID(VillagerInfo.FIELD_WORK_BUILDING_ID, villagerInfo.getWorkBuildingId());
+         if (villagerInfo.getWorkAreaId() != null)
+            item.putUUID(VillagerInfo.FIELD_WORK_AREA_ID, villagerInfo.getWorkAreaId());
          item.putString(VillagerInfo.FIELD_FIRST_NAME, villagerInfo.getFirstName());
          item.putString(VillagerInfo.FIELD_LAST_NAME, villagerInfo.getLastName());
          item.putString(
@@ -67,8 +71,6 @@ public class ServerVillagerStore extends VillagerStore {
          item.putInt(VillagerInfo.FIELD_SOCIAL_CLASS, villagerInfo.getSocialClass());
          if (villagerInfo.getLoadoutId() != null)
             item.putUUID(VillagerInfo.FIELD_LOADOUT_ID, villagerInfo.getLoadoutId());
-         if (villagerInfo.getWorkAreaId() != null)
-            item.putUUID(VillagerInfo.FIELD_WORK_AREA_ID, villagerInfo.getWorkAreaId());
 
          tags.add(item);
       }
@@ -104,14 +106,16 @@ public class ServerVillagerStore extends VillagerStore {
             builder.settlementId(itemTag.getUUID(VillagerInfo.FIELD_SETTLEMENT_ID));
          if (itemTag.hasUUID(VillagerInfo.FIELD_HOME_BUILDING_ID))
             builder.homeBuildingId(itemTag.getUUID(VillagerInfo.FIELD_HOME_BUILDING_ID));
+         if (itemTag.hasUUID(VillagerInfo.FIELD_WORK_BUILDING_ID))
+            builder.workBuildingId(itemTag.getUUID(VillagerInfo.FIELD_WORK_BUILDING_ID));
+         if (itemTag.hasUUID(VillagerInfo.FIELD_WORK_AREA_ID))
+            builder.workAreaId(itemTag.getUUID(VillagerInfo.FIELD_WORK_AREA_ID));
          if (itemTag.hasUUID(VillagerInfo.FIELD_PARTNER_ID))
             builder.partnerId(itemTag.getUUID(VillagerInfo.FIELD_PARTNER_ID));
          if (itemTag.contains(VillagerInfo.FIELD_SOCIAL_CLASS))
             builder.socialClass(itemTag.getInt(VillagerInfo.FIELD_SOCIAL_CLASS));
          if (itemTag.hasUUID(VillagerInfo.FIELD_LOADOUT_ID))
             builder.loadoutId(itemTag.getUUID(VillagerInfo.FIELD_LOADOUT_ID));
-         if (itemTag.hasUUID(VillagerInfo.FIELD_WORK_AREA_ID))
-            builder.workAreaId(itemTag.getUUID(VillagerInfo.FIELD_WORK_AREA_ID));
 
          VillagerInfo villagerInfo = builder.build();
          store.villagers.add(villagerInfo);

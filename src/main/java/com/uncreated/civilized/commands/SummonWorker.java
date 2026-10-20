@@ -48,7 +48,7 @@ public class SummonWorker {
 
       Optional<Building> worksite =
             ServerBuildingsStore.INSTANCE.findEnclosingBuilding(source.getPlayer().getOnPos(), level)
-                  .filter(building -> building.getBuildingType().offersWork());
+                  .filter(building -> building.getBuildingType().isWorkBuilding());
       if (worksite.isEmpty())
          throw ERROR_NOT_INSIDE_WORKSITE.create();
 

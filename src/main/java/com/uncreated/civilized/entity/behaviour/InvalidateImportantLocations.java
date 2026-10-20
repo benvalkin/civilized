@@ -116,7 +116,7 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
          return Optional.empty();
 
       return ServerBuildingsStore.INSTANCE.find(villagerInfo.getWorkBuildingId())
-            .filter(b -> b.getBuildingType().offersWork())
+            .filter(b -> b.getBuildingType().isWorkBuilding())
             .filter(b -> b.getSettlementId().equals(villagerInfo.getSettlementId()));
    }
 
