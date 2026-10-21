@@ -136,10 +136,7 @@ public class VillagerInfo {
       if (partnerId == null)
          return false;
 
-      if (other.partnerId == null)
-         return false;
-
-      return partnerId.equals(other.partnerId);
+      return partnerId.equals(other.villagerId) && villagerId.equals(other.partnerId);
    }
 
    public String getFullName() {
