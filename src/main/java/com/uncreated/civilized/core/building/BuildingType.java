@@ -33,6 +33,7 @@ public class BuildingType {
    private final boolean isWorkerResidence;
    private final boolean isFamilyResidence;
    private final boolean isWorksite;
+   private final boolean isMilitary;
    private final boolean isFoodVendor;
    @Nullable
    private final Class<? extends Animal> animalFarmMobType;

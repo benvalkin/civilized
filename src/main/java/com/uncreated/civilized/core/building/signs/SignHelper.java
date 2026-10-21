@@ -85,23 +85,29 @@ public class SignHelper {
                Component.empty() };
       } else if (building.getBuildingType().isWorkerResidence()) {
          List<VillagerInfo> residents = BuildingUtil.getOccupants(building, villagerStore);
+         List<VillagerInfo> workers = BuildingUtil.getWorkers(building, villagerStore);
 
-         Optional<VillagerInfo> owner = residents.stream().filter(v -> v.getGender() == Gender.MALE).findFirst();
-         if (owner.isEmpty())
-            owner = residents.stream().findFirst();
+         if (building.getBuildingType().isMilitary()) {
+            return new Component[] { building.getBuildingType().shortName(), Component.empty(), Component
+                  .translatable("menu.building.occupants.garrison.heading", workers.size(), building.getMaxWorkers()),
+                  Component.empty() };
+         } else {
+            Optional<VillagerInfo> owner = residents.stream().filter(v -> v.getGender() == Gender.MALE).findFirst();
+            if (owner.isEmpty())
+               owner = residents.stream().findFirst();
 
-         String ownerName = owner.map(VillagerInfo::getLastName).orElse("");
+            String ownerName = owner.map(VillagerInfo::getLastName).orElse("");
 
-         return new Component[] { building.getBuildingType().shortName(),
-               Component.literal(ownerName).withStyle(ChatFormatting.ITALIC),
-               Component.translatable("menu.building.residence.residents.count", residents.size()), Component.empty() };
+            return new Component[] { building.getBuildingType().shortName(),
+                  Component.literal(ownerName).withStyle(ChatFormatting.ITALIC),
+                  Component
+                        .translatable("menu.building.worksite.workers.count", workers.size(), building.getMaxWorkers()),
+                  Component.translatable("menu.building.residence.residents.count", residents.size()) };
+         }
       } else if (building.getBuildingType().isWorksite()) {
          List<VillagerInfo> workers = BuildingUtil.getWorkers(building, villagerStore);
          return new Component[] { building.getBuildingType().shortName(),
-               Component.translatable(
-                     "menu.building.worksite.workers.count",
-                     workers.size(),
-                     building.getMaxWorkers()),
+               Component.translatable("menu.building.worksite.workers.count", workers.size(), building.getMaxWorkers()),
                Component.empty(), Component.empty() };
       }
       return new Component[] { building.getBuildingType().translation(), Component.empty(), Component.empty(),
