@@ -12,6 +12,10 @@ import com.uncreated.civilized.ui.style.Colors;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BedPart;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 
 public class BlockCountRequirement implements IBuildingRequirement {
 
@@ -60,8 +64,13 @@ public class BlockCountRequirement implements IBuildingRequirement {
             for (int y = bounds.getLowerCorner().getY(); y <= bounds.getUpperCorner().getY(); y++) {
                current.set(x, y, z);
 
-               if (validator.isBlockValid(current, level))
-                  validBlocksFound++;
+               if (!validator.isBlockValid(current, level))
+                  continue;
+
+               if (!isMainBlockPart(current, level, bounds))
+                  continue;
+
+               validBlocksFound++;
 
                if (haltChecksIfBlockCanSeeSky() && level.canSeeSky(current))
                   break;
@@ -69,6 +78,27 @@ public class BlockCountRequirement implements IBuildingRequirement {
          }
       }
       return createResult(validBlocksFound);
+   }
+
+   private static boolean isMainBlockPart(BlockPos pos, Level level, BuildingBounds bounds) {
+      BlockState state = level.getBlockState(pos);
+
+      if (state.hasProperty(BlockStateProperties.BED_PART)) {
+         if (state.getValue(BlockStateProperties.BED_PART) == BedPart.HEAD)
+            return true;
+
+         BlockPos head = pos.relative(state.getValue(BlockStateProperties.HORIZONTAL_FACING));
+         return !bounds.contains(head);
+      }
+
+      if (state.hasProperty(BlockStateProperties.DOUBLE_BLOCK_HALF)) {
+         if (state.getValue(BlockStateProperties.DOUBLE_BLOCK_HALF) == DoubleBlockHalf.LOWER)
+            return true;
+
+         return !bounds.contains(pos.below());
+      }
+
+      return true;
    }
 
    public boolean haltChecksIfBlockCanSeeSky() {
@@ -102,7 +132,7 @@ public class BlockCountRequirement implements IBuildingRequirement {
       @Override
       public Component getDescription() {
 
-         if (maxBlocks == null || minBlocks == maxBlocks) {
+         if (maxBlocks == null) {
             int numberToDisplay = Math.clamp(actualBlocks, 0, minBlocks);
             return Component
                   .translatable(
@@ -110,6 +140,14 @@ public class BlockCountRequirement implements IBuildingRequirement {
                         blockDescription,
                         numberToDisplay,
                         minBlocks)
+                  .withColor(Colors.MENU_TEXT_DARK);
+         } else if (minBlocks == maxBlocks) {
+            return Component
+                  .translatable(
+                        "menu.building.management.requirements.count.description",
+                        blockDescription,
+                        actualBlocks,
+                        maxBlocks)
                   .withColor(Colors.MENU_TEXT_DARK);
          }
 

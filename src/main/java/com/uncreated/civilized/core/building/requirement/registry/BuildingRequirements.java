@@ -241,9 +241,9 @@ public class BuildingRequirements {
                   .add(new BlockTypeRequirement(BuildingBlockTypes.WOOD, 120))
                   .add(new BlockTypeRequirement(BuildingBlockTypes.STONE, 64))
                   .add(new ChestsPresentRequirement(2, false))
-                  .add(new BedsPresentRequirement(4, 4, false))
+                  .add(new BedsPresentRequirement(5, 5, false))
                   .add(new SignsPresentRequirement(1, false))
-                  .add(new CurrencyRequirement(100))
+                  .add(new CurrencyRequirement(200))
                   .create());
 
       registerRequirements(
@@ -254,7 +254,7 @@ public class BuildingRequirements {
                   .add(new BlockTypeRequirement(BuildingBlockTypes.WOOD, 120))
                   .add(new BlockTypeRequirement(BuildingBlockTypes.STONE, 120))
                   .add(new ChestsPresentRequirement(2, false))
-                  .add(new BedsPresentRequirement(6, 6, false))
+                  .add(new BedsPresentRequirement(8, 8, false))
                   .add(new SignsPresentRequirement(1, false))
                   .add(new CurrencyRequirement(400))
                   .create());
@@ -267,7 +267,7 @@ public class BuildingRequirements {
                   .add(new BlockTypeRequirement(BuildingBlockTypes.WOOD, 100))
                   .add(new BlockTypeRequirement(BuildingBlockTypes.STONE, 250))
                   .add(new ChestsPresentRequirement(2, false))
-                  .add(new BedsPresentRequirement(8, 8, false))
+                  .add(new BedsPresentRequirement(12, 12, false))
                   .add(new SignsPresentRequirement(1, false))
                   .add(new CurrencyRequirement(800))
                   .create());
