@@ -2,7 +2,9 @@ package com.uncreated.civilized.core.villagerinfo;
 
 import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.OptionalLong;
 import java.util.Random;
 import java.util.UUID;
 
@@ -49,6 +51,9 @@ public class VillagerInfo {
                   .socialClass(buffer.readVarInt())
                   .loadoutId(buffer.readNullable((b -> b.readUUID())))
                   .workAreaId(buffer.readNullable((b -> b.readUUID())))
+                  .motherId(buffer.readNullable((b -> b.readUUID())))
+                  .fatherId(buffer.readNullable((b -> b.readUUID())))
+                  .birthDay(buffer.readNullable((FriendlyByteBuf::readVarLong)))
                   .skills(VillagerSkills.decode(buffer));
 
       return builder.build();
@@ -70,6 +75,9 @@ public class VillagerInfo {
       buffer.writeVarInt(socialClass);
       buffer.writeNullable(loadoutId, (b, v) -> b.writeUUID(v));
       buffer.writeNullable(workAreaId, (b, v) -> b.writeUUID(v));
+      buffer.writeNullable(motherId, (b, v) -> b.writeUUID(v));
+      buffer.writeNullable(fatherId, (b, v) -> b.writeUUID(v));
+      buffer.writeNullable(birthDay, FriendlyByteBuf::writeVarLong);
       skills.encode(buffer);
    }
 
@@ -88,6 +96,10 @@ public class VillagerInfo {
    public static final String FIELD_LOADOUT_ID = "loadout_id";
    public static final String FIELD_WORK_AREA_ID = "work_area_id";
    public static final String FIELD_SKILLS = "skills";
+   public static final String FIELD_MOTHER_ID = "mother_id";
+   public static final String FIELD_FATHER_ID = "father_id";
+   public static final String FIELD_BIRTH_DAY = "birth_day";
+   public static final int GROW_UP_DAYS = 30;
 
    private UUID villagerId;
    @Setter
@@ -122,6 +134,10 @@ public class VillagerInfo {
    @Setter
    @Builder.Default
    private VillagerSkills skills = VillagerSkills.allSkillsZeroXp();
+   private @Nullable UUID motherId;
+   private @Nullable UUID fatherId;
+   @Setter
+   private @Nullable Long birthDay;
 
    public boolean hasName() {
       return !firstName.isEmpty() && !lastName.isEmpty();
@@ -144,6 +160,56 @@ public class VillagerInfo {
          return false;
 
       return partnerId.equals(other.villagerId) && villagerId.equals(other.partnerId);
+   }
+
+   public List<UUID> getParentIds() {
+      List<UUID> parentIds = new ArrayList<>(2);
+      if (motherId != null)
+         parentIds.add(motherId);
+      if (fatherId != null)
+         parentIds.add(fatherId);
+      return parentIds;
+   }
+
+   public boolean isChildOf(VillagerInfo other) {
+      return other.villagerId.equals(motherId) || other.villagerId.equals(fatherId);
+   }
+
+   public boolean isSiblingOf(VillagerInfo other) {
+      if (villagerId.equals(other.villagerId))
+         return false;
+
+      for (UUID parentId : getParentIds()) {
+         if (other.getParentIds().contains(parentId))
+            return true;
+      }
+      return false;
+   }
+
+   /**
+    * Whether they're close family who'd live together: partners, parents and children, siblings, and step-parents and
+    * step-children.
+    */
+   public boolean isCloseFamilyOf(VillagerInfo other) {
+      if (isPartnerOf(other) || isChildOf(other) || other.isChildOf(this) || isSiblingOf(other))
+         return true;
+
+      // a parent's new partner, or a partner's children
+      boolean isStepChild = other.partnerId != null && getParentIds().contains(other.partnerId);
+      boolean isStepParent = partnerId != null && other.getParentIds().contains(partnerId);
+      return isStepChild || isStepParent;
+   }
+
+   public OptionalLong getAgeInDays(long dayTime) {
+      if (birthDay == null)
+         return OptionalLong.empty();
+
+      return OptionalLong.of(dayTime / 24000 - birthDay);
+   }
+
+   public boolean isChild(long dayTime) {
+      OptionalLong age = getAgeInDays(dayTime);
+      return age.isPresent() && age.getAsLong() < GROW_UP_DAYS;
    }
 
    public String getFullName() {
@@ -270,6 +336,10 @@ public class VillagerInfo {
       socialClass = other.socialClass;
       loadoutId = other.loadoutId;
       workAreaId = other.workAreaId;
+      skills = other.skills;
+      motherId = other.motherId;
+      fatherId = other.fatherId;
+      birthDay = other.birthDay;
    }
 
    public String toStringLite() {

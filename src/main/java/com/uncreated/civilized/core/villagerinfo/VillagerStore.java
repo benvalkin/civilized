@@ -1,5 +1,6 @@
 package com.uncreated.civilized.core.villagerinfo;
 
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -31,6 +32,18 @@ public abstract class VillagerStore extends SavedData {
 
    public Set<VillagerInfo> getCitizens(UUID settlementId) {
       return villagers.getSettlementsToVillagersIndex().getValues(settlementId);
+   }
+
+   public Set<VillagerInfo> findChildren(UUID parentId) {
+      return villagers.getParentsToChildrenIndex().getValues(parentId);
+   }
+
+   public Set<VillagerInfo> findSiblings(VillagerInfo villager) {
+      Set<VillagerInfo> siblings = new HashSet<>();
+      for (UUID parentId : villager.getParentIds())
+         siblings.addAll(findChildren(parentId));
+      siblings.remove(villager);
+      return siblings;
    }
 
    public VillagerInfo get(UUID villagerId) {

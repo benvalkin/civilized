@@ -73,6 +73,12 @@ public class ServerVillagerStore extends VillagerStore {
          if (villagerInfo.getLoadoutId() != null)
             item.putUUID(VillagerInfo.FIELD_LOADOUT_ID, villagerInfo.getLoadoutId());
          item.put(VillagerInfo.FIELD_SKILLS, villagerInfo.getSkills().toNbt());
+         if (villagerInfo.getMotherId() != null)
+            item.putUUID(VillagerInfo.FIELD_MOTHER_ID, villagerInfo.getMotherId());
+         if (villagerInfo.getFatherId() != null)
+            item.putUUID(VillagerInfo.FIELD_FATHER_ID, villagerInfo.getFatherId());
+         if (villagerInfo.getBirthDay() != null)
+            item.putLong(VillagerInfo.FIELD_BIRTH_DAY, villagerInfo.getBirthDay());
 
          tags.add(item);
       }
@@ -111,6 +117,12 @@ public class ServerVillagerStore extends VillagerStore {
             builder.homeBuildingId(itemTag.getUUID(VillagerInfo.FIELD_HOME_BUILDING_ID));
          if (itemTag.hasUUID(VillagerInfo.FIELD_WORK_BUILDING_ID))
             builder.workBuildingId(itemTag.getUUID(VillagerInfo.FIELD_WORK_BUILDING_ID));
+         if (itemTag.hasUUID(VillagerInfo.FIELD_MOTHER_ID))
+            builder.motherId(itemTag.getUUID(VillagerInfo.FIELD_MOTHER_ID));
+         if (itemTag.hasUUID(VillagerInfo.FIELD_FATHER_ID))
+            builder.fatherId(itemTag.getUUID(VillagerInfo.FIELD_FATHER_ID));
+         if (itemTag.contains(VillagerInfo.FIELD_BIRTH_DAY))
+            builder.birthDay(itemTag.getLong(VillagerInfo.FIELD_BIRTH_DAY));
          if (itemTag.hasUUID(VillagerInfo.FIELD_WORK_AREA_ID))
             builder.workAreaId(itemTag.getUUID(VillagerInfo.FIELD_WORK_AREA_ID));
          if (itemTag.hasUUID(VillagerInfo.FIELD_PARTNER_ID))

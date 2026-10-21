@@ -4,6 +4,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 
 import com.google.common.collect.ImmutableMap;
@@ -76,7 +78,7 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
       else
          villager.getBrain().setMemory(AIRegistry.MM_VILLAGER_WORKTIME_OCCUPATION.get(), villagerInfo.getOccupation());
 
-      Optional<Building> home = invalidateHome(villagerInfo);
+      Optional<Building> home = invalidateHome(villagerInfo, level.getDayTime());
       if (home.isPresent()) {
          villagerInfo.setHomeBuildingId(home.get().getBuildingId());
          // social class is not yet an active system
@@ -120,15 +122,28 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
             .filter(b -> b.getSettlementId().equals(villagerInfo.getSettlementId()));
    }
 
-   private static Optional<Building> invalidateHome(VillagerInfo villagerInfo) {
+   private static Optional<Building> invalidateHome(VillagerInfo villagerInfo, long dayTime) {
 
       if (!villagerInfo.getNpcRole().is(VillagerNpcRoles.CITIZEN))
          return Optional.empty();
 
-      if (villagerInfo.getOccupation().is(VillagerOccupations.SOLDIER))
-         return invalidateHomeForSoldier(villagerInfo);
+      if (villagerInfo.isChild(dayTime))
+         return invalidateHomeForChild(villagerInfo);
+      else if (villagerInfo.getOccupation().is(VillagerOccupations.SOLDIER))
+         return invalidateHomeForSoldier(villagerInfo, dayTime);
       else
          return invalidateHomeForCivilian(villagerInfo);
+   }
+
+   private static Optional<Building> invalidateHomeForChild(VillagerInfo child) {
+
+      // children live wherever their parents live, even if there isn't a spare bed for them
+      Optional<Building> parentsHome = findParentsHome(child);
+      if (parentsHome.isPresent())
+         return parentsHome;
+
+      // orphans, and children whose parents have nowhere to live together, find a home like anyone else without a job
+      return findHomeWithoutFamily(child);
    }
 
    private static Optional<Building> invalidateHomeForCivilian(VillagerInfo civilian) {
@@ -143,23 +158,34 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
       if (workBuilding.isPresent())
          return workBuilding;
 
-      // otherwise, they can stay wherever they're staying, provided it doesn't now belong to a stranger who has been
-      // assigned to work in their current home
+      // grown-up children keep living with their parents until there's an empty home for them to move into
       Optional<Building> currentHome = ServerBuildingsStore.INSTANCE.find(civilian.getHomeBuildingId());
-      if (currentHome.isPresent() && !isClaimedByAnotherHousehold(currentHome.get(), civilian))
+      if (currentHome.isPresent() && livesWithParents(currentHome.get(), civilian)) {
+         Optional<Building> emptyHome = findEmptyHome(civilian);
+         if (emptyHome.isPresent())
+            return emptyHome;
+
+         return currentHome;
+      }
+
+      return findHomeWithoutFamily(civilian);
+   }
+
+   private static Optional<Building> findHomeWithoutFamily(VillagerInfo villager) {
+
+      // they can stay wherever they're staying, provided it doesn't now belong to another household, e.g. one of its
+      // new workers
+      Optional<Building> currentHome = ServerBuildingsStore.INSTANCE.find(villager.getHomeBuildingId());
+      if (currentHome.isPresent() && !isClaimedByAnotherHousehold(currentHome.get(), villager))
          return currentHome;
 
       // if they can't stay there, any empty family home will do (e.g. a town house)
-      Optional<Building> emptyHome =
-            BuildingUtil.findEmptyGeneralFamilyResidence(
-                  civilian.getSettlementId(),
-                  ServerBuildingsStore.INSTANCE,
-                  ServerVillagerStore.INSTANCE);
+      Optional<Building> emptyHome = findEmptyHome(villager);
       if (emptyHome.isPresent())
          return emptyHome;
 
       // if there are not even any viable empty homes, they will stay in the town hall
-      Optional<Building> townHall = ServerBuildingsStore.INSTANCE.findTownHall(civilian.getSettlementId());
+      Optional<Building> townHall = ServerBuildingsStore.INSTANCE.findTownHall(villager.getSettlementId());
       if (townHall.isPresent())
          return townHall;
 
@@ -167,21 +193,25 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
       return Optional.empty();
    }
 
-   private static Optional<Building> invalidateHomeForSoldier(VillagerInfo soldier) {
+   private static Optional<Building> findEmptyHome(VillagerInfo villager) {
+      return BuildingUtil.findEmptyGeneralFamilyResidence(
+            villager.getSettlementId(),
+            ServerBuildingsStore.INSTANCE,
+            ServerVillagerStore.INSTANCE);
+   }
+
+   private static Optional<Building> invalidateHomeForSoldier(VillagerInfo soldier, long dayTime) {
 
       // soldiers live with their family when they can. Their post is never their family's home.
       Optional<Building> familyHome = findFamilyHome(soldier);
       if (familyHome.isPresent())
          return familyHome;
 
-      // a soldier who has a family but no suitable family home (can happen when two soldiers are partners) tries to
-      // move into an empty family home
-      if (soldier.getPartnerId() != null) {
-         Optional<Building> emptyHome =
-               BuildingUtil.findEmptyGeneralFamilyResidence(
-                     soldier.getSettlementId(),
-                     ServerBuildingsStore.INSTANCE,
-                     ServerVillagerStore.INSTANCE);
+      // a soldier who has a family but no suitable family home (can happen when two soldiers are partners, or a
+      // single soldier has children) tries to move into an empty family home
+      if (soldier.getPartnerId() != null || hasYoungChildren(soldier, dayTime)) { // todo: might need a "has family"
+                                                                                  // method
+         Optional<Building> emptyHome = findEmptyHome(soldier);
          if (emptyHome.isPresent())
             return emptyHome;
       }
@@ -228,7 +258,53 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
       if (isClaimedByAnotherHousehold(building.get(), villager))
          return Optional.empty();
 
+      // a grown-up child who has found a partner starts a household of their own, rather than moving their partner in
+      // with their parents
+      if (livesWithParents(building.get(), villager))
+         return Optional.empty();
+
       return building;
+   }
+
+   private static Optional<Building> findParentsHome(VillagerInfo child) {
+
+      Optional<Building> mothersHome = findParentsFamilyResidence(child.getMotherId());
+      Optional<Building> fathersHome = findParentsFamilyResidence(child.getFatherId());
+
+      if (mothersHome.isPresent() && fathersHome.isPresent())
+         return Optional.of(chooseFamilyHome(mothersHome.get(), fathersHome.get()));
+      if (mothersHome.isPresent())
+         return mothersHome;
+      return fathersHome;
+   }
+
+   private static Optional<Building> findParentsFamilyResidence(@Nullable UUID parentId) {
+
+      Optional<VillagerInfo> parent = ServerVillagerStore.INSTANCE.find(parentId);
+      if (parent.isEmpty())
+         return Optional.empty();
+
+      Optional<Building> home = ServerBuildingsStore.INSTANCE.find(parent.get().getHomeBuildingId());
+      if (home.isEmpty() || !home.get().getBuildingType().isFamilyResidence())
+         return Optional.empty();
+
+      return home;
+   }
+
+   private static boolean livesWithParents(Building building, VillagerInfo villager) {
+      for (VillagerInfo resident : BuildingUtil.getOccupants(building, ServerVillagerStore.INSTANCE)) {
+         if (villager.isChildOf(resident))
+            return true;
+      }
+      return false;
+   }
+
+   private static boolean hasYoungChildren(VillagerInfo villager, long dayTime) {
+      for (VillagerInfo child : ServerVillagerStore.INSTANCE.findChildren(villager.getVillagerId())) {
+         if (child.isChild(dayTime))
+            return true;
+      }
+      return false;
    }
 
    /**
@@ -282,6 +358,6 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
    }
 
    private static boolean isSameHousehold(VillagerInfo villager, VillagerInfo other) {
-      return villager.getVillagerId().equals(other.getVillagerId()) || villager.isPartnerOf(other);
+      return villager.getVillagerId().equals(other.getVillagerId()) || villager.isCloseFamilyOf(other);
    }
 }
