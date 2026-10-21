@@ -17,7 +17,9 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.neoforged.neoforge.network.PacketDistributor;
+import org.jetbrains.annotations.NotNull;
 
 public class ManageWorkBuildingWorkersTab extends ManageOccupantsTab {
 
@@ -28,10 +30,6 @@ public class ManageWorkBuildingWorkersTab extends ManageOccupantsTab {
    protected ManageWorkBuildingWorkersTab(ITabHost tabHost, Font font, Component heading, BuildingScreenContext context) {
       super(tabHost, font, heading, context);
       refresh();
-   }
-
-   protected String workforceName() {
-      return "workers";
    }
 
    @Override
@@ -60,7 +58,7 @@ public class ManageWorkBuildingWorkersTab extends ManageOccupantsTab {
    private Button createUnassignButton(VillagerInfo worker) {
       return Button
             .builder(
-                  Component.translatable("menu.building.occupants.button.unassign." + workforceName()),
+                    getUnassignButtonText(),
                   button -> PacketDistributor
                         .sendToServer(new AssignWorkerRequest(worker.getVillagerId(), Optional.empty())))
             .build();
@@ -69,14 +67,14 @@ public class ManageWorkBuildingWorkersTab extends ManageOccupantsTab {
    private Button createAssignButton(VillagerInfo villager) {
       Button button =
             Button.builder(
-                  Component.translatable("menu.building.occupants.button.assign"),
+                            getAssignedButtonText(),
                   b -> PacketDistributor.sendToServer(
                         new AssignWorkerRequest(villager.getVillagerId(), Optional.of(building.getBuildingId()))))
                   .build();
 
       if (!BuildingUtil.worksiteHasFreeWorkerSlot(building, ClientVillagerStore.INSTANCE)) {
          button.active = false;
-         button.setTooltip(Tooltip.create(Component.translatable("menu.building.occupants.button.assign.full")));
+         button.setTooltip(Tooltip.create(Component.translatable("menu.building.occupants.button.assign.workers.full")));
       } else if (!villager.getOccupation().is(VillagerOccupations.UNEMPLOYED)) {
          button.setTooltip(
                Tooltip.create(
@@ -88,17 +86,25 @@ public class ManageWorkBuildingWorkersTab extends ManageOccupantsTab {
       return button;
    }
 
+   protected @NotNull Component getAssignedButtonText() {
+      return Component.translatable("menu.building.occupants.button.assign.workers");
+   }
+
+   private @NotNull MutableComponent getUnassignButtonText() {
+      return Component.translatable("menu.building.occupants.button.unassign.workers");
+   }
+
    @Override
    protected Component getSubHeading(List<VillagerInfo> villagers) {
       long workers = villagers.stream().filter(v -> v.isAssignedWorkerOf(building)).count();
       return Component.translatable(
-            "menu.building.occupants." + workforceName() + ".heading",
+            "menu.building.occupants.workers.heading",
             workers,
             building.getMaxWorkers());
    }
 
    @Override
    protected Component getEmptyOccupantsMessage() {
-      return Component.translatable("menu.building.occupants." + workforceName() + ".empty");
+      return Component.translatable("menu.building.occupants.workers.empty");
    }
 }

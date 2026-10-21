@@ -51,7 +51,7 @@ public class ManageWorkAreaWorkersTab extends ManageOccupantsTab {
 
       Button assignButton =
             Button.builder(
-                  Component.translatable("menu.building.occupants.button.assign"),
+                  Component.translatable("menu.building.occupants.button.assign.workers"),
                   button -> PacketDistributor
                         .sendToServer(new AssignWorkAreaRequest(villager.getVillagerId(), building.getBuildingId())))
                   .build();

@@ -88,8 +88,11 @@ public class SignHelper {
          List<VillagerInfo> workers = BuildingUtil.getWorkers(building, villagerStore);
 
          if (building.getBuildingType().isMilitary()) {
-            return new Component[] { building.getBuildingType().shortName(), Component.empty(), Component
-                  .translatable("menu.building.occupants.garrison.heading", workers.size(), building.getMaxWorkers()),
+            return new Component[] { building.getBuildingType().shortName(), Component.empty(),
+                  Component.translatable(
+                        "menu.building.occupants.assigned_soldiers.heading",
+                        workers.size(),
+                        building.getMaxWorkers()),
                   Component.empty() };
          } else {
             Optional<VillagerInfo> owner = residents.stream().filter(v -> v.getGender() == Gender.MALE).findFirst();
