@@ -93,7 +93,7 @@ public class BuildingUtil {
    }
 
    public static boolean worksiteHasFreeWorkerSlot(Building building, VillagerStore store) {
-      return getAssignedWorkers(building, store).size() < building.getBuildingType().maxWorkers();
+      return getAssignedWorkers(building, store).size() < building.getMaxWorkers();
    }
 
    public static Optional<Building> findUnoccupiedWorksite(

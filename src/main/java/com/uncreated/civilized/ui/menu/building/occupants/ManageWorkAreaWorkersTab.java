@@ -57,7 +57,7 @@ public class ManageWorkAreaWorkersTab extends ManageOccupantsTab {
                   .build();
 
       List<VillagerInfo> workers = BuildingUtil.getWorkers(building, ClientVillagerStore.INSTANCE);
-      if (!workers.isEmpty() && workers.size() >= building.getBuildingType().maxWorkers())
+      if (!workers.isEmpty() && workers.size() >= building.getMaxWorkers())
          assignButton.setTooltip(
                Tooltip.create(
                      Component.translatable(
@@ -72,7 +72,7 @@ public class ManageWorkAreaWorkersTab extends ManageOccupantsTab {
    protected Component getSubHeading(List<VillagerInfo> villagers) {
       long workers = villagers.stream().filter(this::worksHere).count();
       return Component
-            .translatable("menu.building.occupants.workers.heading", workers, building.getBuildingType().maxWorkers());
+            .translatable("menu.building.occupants.workers.heading", workers, building.getMaxWorkers());
    }
 
    @Override

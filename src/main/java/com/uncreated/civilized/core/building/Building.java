@@ -135,6 +135,10 @@ public class Building {
       return null;
    }
 
+   public int getMaxWorkers() {
+      return buildingType.getMaxWorkers().apply(this);
+   }
+
    @Override
    public String toString() {
       return String.format(

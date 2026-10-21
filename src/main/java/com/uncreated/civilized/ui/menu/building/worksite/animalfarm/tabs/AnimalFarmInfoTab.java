@@ -54,7 +54,7 @@ public class AnimalFarmInfoTab extends ABuildingScreenTab implements IBuildingIn
             Component.translatable(
                   "menu.building.worksite.workers.heading",
                   workers.size(),
-                  context.building().getBuildingType().maxWorkers()),
+                  context.building().getMaxWorkers()),
             getX(),
             getY() + 20,
             Colors.MENU_TEXT_DARK,

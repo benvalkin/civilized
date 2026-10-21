@@ -46,7 +46,7 @@ public class BuildingType {
    @Builder.Default
    private final BuildingDetectionType detectionType = BuildingDetectionType.ROOMS;
    @Builder.Default
-   private final int maxWorkers = 1;
+   private final Function<Building, Integer> getMaxWorkers = b -> 1;
    @Getter(AccessLevel.NONE)
    @Builder.Default
    private final Supplier<VillagerOccupation> occupation = () -> VillagerOccupations.UNEMPLOYED;

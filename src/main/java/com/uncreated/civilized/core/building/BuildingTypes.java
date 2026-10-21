@@ -119,16 +119,16 @@ public class BuildingTypes {
          declare(
                BuildingType.builder(createResourceKey("guard_post"))
                      .isWorkerResidence(true)
-                     .maxWorkers(1)
                      .occupation(() -> VillagerOccupations.SOLDIER)
                      .build());
    public static BuildingType BARRACKS =
-         declare(
-               BuildingType.builder(createResourceKey("barracks"))
-                     .isWorkerResidence(true)
-                     .maxWorkers(2)
-                     .occupation(() -> VillagerOccupations.SOLDIER)
-                     .build());
+         declare(BuildingType.builder(createResourceKey("barracks")).isWorkerResidence(true).getMaxWorkers(b -> {
+            if (b.getUpgradeLevel() <= 1)
+               return 5;
+            if (b.getUpgradeLevel() == 2)
+               return 8;
+            return 10;
+         }).occupation(() -> VillagerOccupations.SOLDIER).build());
    public static BuildingType MILITARY_HOUSE =
          declare(
                BuildingType.builder(createResourceKey("military_house"))

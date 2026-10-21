@@ -101,7 +101,7 @@ public class SignHelper {
                Component.translatable(
                      "menu.building.worksite.workers.count",
                      workers.size(),
-                     building.getBuildingType().maxWorkers()),
+                     building.getMaxWorkers()),
                Component.empty(), Component.empty() };
       }
       return new Component[] { building.getBuildingType().translation(), Component.empty(), Component.empty(),

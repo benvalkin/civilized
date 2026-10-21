@@ -94,7 +94,7 @@ public class ManageWorkBuildingWorkersTab extends ManageOccupantsTab {
       return Component.translatable(
             "menu.building.occupants." + workforceName() + ".heading",
             workers,
-            building.getBuildingType().maxWorkers());
+            building.getMaxWorkers());
    }
 
    @Override

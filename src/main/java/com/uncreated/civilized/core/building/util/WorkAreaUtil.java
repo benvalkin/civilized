@@ -99,10 +99,10 @@ public final class WorkAreaUtil {
    }
 
    private static boolean isABoolean(Building workArea, List<VillagerInfo> currentWorkers) {
-      return !currentWorkers.isEmpty() && currentWorkers.size() >= workArea.getBuildingType().maxWorkers();
+      return !currentWorkers.isEmpty() && currentWorkers.size() >= workArea.getMaxWorkers();
    }
 
    private static boolean hasRoom(Building workArea, VillagerStore villagerStore) {
-      return getWorkers(workArea, villagerStore).size() < workArea.getBuildingType().maxWorkers();
+      return getWorkers(workArea, villagerStore).size() < workArea.getMaxWorkers();
    }
 }
