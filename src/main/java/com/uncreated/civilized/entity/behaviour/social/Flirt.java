@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+import com.uncreated.civilized.core.villagerinfo.Gender;
 import org.jetbrains.annotations.NotNull;
 
 import com.uncreated.civilized.core.StoreOperation;
@@ -165,7 +166,8 @@ public class Flirt extends Socialize {
          return;
 
       villager.changeNpcRole(VillagerNpcRoles.CITIZEN);
-      villager.getInfo().setLastName(partner.getInfo().getLastName());
+      if (partner.getInfo().getGender() == Gender.MALE)
+         villager.getInfo().setLastName(partner.getInfo().getLastName());
    }
 
    public ConversationTopic getConversationTopic() {
