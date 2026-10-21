@@ -112,7 +112,7 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
    }
 
    private static Optional<Building> invalidateWorksite(VillagerInfo villagerInfo) {
-      if (!villagerInfo.getNpcRole().is(VillagerNpcRoles.WORKER))
+      if (!villagerInfo.getNpcRole().is(VillagerNpcRoles.CITIZEN))
          return Optional.empty();
 
       return ServerBuildingsStore.INSTANCE.find(villagerInfo.getWorkBuildingId())
@@ -122,7 +122,7 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
 
    private static Optional<Building> invalidateHome(VillagerInfo villagerInfo) {
 
-      if (!villagerInfo.getNpcRole().is(VillagerNpcRoles.WORKER))
+      if (!villagerInfo.getNpcRole().is(VillagerNpcRoles.CITIZEN))
          return Optional.empty();
 
       if (villagerInfo.getOccupation().is(VillagerOccupations.SOLDIER))

@@ -24,7 +24,7 @@ public class JoinSettlementAction implements Consumer<DialogueContext> {
       info.setSettlementId(settlement.getSettlementId());
 
       info.setWorkBuildingId(joinSettlement.getFreeWorksite().getBuildingId());
-      joinSettlement.getVillager().changeNpcRole(VillagerNpcRoles.WORKER);
+      joinSettlement.getVillager().changeNpcRole(VillagerNpcRoles.CITIZEN);
 
       ClientVillagerStore.INSTANCE.replicateChange(info, StoreOperation.UPDATE);
       ClientVillagerStore.INSTANCE.setDirty();

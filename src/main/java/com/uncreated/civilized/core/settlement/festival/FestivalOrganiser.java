@@ -110,7 +110,7 @@ public class FestivalOrganiser {
       int numberOfSingleWorkers =
             (int) ServerVillagerStore.INSTANCE.getCitizens(settlement().getSettlementId())
                   .stream()
-                  .filter(villager -> villager.getNpcRole().is(VillagerNpcRoles.WORKER) && !villager.isTaken())
+                  .filter(villager -> villager.getNpcRole().is(VillagerNpcRoles.CITIZEN) && !villager.isTaken())
                   .count();
       // there may already be visitors at the town square - take these into account to avoid spawning too may visitors
       Optional<Building> townSquare = findTownSquare();

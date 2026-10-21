@@ -54,7 +54,7 @@ public class Flirt extends Socialize {
                   // TODO: eventually need to filter out hostile villagers
                   other -> other != villager && other.isAlive() && !other.isDrafted()
                         && other.getInfo().getGender() == villager.getInfo().getGender().opposite()
-                        && !other.getInfo().isTaken() && other.getInfo().getNpcRole().is(VillagerNpcRoles.WORKER)
+                        && !other.getInfo().isTaken() && other.getInfo().getNpcRole().is(VillagerNpcRoles.CITIZEN)
                         && other.getInfo().getSettlementId() != null /* && villager.hasLineOfSight(other) */)
                   .stream()
                   .sorted(Comparator.comparingDouble(villager::distanceToSqr))
@@ -164,7 +164,7 @@ public class Flirt extends Socialize {
       if (!villager.getInfo().getNpcRole().is(VillagerNpcRoles.SUITOR))
          return;
 
-      villager.changeNpcRole(VillagerNpcRoles.WORKER);
+      villager.changeNpcRole(VillagerNpcRoles.CITIZEN);
       villager.getInfo().setLastName(partner.getInfo().getLastName());
    }
 

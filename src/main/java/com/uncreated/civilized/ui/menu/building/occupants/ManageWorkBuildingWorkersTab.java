@@ -38,7 +38,7 @@ public class ManageWorkBuildingWorkersTab extends ManageOccupantsTab {
    protected List<VillagerInfo> provideOccupantsModelData() {
       return ClientVillagerStore.INSTANCE.getCitizens(building.getSettlementId())
             .stream()
-            .filter(v -> v.getNpcRole().is(VillagerNpcRoles.WORKER))
+            .filter(v -> v.getNpcRole().is(VillagerNpcRoles.CITIZEN))
             // this building's workers first, then villagers without a job, since giving them one costs nothing
             .sorted(
                   Comparator.comparing((VillagerInfo v) -> !v.isAssignedWorkerOf(building))

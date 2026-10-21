@@ -64,7 +64,7 @@ public class SummonWorker {
          throw ERROR_ENTITY_SPAWN_ERROR.create();
       }
 
-      villager.changeNpcRole(VillagerNpcRoles.WORKER);
+      villager.changeNpcRole(VillagerNpcRoles.CITIZEN);
       villager.getInfo().setSettlementId(worksite.get().getSettlementId());
       villager.getInfo().setWorkBuildingId(worksite.get().getBuildingId());
       ServerVillagerStore.INSTANCE.setDirty();

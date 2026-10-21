@@ -12,13 +12,11 @@ import com.mojang.datafixers.util.Pair;
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.Building;
 
-import com.uncreated.civilized.ui.style.Colors;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
@@ -161,7 +159,7 @@ public class VillagerInfo {
    }
 
    public Component getTitleTranslation() {
-      if (getNpcRole().is(VillagerNpcRoles.WORKER)) {
+      if (getNpcRole().is(VillagerNpcRoles.CITIZEN)) {
          if (isHomemaker())
             return getHomeMakerTranslation();
 

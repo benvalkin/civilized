@@ -71,9 +71,9 @@ public class VillagerNpcRoles {
 
    public static final VillagerNpcRole NONE = declare(VillagerNpcRole.builder(createResourceKey("none")).build());
    // settlement members
-   public static final VillagerNpcRole WORKER =
+   public static final VillagerNpcRole CITIZEN =
          declare(
-               VillagerNpcRole.builder(createResourceKey("worker"))
+               VillagerNpcRole.builder(createResourceKey("citizen"))
                      .dialogueController(WorkerDialogueController::new)
                      .build());
    public static final VillagerNpcRole ADVISOR =
@@ -124,10 +124,7 @@ public class VillagerNpcRoles {
    public static final VillagerNpcRole MERCHANT =
          declare(
                VillagerNpcRole.builder(createResourceKey("merchant"))
-                     .clothingSets(
-                           List.of(
-                                 CLOTHING_SET_PATRICIAN,
-                                 CLOTHING_SET_PEASANT))
+                     .clothingSets(List.of(CLOTHING_SET_PATRICIAN, CLOTHING_SET_PEASANT))
                      .createRoleBehaviour(MerchantVisitorBehaviour::new)
                      .build());
    public static final VillagerNpcRole BANDIT =

@@ -64,7 +64,7 @@ public record AssignWorkerRequest(UUID villagerId, Optional<UUID> worksiteId) im
          return;
       }
 
-      if (!worker.get().getNpcRole().is(VillagerNpcRoles.WORKER)) {
+      if (!worker.get().getNpcRole().is(VillagerNpcRoles.CITIZEN)) {
          failure(context, "Worker could not be assigned - this villager is not able to work.");
          return;
       }
