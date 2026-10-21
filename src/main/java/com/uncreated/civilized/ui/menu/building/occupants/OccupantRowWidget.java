@@ -5,8 +5,6 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
-import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
-import com.uncreated.civilized.core.villagerinfo.VillagerOccupations;
 import com.uncreated.civilized.ui.style.Colors;
 
 import net.minecraft.client.gui.Font;
@@ -41,21 +39,14 @@ public class OccupantRowWidget extends AbstractContainerWidget {
       }
    }
 
-   public static Component describeJob(VillagerInfo villager) {
-      if (!villager.getOccupation().is(VillagerOccupations.UNEMPLOYED))
-         return villager.getOccupation().translation();
-      if (villager.getNpcRole().is(VillagerNpcRoles.SPOUSE))
-         return Component.translatable("menu.building.occupants.job.spouse"); // todo: remove this when spouses are folded
-      return Component.translatable("menu.building.occupants.job.unemployed");
-   }
-
    @Override
    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
       int textY = getY() + (HEIGHT - font.lineHeight) / 2 + 1;
       graphics.drawString(font, villager.getFullName(), getX(), textY, Colors.MENU_TEXT_DARK, false);
 
       int detailRight = button != null ? button.getX() - 4 : getRight();
-      String job = font.plainSubstrByWidth(describeJob(villager).getString(), detailRight - (getX() + DETAIL_X));
+      String job =
+            font.plainSubstrByWidth(villager.getTitleTranslation().getString(), detailRight - (getX() + DETAIL_X));
       graphics.drawString(font, job, getX() + DETAIL_X, textY, Colors.BUILDING_DARK, false);
 
       if (button != null)

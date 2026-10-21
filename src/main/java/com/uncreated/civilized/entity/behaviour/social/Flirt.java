@@ -106,10 +106,10 @@ public class Flirt extends Socialize {
       villager.getInfo().setPartnerId(suitor.getInfo().getVillagerId());
       alignSettlementIds(suitor, villager);
       alignSettlementIds(villager, suitor);
-      convertToSpouseIfNecessary(suitor);
-      convertToSpouseIfNecessary(villager);
+      joinCitizensFamily(suitor, villager);
+      joinCitizensFamily(villager, suitor);
 
-      // the suitor stops being a visitor once it's a spouse, but its partner may still be one
+      // the suitor stops being a visitor once it has a partner, but its partner may still be one
       VisitorBehaviour.of(suitor).ifPresent(visitor -> visitor.setDepartAt(VisitorBehaviour.NO_DEPARTURE));
       VisitorBehaviour.of(villager).ifPresent(visitor -> visitor.setDepartAt(VisitorBehaviour.NO_DEPARTURE));
 
@@ -160,9 +160,12 @@ public class Flirt extends Socialize {
          villager.getInfo().setSettlementId(other.getInfo().getSettlementId());
    }
 
-   private static void convertToSpouseIfNecessary(CivilizedVillager villager) {
-      if (villager.getInfo().getNpcRole().is(VillagerNpcRoles.SUITOR))
-         villager.changeNpcRole(VillagerNpcRoles.SPOUSE);
+   private static void joinCitizensFamily(CivilizedVillager villager, CivilizedVillager partner) {
+      if (!villager.getInfo().getNpcRole().is(VillagerNpcRoles.SUITOR))
+         return;
+
+      villager.changeNpcRole(VillagerNpcRoles.WORKER);
+      villager.getInfo().setLastName(partner.getInfo().getLastName());
    }
 
    public ConversationTopic getConversationTopic() {

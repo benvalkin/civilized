@@ -222,7 +222,7 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
       return LoadedVillagers.find(partnerId)
             .filter(
                   spouse -> spouse.isAlive() && spouse.level() == villager.level()
-                        && spouse.getInfo().getNpcRole().is(VillagerNpcRoles.SPOUSE));
+                        && spouse.getInfo().isHomemaker());
    }
 
    private static boolean isFreeToHaul(CivilizedVillager villager) {

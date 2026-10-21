@@ -122,16 +122,8 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
 
    private static Optional<Building> invalidateHome(VillagerInfo villagerInfo) {
 
-      boolean isCitizen =
-            villagerInfo.getNpcRole().is(VillagerNpcRoles.WORKER)
-                  || villagerInfo.getNpcRole().is(VillagerNpcRoles.SPOUSE);
-      if (!isCitizen)
+      if (!villagerInfo.getNpcRole().is(VillagerNpcRoles.WORKER))
          return Optional.empty();
-
-      // spouses inherit their partner's last name
-      if (villagerInfo.getNpcRole().is(VillagerNpcRoles.SPOUSE))
-         ServerVillagerStore.INSTANCE.find(villagerInfo.getPartnerId())
-               .ifPresent(partner -> villagerInfo.setLastName(partner.getLastName()));
 
       if (villagerInfo.getOccupation().is(VillagerOccupations.SOLDIER))
          return invalidateHomeForSoldier(villagerInfo);

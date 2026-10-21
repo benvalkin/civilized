@@ -6,7 +6,6 @@ import org.joml.Matrix4f;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.uncreated.civilized.core.villagerinfo.Gender;
-import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.data.VillagerHunger;
 import com.uncreated.civilized.entity.renderer.layer.ClothingLayer;
@@ -81,32 +80,21 @@ public class CivilizedVillagerRenderer extends
       state.health = villager.getHealth();
       state.maxHealth = villager.getMaxHealth();
       int hunger = villager.getHunger().hunger();
-      if (villager.getInfo().getNpcRole().is(VillagerNpcRoles.WORKER)) {
-         if (DEBUG) {
-            state.title =
-                  Component.translatable(
-                        "villager.renderer.title.extended",
-                        villager.getInfo().getOccupation().translation(),
-                        healthIcon(state.health, state.maxHealth),
-                        Math.ceil(state.health),
-                        hungerIcon(hunger),
-                        hunger);
-         } else {
-            Component healthC =
-                  state.health < state.maxHealth ? healthIcon(state.health, state.maxHealth) : Component.empty();
-            Component hungerC = hunger <= VillagerHunger.HUNGRY_THRESHOLD ? hungerIcon(hunger) : Component.empty();
-            state.title =
-                  Component.translatable(
-                        "villager.renderer.title",
-                        villager.getInfo().getOccupation().translation(),
-                        healthC,
-                        hungerC,
-                        hungerIcon(hunger));
-         }
-      } else if (villager.getInfo().getNpcRole().is(VillagerNpcRoles.SPOUSE)) {
-         state.title = villager.getInfo().getSocialClassTranslation();
+      Component title = villager.getInfo().getTitleTranslation();
+      if (DEBUG) {
+         state.title =
+               Component.translatable(
+                     "villager.renderer.title.extended",
+                     title,
+                     healthIcon(state.health, state.maxHealth),
+                     Math.ceil(state.health),
+                     hungerIcon(hunger),
+                     hunger);
       } else {
-         state.title = villager.getInfo().getNpcRole().translation(villager.getInfo().getGender());
+         Component healthC =
+               state.health < state.maxHealth ? healthIcon(state.health, state.maxHealth) : Component.empty();
+         Component hungerC = hunger <= VillagerHunger.HUNGRY_THRESHOLD ? hungerIcon(hunger) : Component.empty();
+         state.title = Component.translatable("villager.renderer.title", title, healthC, hungerC, hungerIcon(hunger));
       }
       state.currentActivity = villager.getEntityData().get(CivilizedVillager.ACTIVITY_DESCRIPTION);
    }

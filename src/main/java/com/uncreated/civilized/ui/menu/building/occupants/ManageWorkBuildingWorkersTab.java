@@ -36,7 +36,6 @@ public class ManageWorkBuildingWorkersTab extends ManageOccupantsTab {
 
    @Override
    protected List<VillagerInfo> provideOccupantsModelData() {
-      // todo: let any adult work, once spouses are folded into the homemaker occupation
       return ClientVillagerStore.INSTANCE.getCitizens(building.getSettlementId())
             .stream()
             .filter(v -> v.getNpcRole().is(VillagerNpcRoles.WORKER))

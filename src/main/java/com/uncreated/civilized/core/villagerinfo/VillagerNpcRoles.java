@@ -76,8 +76,6 @@ public class VillagerNpcRoles {
                VillagerNpcRole.builder(createResourceKey("worker"))
                      .dialogueController(WorkerDialogueController::new)
                      .build());
-   public static final VillagerNpcRole SPOUSE =
-         declare(VillagerNpcRole.builder(createResourceKey("spouse")).genderedTitle(true).build());
    public static final VillagerNpcRole ADVISOR =
          declare(
                VillagerNpcRole.builder(createResourceKey("advisor"))

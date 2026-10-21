@@ -21,7 +21,7 @@ public class ManageResidentsTabButton extends BuildingTabButton {
             tabHost,
             buttonTabIndex,
             ICON,
-            Tooltip.create(Component.translatable("menu.building.residence.residents.tab.heading")), createTab);
+            Tooltip.create(Component.translatable("menu.building.occupants.residents.tab.heading")), createTab);
    }
 
    public ManageResidentsTabButton(ITabHost tabHost, int buttonTabIndex, Function<ITabHost, ATab> createTab, Tooltip tooltip) {

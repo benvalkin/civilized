@@ -12,11 +12,13 @@ import com.mojang.datafixers.util.Pair;
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.Building;
 
+import com.uncreated.civilized.ui.style.Colors;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
@@ -128,6 +130,10 @@ public class VillagerInfo {
       return partnerId != null;
    }
 
+   public boolean isHomemaker() {
+      return isTaken() && occupation.is(VillagerOccupations.UNEMPLOYED);
+   }
+
    public boolean isPartnerOf(VillagerInfo other) {
       if (partnerId == null)
          return false;
@@ -152,6 +158,22 @@ public class VillagerInfo {
          return Component.empty();
 
       return Component.literal(getFullName());
+   }
+
+   public Component getTitleTranslation() {
+      if (getNpcRole().is(VillagerNpcRoles.WORKER)) {
+         if (isHomemaker())
+            return getHomeMakerTranslation();
+
+         return getOccupation().translation();
+      }
+
+      return getNpcRole().translation(gender);
+   }
+
+   public Component getHomeMakerTranslation() {
+      return Component
+              .translatable("menu.building.occupants.job.homemaker." + gender.toString().toLowerCase());
    }
 
    public Component getSocialClassTranslation() {

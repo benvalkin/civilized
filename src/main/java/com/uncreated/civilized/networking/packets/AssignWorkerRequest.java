@@ -64,7 +64,6 @@ public record AssignWorkerRequest(UUID villagerId, Optional<UUID> worksiteId) im
          return;
       }
 
-      // todo: let any adult work, once spouses are folded into the homemaker occupation
       if (!worker.get().getNpcRole().is(VillagerNpcRoles.WORKER)) {
          failure(context, "Worker could not be assigned - this villager is not able to work.");
          return;
