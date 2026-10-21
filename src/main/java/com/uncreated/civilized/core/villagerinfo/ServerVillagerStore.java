@@ -9,6 +9,7 @@ import com.mojang.datafixers.util.Pair;
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.villagerinfo.events.model.VillagerInfoUpdatedEvent;
+import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkills;
 import com.uncreated.civilized.entity.CivilizedVillager;
 
 import net.minecraft.core.HolderLookup;
@@ -71,6 +72,7 @@ public class ServerVillagerStore extends VillagerStore {
          item.putInt(VillagerInfo.FIELD_SOCIAL_CLASS, villagerInfo.getSocialClass());
          if (villagerInfo.getLoadoutId() != null)
             item.putUUID(VillagerInfo.FIELD_LOADOUT_ID, villagerInfo.getLoadoutId());
+         item.put(VillagerInfo.FIELD_SKILLS, villagerInfo.getSkills().toNbt());
 
          tags.add(item);
       }
@@ -100,7 +102,8 @@ public class ServerVillagerStore extends VillagerStore {
                      .npcRole(
                            VillagerNpcRoles.getFromResourceLocation(
                                  ResourceLocation.parse(itemTag.getString(VillagerInfo.FIELD_VILLAGER_NPC_ROLE))))
-                     .gender(Gender.valueOf(itemTag.getString(VillagerInfo.FIELD_VILLAGER_GENDER)));
+                     .gender(Gender.valueOf(itemTag.getString(VillagerInfo.FIELD_VILLAGER_GENDER)))
+                     .skills(VillagerSkills.fromNbt(itemTag.getCompound(VillagerInfo.FIELD_SKILLS)));
 
          if (itemTag.hasUUID(VillagerInfo.FIELD_SETTLEMENT_ID))
             builder.settlementId(itemTag.getUUID(VillagerInfo.FIELD_SETTLEMENT_ID));

@@ -11,6 +11,7 @@ import javax.annotation.Nullable;
 import com.mojang.datafixers.util.Pair;
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.Building;
+import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkills;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -47,7 +48,8 @@ public class VillagerInfo {
                   .partnerId(buffer.readNullable((b -> b.readUUID())))
                   .socialClass(buffer.readVarInt())
                   .loadoutId(buffer.readNullable((b -> b.readUUID())))
-                  .workAreaId(buffer.readNullable((b -> b.readUUID())));
+                  .workAreaId(buffer.readNullable((b -> b.readUUID())))
+                  .skills(VillagerSkills.decode(buffer));
 
       return builder.build();
    }
@@ -68,6 +70,7 @@ public class VillagerInfo {
       buffer.writeVarInt(socialClass);
       buffer.writeNullable(loadoutId, (b, v) -> b.writeUUID(v));
       buffer.writeNullable(workAreaId, (b, v) -> b.writeUUID(v));
+      skills.encode(buffer);
    }
 
    public static final String FIELD_VILLAGER_ID = "villager_id";
@@ -84,6 +87,7 @@ public class VillagerInfo {
    public static final String FIELD_SOCIAL_CLASS = "social_class";
    public static final String FIELD_LOADOUT_ID = "loadout_id";
    public static final String FIELD_WORK_AREA_ID = "work_area_id";
+   public static final String FIELD_SKILLS = "skills";
 
    private UUID villagerId;
    @Setter
@@ -115,6 +119,9 @@ public class VillagerInfo {
    private @Nullable UUID loadoutId;
    @Setter
    private @Nullable UUID workAreaId;
+   @Setter
+   @Builder.Default
+   private VillagerSkills skills = VillagerSkills.allSkillsZeroXp();
 
    public boolean hasName() {
       return !firstName.isEmpty() && !lastName.isEmpty();
@@ -167,8 +174,7 @@ public class VillagerInfo {
    }
 
    public Component getHomeMakerTranslation() {
-      return Component
-              .translatable("menu.building.occupants.job.homemaker." + gender.toString().toLowerCase());
+      return Component.translatable("menu.building.occupants.job.homemaker." + gender.toString().toLowerCase());
    }
 
    public Component getSocialClassTranslation() {
