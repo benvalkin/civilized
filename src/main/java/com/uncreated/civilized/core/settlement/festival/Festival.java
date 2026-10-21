@@ -26,7 +26,7 @@ public final class Festival {
    /** How long visitors spend arriving before the celebration begins. */
    public static final int GATHERING_DURATION = 2000; // 2 hours
    public static final int CELEBRATION_DURATION = 4000; // 4 hours
-   public static final int FLIRTING_SUCCESS_MULTIPLIER = 2;
+   public static final int FESTIVAL_RELATIONSHIP_SUCCESS_ODDS = 3;
 
    public enum Phase {
       NONE,

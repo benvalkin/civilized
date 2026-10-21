@@ -71,19 +71,19 @@ public class CivilizedVillagerActivities {
                   new DropOffItemsAtBuilding(),
                   new IdleStrollAroundSettlement(5, 3, speedModifier),
                   new Socialize(speedModifier),
-                  // never started by the villager itself, but lets suitors invite it to flirt
-                  new Flirt(speedModifier),
+                  new Flirt(speedModifier, Flirt.BASE_RELATIONSHIP_SUCCESS_ODDS, false),
                   new VisitEntertainmentPlace(0.4F)),
             ImmutableList.of(
                   WorkStates.OFFLOAD_INVENTORIES_AFTER_WORK,
                   WorkStates.DROPPING_OFF_ITEMS_AT_BUILDING,
                   BehaviourStates.EATING_FOOD),
             new ShufflingList<BehaviourState>().add(BehaviourStates.SOCIALISING, 10)
+                  .add(BehaviourStates.FLIRTING, 1)
                   .add(BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT, 5)
                   .add(BehaviourStates.VISITING_ENTERTAINMENT, 1));
    }
 
-   public static IdleBehaviourControl createSuitorBehaviourControl(float speedModifier) {
+   public static IdleBehaviourControl createStandardVisitorBehaviourControl(float speedModifier) {
       return new IdleBehaviourControl(
             ImmutableList.of(
                   new EatFood(BehaviourStates.EATING_FOOD),
@@ -91,15 +91,15 @@ public class CivilizedVillagerActivities {
                   new DropOffItemsAtBuilding(),
                   new CheckOffloadInventories(),
                   new IdleStrollAroundSettlement(5, 3, speedModifier),
-                  new Flirt(speedModifier),
+                  new Flirt(speedModifier, Flirt.BASE_RELATIONSHIP_SUCCESS_ODDS, false),
                   new Socialize(speedModifier),
                   new VisitEntertainmentPlace(0.4F)),
             ImmutableList.of(
                   WorkStates.OFFLOAD_INVENTORIES_AFTER_WORK,
                   WorkStates.DROPPING_OFF_ITEMS_AT_BUILDING,
                   BehaviourStates.EATING_FOOD),
-            new ShufflingList<BehaviourState>().add(BehaviourStates.FLIRTING, 32)
-                  .add(BehaviourStates.SOCIALISING, 8)
+            new ShufflingList<BehaviourState>().add(BehaviourStates.SOCIALISING, 8)
+                  .add(BehaviourStates.FLIRTING, 1)
                   .add(BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT, 3)
                   .add(BehaviourStates.VISITING_ENTERTAINMENT, 1));
    }
@@ -113,24 +113,25 @@ public class CivilizedVillagerActivities {
                   new TakeItemsToInventory(),
                   new GoToTownSquare(0.5F),
                   new Socialize(speedModifier),
-                  new Flirt(speedModifier),
+                  new Flirt(speedModifier, Festival.FESTIVAL_RELATIONSHIP_SUCCESS_ODDS, true),
                   new AttendFestival(speedModifier),
                   new IdleStrollAroundSettlement(5, 3, speedModifier)),
             ImmutableList.of(BehaviourStates.EATING_FOOD, BehaviourStates.GOING_TO_TOWN_SQUARE),
             new ShufflingList<BehaviourState>().add(BehaviourStates.SOCIALISING, 10)
+                  .add(BehaviourStates.FLIRTING, 2)
                   .add(BehaviourStates.CELEBRATING, 6)
                   // the fallback for when the town square isn't loaded, since there must always be an idle task
                   .add(BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT, 1));
    }
 
-   public static IdleBehaviourControl createSuitorFestivalBehaviourControl(float speedModifier) {
+   public static IdleBehaviourControl createFesstivalVisitorBehaviourControl(float speedModifier) {
       return new IdleBehaviourControl(
             AIRegistry.A_ATTENDING_FESTIVAL.get(),
             ImmutableList.of(
                   new EatFood(BehaviourStates.EATING_FOOD),
                   new TakeItemsToInventory(),
                   new GoToTownSquare(0.5F),
-                  new Flirt(speedModifier, Flirt.BASE_RELATIONSHIP_SUCCESS_ODDS / Festival.FLIRTING_SUCCESS_MULTIPLIER),
+                  new Flirt(speedModifier, Festival.FESTIVAL_RELATIONSHIP_SUCCESS_ODDS, true),
                   new Socialize(speedModifier),
                   new AttendFestival(speedModifier),
                   new IdleStrollAroundSettlement(5, 3, speedModifier)),

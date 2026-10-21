@@ -35,8 +35,8 @@ import net.minecraft.world.item.Items;
 /** Runs a settlement's festivals once they've been started: brings in suitors, and wraps the festival up at the end. */
 public class FestivalOrganiser {
 
-   private static final float SUITORS_PER_SINGLE_WORKER = 1.1F;
-   private static final int MINIMUM_FESTIVAL_VISITORS = 2;
+   private static final float SUITORS_PER_SINGLE_WORKER = 0.33F;
+   private static final int MINIMUM_FESTIVAL_VISITORS = 0;
    private final LoadedSettlement loadedSettlement;
    private @Nullable DailyEventScheduler visitorArrivalScheduler;
    private long visitorArrivalsFestivalStartTime = SettlementState.NOT_SCHEDULED;
@@ -110,7 +110,7 @@ public class FestivalOrganiser {
       int numberOfSingleWorkers =
             (int) ServerVillagerStore.INSTANCE.getCitizens(settlement().getSettlementId())
                   .stream()
-                  .filter(villager -> villager.getNpcRole().is(VillagerNpcRoles.CITIZEN) && !villager.isTaken())
+                  .filter(villager -> villager.getNpcRole().is(VillagerNpcRoles.CITIZEN))
                   .count();
       // there may already be visitors at the town square - take these into account to avoid spawning too may visitors
       Optional<Building> townSquare = findTownSquare();

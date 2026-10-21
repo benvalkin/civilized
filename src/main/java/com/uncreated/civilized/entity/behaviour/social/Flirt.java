@@ -1,10 +1,12 @@
 package com.uncreated.civilized.entity.behaviour.social;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
-import com.uncreated.civilized.core.villagerinfo.Gender;
 import org.jetbrains.annotations.NotNull;
 
 import com.uncreated.civilized.core.StoreOperation;
@@ -12,6 +14,7 @@ import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
 import com.uncreated.civilized.core.settlement.festival.Festival;
+import com.uncreated.civilized.core.villagerinfo.Gender;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
 import com.uncreated.civilized.entity.CivilizedVillager;
@@ -31,17 +34,19 @@ public class Flirt extends Socialize {
    /** How often to show a particle effect hearts during flirting */
    private static final int TICKS_PER_FLIRTING_HEART = 60;
    private static final int HEARTS_WHEN_DATING = 7;
+   public static final int PASSIVE_FLIRTING_DAILY_ODDS_MIN = 3;
+   public static final int PASSIVE_FLIRTING_DAILY_ODDS_MAX = 5;
+   private static final Duration PASSIVE_FLIRTING_COOLDOWN = Duration.of(150, ChronoUnit.SECONDS);
+   private static final Duration ACTIVE_FLIRTING_COOLDOWN = Duration.of(30, ChronoUnit.SECONDS);
    public static final int BASE_RELATIONSHIP_SUCCESS_ODDS = 4;
 
    private final int relationshipSuccessOdds;
+   private final boolean active;
 
-   public Flirt(float speedModifier) {
-      this(speedModifier, BASE_RELATIONSHIP_SUCCESS_ODDS);
-   }
-
-   public Flirt(float speedModifier, int relationshipSuccessOdds) {
+   public Flirt(float speedModifier, int relationshipSuccessOdds, boolean active) {
       super(BehaviourStates.FLIRTING, speedModifier, 30 * 20, 120 * 20, 0);
       this.relationshipSuccessOdds = relationshipSuccessOdds;
+      this.active = active;
    }
 
    @Override
@@ -53,7 +58,8 @@ public class Flirt extends Socialize {
                   CivilizedVillager.class,
                   villager.getBoundingBox().inflate(INVITE_RANGE),
                   // TODO: eventually need to filter out hostile villagers
-                  other -> other != villager && other.isAlive() && !other.isDrafted()
+                  other -> other != villager && other.isAlive() && other.getInfo().getSettlementId() != null
+                        && !other.isDrafted()
                         && other.getInfo().getGender() == villager.getInfo().getGender().opposite()
                         && !other.getInfo().isTaken() && other.getInfo().getNpcRole().is(VillagerNpcRoles.CITIZEN)
                         && other.getInfo().getSettlementId() != null /* && villager.hasLineOfSight(other) */)
@@ -68,6 +74,12 @@ public class Flirt extends Socialize {
       if (villager.getInfo().isTaken())
          return false;
 
+      if (!active) {
+         boolean isInstigator = currentConversation(villager).isEmpty();
+         if (isInstigator && !isPassiveFlirtingDay(level, villager))
+            return false;
+      }
+
       Festival.Phase festival =
             Festival.currentPhaseFor(
                   villager.getInfo(),
@@ -81,6 +93,18 @@ public class Flirt extends Socialize {
       return super.checkExtraStartConditions(level, villager);
    }
 
+   private static boolean isPassiveFlirtingDay(ServerLevel level, CivilizedVillager villager) {
+      long day = level.getDayTime() / 24000;
+      Random todaysRandom = new Random(day * 31 + villager.getUUID().hashCode());
+      int todayOdds = todaysRandom.nextInt(PASSIVE_FLIRTING_DAILY_ODDS_MIN, PASSIVE_FLIRTING_DAILY_ODDS_MAX + 1);
+      return todaysRandom.nextInt(todayOdds) == 0;
+   }
+
+   @Override
+   protected Duration getRestartCooldown() {
+      return active ? ACTIVE_FLIRTING_COOLDOWN : PASSIVE_FLIRTING_COOLDOWN;
+   }
+
    @Override
    protected void tickDuringConversation(ServerLevel level, CivilizedVillager villager, long gameTime) {
       if (villager.getRandom().nextInt(TICKS_PER_FLIRTING_HEART) == 0)
@@ -89,38 +113,43 @@ public class Flirt extends Socialize {
 
    @Override
    protected void stop(ServerLevel level, CivilizedVillager villager, long gameTime) {
-      boolean isSuitor = villager.getInfo().getNpcRole().is(VillagerNpcRoles.SUITOR);
-      if (isSuitor && !villager.getInfo().isTaken() && isMet()
-            && villager.getRandom().nextInt(relationshipSuccessOdds) == 0) {
-         Optional<Conversation> conversation = villager.getBrain().getMemory(AIRegistry.MM_CONVERSATION.get());
-         if (conversation.isPresent() && conversation.get().getPastMembers().size() == 2) {
-            CivilizedVillager suitor = conversation.get().getPastMembers().getFirst();
+
+      Optional<Conversation> conversation = villager.getBrain().getMemory(AIRegistry.MM_CONVERSATION.get());
+      if (conversation.isPresent()) {
+         boolean isInstigator = villager.is(conversation.get().getHost());
+         if (isInstigator && !villager.getInfo().isTaken() && isMet() && conversation.get().getPastMembers().size() == 2
+               && rollSuccess(villager)) {
+            CivilizedVillager instigator = conversation.get().getHost();
             CivilizedVillager settlementVillager = conversation.get().getPastMembers().getLast();
-            startDating(suitor, settlementVillager, level);
+            startDating(instigator, settlementVillager, level);
          }
       }
       super.stop(level, villager, gameTime);
    }
 
-   protected void startDating(CivilizedVillager suitor, CivilizedVillager villager, ServerLevel level) {
-      suitor.getInfo().setPartnerId(villager.getInfo().getVillagerId());
-      villager.getInfo().setPartnerId(suitor.getInfo().getVillagerId());
-      alignSettlementIds(suitor, villager);
-      alignSettlementIds(villager, suitor);
-      joinCitizensFamily(suitor, villager);
-      joinCitizensFamily(villager, suitor);
+   private boolean rollSuccess(CivilizedVillager instigator) {
+      return instigator.getRandom().nextInt(relationshipSuccessOdds) == 0;
+   }
 
-      // the suitor stops being a visitor once it has a partner, but its partner may still be one
-      VisitorBehaviour.of(suitor).ifPresent(visitor -> visitor.setDepartAt(VisitorBehaviour.NO_DEPARTURE));
+   protected void startDating(CivilizedVillager instigator, CivilizedVillager villager, ServerLevel level) {
+      instigator.getInfo().setPartnerId(villager.getInfo().getVillagerId());
+      villager.getInfo().setPartnerId(instigator.getInfo().getVillagerId());
+      alignSettlementIds(instigator, villager);
+      alignSettlementIds(villager, instigator);
+      joinCitizensFamily(instigator, villager);
+      joinCitizensFamily(villager, instigator);
+
+      // if either villager is a visitor, they must cancel their departure
+      VisitorBehaviour.of(instigator).ifPresent(visitor -> visitor.setDepartAt(VisitorBehaviour.NO_DEPARTURE));
       VisitorBehaviour.of(villager).ifPresent(visitor -> visitor.setDepartAt(VisitorBehaviour.NO_DEPARTURE));
 
-      suitor.refreshBrain(level);
+      instigator.refreshBrain(level);
       villager.refreshBrain(level);
 
-      emitHearts(level, suitor, HEARTS_WHEN_DATING);
+      emitHearts(level, instigator, HEARTS_WHEN_DATING);
       emitHearts(level, villager, HEARTS_WHEN_DATING);
 
-      ServerVillagerStore.INSTANCE.replicateChange(suitor.getInfo(), StoreOperation.UPDATE);
+      ServerVillagerStore.INSTANCE.replicateChange(instigator.getInfo(), StoreOperation.UPDATE);
       ServerVillagerStore.INSTANCE.replicateChange(villager.getInfo(), StoreOperation.UPDATE);
       ServerVillagerStore.INSTANCE.setDirty();
 
@@ -137,7 +166,7 @@ public class Flirt extends Socialize {
                   .translatable(
                         "message.notification.villager.started_dating",
                         villager.getInfo().getFirstName(),
-                        suitor.getInfo().getFirstName())
+                        instigator.getInfo().getFirstName())
                   .withColor(Colors.LOVE),
             false);
    }
@@ -162,10 +191,9 @@ public class Flirt extends Socialize {
    }
 
    private static void joinCitizensFamily(CivilizedVillager villager, CivilizedVillager partner) {
-      if (!villager.getInfo().getNpcRole().is(VillagerNpcRoles.SUITOR))
-         return;
+      if (!villager.getInfo().getNpcRole().is(VillagerNpcRoles.CITIZEN))
+         villager.changeNpcRole(VillagerNpcRoles.CITIZEN);
 
-      villager.changeNpcRole(VillagerNpcRoles.CITIZEN);
       if (partner.getInfo().getGender() == Gender.MALE)
          villager.getInfo().setLastName(partner.getInfo().getLastName());
    }

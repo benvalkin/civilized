@@ -51,6 +51,11 @@ public class Socialize extends StatefulBehaviour {
       this.speedModifier = speedModifier;
    }
 
+   /** How long the villager waits after a conversation before starting another one. */
+   protected Duration getRestartCooldown() {
+      return COOLDOWN;
+   }
+
    public Socialize(float speedModifier) {
       this(BehaviourStates.SOCIALISING, speedModifier, 10 * 20, 90 * 20, 0);
    }
@@ -58,7 +63,7 @@ public class Socialize extends StatefulBehaviour {
    @Override
    protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
 
-      // invited by another villager, which is how the partner ends up here
+      // invited by another villager
       if (currentConversation(villager).isPresent())
          return true;
 
@@ -173,7 +178,7 @@ public class Socialize extends StatefulBehaviour {
       villager.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
       villager.getBrain().eraseMemory(MemoryModuleType.LOOK_TARGET);
 
-      getBehaviourCooldowns().startCooldown(Cooldowns.START, COOLDOWN, gameTime);
+      getBehaviourCooldowns().startCooldown(Cooldowns.START, getRestartCooldown(), gameTime);
 
       VisitorBehaviour.of(villager).ifPresent(visitor -> visitor.setDeparturePaused(false));
    }

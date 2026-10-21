@@ -549,7 +549,7 @@ public class CivilizedVillager extends AgeableMob
             registerStatefulControls(AIRegistry.A_STRIKE.get(), getStrikePackage(createStrikeBehaviourControl(0.25f))));
       IdleBehaviourControl festivalBehaviourControl;
       if (info.getNpcRole().is(VillagerNpcRoles.SUITOR))
-         festivalBehaviourControl = createSuitorFestivalBehaviourControl(0.25f);
+         festivalBehaviourControl = createFesstivalVisitorBehaviourControl(0.25f);
       else
          festivalBehaviourControl = createFestivalBehaviourControl(0.25f);
       brain.addActivity(
@@ -557,7 +557,7 @@ public class CivilizedVillager extends AgeableMob
             registerStatefulControls(AIRegistry.A_ATTENDING_FESTIVAL.get(), getIdlePackage(festivalBehaviourControl)));
       IdleBehaviourControl idleBehaviourControl;
       if (info.getNpcRole().is(VillagerNpcRoles.SUITOR))
-         idleBehaviourControl = createSuitorBehaviourControl(0.25f);
+         idleBehaviourControl = createStandardVisitorBehaviourControl(0.25f);
       else
          idleBehaviourControl = createIdleBehaviourControl(0.25f);
       // a villager whose idle time ends (e.g. it's time to work) drops out of any conversation it was invited to, which
