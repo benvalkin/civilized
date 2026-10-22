@@ -660,6 +660,20 @@ public class CivilizedVillager extends AgeableMob
    public void aiStep() {
       this.updateSwingTime();
       super.aiStep();
+      refreshSizeForLifeStage();
+   }
+
+   /**
+    * Minecraft only sets up the hitbox and eye height when the villager spawns in for the first time, so this has to be
+    * redone when the villager's player model changes (i.e. when a child grows up). Checked every tick, on both sides,
+    * which is cheap since it only refreshes when the life stage has changed.
+    */
+   public void refreshSizeForLifeStage() {
+      if (isBaby() == sizedAsChild)
+         return;
+
+      sizedAsChild = isBaby();
+      refreshDimensions();
    }
 
    @Override
@@ -667,7 +681,6 @@ public class CivilizedVillager extends AgeableMob
 
       ensureRoleBehaviourMatchesRole();
       roleBehaviour.serverTick(serverLevel, serverLevel.getGameTime());
-      // e.g. a visitor that has just departed
       if (isRemoved())
          return;
 
@@ -843,6 +856,20 @@ public class CivilizedVillager extends AgeableMob
       builder.define(HUNGRY_START_TIME, -1L);
       builder.define(ACTIVITY_DESCRIPTION, Component.empty());
       builder.define(FLOOR_SLEEPING_DIRECTION, NOT_SLEEPING_ON_FLOOR);
+   }
+
+   private static final float CHILD_SCALE = 0.6F;
+
+   private boolean sizedAsChild;
+
+   @Override
+   public boolean isBaby() {
+      return info != null && info.isChild();
+   }
+
+   @Override
+   public float getAgeScale() {
+      return isBaby() ? CHILD_SCALE : 1.0F;
    }
 
    @Nullable
