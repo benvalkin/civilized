@@ -154,7 +154,7 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
          return familyHome;
 
       // otherwise, workers live where they work
-      Optional<Building> workBuilding = findWorkBuildingResidence(civilian);
+      Optional<Building> workBuilding = checkLivesInWorkBuildingResidence(civilian);
       if (workBuilding.isPresent())
          return workBuilding;
 
@@ -216,7 +216,7 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
       }
 
       // otherwise, they stay live at their assigned garrison
-      Optional<Building> post = findWorkBuildingResidence(soldier);
+      Optional<Building> post = checkLivesInWorkBuildingResidence(soldier);
       if (post.isPresent())
          return post;
 
@@ -229,8 +229,7 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
    }
 
    /**
-    * Where the villager's family lives together: whichever of the villager's and their partner's homes is a family
-    * residence that no other household has claimed. When both are, the one with the higher upgrade level wins.
+    * Tries to find
     */
    private static Optional<Building> findFamilyHome(VillagerInfo villager) {
 
@@ -238,22 +237,24 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
       if (partner.isEmpty())
          return Optional.empty();
 
-      Optional<Building> ownHome = findUnclaimedFamilyResidence(villager.getHomeBuildingId(), villager);
+      Optional<Building> ownHome = checkUnclaimedFamilyResidence(villager.getHomeBuildingId(), villager);
       // a grown-up child who has found a partner starts a household of their own, rather than moving their partner in
       // with their parents. A partner living with their own parents is already ruled out, as that's another household.
       if (ownHome.isPresent() && livesWithParents(ownHome.get(), villager))
          ownHome = Optional.empty();
 
-      Optional<Building> partnerHome = findUnclaimedFamilyResidence(partner.get().getHomeBuildingId(), villager);
+      Optional<Building> partnerHome = checkUnclaimedFamilyResidence(partner.get().getHomeBuildingId(), villager);
 
+      // if both parents have a home that can house the family, try break the tie
       if (ownHome.isPresent() && partnerHome.isPresent())
          return Optional.of(chooseFamilyHome(ownHome.get(), partnerHome.get()));
+      // otherwise, choose one or the other
       if (partnerHome.isPresent())
          return partnerHome;
       return ownHome;
    }
 
-   private static Optional<Building> findUnclaimedFamilyResidence(UUID buildingId, VillagerInfo villager) {
+   private static Optional<Building> checkUnclaimedFamilyResidence(UUID buildingId, VillagerInfo villager) {
 
       Optional<Building> building = ServerBuildingsStore.INSTANCE.find(buildingId);
       if (building.isEmpty() || !building.get().getBuildingType().isFamilyResidence())
@@ -298,7 +299,6 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
       return false;
    }
 
-   /** Whether they have a partner or young children, who'd need a family home to live in with them. */
    private static boolean hasFamilyToHouse(VillagerInfo villager) {
       return villager.getPartnerId() != null || hasYoungChildren(villager);
    }
@@ -330,7 +330,7 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
     *
     * @return the specified worker's assigned work building, provided that it is a residence where they can live.
     */
-   private static Optional<Building> findWorkBuildingResidence(VillagerInfo worker) {
+   private static Optional<Building> checkLivesInWorkBuildingResidence(VillagerInfo worker) {
 
       Optional<Building> workBuilding = ServerBuildingsStore.INSTANCE.find(worker.getWorkBuildingId());
       if (workBuilding.isEmpty() || !workBuilding.get().getBuildingType().isWorkerResidence())
