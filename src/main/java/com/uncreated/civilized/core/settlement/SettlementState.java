@@ -14,13 +14,11 @@ public class SettlementState {
    private static final String FIELD_LAST_FESTIVAL_TIME = "last_festival_time";
    private static final String FIELD_FESTIVALS_HELD_COUNT = "festivals_held_count";
    private static final String FIELD_FESTIVAL_START_TIME = "festival_start_time";
-   private static final String FIELD_LAST_BIRTHS_CHECK_DAY = "last_births_check_day";
 
    private long nextTaxCollectionDay = NOT_SCHEDULED;
    private long lastFestivalDay = NOT_SCHEDULED;
    private int festivalsHeldCount = 0;
    private long festivalStartTime = NOT_SCHEDULED;
-   private long lastBirthsCheckDay = NOT_SCHEDULED;
 
    public CompoundTag toNbt() {
       CompoundTag tag = new CompoundTag();
@@ -28,7 +26,6 @@ public class SettlementState {
       tag.putLong(FIELD_LAST_FESTIVAL_TIME, lastFestivalDay);
       tag.putInt(FIELD_FESTIVALS_HELD_COUNT, festivalsHeldCount);
       tag.putLong(FIELD_FESTIVAL_START_TIME, festivalStartTime);
-      tag.putLong(FIELD_LAST_BIRTHS_CHECK_DAY, lastBirthsCheckDay);
       return tag;
    }
 
@@ -42,8 +39,6 @@ public class SettlementState {
          data.festivalsHeldCount = tag.getInt(FIELD_FESTIVALS_HELD_COUNT);
       if (tag.contains(FIELD_FESTIVAL_START_TIME))
          data.festivalStartTime = tag.getLong(FIELD_FESTIVAL_START_TIME);
-      if (tag.contains(FIELD_LAST_BIRTHS_CHECK_DAY))
-         data.lastBirthsCheckDay = tag.getLong(FIELD_LAST_BIRTHS_CHECK_DAY);
       return data;
    }
 }

@@ -53,6 +53,6 @@ public class SettlementBehaviour {
       defenseHighCommand.serverTick(level, gameTime);
       taxCollector.serverTick(level, gameTime, dayTime);
       festivalOrganiser.serverTick(level, gameTime, dayTime);
-      birthOrganiser.serverTick(level, dayTime);
+      birthOrganiser.serverTick(level, gameTime, dayTime);
    }
 }

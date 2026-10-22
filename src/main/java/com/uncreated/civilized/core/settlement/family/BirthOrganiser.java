@@ -12,11 +12,11 @@ import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.entity.LoadedBuildings;
 import com.uncreated.civilized.core.building.util.BuildingUtil;
-import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
-import com.uncreated.civilized.core.settlement.SettlementState;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlement;
+import com.uncreated.civilized.core.settlement.entity.LoadedVillagers;
 import com.uncreated.civilized.core.villagerinfo.Gender;
+import com.uncreated.civilized.core.villagerinfo.LifeStage;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
@@ -24,6 +24,7 @@ import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.InvalidateImportantLocations;
 import com.uncreated.civilized.neoforge.registration.entity.EntityRegistry;
 import com.uncreated.civilized.ui.style.Colors;
+import com.uncreated.civilized.util.random.DailyEventScheduler;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -38,9 +39,13 @@ public class BirthOrganiser {
 
    public static final int BIRTH_ODDS_PERCENT = 6;
    public static final int BIRTH_ODDS_PERCENT_HOMEMAKER = 12;
-   private static final long BIRTH_TIME_OF_DAY = 18000;
+   private static final int BIRTH_WINDOW_START_TIME = 21000;
+   private static final int BIRTH_WINDOW_END_TIME = 23000;
 
    private final LoadedSettlement loadedSettlement;
+   /** Once a night, at a random time, every couple gets a chance of having a child. */
+   private final DailyEventScheduler birthScheduler =
+         new DailyEventScheduler(1, BIRTH_WINDOW_START_TIME, BIRTH_WINDOW_END_TIME, 1F);
 
    public BirthOrganiser(LoadedSettlement loadedSettlement) {
       this.loadedSettlement = loadedSettlement;
@@ -50,24 +55,45 @@ public class BirthOrganiser {
       return loadedSettlement.getSettlement();
    }
 
-   public void serverTick(ServerLevel level, long dayTime) {
+   public void serverTick(ServerLevel level, long gameTime, long dayTime) {
+      birthScheduler.tick(level, gameTime, () -> {
+         growUpChildren(level, dayTime);
+         rollBirths(level, dayTime);
+      });
+   }
 
+   private void growUpChildren(ServerLevel level, long dayTime) {
+      List<VillagerInfo> grownUp = new ArrayList<>();
+      for (VillagerInfo villager : ServerVillagerStore.INSTANCE.getCitizens(settlement().getSettlementId())) {
+         if (villager.isOldEnoughToGrowUp(dayTime))
+            grownUp.add(villager);
+      }
+
+      for (VillagerInfo villager : grownUp) {
+         villager.setLifeStage(LifeStage.ADULT);
+         ServerVillagerStore.INSTANCE.replicateChange(villager, StoreOperation.UPDATE);
+
+         // e.g. refresh their appearance
+         Optional<CivilizedVillager> entity = LoadedVillagers.find(villager.getVillagerId());
+         if (entity.isPresent()) {
+            entity.get().refreshBrain(level);
+            entity.get().updateClothing();
+         }
+
+         announce(
+               level,
+               Component.translatable("message.notification.villager.grown_up", villager.getFullName())
+                     .withColor(Colors.FAMILY));
+      }
+
+      if (!grownUp.isEmpty())
+         ServerVillagerStore.INSTANCE.setDirty();
+   }
+
+   private void rollBirths(ServerLevel level, long dayTime) {
       long day = dayTime / 24000;
-      SettlementState state = settlement().getState();
-
-      if (state.getLastBirthsCheckDay() > day) // todo: don't really think we to save the last day if it happens daily.
-                                               // Let's rather use a daily even scheduler.
-         state.setLastBirthsCheckDay(SettlementState.NOT_SCHEDULED);
-
-      // once a night
-      if (state.getLastBirthsCheckDay() == day || dayTime % 24000 < BIRTH_TIME_OF_DAY)
-         return;
-
-      state.setLastBirthsCheckDay(day);
-      ServerSettlementsStore.INSTANCE.setDirty();
-
-      for (Couple couple : findCouplesLivingTogether(dayTime)) {
-         if (!hasRoomForAnotherChild(couple.home(), dayTime))
+      for (Couple couple : findCouplesLivingTogether()) {
+         if (!hasRoomForAnotherChild(couple.home()))
             continue;
 
          int odds = couple.hasHomemaker() ? BIRTH_ODDS_PERCENT_HOMEMAKER : BIRTH_ODDS_PERCENT;
@@ -83,15 +109,15 @@ public class BirthOrganiser {
       }
    }
 
-   private List<Couple> findCouplesLivingTogether(long dayTime) {
+   private List<Couple> findCouplesLivingTogether() {
 
       List<Couple> couples = new ArrayList<>();
       for (VillagerInfo mother : ServerVillagerStore.INSTANCE.getCitizens(settlement().getSettlementId())) {
-         if (mother.getGender() != Gender.FEMALE || !isAdultCitizen(mother, dayTime))
+         if (mother.getGender() != Gender.FEMALE || !isAdultCitizen(mother))
             continue;
 
          Optional<VillagerInfo> father = ServerVillagerStore.INSTANCE.find(mother.getPartnerId());
-         if (father.isEmpty() || !isAdultCitizen(father.get(), dayTime))
+         if (father.isEmpty() || !isAdultCitizen(father.get()))
             continue;
 
          boolean parentsLiveTogether =
@@ -109,18 +135,18 @@ public class BirthOrganiser {
       return couples;
    }
 
-   private static boolean isAdultCitizen(VillagerInfo villager, long dayTime) {
-      return villager.getNpcRole().is(VillagerNpcRoles.CITIZEN) && !villager.isChild(dayTime);
+   private static boolean isAdultCitizen(VillagerInfo villager) {
+      return villager.getNpcRole().is(VillagerNpcRoles.CITIZEN) && !villager.isChild();
    }
 
    public static int childSlots(Building home) {
       return Math.max(0, home.getUpgradeLevel() - 1);
    }
 
-   private static boolean hasRoomForAnotherChild(Building home, long dayTime) {
+   private static boolean hasRoomForAnotherChild(Building home) {
       int children = 0;
       for (VillagerInfo resident : BuildingUtil.getOccupants(home, ServerVillagerStore.INSTANCE)) {
-         if (resident.isChild(dayTime))
+         if (resident.isChild())
             children++;
       }
       return children < childSlots(home);
@@ -145,6 +171,7 @@ public class BirthOrganiser {
       info.setSettlementId(settlement().getSettlementId());
       info.setParents(couple.mother().getVillagerId(), couple.father().getVillagerId());
       info.setBirthDay(day);
+      info.setLifeStage(LifeStage.CHILD);
       info.setLastName(couple.father().getLastName());
       info.setHomeBuildingId(couple.home().getBuildingId());
       ServerVillagerStore.INSTANCE.setDirty();
@@ -158,10 +185,6 @@ public class BirthOrganiser {
    }
 
    private void announceBirth(ServerLevel level, Couple couple, VillagerInfo child) {
-      Player owner = level.getPlayerByUUID(settlement().getOwnerId());
-      if (owner == null)
-         return;
-
       MutableComponent message;
       if (child.getGender() == Gender.MALE)
          message =
@@ -176,6 +199,12 @@ public class BirthOrganiser {
                      couple.father().getLastName(),
                      child.getFirstName());
 
-      owner.displayClientMessage(message.withColor(Colors.LOVE), false);
+      announce(level, message);
+   }
+
+   private void announce(ServerLevel level, MutableComponent message) {
+      Player owner = level.getPlayerByUUID(settlement().getOwnerId());
+      if (owner != null)
+         owner.displayClientMessage(message.withColor(Colors.FAMILY), false);
    }
 }

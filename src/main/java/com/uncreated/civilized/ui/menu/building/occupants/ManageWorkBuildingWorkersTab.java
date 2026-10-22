@@ -13,7 +13,6 @@ import com.uncreated.civilized.networking.packets.AssignWorkerRequest;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
 import com.uncreated.civilized.ui.tabs.ITabHost;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
@@ -35,10 +34,9 @@ public class ManageWorkBuildingWorkersTab extends ManageOccupantsTab {
 
    @Override
    protected List<VillagerInfo> provideOccupantsModelData() {
-      long dayTime = Minecraft.getInstance().level.getDayTime();
       return ClientVillagerStore.INSTANCE.getCitizens(building.getSettlementId())
             .stream()
-            .filter(v -> v.getNpcRole().is(VillagerNpcRoles.CITIZEN) && !v.isChild(dayTime))
+            .filter(v -> v.getNpcRole().is(VillagerNpcRoles.CITIZEN) && !v.isChild())
             // this building's workers first, then villagers without a job, since giving them one costs nothing
             .sorted(
                   Comparator.comparing((VillagerInfo v) -> !v.isAssignedWorkerOf(building))

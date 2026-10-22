@@ -54,6 +54,7 @@ public class VillagerInfo {
                   .motherId(buffer.readNullable((b -> b.readUUID())))
                   .fatherId(buffer.readNullable((b -> b.readUUID())))
                   .birthDay(buffer.readNullable((FriendlyByteBuf::readVarLong)))
+                  .lifeStage(buffer.readEnum(LifeStage.class))
                   .skills(VillagerSkills.decode(buffer));
 
       return builder.build();
@@ -78,6 +79,7 @@ public class VillagerInfo {
       buffer.writeNullable(motherId, (b, v) -> b.writeUUID(v));
       buffer.writeNullable(fatherId, (b, v) -> b.writeUUID(v));
       buffer.writeNullable(birthDay, FriendlyByteBuf::writeVarLong);
+      buffer.writeEnum(lifeStage);
       skills.encode(buffer);
    }
 
@@ -99,6 +101,7 @@ public class VillagerInfo {
    public static final String FIELD_MOTHER_ID = "mother_id";
    public static final String FIELD_FATHER_ID = "father_id";
    public static final String FIELD_BIRTH_DAY = "birth_day";
+   public static final String FIELD_LIFE_STAGE = "life_stage";
    public static final int GROW_UP_DAYS = 30;
 
    private UUID villagerId;
@@ -138,6 +141,9 @@ public class VillagerInfo {
    private @Nullable UUID fatherId;
    @Setter
    private @Nullable Long birthDay;
+   @Setter
+   @Builder.Default
+   private LifeStage lifeStage = LifeStage.ADULT;
 
    public boolean hasName() {
       return !firstName.isEmpty() && !lastName.isEmpty();
@@ -213,11 +219,13 @@ public class VillagerInfo {
       return OptionalLong.of(dayTime / 24000 - birthDay);
    }
 
-   public boolean isChild(long dayTime) { // todo: i don't know if I like passing in the dayTime into this check as it's
-                                          // very limiting. It would be better to just remove the birthday when the
-                                          // child grows up
+   public boolean isChild() {
+      return lifeStage == LifeStage.CHILD;
+   }
+
+   public boolean isOldEnoughToGrowUp(long dayTime) {
       OptionalLong age = getAgeInDays(dayTime);
-      return age.isPresent() && age.getAsLong() < GROW_UP_DAYS;
+      return isChild() && age.isPresent() && age.getAsLong() >= GROW_UP_DAYS;
    }
 
    public String getFullName() {
@@ -348,6 +356,7 @@ public class VillagerInfo {
       motherId = other.motherId;
       fatherId = other.fatherId;
       birthDay = other.birthDay;
+      lifeStage = other.lifeStage;
    }
 
    public String toStringLite() {

@@ -79,6 +79,7 @@ public class ServerVillagerStore extends VillagerStore {
             item.putUUID(VillagerInfo.FIELD_FATHER_ID, villagerInfo.getFatherId());
          if (villagerInfo.getBirthDay() != null)
             item.putLong(VillagerInfo.FIELD_BIRTH_DAY, villagerInfo.getBirthDay());
+         item.putString(VillagerInfo.FIELD_LIFE_STAGE, villagerInfo.getLifeStage().name());
 
          tags.add(item);
       }
@@ -123,6 +124,8 @@ public class ServerVillagerStore extends VillagerStore {
             builder.fatherId(itemTag.getUUID(VillagerInfo.FIELD_FATHER_ID));
          if (itemTag.contains(VillagerInfo.FIELD_BIRTH_DAY))
             builder.birthDay(itemTag.getLong(VillagerInfo.FIELD_BIRTH_DAY));
+         if (itemTag.contains(VillagerInfo.FIELD_LIFE_STAGE))
+            builder.lifeStage(LifeStage.valueOf(itemTag.getString(VillagerInfo.FIELD_LIFE_STAGE)));
          if (itemTag.hasUUID(VillagerInfo.FIELD_WORK_AREA_ID))
             builder.workAreaId(itemTag.getUUID(VillagerInfo.FIELD_WORK_AREA_ID));
          if (itemTag.hasUUID(VillagerInfo.FIELD_PARTNER_ID))

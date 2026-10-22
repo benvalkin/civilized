@@ -33,4 +33,6 @@ public class Colors {
    public final static int BUILDING_UPGRADE_LEVEL = 0x56b3ac;
 
    public final static int LOVE = 0xffb8f0;
+
+   public final static int FAMILY = 0xc9b8ff;
 }
