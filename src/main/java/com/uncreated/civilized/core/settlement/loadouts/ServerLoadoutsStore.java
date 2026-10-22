@@ -61,7 +61,7 @@ public class ServerLoadoutsStore extends LoadoutsStore {
 
    private void replicateChange(Loadout loadout, StoreOperation operation) {
       setDirty();
-      // todo: don't think we need to should client replication
+      // client replication of loadouts has no planned support
       // PacketDistributor.sendToAllPlayers(loadout.toPacket(operation));
       NeoForge.EVENT_BUS.post(new LoadoutUpdatedEvent(loadout, false));
    }

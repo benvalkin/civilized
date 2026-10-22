@@ -308,6 +308,8 @@
   "message.settlement.permission.denied.player_not_found": "That player is no longer online.",
   "message.settlement.permission.denied.blocks": "You don't have permission to build in %s.",
   "message.notification.villager.started_dating": "%s and %s have started dating!",
+  "message.notification.villager.child_born.male": "The %s family welcomes a new child. They have named him %s.",
+  "message.notification.villager.child_born.female": "The %s family welcomes a new child. They have named her %s.",
   "production_bill.description.enabled": "Toggle production",
   "production_bill.production_strategy.description.complex.produce_infinite": "Produce infinite",
   "production_bill.production_strategy.description.complex.produce_up_to": "Produce up to: %s",

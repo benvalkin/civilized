@@ -7,6 +7,7 @@ import com.uncreated.civilized.core.building.logistics.LogisticsManager;
 import com.uncreated.civilized.core.settlement.Settlement;
 import com.uncreated.civilized.core.settlement.defense.SettlementDefenseHighCommand;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlement;
+import com.uncreated.civilized.core.settlement.family.BirthOrganiser;
 import com.uncreated.civilized.core.settlement.festival.FestivalOrganiser;
 import com.uncreated.civilized.core.settlement.tax.TaxCollector;
 
@@ -30,6 +31,9 @@ public class SettlementBehaviour {
    private final FestivalOrganiser festivalOrganiser;
 
    @Getter
+   private final BirthOrganiser birthOrganiser;
+
+   @Getter
    private final LoadedSettlement entity;
 
    public Settlement getSettlement() {
@@ -42,11 +46,13 @@ public class SettlementBehaviour {
       defenseHighCommand = new SettlementDefenseHighCommand(entity);
       taxCollector = new TaxCollector(entity);
       festivalOrganiser = new FestivalOrganiser(entity);
+      birthOrganiser = new BirthOrganiser(entity);
    }
 
    public void serverTick(ServerLevel level, long gameTime, long dayTime) {
       defenseHighCommand.serverTick(level, gameTime);
       taxCollector.serverTick(level, gameTime, dayTime);
       festivalOrganiser.serverTick(level, gameTime, dayTime);
+      birthOrganiser.serverTick(level, dayTime);
    }
 }

@@ -162,6 +162,12 @@ public class VillagerInfo {
       return partnerId.equals(other.villagerId) && villagerId.equals(other.partnerId);
    }
 
+   /** Only for newborns: a villager's parents never change once they're born. */
+   public void setParents(UUID motherId, UUID fatherId) {
+      this.motherId = motherId;
+      this.fatherId = fatherId;
+   }
+
    public List<UUID> getParentIds() {
       List<UUID> parentIds = new ArrayList<>(2);
       if (motherId != null)
