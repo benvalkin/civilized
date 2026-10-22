@@ -17,6 +17,7 @@ public class CivilizedVillagerRenderState extends HumanoidRenderState {
    public Component currentActivity;
    public ResourceLocation skin;
    public ResourceLocation hair;
+   public ResourceLocation eyes;
    public ResourceLocation clothing;
    public boolean sleepingOnFloor;
    public boolean useSlimArmsPlayerModel;

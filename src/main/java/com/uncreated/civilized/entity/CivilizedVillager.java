@@ -57,6 +57,7 @@ import com.uncreated.civilized.entity.equipment.VillagerEquipment;
 import com.uncreated.civilized.entity.equipment.VillagerInventoryType;
 import com.uncreated.civilized.entity.pathfinding.VillagerGroundPathNavigation;
 import com.uncreated.civilized.entity.stats.ClothingTextureRegistry;
+import com.uncreated.civilized.entity.stats.EyeTextureRegistry;
 import com.uncreated.civilized.entity.stats.HairTextureRegistry;
 import com.uncreated.civilized.entity.stats.SkinTextureRegistry;
 import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
@@ -339,6 +340,8 @@ public class CivilizedVillager extends AgeableMob
    @Getter
    private ResourceLocation hair = SkinTextureRegistry.FALLBACK;
    @Getter
+   private ResourceLocation eyes = EyeTextureRegistry.FALLBACK;
+   @Getter
    private ResourceLocation clothing = ClothingTextureRegistry.FALLBACK;
 
    @Override
@@ -357,7 +360,8 @@ public class CivilizedVillager extends AgeableMob
 
    public void updateSkin() {
       skin = SkinTextureRegistry.getRandomSkin(perLifetimeRandom(1), "default", info.getGender()).getValue();
-      hair = HairTextureRegistry.getRandomSkin(perLifetimeRandom(2), "default", info.getGender()).getValue();
+      eyes = EyeTextureRegistry.getRandomEyes(perLifetimeRandom(2), "default", info.getGender()).getValue();
+      hair = HairTextureRegistry.getRandomSkin(perLifetimeRandom(3), "default", info.getGender()).getValue();
    }
 
    public void updateClothing() {
@@ -368,7 +372,7 @@ public class CivilizedVillager extends AgeableMob
 
       clothing =
             ClothingTextureRegistry.getRandomClothingTexture(
-                  perLifetimeRandom(3),
+                  perLifetimeRandom(4),
                   ClothingTextureRegistry.DEFAULT_CULTURE,
                   clothingSets,
                   info.getGender());

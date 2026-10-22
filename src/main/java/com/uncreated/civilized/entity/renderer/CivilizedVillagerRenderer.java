@@ -9,6 +9,7 @@ import com.uncreated.civilized.core.villagerinfo.Gender;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.data.VillagerHunger;
 import com.uncreated.civilized.entity.renderer.layer.ClothingLayer;
+import com.uncreated.civilized.entity.renderer.layer.EyesLayer;
 import com.uncreated.civilized.entity.renderer.layer.HairLayer;
 import com.uncreated.civilized.entity.renderer.layer.VillagerArmorLayer;
 
@@ -44,6 +45,7 @@ public class CivilizedVillagerRenderer extends
       this.wideModel = this.model;
       this.slimModel = new HumanoidModel<>(context.bakeLayer(ModelLayers.PLAYER_SLIM));
 
+      this.addLayer(new EyesLayer(this)); // eyes render over the skin, under clothing such as hoods
       this.addLayer(new ClothingLayer(this, context.getModelSet()));
       this.addLayer(new HairLayer(this, context.getModelSet())); // hair renders over clothing
       this.addLayer(new VillagerArmorLayer(this, context)); // armour obviously renders over everything
@@ -76,6 +78,7 @@ public class CivilizedVillagerRenderer extends
       state.occupation = villager.getInfo().getOccupation();
       state.skin = villager.getSkin();
       state.hair = villager.getHair();
+      state.eyes = villager.getEyes();
       state.clothing = villager.getClothing();
       state.health = villager.getHealth();
       state.maxHealth = villager.getMaxHealth();
