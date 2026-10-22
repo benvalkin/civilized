@@ -229,6 +229,8 @@
   "menu.building.occupants.job.unemployed": "Unemployed",
   "menu.building.occupants.job.homemaker.male": "Husband",
   "menu.building.occupants.job.homemaker.female": "Housewife",
+  "menu.building.occupants.job.child.male": "Boy",
+  "menu.building.occupants.job.child.female": "Girl",
   "menu.building.occupants.assign.leaves_job": "%s will leave their job as %s.",
   "menu.building.residence.production_bills.add_bill.description": "Add Bill",
   "menu.building.residence.production_bills.add_bill.tooltip": "Add new production bill",

@@ -246,6 +246,8 @@ public class VillagerInfo {
 
    public Component getTitleTranslation() {
       if (getNpcRole().is(VillagerNpcRoles.CITIZEN)) {
+         if (isChild())
+            return getChildTranslation();
          if (isHomemaker())
             return getHomeMakerTranslation();
 
@@ -253,6 +255,10 @@ public class VillagerInfo {
       }
 
       return getNpcRole().translation(gender);
+   }
+
+   public Component getChildTranslation() {
+      return Component.translatable("menu.building.occupants.job.child." + gender.toString().toLowerCase());
    }
 
    public Component getHomeMakerTranslation() {
