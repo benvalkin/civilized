@@ -69,6 +69,11 @@ public record AssignWorkerRequest(UUID villagerId, Optional<UUID> worksiteId) im
          return;
       }
 
+      if (worker.get().isChild(context.player().level().getDayTime())) {
+         failure(context, "Worker could not be assigned - villager is a child.");
+         return;
+      }
+
       Optional<Building> worksite = Optional.empty();
       if (packet.worksiteId().isPresent()) {
          worksite = ServerBuildingsStore.INSTANCE.find(packet.worksiteId().get());

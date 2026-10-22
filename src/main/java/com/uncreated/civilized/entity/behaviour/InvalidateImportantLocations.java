@@ -260,7 +260,7 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
 
       // a grown-up child who has found a partner starts a household of their own, rather than moving their partner in
       // with their parents
-      if (livesWithParents(building.get(), villager))
+      if (livesWithParents(building.get(), villager)) // todo: i don't think this check belongs in this method
          return Optional.empty();
 
       return building;

@@ -62,6 +62,7 @@ public class Flirt extends Socialize {
                         && !other.isDrafted()
                         && other.getInfo().getGender() == villager.getInfo().getGender().opposite()
                         && !other.getInfo().isTaken() && other.getInfo().getNpcRole().is(VillagerNpcRoles.CITIZEN)
+                        && !other.getInfo().isChild(level.getDayTime())
                         && other.getInfo().getSettlementId() != null /* && villager.hasLineOfSight(other) */)
                   .stream()
                   .sorted(Comparator.comparingDouble(villager::distanceToSqr))
@@ -71,7 +72,7 @@ public class Flirt extends Socialize {
 
    @Override
    protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
-      if (villager.getInfo().isTaken())
+      if (villager.getInfo().isTaken() || villager.getInfo().isChild(level.getDayTime()))
          return false;
 
       if (!active) {

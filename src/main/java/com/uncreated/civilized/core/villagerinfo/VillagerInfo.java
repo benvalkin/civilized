@@ -207,7 +207,9 @@ public class VillagerInfo {
       return OptionalLong.of(dayTime / 24000 - birthDay);
    }
 
-   public boolean isChild(long dayTime) {
+   public boolean isChild(long dayTime) { // todo: i don't know if I like passing in the dayTime into this check as it's
+                                          // very limiting. It would be better to just remove the birthday when the
+                                          // child grows up
       OptionalLong age = getAgeInDays(dayTime);
       return age.isPresent() && age.getAsLong() < GROW_UP_DAYS;
    }

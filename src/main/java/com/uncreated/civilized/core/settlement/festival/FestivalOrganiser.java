@@ -87,7 +87,7 @@ public class FestivalOrganiser {
       case NONE -> end(level, dayTime);
       case GATHERING -> {
          if (visitorArrivalScheduler == null || visitorArrivalsFestivalStartTime != state.getFestivalStartTime())
-            visitorArrivalScheduler = scheduleVisitorArrivals(state);
+            visitorArrivalScheduler = scheduleVisitorArrivals(state, dayTime);
          visitorArrivalScheduler.tick(level, gameTime, () -> trySpawnVisitor(level, state));
       }
       case CELEBRATING -> {
@@ -106,11 +106,13 @@ public class FestivalOrganiser {
       return ServerBuildingsStore.INSTANCE.findTownSquare(settlement().getSettlementId());
    }
 
-   private DailyEventScheduler scheduleVisitorArrivals(SettlementState state) {
+   private DailyEventScheduler scheduleVisitorArrivals(SettlementState state, long dayTime) {
       int numberOfSingleWorkers =
             (int) ServerVillagerStore.INSTANCE.getCitizens(settlement().getSettlementId())
                   .stream()
-                  .filter(villager -> villager.getNpcRole().is(VillagerNpcRoles.CITIZEN))
+                  .filter(
+                        villager -> villager.getNpcRole().is(VillagerNpcRoles.CITIZEN) && !villager.isChild(dayTime)
+                              && !villager.isTaken())
                   .count();
       // there may already be visitors at the town square - take these into account to avoid spawning too may visitors
       Optional<Building> townSquare = findTownSquare();
