@@ -4,6 +4,8 @@ import com.uncreated.civilized.CivilizedMod;
 import com.uncreated.civilized.commands.DetectRooms;
 import com.uncreated.civilized.commands.OpenTradingMenu;
 import com.uncreated.civilized.commands.SetSettlementAccess;
+import com.uncreated.civilized.commands.SetVillagerAge;
+import com.uncreated.civilized.commands.SummonChild;
 import com.uncreated.civilized.commands.SummonWorker;
 import com.uncreated.civilized.commands.SummonVisitor;
 import com.uncreated.civilized.core.building.events.model.BuildingUpdatedEvent;
@@ -21,5 +23,7 @@ public class CommandRegistry {
         OpenTradingMenu.register(event.getDispatcher());
         SummonVisitor.register(event.getDispatcher());
         DetectRooms.register(event.getDispatcher());
+        SummonChild.register(event.getDispatcher());
+        SetVillagerAge.register(event.getDispatcher());
     }
 }

@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -158,30 +160,42 @@ public class BirthOrganiser {
       if (LoadedBuildings.checkLoaded(couple.home()).isEmpty())
          return;
 
-      BlockPos birthPos = couple.home().getBounds().findRandomInsideFloorBlock(level);
-      CivilizedVillager child =
-            EntityRegistry.CIVILIZED_VILLAGER.get().spawn(level, birthPos, EntitySpawnReason.BREEDING);
+      Optional<CivilizedVillager> child =
+            spawnChild(level, couple.home(), couple.mother(), couple.father(), day);
+      child.ifPresent(c -> announceBirth(level, couple, c.getInfo()));
+   }
+
+   public static Optional<CivilizedVillager> spawnChild(
+         ServerLevel level,
+         Building home,
+         @Nullable VillagerInfo mother,
+         @Nullable VillagerInfo father,
+         long birthDay) {
+
+      BlockPos birthPos = home.getBounds().findRandomInsideFloorBlock(level);
+      CivilizedVillager child = EntityRegistry.CIVILIZED_VILLAGER.get().spawn(level, birthPos, EntitySpawnReason.BREEDING);
       if (child == null) {
-         LOGGER.error("Tried to spawn new child at {} but something went wrong.", couple.home().getBuildingId());
-         return;
+         LOGGER.error("Tried to spawn new child at {} but something went wrong.", home.getBuildingId());
+         return Optional.empty();
       }
 
       VillagerInfo info = child.getInfo();
       child.changeNpcRole(VillagerNpcRoles.CITIZEN);
-      info.setSettlementId(settlement().getSettlementId());
-      info.setParents(couple.mother().getVillagerId(), couple.father().getVillagerId());
-      info.setBirthDay(day);
+      info.setSettlementId(home.getSettlementId());
+      if (mother != null && father != null) {
+         info.setParents(mother.getVillagerId(), father.getVillagerId());
+         info.setLastName(father.getLastName());
+      }
+      info.setBirthDay(birthDay);
       info.setLifeStage(LifeStage.CHILD);
-      info.setLastName(couple.father().getLastName());
-      info.setHomeBuildingId(couple.home().getBuildingId());
+      info.setHomeBuildingId(home.getBuildingId());
       ServerVillagerStore.INSTANCE.setDirty();
       ServerVillagerStore.INSTANCE.replicateChange(info, StoreOperation.ADD_OR_OVERWRITE);
 
       // invalidate to finalize home location and etc
       InvalidateImportantLocations.revalidate(level, child);
       child.refreshBrain(level);
-
-      announceBirth(level, couple, info);
+      return Optional.of(child);
    }
 
    private void announceBirth(ServerLevel level, Couple couple, VillagerInfo child) {
