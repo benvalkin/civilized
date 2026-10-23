@@ -25,7 +25,23 @@ public class EyeTextureRegistry {
    private static final Object2ObjectArrayMap<String, Int2ObjectMap<ResourceLocation>> EYE_TEXTURES =
          Util.make(new Object2ObjectArrayMap<>(), map -> {
             add(map, DEFAULT_CULTURE, "male", "1");
+            add(map, DEFAULT_CULTURE, "male", "2");
+            add(map, DEFAULT_CULTURE, "male", "3");
+            add(map, DEFAULT_CULTURE, "male", "4");
+            add(map, DEFAULT_CULTURE, "male", "5");
+            add(map, DEFAULT_CULTURE, "male", "6");
+            add(map, DEFAULT_CULTURE, "male", "7");
             add(map, DEFAULT_CULTURE, "female", "1");
+            add(map, DEFAULT_CULTURE, "female", "2");
+            add(map, DEFAULT_CULTURE, "female", "3");
+            add(map, DEFAULT_CULTURE, "female", "4");
+            add(map, DEFAULT_CULTURE, "female", "5");
+            add(map, DEFAULT_CULTURE, "female", "6");
+            add(map, DEFAULT_CULTURE, "female", "7");
+            add(map, DEFAULT_CULTURE, "female", "8");
+            add(map, DEFAULT_CULTURE, "female", "9");
+            add(map, DEFAULT_CULTURE, "female", "10");
+            add(map, DEFAULT_CULTURE, "female", "11");
          });
 
    private static void add(
