@@ -1,5 +1,7 @@
 package com.uncreated.civilized.core.villagerinfo.skills;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import net.minecraft.nbt.CompoundTag;
@@ -60,6 +62,30 @@ public class VillagerSkills {
          return Optional.empty();
 
       return Optional.of(totalXp);
+   }
+
+   public boolean isCapableOf(VillagerSkill skill) {
+      return getTotalXpIntl(skill) >= 0;
+   }
+
+   public List<SkillValue> allSkills() {
+      List<SkillValue> capableSkills = new ArrayList<>();
+      for (VillagerSkill skill : VillagerSkill.values())
+         capableSkills.add(new SkillValue(skill, getTotalXpIntl(skill)));
+
+      return capableSkills;
+   }
+
+   public List<CapableSkillValue> capableSkills() {
+      List<CapableSkillValue> capableSkills = new ArrayList<>();
+      for (VillagerSkill skill : VillagerSkill.values()) {
+         Optional<Integer> totalXp = getTotalXp(skill);
+         if (totalXp.isEmpty())
+            continue;
+
+         capableSkills.add(new CapableSkillValue(skill, totalXp.get()));
+      }
+      return capableSkills;
    }
 
    public static Integer currentLevel(int totalXp) {

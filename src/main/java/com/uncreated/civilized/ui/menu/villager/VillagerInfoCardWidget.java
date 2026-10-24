@@ -1,10 +1,10 @@
 package com.uncreated.civilized.ui.menu.villager;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
+import com.uncreated.civilized.core.villagerinfo.skills.CapableSkillValue;
 import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkill;
 import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkills;
 import com.uncreated.civilized.entity.CivilizedVillager;
@@ -77,7 +77,7 @@ public class VillagerInfoCardWidget extends AbstractWidget {
       y += font.lineHeight;
       graphics.drawCenteredString(
             font,
-            info.getTitleTranslation().copy().withColor(Colors.TEXT_LIGHT_MUTED),
+            info.getTitleTranslation().copy().withColor(Colors.BUILDING_LIGHT),
             centreX,
             y,
             Colors.TEXT_LIGHT_MUTED);
@@ -127,9 +127,9 @@ public class VillagerInfoCardWidget extends AbstractWidget {
       int levelRight = getRight() - PADDING;
 
       Component hoveredLevelName = null;
-      for (VillagerSkill skill : findBestSkills(skills)) {
-         int level = VillagerSkills.currentLevel(totalXp(skills, skill));
-         graphics.drawString(font, skillName(skill), x, y, Colors.TEXT_LIGHT_MUTED);
+      for (CapableSkillValue skill : findBestSkills(skills)) {
+         int level = VillagerSkills.currentLevel(skill.totalXp());
+         graphics.drawString(font, skillName(skill.skill()), x, y, Colors.TEXT_LIGHT_MUTED);
          String levelText = String.valueOf(level);
          graphics
                .drawString(font, levelText, levelRight - font.width(levelText), y, Colors.MENU_TEXT_VILLAGER_DIALOGUE);
@@ -143,14 +143,10 @@ public class VillagerInfoCardWidget extends AbstractWidget {
          graphics.renderTooltip(font, hoveredLevelName, mouseX, mouseY);
    }
 
-   private static List<VillagerSkill> findBestSkills(VillagerSkills skills) {
-      List<VillagerSkill> best = new ArrayList<>(List.of(VillagerSkill.values()));
-      best.sort(Comparator.comparingInt((VillagerSkill skill) -> totalXp(skills, skill)).reversed());
+   private static List<CapableSkillValue> findBestSkills(VillagerSkills skills) {
+      List<CapableSkillValue> best = skills.capableSkills();
+      best.sort(Comparator.comparingInt(CapableSkillValue::totalXp).reversed());
       return best.subList(0, Math.min(SKILLS_SHOWN, best.size()));
-   }
-
-   private static int totalXp(VillagerSkills skills, VillagerSkill skill) {
-      return skills.getTotalXp(skill).orElse(0);
    }
 
    private static Component skillName(VillagerSkill skill) {
