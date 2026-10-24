@@ -1,5 +1,7 @@
 package com.uncreated.civilized.ui.components.widget;
 
+import java.util.List;
+
 import com.uncreated.civilized.core.villagerinfo.skills.SkillValue;
 import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkills;
 import com.uncreated.civilized.ui.style.Colors;
@@ -113,7 +115,7 @@ public class SkillWidget extends AbstractWidget {
       graphics.drawString(font, levelText, levelRight - font.width(levelText), textY, colour);
 
       if (isHovered())
-         graphics.renderTooltip(font, levelName(capable, level), mouseX, mouseY);
+         graphics.renderComponentTooltip(font, tooltipFor(totalXp, level, capable), mouseX, mouseY);
    }
 
    private int renderBar(GuiGraphics graphics, float filled, int colour) {
@@ -155,10 +157,23 @@ public class SkillWidget extends AbstractWidget {
       return Colors.SKILL_MASTER;
    }
 
-   private static Component levelName(boolean capable, int level) {
+   private static List<Component> tooltipFor(int totalXp, int level, boolean capable) {
       if (!capable)
-         return Component.translatable("villager.skill.level.explanation.incapable");
-      return Component.translatable("villager.skill.level.explanation." + level);
+         return List.of(Component.translatable("villager.skill.level.explanation.incapable"));
+
+      Component progressLine;
+      if (level >= VillagerSkills.MAX_LEVEL)
+         progressLine = Component.translatable("villager.skill.progress.max");
+      else
+         progressLine =
+               Component.translatable(
+                     "villager.skill.progress",
+                     String.format("%,d", VillagerSkills.currentLevelXp(totalXp)),
+                     String.format("%,d", VillagerSkills.nextLevelRequiredXp(totalXp)));
+
+      return List.of(
+            progressLine.copy().withColor(Colors.TEXT_LIGHT_MUTED),
+            Component.translatable("villager.skill.level.explanation." + level));
    }
 
    private static Component skillName(SkillValue skill) {
