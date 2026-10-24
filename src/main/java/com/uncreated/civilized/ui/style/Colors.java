@@ -8,6 +8,11 @@ public class Colors {
 
    public static final int TEXT_LIGHT_MUTED = 0xababab;
 
+   public static final int SKILL_UNSKILLED = TEXT_LIGHT_MUTED;
+   public static final int SKILL_COMPETENT = MENU_TEXT_VILLAGER_DIALOGUE;
+   public static final int SKILL_HIGHLY_SKILLED = 0xfff3c2;
+   public static final int SKILL_MASTER = 0xffe066;
+
    public final static int VALIDATION_ERROR = 0xebb2b2;
    public final static int VALIDATION_SUCCESS = 0xc5edcc;
    public final static int VALIDATION_PARTIAL_SUCCESS = 0xa5d4e8;

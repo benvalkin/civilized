@@ -1,14 +1,16 @@
 package com.uncreated.civilized.ui.menu.villager;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.core.villagerinfo.skills.CapableSkillValue;
-import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkill;
+import com.uncreated.civilized.core.villagerinfo.skills.SkillValue;
 import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkills;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.data.VillagerHunger;
+import com.uncreated.civilized.ui.components.widget.SkillWidget;
 import com.uncreated.civilized.ui.style.Colors;
 
 import net.minecraft.client.gui.Font;
@@ -41,6 +43,7 @@ public class VillagerInfoCardWidget extends AbstractWidget {
 
    private final Font font;
    private final CivilizedVillager villager;
+   private final List<SkillWidget> skillRows = new ArrayList<>();
 
    /**
     * @param bottom
@@ -51,11 +54,29 @@ public class VillagerInfoCardWidget extends AbstractWidget {
       this.font = font;
       this.villager = villager;
       setY(bottom - height);
+      createSkillRows();
    }
 
+   /**
+    * Combined pixel height of the following child widgets stacked below each other: Name and title, then health and
+    * hunger, then the skills heading and the list of skills.
+    */
    private static int heightFor(Font font) {
-      return PADDING + font.lineHeight * 2 + SECTION_GAP + ICON_SIZE * 2 + ICON_ROW_GAP + SECTION_GAP
-            + font.lineHeight * (1 + SKILLS_SHOWN) + PADDING;
+      return skillListY(font) + SkillWidget.heightFor(font) * SKILLS_SHOWN + PADDING;
+   }
+
+   private static int skillListY(Font font) {
+      return PADDING + font.lineHeight * 2 + SECTION_GAP + ICON_SIZE * 2 + ICON_ROW_GAP + SECTION_GAP + font.lineHeight;
+   }
+
+   private void createSkillRows() {
+      int x = getX() + PADDING + SKILL_INDENT;
+      int y = getY() + skillListY(font);
+      int rowWidth = getRight() - PADDING - x;
+      for (CapableSkillValue skill : findBestSkills(villager.getInfo().getSkills())) {
+         skillRows.add(new SkillWidget(font, x, y, rowWidth, new SkillValue(skill.skill(), skill.totalXp())));
+         y += SkillWidget.heightFor(font);
+      }
    }
 
    @Override
@@ -90,8 +111,7 @@ public class VillagerInfoCardWidget extends AbstractWidget {
 
       graphics
             .drawString(font, Component.translatable("menu.villager.skills"), x, y, Colors.MENU_TEXT_VILLAGER_DIALOGUE);
-      y += font.lineHeight;
-      renderBestSkills(graphics, x + SKILL_INDENT, y, mouseX, mouseY);
+      skillRows.forEach(row -> row.render(graphics, mouseX, mouseY, partialTick));
    }
 
    private void renderHealth(GuiGraphics graphics, int x, int y) {
@@ -122,35 +142,10 @@ public class VillagerInfoCardWidget extends AbstractWidget {
       }
    }
 
-   private void renderBestSkills(GuiGraphics graphics, int x, int y, int mouseX, int mouseY) {
-      VillagerSkills skills = villager.getInfo().getSkills();
-      int levelRight = getRight() - PADDING;
-
-      Component hoveredLevelName = null;
-      for (CapableSkillValue skill : findBestSkills(skills)) {
-         int level = VillagerSkills.currentLevel(skill.totalXp());
-         graphics.drawString(font, skillName(skill.skill()), x, y, Colors.TEXT_LIGHT_MUTED);
-         String levelText = String.valueOf(level);
-         graphics
-               .drawString(font, levelText, levelRight - font.width(levelText), y, Colors.MENU_TEXT_VILLAGER_DIALOGUE);
-
-         if (mouseX >= x && mouseX < levelRight && mouseY >= y && mouseY < y + font.lineHeight)
-            hoveredLevelName = Component.translatable("villager.skill.level.explanation." + level);
-         y += font.lineHeight;
-      }
-
-      if (hoveredLevelName != null)
-         graphics.renderTooltip(font, hoveredLevelName, mouseX, mouseY);
-   }
-
    private static List<CapableSkillValue> findBestSkills(VillagerSkills skills) {
       List<CapableSkillValue> best = skills.capableSkills();
       best.sort(Comparator.comparingInt(CapableSkillValue::totalXp).reversed());
       return best.subList(0, Math.min(SKILLS_SHOWN, best.size()));
-   }
-
-   private static Component skillName(VillagerSkill skill) {
-      return Component.translatable("villager.skill." + skill.name().toLowerCase());
    }
 
    @Override
