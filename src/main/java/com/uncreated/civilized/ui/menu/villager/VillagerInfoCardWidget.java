@@ -32,6 +32,7 @@ public class VillagerInfoCardWidget extends AbstractWidget {
    private static final int ICON_SPACING = 8;
    private static final int ICON_ROW_GAP = 2;
    private static final int SKILLS_SHOWN = 4;
+   private static final SkillWidget.ProgressBarAppearance SKILL_BAR = SkillWidget.ProgressBarAppearance.BEHIND;
    private static final int SKILL_INDENT = 4;
 
    private static final ResourceLocation HEART_CONTAINER = ResourceLocation.withDefaultNamespace("hud/heart/container");
@@ -62,7 +63,7 @@ public class VillagerInfoCardWidget extends AbstractWidget {
     * hunger, then the skills heading and the list of skills.
     */
    private static int heightFor(Font font) {
-      return skillListY(font) + SkillWidget.heightFor(font) * SKILLS_SHOWN + PADDING;
+      return skillListY(font) + SkillWidget.heightFor(font, SKILL_BAR) * SKILLS_SHOWN + PADDING;
    }
 
    private static int skillListY(Font font) {
@@ -74,9 +75,24 @@ public class VillagerInfoCardWidget extends AbstractWidget {
       int y = getY() + skillListY(font);
       int rowWidth = getRight() - PADDING - x;
       for (CapableSkillValue skill : findBestSkills(villager.getInfo().getSkills())) {
-         skillRows.add(new SkillWidget(font, x, y, rowWidth, new SkillValue(skill.skill(), skill.totalXp())));
-         y += SkillWidget.heightFor(font);
+         skillRows.add(
+               new SkillWidget(
+                     font,
+                     x,
+                     y,
+                     rowWidth,
+                     new SkillValue(skill.skill(), skill.totalXp()),
+                     SkillWidget.ProgressBarCalculation.LEVEL_OUT_OF_MAX,
+                     SKILL_BAR));
+         y += SkillWidget.heightFor(font, SKILL_BAR);
       }
+
+      // every row's bar starts after the longest name, so they line up
+      int longestNameRight = x;
+      for (SkillWidget row : skillRows)
+         longestNameRight = Math.max(longestNameRight, row.getNameRight());
+      for (SkillWidget row : skillRows)
+         row.alignBarAfter(longestNameRight);
    }
 
    @Override

@@ -7,11 +7,13 @@ public class Colors {
    public final static int MENU_TEXT_VILLAGER_DIALOGUE_ACTION = 0xdbd1b8;
 
    public static final int TEXT_LIGHT_MUTED = 0xababab;
+   public static final int TEXT_DARK_MUTED = 0x666666;
 
-   public static final int SKILL_UNSKILLED = TEXT_LIGHT_MUTED;
+   public static final int SKILL_INCAPABLE = TEXT_DARK_MUTED;
+   public static final int SKILL_UNSKILLED = 0x919191;
    public static final int SKILL_COMPETENT = MENU_TEXT_VILLAGER_DIALOGUE;
    public static final int SKILL_HIGHLY_SKILLED = 0xfff3c2;
-   public static final int SKILL_MASTER = 0xffe066;
+   public static final int SKILL_MASTER = 0xffe78a;
 
    public final static int VALIDATION_ERROR = 0xebb2b2;
    public final static int VALIDATION_SUCCESS = 0xc5edcc;
