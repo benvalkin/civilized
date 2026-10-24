@@ -439,32 +439,34 @@ public class CivilizedVillager extends AgeableMob
       DialogueController dialogueController = DialogueController.selectDialogueController(this);
       DialogueFlow dialogueFlow = dialogueController.getDialogueFlow(this, player, hand);
 
-      if (dialogueFlow == null)
-         return InteractionResult.PASS;
+      @Nullable
+      IVillageDialogue dialogue = null;
+      @Nullable
+      DialogueContext context = null;
+      if (dialogueFlow != null) {
 
-      long gameTime = player.level().getGameTime();
-      long dayTime = player.level().getDayTime();
-      DialogueContext context = dialogueFlow.buildDialogueContext(this, player, hand, gameTime, dayTime);
-      IVillageDialogue dialogue = dialogueFlow.getOpeningDialogue(context);
+         long gameTime = player.level().getGameTime();
+         long dayTime = player.level().getDayTime();
+         context = dialogueFlow.buildDialogueContext(this, player, hand, gameTime, dayTime);
 
-      while (dialogue != null && !dialogue.isAvailableToPlayer(context)) {
-         dialogue = dialogue.getFallback();
-      }
+         dialogue = dialogueFlow.getOpeningDialogue(context);
 
-      if (dialogue == null) {
-         return InteractionResult.PASS;
-      }
-      if (dialogue instanceof ItemDepotDialogue itemDepotDialogue) {
+         while (dialogue != null && !dialogue.isAvailableToPlayer(context)) {
+            dialogue = dialogue.getFallback();
+         }
 
-         ItemStack itemInHand = player.getItemInHand(hand);
-         if (itemInHand.isEmpty())
-            return InteractionResult.PASS;
+         if (dialogue instanceof ItemDepotDialogue itemDepotDialogue) {
 
-         if (!itemDepotDialogue.getCanConsumeItemCheck().canConsumeItem(context, itemInHand, hand))
-            return InteractionResult.PASS;
-
-         ItemStack consumed = itemDepotDialogue.getConsumeItemAction().consumeItem(context, itemInHand, hand);
-         return InteractionResult.CONSUME.heldItemTransformedTo(consumed);
+            ItemStack itemInHand = player.getItemInHand(hand);
+            if (itemInHand.isEmpty())
+               dialogue = null;
+            else if (!itemDepotDialogue.getCanConsumeItemCheck().canConsumeItem(context, itemInHand, hand))
+               return InteractionResult.PASS;
+            else {
+               ItemStack consumed = itemDepotDialogue.getConsumeItemAction().consumeItem(context, itemInHand, hand);
+               return InteractionResult.CONSUME.heldItemTransformedTo(consumed);
+            }
+         }
       }
 
       if (isClientSide)

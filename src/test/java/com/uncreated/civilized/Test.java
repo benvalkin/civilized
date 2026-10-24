@@ -7,7 +7,7 @@ public class Test {
    @org.junit.jupiter.api.Test
    public void test() {
 
-      float xpPerDay = 400;
+      float xpPerDay = 300;
 
       for (int level = 0; level <= 10; level++) {
 
@@ -19,12 +19,12 @@ public class Test {
          Integer myNextLevelRequiredTotalXp = VillagerSkills.requiredTotalXpForLevel(myCurrentLevel + 1);
 
          int daysToReachL1 = Math.round(myNextLevelRequiredXp / xpPerDay);
-         int daysToReachL2 = Math.round(myNextLevelRequiredXp / (xpPerDay * 2f));
-         int daysToReachL3 = Math.round(myNextLevelRequiredXp / (xpPerDay * 3f));
+         int daysToReachL2 = Math.round(myNextLevelRequiredXp / (xpPerDay * 1.5f));
+         int daysToReachL3 = Math.round(myNextLevelRequiredXp / (xpPerDay * 2f));
 
          int totalDaysToReachL1 = Math.round(myTotalXp / xpPerDay);
-         int totalDaysToReachL2 = Math.round(myTotalXp / (xpPerDay * 2f));
-         int totalDaysToReachL3 = Math.round(myTotalXp / (xpPerDay * 3f));
+         int totalDaysToReachL2 = Math.round(myTotalXp / (xpPerDay * 1.5f));
+         int totalDaysToReachL3 = Math.round(myTotalXp / (xpPerDay * 2f));
 
 
          System.out.printf(
