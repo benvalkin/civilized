@@ -103,7 +103,7 @@ public class VillagerScreen extends AbstractContainerScreen<VillagerMenu> implem
             new ItemStack(Items.EXPERIENCE_BOTTLE),
             "skills",
             SkillsTab.class,
-            () -> new SkillsTab(tabCoords, font));
+            () -> new SkillsTab(tabCoords, font, villager));
       x += VillagerTabButton.SIZE + TAB_GAP;
       addTabButton(
             x,
