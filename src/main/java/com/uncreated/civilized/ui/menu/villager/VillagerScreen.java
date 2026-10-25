@@ -8,12 +8,15 @@ import java.util.function.Supplier;
 import org.jetbrains.annotations.Nullable;
 
 import com.uncreated.civilized.core.dialogue.VillagerConversation;
+import com.uncreated.civilized.core.settlement.permission.ClientSettlementPermissionStore;
 import com.uncreated.civilized.entity.CivilizedVillager;
+import com.uncreated.civilized.ui.components.IRefreshableUI;
 import com.uncreated.civilized.ui.components.SlotFrameRenderer;
+import com.uncreated.civilized.ui.menu.building.military.LoadoutSlotLayout;
 import com.uncreated.civilized.ui.menu.villager.tabs.DialogueTab;
-import com.uncreated.civilized.ui.menu.villager.tabs.EquipmentTab;
 import com.uncreated.civilized.ui.menu.villager.tabs.FamilyTab;
 import com.uncreated.civilized.ui.menu.villager.tabs.SkillsTab;
+import com.uncreated.civilized.ui.menu.villager.tabs.SoldierEquipmentTab;
 import com.uncreated.civilized.ui.style.Colors;
 import com.uncreated.civilized.ui.tabs.ATab;
 import com.uncreated.civilized.ui.tabs.ITabHost;
@@ -30,7 +33,7 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
-public class VillagerScreen extends AbstractContainerScreen<VillagerMenu> implements ITabHost {
+public class VillagerScreen extends AbstractContainerScreen<VillagerMenu> implements ITabHost, IRefreshableUI {
 
    public static final int PANEL_COLOUR = 0xB0000000;
    public static final int UNSELECTED_TAB_COLOUR = 0x70000000;
@@ -57,9 +60,13 @@ public class VillagerScreen extends AbstractContainerScreen<VillagerMenu> implem
       super(menu, playerInventory, title);
       this.villager = menu.getVillager();
       // recompute the opening dialogue on the client
-      this.conversation = VillagerConversation.openingDialogue(villager, playerInventory.player, menu.getHand());
+      this.conversation =
+            VillagerConversation.openingDialogue(villager, playerInventory.player, menu.getInteractedHand());
+      // the container area is the slot column, which is centred on the content panel in init()
+      this.imageWidth = VillagerMenu.SLOT_COLUMN_WIDTH;
       this.imageHeight = VillagerMenu.CONTENT_HEIGHT;
-      // standard inventory label height
+      // standard inventory label height, lined up with the inventory's left edge
+      this.inventoryLabelX = 0;
       this.inventoryLabelY = this.imageHeight - 94;
    }
 
@@ -74,13 +81,17 @@ public class VillagerScreen extends AbstractContainerScreen<VillagerMenu> implem
 
       // the leftmost possible X coordinate the content panel can start (starts at the end of the info card)
       int contentLeftPosLimit = infoCard.getRight() + PANEL_GAP;
-      imageWidth = Math.min(PREFERRED_CONTENT_WIDTH, width - SCREEN_MARGIN - contentLeftPosLimit);
+      int contentWidth = Math.min(PREFERRED_CONTENT_WIDTH, width - SCREEN_MARGIN - contentLeftPosLimit);
       // the content's left pos starts at the end the info card (plus a margin), and its width is set to
       // whatever value would make it center aligned on the main screen.
       // This makes it nicely center aligned in the main screen whilst also fixed to the end of the info card.
-      leftPos = Math.max(contentLeftPosLimit, (width - imageWidth) / 2);
-      topPos = panelBottom - imageHeight;
-      tabCoords = new TabCoords(leftPos, topPos, imageWidth, imageHeight);
+      int contentLeftPos = Math.max(contentLeftPosLimit, (width - contentWidth) / 2);
+      int contentTopPos = panelBottom - VillagerMenu.CONTENT_HEIGHT;
+      tabCoords = new TabCoords(contentLeftPos, contentTopPos, contentWidth, VillagerMenu.CONTENT_HEIGHT);
+
+      // slot positions can't change with the panel's width, so the slots are placed in a column centred on the panel
+      leftPos = contentLeftPos + (contentWidth - imageWidth) / 2;
+      topPos = contentTopPos;
 
       tabController = new TabController(this::createDialogueTab, this::addWidget, this::removeWidget);
       createTabButtons(infoCard.getX(), infoCard.getY() - VillagerTabButton.SIZE);
@@ -105,15 +116,26 @@ public class VillagerScreen extends AbstractContainerScreen<VillagerMenu> implem
             SkillsTab.class,
             () -> new SkillsTab(tabCoords, font, villager));
       x += VillagerTabButton.SIZE + TAB_GAP;
+      if (VillagerMenu.shouldShowSoldierEquipmentTab(
+            ClientSettlementPermissionStore.INSTANCE,
+            minecraft.player,
+            villager.getInfo())) {
+         addTabButton(
+               x,
+               y,
+               new ItemStack(Items.IRON_CHESTPLATE),
+               "equipment",
+               SoldierEquipmentTab.class,
+               () -> new SoldierEquipmentTab(tabCoords, font, villager));
+         x += VillagerTabButton.SIZE + TAB_GAP;
+      }
       addTabButton(
             x,
             y,
-            new ItemStack(Items.IRON_CHESTPLATE),
-            "equipment",
-            EquipmentTab.class,
-            () -> new EquipmentTab(tabCoords, font));
-      x += VillagerTabButton.SIZE + TAB_GAP;
-      addTabButton(x, y, new ItemStack(Items.RED_BED), "family", FamilyTab.class, () -> new FamilyTab(tabCoords, font, villager));
+            new ItemStack(Items.RED_BED),
+            "family",
+            FamilyTab.class,
+            () -> new FamilyTab(tabCoords, font, villager));
    }
 
    private void addTabButton(
@@ -138,12 +160,20 @@ public class VillagerScreen extends AbstractContainerScreen<VillagerMenu> implem
 
    private void onTabOpened(ATab openTab) {
       menu.setPlayerInventoryVisible(openTab.showsPlayerInventory());
+      menu.setEquipmentVisible(openTab instanceof SoldierEquipmentTab);
       for (VillagerTabButton button : tabButtons)
          button.refreshSelected(openTab);
    }
 
+   @Override
    public @Nullable ATab getCurrentTab() {
       return tabController.getCurrentTab();
+   }
+
+   @Override
+   public void refresh() {
+      if (tabController != null)
+         tabController.refresh();
    }
 
    @Override
@@ -203,16 +233,28 @@ public class VillagerScreen extends AbstractContainerScreen<VillagerMenu> implem
       renderTooltip(graphics, mouseX, mouseY);
    }
 
-   /**
-    * Disallows clicks that occur over info card/tab buttons. It is in place primarily to prevent mouse carried items
-    * getting dropped on the ground if you click them over the info card.
-    */
+   @Override
+   protected void renderTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
+      if (hoveredSlot instanceof EquipmentMenuSlot equipmentSlot && !equipmentSlot.hasItem()
+            && menu.getCarried().isEmpty()) {
+         // If hovered over an equipment slot, show it's tooltip
+         graphics.renderTooltip(font, LoadoutSlotLayout.nameOf(equipmentSlot.getEquipmentSlot()), mouseX, mouseY);
+         return;
+      }
+
+      super.renderTooltip(graphics, mouseX, mouseY);
+   }
+
    @Override
    protected boolean hasClickedOutside(double mouseX, double mouseY, int guiLeft, int guiTop, int mouseButton) {
       boolean isOverCardOrTabs =
             mouseX >= infoCard.getX() && mouseX < infoCard.getRight() && mouseY >= getFirstTabButtonY()
                   && mouseY < infoCard.getBottom();
-      return !isOverCardOrTabs && super.hasClickedOutside(mouseX, mouseY, guiLeft, guiTop, mouseButton);
+      boolean isOverContentPanel =
+            mouseX >= tabCoords.contentLeftPos() && mouseX < tabCoords.contentLeftPos() + tabCoords.tabWidth()
+                  && mouseY >= tabCoords.contentTopPos() && mouseY < tabCoords.contentTopPos() + tabCoords.tabHeight();
+      return !isOverCardOrTabs && !isOverContentPanel
+            && super.hasClickedOutside(mouseX, mouseY, guiLeft, guiTop, mouseButton);
    }
 
    /**

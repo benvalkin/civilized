@@ -250,6 +250,26 @@ public class VillagerEquipment {
       return true;
    }
 
+   public void forceSet(CarriedEquipmentSlot carriedEquipmentSlot, ItemStack itemStack) {
+      if (hasEquipped(carriedEquipmentSlot)) {
+         EquipmentSlot equipmentSlot = equipment.get(carriedEquipmentSlot);
+         villager.setItemSlot(equipmentSlot, itemStack);
+         if (itemStack.isEmpty())
+            markUnequipped(equipmentSlot);
+         return;
+      }
+
+      carriedSlots[carriedEquipmentSlot.ordinal()] = itemStack;
+   }
+
+   public boolean canInsertInto(CarriedEquipmentSlot carriedEquipmentSlot, ItemStack itemStack) {
+      EquipmentSlot equipmentSlot = equipment.get(carriedEquipmentSlot);
+      if (equipmentSlot.getType() != EquipmentSlot.Type.HUMANOID_ARMOR)
+         return true;
+
+      return villager.getEquipmentSlotForItem(itemStack) == equipmentSlot;
+   }
+
    public ItemStack remove(CarriedEquipmentSlot carriedEquipmentSlot, int amount) {
 
       if (hasEquipped(carriedEquipmentSlot)) {

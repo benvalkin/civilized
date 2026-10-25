@@ -1,6 +1,8 @@
 package com.uncreated.civilized.ui.menu.villager;
 
+import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermissionStore;
 import com.uncreated.civilized.entity.CivilizedVillager;
+import com.uncreated.civilized.entity.equipment.CarriedEquipmentContainer;
 
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -31,7 +33,13 @@ public class VillagerScreenOpener {
 
          @Override
          public AbstractContainerMenu createMenu(int containerId, Inventory inventory, Player player) {
-            return new VillagerMenu(containerId, inventory, villager, hand);
+            return new VillagerMenu(
+                  containerId,
+                  inventory,
+                  villager,
+                  hand,
+                  new CarriedEquipmentContainer(villager.getEquipment(), VillagerMenu.EQUIPMENT_SLOTS),
+                  ServerSettlementPermissionStore.INSTANCE);
          }
       }, buffer -> writeMenuData(buffer, villager, hand)).ifPresent(containerId -> villager.goSpeakToPlayer(player));
    }

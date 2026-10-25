@@ -1,23 +1,34 @@
 package com.uncreated.civilized.ui.menu.villager;
 
+import java.util.List;
+import java.util.function.BooleanSupplier;
+
+import com.uncreated.civilized.core.settlement.loadouts.Loadout;
+import com.uncreated.civilized.core.settlement.permission.ClientSettlementPermissionStore;
+import com.uncreated.civilized.core.settlement.permission.SettlementPermissionStore;
+import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
+import com.uncreated.civilized.core.villagerinfo.VillagerOccupations;
 import com.uncreated.civilized.entity.CivilizedVillager;
+import com.uncreated.civilized.entity.equipment.CarriedEquipmentSlot;
 import com.uncreated.civilized.neoforge.registration.gui.GuiRegistry;
 import com.uncreated.civilized.ui.menu.container.TogglableSlot;
 
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
 // it was decided to make the villager screen a menu because some tabs (e.g. equipment) need the player's inventory.
 
 /**
- * The menu behind the villager screen. Talking to a villager opens it, so the villager stands still for as long as it is
- * open.
+ * Menu behind {@link VillagerScreen}.
  */
 @Getter
 public class VillagerMenu extends AbstractContainerMenu {
@@ -30,17 +41,22 @@ public class VillagerMenu extends AbstractContainerMenu {
     * when the menu is created.
     */
    public static final int CONTENT_HEIGHT = 160;
+   public static final int SLOT_COLUMN_WIDTH = 9 * 18;
 
-   // relative to the content panel. The inventory sits at its bottom.
-   private static final int INVENTORY_X = 8;
+   public static final List<CarriedEquipmentSlot> EQUIPMENT_SLOTS = Loadout.SUPPORTED_SLOTS;
+   public static final int EQUIPMENT_Y = 40;
+
+   // the inventory sits at the bottom of the content panel
    private static final int INVENTORY_Y = CONTENT_HEIGHT - 8 - 76;
+   private static final int INVENTORY_SLOT_COUNT = 36;
 
    @Setter
    private boolean playerInventoryVisible;
+   @Setter
+   private boolean equipmentVisible;
 
    private final CivilizedVillager villager;
-   /** The hand the player talked to the villager with. Dialogue can depend on what's held in it. */
-   private final InteractionHand hand;
+   private final InteractionHand interactedHand;
 
    // client constructor
    public VillagerMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf extraDataFromServer) {
@@ -48,15 +64,40 @@ public class VillagerMenu extends AbstractContainerMenu {
             containerId,
             playerInventory,
             (CivilizedVillager) playerInventory.player.level().getEntity(extraDataFromServer.readVarInt()),
-            extraDataFromServer.readEnum(InteractionHand.class));
+            extraDataFromServer.readEnum(InteractionHand.class),
+            // client slots are filled via the serverside menu syncing them
+            new SimpleContainer(EQUIPMENT_SLOTS.size()),
+            ClientSettlementPermissionStore.INSTANCE);
    }
 
-   public VillagerMenu(int containerId, Inventory playerInventory, CivilizedVillager villager, InteractionHand hand) {
+   public VillagerMenu(
+         int containerId,
+         Inventory playerInventory,
+         CivilizedVillager villager,
+         InteractionHand interactedHand,
+         Container villagerEquipment,
+         SettlementPermissionStore permissionStore) {
       super(GuiRegistry.VILLAGER_MENU.get(), containerId);
       this.villager = villager;
-      this.hand = hand;
+      this.interactedHand = interactedHand;
 
       addPlayerInventorySlots(playerInventory);
+      Player player = playerInventory.player;
+      addEquipmentSlots(
+            villagerEquipment,
+            () -> shouldShowSoldierEquipmentTab(permissionStore, player, villager.getInfo()));
+   }
+
+   public static boolean shouldShowSoldierEquipmentTab(
+         SettlementPermissionStore permissionStore,
+         Player player,
+         VillagerInfo villager) {
+      if (!villager.getOccupation().is(VillagerOccupations.SOLDIER) || villager.getSettlementId() == null)
+         return false;
+
+      return permissionStore.find(villager.getSettlementId())
+            .map(permissions -> permissions.hasEditEquipmentPermission(player.getUUID()))
+            .orElse(false);
    }
 
    private void addPlayerInventorySlots(Inventory playerInventory) {
@@ -66,7 +107,7 @@ public class VillagerMenu extends AbstractContainerMenu {
                   new TogglableSlot(
                         playerInventory,
                         column + (row + 1) * 9,
-                        INVENTORY_X + column * 18,
+                        column * 18,
                         INVENTORY_Y + row * 18,
                         this::isPlayerInventoryVisible));
          }
@@ -77,9 +118,23 @@ public class VillagerMenu extends AbstractContainerMenu {
                new TogglableSlot(
                      playerInventory,
                      hotbarSlot,
-                     INVENTORY_X + hotbarSlot * 18,
+                     hotbarSlot * 18,
                      INVENTORY_Y + 58,
                      this::isPlayerInventoryVisible));
+   }
+
+   private void addEquipmentSlots(Container equipment, BooleanSupplier canEdit) {
+      for (int i = 0; i < EQUIPMENT_SLOTS.size(); i++)
+         addSlot(
+               new EquipmentMenuSlot(
+                     equipment,
+                     i,
+                     i * 18,
+                     EQUIPMENT_Y,
+                     this::isEquipmentVisible,
+                     villager,
+                     EQUIPMENT_SLOTS.get(i),
+                     canEdit));
    }
 
    @Override
@@ -95,9 +150,27 @@ public class VillagerMenu extends AbstractContainerMenu {
          villager.stopSpeakingToPlayer();
    }
 
+   /** Shift-clicking moves items between the player's inventory and the villager's equipment. */
    @Override
    public ItemStack quickMoveStack(Player player, int index) {
-      // Quick moving stacks is not supported until a tab has slots of its own to move them to.
-      return ItemStack.EMPTY;
+      Slot slot = slots.get(index);
+      if (!slot.hasItem())
+         return ItemStack.EMPTY;
+
+      ItemStack stack = slot.getItem();
+      ItemStack original = stack.copy();
+      boolean isInventorySlot = index < INVENTORY_SLOT_COUNT;
+      if (isInventorySlot) {
+         if (!moveItemStackTo(stack, INVENTORY_SLOT_COUNT, slots.size(), false))
+            return ItemStack.EMPTY;
+      } else if (!moveItemStackTo(stack, 0, INVENTORY_SLOT_COUNT, true))
+         return ItemStack.EMPTY;
+
+      if (stack.isEmpty())
+         slot.setByPlayer(ItemStack.EMPTY);
+      else
+         slot.setChanged();
+
+      return original;
    }
 }

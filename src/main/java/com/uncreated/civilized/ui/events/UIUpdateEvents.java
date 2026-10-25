@@ -8,6 +8,7 @@ import com.uncreated.civilized.core.settlement.events.SettlementUpdatedEvent;
 import com.uncreated.civilized.core.settlement.permission.events.SettlementPermissionsUpdatedEvent;
 import com.uncreated.civilized.core.villagerinfo.events.model.VillagerInfoUpdatedEvent;
 import com.uncreated.civilized.ui.menu.building.IBuildingScreen;
+import com.uncreated.civilized.ui.menu.villager.VillagerScreen;
 
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
@@ -21,17 +22,23 @@ public class UIUpdateEvents {
       if (!event.isClientside())
          return;
 
-      if (!(Minecraft.getInstance().screen instanceof IBuildingScreen buildingScreen))
+      if (Minecraft.getInstance().screen instanceof VillagerScreen villagerScreen) {
+         UUID viewedVillagerId = villagerScreen.getMenu().getVillager().getInfo().getVillagerId();
+         if (viewedVillagerId.equals(event.getVillagerInfo().getVillagerId()))
+            villagerScreen.refresh();
+
          return;
+      }
 
-      UUID viewedBuildingId = buildingScreen.getContext().building().getBuildingId();
+      if (Minecraft.getInstance().screen instanceof IBuildingScreen buildingScreen) {
+         UUID viewedBuildingId = buildingScreen.getContext().building().getBuildingId();
 
-      if (!(viewedBuildingId.equals(event.getVillagerInfo().getHomeBuildingId())
-            || viewedBuildingId.equals(event.getVillagerInfo().getWorkBuildingId())
-            || viewedBuildingId.equals(event.getVillagerInfo().getWorkAreaId())))
-         return;
-
-      buildingScreen.refresh();
+         if (viewedBuildingId.equals(event.getVillagerInfo().getHomeBuildingId())
+               || viewedBuildingId.equals(event.getVillagerInfo().getWorkBuildingId())
+               || viewedBuildingId.equals(event.getVillagerInfo().getWorkAreaId())) {
+            buildingScreen.refresh();
+         }
+      }
    }
 
    @SubscribeEvent

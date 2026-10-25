@@ -48,7 +48,7 @@ public class SettlementPermissions {
          this.permissions.put(permission.playerId(), permission);
    }
 
-  void copyFrom(SettlementPermissions other) {
+   void copyFrom(SettlementPermissions other) {
       permissions.clear();
       permissions.putAll(other.permissions);
    }
@@ -96,15 +96,15 @@ public class SettlementPermissions {
       permissions.remove(playerId);
    }
 
-//   public boolean hasItemPickUpPermission(UUID playerId) {
-//      return getPermissionForPlayer(playerId).map(p -> p.accessLevel().isAboveOrEqualTo(AccessLevel.FRIEND))
-//              .orElse(false);
-//   }
-//
-//   public boolean hasOpenDoorsPermission(UUID playerId) {
-//      return getPermissionForPlayer(playerId).map(p -> p.accessLevel().isAboveOrEqualTo(AccessLevel.FRIEND))
-//            .orElse(false);
-//   }
+   // public boolean hasItemPickUpPermission(UUID playerId) {
+   // return getPermissionForPlayer(playerId).map(p -> p.accessLevel().isAboveOrEqualTo(AccessLevel.FRIEND))
+   // .orElse(false);
+   // }
+   //
+   // public boolean hasOpenDoorsPermission(UUID playerId) {
+   // return getPermissionForPlayer(playerId).map(p -> p.accessLevel().isAboveOrEqualTo(AccessLevel.FRIEND))
+   // .orElse(false);
+   // }
 
    public boolean hasGeneralBlockPlacingPermission(UUID playerId) {
       return getPermissionForPlayer(playerId).map(p -> p.accessLevel().isAboveOrEqualTo(AccessLevel.CITIZEN))
@@ -117,15 +117,17 @@ public class SettlementPermissions {
    }
 
    public boolean hasOpenAllChestsPermission(UUID playerId) {
-      return getPermissionForPlayer(playerId)
-            .map(p -> p.accessLevel().isAboveOrEqualTo(AccessLevel.ADMINISTRATOR))
+      return getPermissionForPlayer(playerId).map(p -> p.accessLevel().isAboveOrEqualTo(AccessLevel.ADMINISTRATOR))
             .orElse(false);
    }
 
    public boolean hasEditBuildingPermission(UUID playerId) {
-      return getPermissionForPlayer(playerId)
-            .map(p -> p.accessLevel().isAboveOrEqualTo(AccessLevel.ADMINISTRATOR))
+      return getPermissionForPlayer(playerId).map(p -> p.accessLevel().isAboveOrEqualTo(AccessLevel.ADMINISTRATOR))
             .orElse(false);
+   }
+
+   public boolean hasEditEquipmentPermission(UUID playerId) {
+      return hasEditBuildingPermission(playerId);
    }
 
    public boolean hasCreateBuildingsPermission(UUID playerId) {
@@ -134,8 +136,8 @@ public class SettlementPermissions {
    }
 
    /** Only ever sent from the server. Clients are not allowed to tell the server to change permissions. */
-   public record Packet(SettlementPermissions permissions, StoreOperation storeOperation)
-         implements CustomPacketPayload {
+   public record Packet(SettlementPermissions permissions,
+         StoreOperation storeOperation) implements CustomPacketPayload {
 
       public static final Type<Packet> SYNC_TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(CIVILIZED_MOD_ID, "settlement_permissions_store_sync"));

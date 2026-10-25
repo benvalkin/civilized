@@ -24,6 +24,7 @@ import com.uncreated.civilized.ui.menu.building.military.tabs.ManageSoldierTab;
 import com.uncreated.civilized.ui.menu.building.residence.artisan.EditProductionBillTab;
 import com.uncreated.civilized.ui.menu.building.townhall.tabs.ManagePermissionsTab;
 import com.uncreated.civilized.ui.menu.trading.TradingMenuScreen;
+import com.uncreated.civilized.ui.tabs.ITabHost;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -114,8 +115,7 @@ public final class ClientPacketHandlers {
       Screen screen = Minecraft.getInstance().screen;
       if (screen instanceof ILoadoutListener listener) {
          listener.receiveListLoadouts(packet.requestId(), packet.results());
-      } else if (screen instanceof ABuildingMenuScreen buildingScreen
-            && buildingScreen.getCurrentTab() instanceof ILoadoutListener listener) {
+      } else if (screen instanceof ITabHost tabHost && tabHost.getCurrentTab() instanceof ILoadoutListener listener) {
          listener.receiveListLoadouts(packet.requestId(), packet.results());
       }
    }
@@ -132,8 +132,7 @@ public final class ClientPacketHandlers {
       Screen screen = Minecraft.getInstance().screen;
       if (screen instanceof ILoadoutListener listener) {
          listener.receiveLoadoutSavedResult(packet);
-      } else if (screen instanceof ABuildingMenuScreen buildingScreen
-            && buildingScreen.getCurrentTab() instanceof ILoadoutListener listener) {
+      } else if (screen instanceof ITabHost tabHost && tabHost.getCurrentTab() instanceof ILoadoutListener listener) {
          listener.receiveLoadoutSavedResult(packet);
       }
    }
