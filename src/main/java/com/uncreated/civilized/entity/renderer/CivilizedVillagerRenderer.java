@@ -200,6 +200,15 @@ public class CivilizedVillagerRenderer extends
    protected void scale(CivilizedVillagerRenderState renderState, PoseStack poseStack) {
       this.model = renderState.useSlimArmsPlayerModel ? slimModel : wideModel;
       super.scale(renderState, poseStack);
+
+      if (renderState.isBaby)
+         poseStack.scale(renderState.ageScale, renderState.ageScale, renderState.ageScale);
+   }
+
+   @Override
+   protected float getShadowRadius(CivilizedVillagerRenderState renderState) {
+      float radius = super.getShadowRadius(renderState);
+      return renderState.isBaby ? radius * renderState.ageScale : radius;
    }
 
    @Override
