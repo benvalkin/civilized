@@ -308,6 +308,7 @@
   "menu.building.worksite.crop_farm.allowed_crops.description": "Select the seeds or crops that should be planted in this field.",
   "menu.building.worksite.crop_farm.allowed_crops.heading": "Allowed crops:",
   "menu.building.worksite.crop_farm.edit_allowed_crops": "Select Crops",
+  "menu.building.worksite.crop_farm.tended_plots": "%s/%s plots can be tended (Farmer's skill)",
   "menu.building.worksite.grove.allowed_saplings.description": "Select a sapling type that should be planted in this grove.",
   "menu.building.worksite.grove.allowed_saplings.heading": "Wood type:",
   "menu.building.worksite.grove.edit_allowed_saplings": "Select Wood",

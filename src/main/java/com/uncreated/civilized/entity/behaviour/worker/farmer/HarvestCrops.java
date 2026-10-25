@@ -12,6 +12,7 @@ import com.uncreated.civilized.core.building.logistics.hauling.ReservationKey;
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.TakeToInventoryInstruction;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.ToolRequirement;
+import com.uncreated.civilized.core.building.util.CropFarmPlotUtil;
 import com.uncreated.civilized.core.notifications.Notification;
 import com.uncreated.civilized.core.villagerinfo.skills.SkillEffects;
 import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkill;
@@ -45,6 +46,8 @@ public class HarvestCrops extends WorkTaskBehaviour {
    private long lastWorkTime;
    private static final int HITS_PER_CROP = 4;
    private int hitIntervalTicks;
+   /** How many of the field's plots the farmer can keep planted. */
+   private int maxPlots;
    private @Nullable BlockPos nextFarmland = null;
    private @Nullable BlockPos nextMaturesCropToHarvest = null;
    private MediumDistanceTravelTask travelHelper;
@@ -100,6 +103,7 @@ public class HarvestCrops extends WorkTaskBehaviour {
       int farmingLevel = villager.getInfo().getSkills().getLevel(VillagerSkill.FARMING);
       int cropsPerDay = SkillEffects.getCropsHarvestedPerDay(farmingLevel);
       hitIntervalTicks = SkillEffects.convertToTicks(cropsPerDay) / HITS_PER_CROP;
+      maxPlots = SkillEffects.getMaxAllowedCrops(farmingLevel);
       travelHelper = new MediumDistanceTravelTask(villager, getWorksite().getBuilding().getBlockPos(), 5);
       hasWorkOutputItems = false;
       villager.setItemSlot(EquipmentSlot.MAINHAND, handHeld);
@@ -166,7 +170,12 @@ public class HarvestCrops extends WorkTaskBehaviour {
                   getDrops(level.getBlockState(nextMaturesCropToHarvest), level, nextMaturesCropToHarvest);
             drops.forEach(i -> villager.getInventory().addItem(i));
 
-            level.setBlockAndUpdate(nextMaturesCropToHarvest, getCropReplantState(cropState, cropBlock));
+            // every fully grown crop is harvested, but only the plots that the farmer is allowed to tend are planted
+            // again
+            if (isTendedPlot(level, nextMaturesCropToHarvest.below()))
+               level.setBlockAndUpdate(nextMaturesCropToHarvest, getCropReplantState(cropState, cropBlock));
+            else
+               level.removeBlock(nextMaturesCropToHarvest, false);
             villager.playSound(SoundEvents.CROP_BREAK, 1.0f, 1.0f);
             toolHits = 0;
             gainAccumulatedWorkXp(villager);
@@ -174,6 +183,10 @@ public class HarvestCrops extends WorkTaskBehaviour {
             hasWorkOutputItems = true;
          }
       }
+   }
+
+   private boolean isTendedPlot(ServerLevel level, BlockPos farmland) {
+      return CropFarmPlotUtil.findTendedPlots(getWorksite().getBuilding(), level, maxPlots).contains(farmland);
    }
 
    private BlockState getCropReplantState(BlockState currentState, CropBlock cropBlock) {

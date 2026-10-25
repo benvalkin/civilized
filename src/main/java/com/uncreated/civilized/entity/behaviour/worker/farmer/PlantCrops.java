@@ -15,6 +15,7 @@ import com.uncreated.civilized.core.building.logistics.orders.imports.ImportUpTo
 import com.uncreated.civilized.core.building.logistics.orders.task.TaskConsumableItemRequirement;
 import com.uncreated.civilized.core.building.logistics.orders.task.TaskItemRequirement;
 import com.uncreated.civilized.core.building.state.CropFarmState;
+import com.uncreated.civilized.core.building.util.CropFarmPlotUtil;
 import com.uncreated.civilized.core.notifications.Notification;
 import com.uncreated.civilized.core.villagerinfo.skills.SkillEffects;
 import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkill;
@@ -36,7 +37,6 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.CropBlock;
-import net.minecraft.world.level.block.FarmBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class PlantCrops extends WorkTaskBehaviour {
@@ -55,7 +55,7 @@ public class PlantCrops extends WorkTaskBehaviour {
       if (!super.checkExtraStartConditions(level, villager))
          return false;
 
-      findFarmland(level);
+      findFarmland(level, villager);
 
       if (emptyFarmland.isEmpty())
          return false;
@@ -140,7 +140,7 @@ public class PlantCrops extends WorkTaskBehaviour {
 
          lastWorkTime = tickTime;
 
-         findFarmland(level);
+         findFarmland(level, villager);
 
          if (!emptyFarmland.isEmpty()) {
             BlockPos cropPos = emptyFarmland.getFirst();
@@ -200,22 +200,14 @@ public class PlantCrops extends WorkTaskBehaviour {
       return currentState.setValue(CropBlock.AGE, cropBlock.getStateForAge(0).getValue(CropBlock.AGE));
    }
 
-   private void findFarmland(ServerLevel serverLevel) {
+   private void findFarmland(ServerLevel level, CivilizedVillager villager) {
       emptyFarmland.clear();
 
-      getWorksite().getBuilding().getBounds().traverseBlocksWithin(traversal -> {
-         BlockPos b = traversal.getCurrentBlockPos();
-         if (isEmptyFarmland(b.below(), serverLevel)) {
-            emptyFarmland.add(b);
-         }
-         if (serverLevel.canSeeSky(b))
-            traversal.skipToNextXZ();
-      });
-   }
-
-   private boolean isEmptyFarmland(BlockPos blockPos, ServerLevel serverLevel) {
-      BlockState farmland = serverLevel.getBlockState(blockPos);
-      BlockState above = serverLevel.getBlockState(blockPos.above());
-      return farmland.getBlock() instanceof FarmBlock && above.isEmpty();
+      int farmingLevel = villager.getInfo().getSkills().getLevel(VillagerSkill.FARMING);
+      int maxPlots = SkillEffects.getMaxAllowedCrops(farmingLevel);
+      for (BlockPos plot : CropFarmPlotUtil.findTendedPlots(getWorksite().getBuilding(), level, maxPlots)) {
+         if (level.getBlockState(plot.above()).isEmpty())
+            emptyFarmland.add(plot.above());
+      }
    }
 }

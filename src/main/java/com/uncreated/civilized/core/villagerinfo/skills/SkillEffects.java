@@ -1,5 +1,7 @@
 package com.uncreated.civilized.core.villagerinfo.skills;
 
+import java.util.List;
+
 import com.uncreated.civilized.entity.CivilizedVillager;
 
 /**
@@ -28,8 +30,8 @@ public final class SkillEffects {
     * How much faster than the baseline a villager of this level works. x0.5 at level 0, x1 at level 5 and x2 at level
     * 10. Every level is the same step up from the one before it (about 15%).
     */
-   public static float levelMultiplier(int level) {
-      return (float) Math.pow(2, (level - BASELINE_LEVEL) / (double) BASELINE_LEVEL);
+   public static float levelMultiplier(int level, float multiplierPower) {
+      return (float) Math.pow(multiplierPower, (level - BASELINE_LEVEL) / (double) BASELINE_LEVEL);
    }
 
    public static int convertToTicks(int unitsPerDay) {
@@ -48,6 +50,10 @@ public final class SkillEffects {
       return scaled(24, farmingLevel);
    }
 
+   public static int getMaxAllowedCrops(int farmingLevel) {
+      return fixedDistribution(List.of(14, 20, 26, 32, 40, 50, 60, 80, 90, 100, 120), farmingLevel);
+   }
+
    public static int getSaplingsPlantedPerDay(int farmingLevel) {
       return scaled(500, farmingLevel);
    }
@@ -60,7 +66,21 @@ public final class SkillEffects {
       return scaled(5, animalsLevel);
    }
 
+   private static int scaled(int baselinePerDay, int level, float multiplierPower) {
+      return Math.max(1, Math.round(baselinePerDay * levelMultiplier(level, multiplierPower)));
+   }
+
    private static int scaled(int baselinePerDay, int level) {
-      return Math.max(1, Math.round(baselinePerDay * levelMultiplier(level)));
+      return scaled(baselinePerDay, level, 2.5f);
+   }
+
+   private static int fixedDistribution(List<Integer> values, int level) {
+      if (values.isEmpty())
+         return 1;
+
+      if (level >= values.size())
+         return values.getLast();
+
+      return values.get(level);
    }
 }

@@ -4,11 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-import com.uncreated.civilized.core.building.ClientBuildingStore;
 import com.uncreated.civilized.core.building.state.CropFarmState;
 import com.uncreated.civilized.core.building.util.BuildingUtil;
+import com.uncreated.civilized.core.building.util.CropFarmPlotUtil;
 import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
+import com.uncreated.civilized.core.villagerinfo.skills.SkillEffects;
+import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkill;
 import com.uncreated.civilized.ui.components.widget.ItemDisplayWidget;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
 import com.uncreated.civilized.ui.menu.building.ABuildingScreenTab;
@@ -17,6 +19,7 @@ import com.uncreated.civilized.ui.style.Colors;
 import com.uncreated.civilized.ui.tabs.ATab;
 import com.uncreated.civilized.ui.tabs.ITabHost;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -28,6 +31,9 @@ public class CropFarmInfoTab extends ABuildingScreenTab implements IBuildingInfo
 
    private final ArrayList<ItemDisplayWidget> itemDisplayWidgets;
    private List<VillagerInfo> workers;
+   private int plotCount;
+   /** How many of the plots the field's farmer can keep planted. */
+   private int tendedPlotCount;
    private final Button chooseCrops;
 
    public CropFarmInfoTab(
@@ -35,11 +41,7 @@ public class CropFarmInfoTab extends ABuildingScreenTab implements IBuildingInfo
          Font font,
          BuildingScreenContext context,
          Function<ITabHost, ATab> createCropsTab) {
-      super(
-            tabHost,
-            font,
-            Component.translatable("menu.building.info.tab.heading"),
-            context);
+      super(tabHost, font, Component.translatable("menu.building.info.tab.heading"), context);
       this.workers = createOccupantsList();
 
       itemDisplayWidgets = new ArrayList<>();
@@ -50,7 +52,10 @@ public class CropFarmInfoTab extends ABuildingScreenTab implements IBuildingInfo
                   // notice how if the button's 'x' is set to the parent's width, the button seems to render right to
                   // left...
                   // is this a feature??
-                  button -> tabHost.changeTab(createCropsTab.apply(tabHost))).pos(getX(), getBottom() - 18).size(80, 18).build();
+                  button -> tabHost.changeTab(createCropsTab.apply(tabHost)))
+                  .pos(getX(), getBottom() - 18)
+                  .size(80, 18)
+                  .build();
    }
 
    @Override
@@ -80,6 +85,15 @@ public class CropFarmInfoTab extends ABuildingScreenTab implements IBuildingInfo
                false);
       }
 
+      if (!workers.isEmpty())
+         graphics.drawString(
+               font,
+               Component.translatable("menu.building.worksite.crop_farm.tended_plots", tendedPlotCount, plotCount),
+               getX(),
+               getY() + 39 + workers.size() * 10,
+               Colors.MENU_TEXT_DARK,
+               false);
+
       chooseCrops.render(graphics, mouseX, mouseY, partialTicks);
 
       graphics.drawString(
@@ -102,9 +116,23 @@ public class CropFarmInfoTab extends ABuildingScreenTab implements IBuildingInfo
       return BuildingUtil.getWorkers(context.building(), ClientVillagerStore.INSTANCE);
    }
 
+   private void countPlots() {
+      // the field has to be near the player while its screen is open, so its farmland can be counted on the
+      // client
+      plotCount = CropFarmPlotUtil.findPlots(context.building(), Minecraft.getInstance().level).size();
+
+      int maxPlots = 0;
+      for (VillagerInfo worker : workers) {
+         int farmingLevel = worker.getSkills().getLevel(VillagerSkill.FARMING);
+         maxPlots = Math.max(maxPlots, SkillEffects.getMaxAllowedCrops(farmingLevel));
+      }
+      tendedPlotCount = Math.min(maxPlots, plotCount);
+   }
+
    @Override
    public void refresh() {
       this.workers = createOccupantsList();
+      countPlots();
 
       CropFarmState cropFarmState = (CropFarmState) context.building().getState();
 
