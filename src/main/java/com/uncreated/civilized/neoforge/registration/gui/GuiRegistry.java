@@ -6,6 +6,7 @@ import java.util.function.Supplier;
 
 import com.uncreated.civilized.ui.menu.building.BuildingMenu;
 import com.uncreated.civilized.ui.menu.trading.TradingMenu;
+import com.uncreated.civilized.ui.menu.villager.VillagerMenu;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.inventory.MenuType;
@@ -21,4 +22,7 @@ public class GuiRegistry {
 
    public static final Supplier<MenuType<TradingMenu>> TRADING_MENU =
          MENUS.register("trading_menu", () -> IMenuTypeExtension.create(TradingMenu::new));
+
+   public static final Supplier<MenuType<VillagerMenu>> VILLAGER_MENU =
+         MENUS.register("villager_menu", () -> IMenuTypeExtension.create(VillagerMenu::new));
 }

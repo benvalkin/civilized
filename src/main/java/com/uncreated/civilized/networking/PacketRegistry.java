@@ -45,7 +45,6 @@ import com.uncreated.civilized.networking.packets.NotificationToast;
 import com.uncreated.civilized.networking.packets.SetSettlementAccessLevel;
 import com.uncreated.civilized.networking.packets.SettlementAccessLevelDenied;
 import com.uncreated.civilized.networking.packets.TradeSlotUpdated;
-import com.uncreated.civilized.networking.packets.VillagerDialogueScreenToggled;
 
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
@@ -152,11 +151,6 @@ public class PacketRegistry {
             GiveItemsToPlayer.TYPE,
             GiveItemsToPlayer.STREAM_CODEC,
             RewardActions::serverGiveItemsToPlayer);
-
-      registrar.playToServer(
-            VillagerDialogueScreenToggled.TYPE,
-            VillagerDialogueScreenToggled.STREAM_CODEC,
-            VillagerDialogueScreenToggled::serverReceiveVillagerDialogueScreenToggled);
 
       registrar.playToServer(
             PreviewProductionBill.TYPE,

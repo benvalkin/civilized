@@ -1,27 +1,35 @@
 package com.uncreated.civilized.ui.menu.villager;
 
-import javax.annotation.Nullable;
+import java.util.Optional;
+import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 
-import com.uncreated.civilized.core.dialogue.Dialogue;
-import com.uncreated.civilized.core.dialogue.IVillageDialogue;
-import com.uncreated.civilized.core.dialogue.ResponseOption;
-import com.uncreated.civilized.core.dialogue.context.DialogueContext;
-import com.uncreated.civilized.core.dialogue.context.ResponseOptionContext;
+import org.jetbrains.annotations.Nullable;
+
 import com.uncreated.civilized.entity.CivilizedVillager;
-import com.uncreated.civilized.networking.packets.VillagerDialogueScreenToggled;
+import com.uncreated.civilized.ui.components.SlotFrameRenderer;
+import com.uncreated.civilized.ui.menu.villager.tabs.DialogueTab;
+import com.uncreated.civilized.ui.menu.villager.tabs.EquipmentTab;
+import com.uncreated.civilized.ui.menu.villager.tabs.FamilyTab;
+import com.uncreated.civilized.ui.menu.villager.tabs.SkillsTab;
+import com.uncreated.civilized.ui.style.Colors;
+import com.uncreated.civilized.ui.tabs.ATab;
+import com.uncreated.civilized.ui.tabs.ITabHost;
+import com.uncreated.civilized.ui.tabs.TabController;
+import com.uncreated.civilized.ui.tabs.TabCoords;
 
-import net.minecraft.client.Minecraft;
+import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Tooltip;
-import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.neoforged.neoforge.network.PacketDistributor;
 
-public class VillagerScreen extends Screen {
+public class VillagerScreen extends AbstractContainerScreen<VillagerMenu> implements ITabHost {
 
-   // todo: placeholder look until there are textures for these panels
    public static final int PANEL_COLOUR = 0xB0000000;
    public static final int UNSELECTED_TAB_COLOUR = 0x70000000;
    public static final int HOVERED_TAB_COLOUR = 0x90000000;
@@ -31,147 +39,193 @@ public class VillagerScreen extends Screen {
    private static final int BOTTOM_MARGIN = 30;
    private static final int PANEL_GAP = 6;
    private static final int TAB_GAP = 2;
+   private static final int PREFERRED_CONTENT_WIDTH = DialogueBoxWidget.PREFERRED_WIDTH;
 
    private final CivilizedVillager villager;
-   @Nullable
-   private IVillageDialogue dialogue;
-   @Nullable
-   private final DialogueContext context;
+   private final VillagerConversation conversation;
 
-   @Nullable
-   private DialogueBoxWidget dialogueBox;
+   private TabController tabController;
+   private VillagerInfoCardWidget infoCard;
 
-   public VillagerScreen(
-         CivilizedVillager villager,
-         @Nullable IVillageDialogue dialogue,
-         @Nullable DialogueContext context) {
-      super(Component.literal(villager.getInfo().getFullName()));
-      this.villager = villager;
-      this.dialogue = dialogue;
-      this.context = context;
-   }
+   @Getter
+   private TabCoords tabCoords;
 
-   @Override
-   public boolean isPauseScreen() {
-      return false;
+   public VillagerScreen(VillagerMenu menu, Inventory playerInventory, Component title) {
+      super(menu, playerInventory, title);
+      this.villager = menu.getVillager();
+      this.conversation = VillagerConversation.start(villager, playerInventory.player, menu.getHand());
+      this.imageHeight = VillagerMenu.CONTENT_HEIGHT;
+      // standard inventory label height
+      this.inventoryLabelY = this.imageHeight - 94;
    }
 
    @Override
    protected void init() {
+      // centres the container area, which is moved next to the info card below
       super.init();
       int panelBottom = height - BOTTOM_MARGIN;
 
-      VillagerInfoCardWidget infoCard = new VillagerInfoCardWidget(font, villager, SCREEN_MARGIN, panelBottom);
+      infoCard = new VillagerInfoCardWidget(font, villager, SCREEN_MARGIN, panelBottom);
       addRenderableWidget(infoCard);
 
-      createTabs(infoCard.getX(), infoCard.getY() - VillagerTabButton.SIZE);
+      // the leftmost possible X coordinate the content panel can start (starts at the end of the info card)
+      int contentLeftPosLimit = infoCard.getRight() + PANEL_GAP;
+      imageWidth = Math.min(PREFERRED_CONTENT_WIDTH, width - SCREEN_MARGIN - contentLeftPosLimit);
+      // the content's left pos starts at the end the info card (plus a margin), and its width is set to
+      // whatever value would make it center aligned on the main screen.
+      // This makes it nicely center aligned in the main screen whilst also fixed to the end of the info card.
+      leftPos = Math.max(contentLeftPosLimit, (width - imageWidth) / 2);
+      topPos = panelBottom - imageHeight;
+      tabCoords = new TabCoords(leftPos, topPos, imageWidth, imageHeight);
 
-      if (dialogue != null && context != null) {
+      tabController = new TabController(this::createDialogueTab, this::addWidget, this::removeWidget);
+      createTabButtons(infoCard.getX(), infoCard.getY() - VillagerTabButton.SIZE);
 
-         // the furthest possible X coordinate that the dialogue box can start at
-         int dialogueLeftPosLimit = infoCard.getRight() + PANEL_GAP;
-         int dialogueWidth = Math.min(DialogueBoxWidget.PREFERRED_WIDTH, width - SCREEN_MARGIN - dialogueLeftPosLimit);
-         // the dialogue box's left pos starts at the end the info card (plus a margin), and its width is set to
-         // whatever
-         // value would make it center aligned on the main screen.
-         // This makes it nicely center aligned in the main screen whilst also fixed to the end of the info card.
-         int dialogueX = Math.max(dialogueLeftPosLimit, (width - dialogueWidth) / 2);
-         dialogueBox =
-               new DialogueBoxWidget(
-                     font,
-                     dialogue,
-                     context,
-                     dialogueX,
-                     panelBottom,
-                     dialogueWidth,
-                     this::onResponseOptionPressed);
-         addRenderableWidget(dialogueBox);
-      }
-
-      clientNotifyServerScreenOpen(villager);
+      ATab openTab = tabController.changeToDefaultTabIfNotSet(this);
+      menu.setPlayerInventoryVisible(openTab.showsPlayerInventory());
    }
 
-   private void createTabs(int x, int y) {
-      addTab(x, y, new ItemStack(Items.WRITABLE_BOOK), "talk", true, true);
-      x += VillagerTabButton.SIZE + TAB_GAP;
-      addTab(x, y, new ItemStack(Items.EXPERIENCE_BOTTLE), "skills", false, false);
-      x += VillagerTabButton.SIZE + TAB_GAP;
-      addTab(x, y, new ItemStack(Items.IRON_CHESTPLATE), "equipment", false, false);
-      x += VillagerTabButton.SIZE + TAB_GAP;
-      addTab(x, y, new ItemStack(Items.RED_BED), "family", false, false);
+   private ATab createDialogueTab(ITabHost tabHost) {
+      return new DialogueTab(tabCoords, font, conversation, this::onClose);
    }
 
-   private void addTab(int x, int y, ItemStack icon, String key, boolean selected, boolean available) {
+   private void createTabButtons(int x, int y) {
+      addTabButton(x, y, new ItemStack(Items.WRITABLE_BOOK), "talk", DialogueTab.class, () -> createDialogueTab(this));
+      x += VillagerTabButton.SIZE + TAB_GAP;
+      addTabButton(
+            x,
+            y,
+            new ItemStack(Items.EXPERIENCE_BOTTLE),
+            "skills",
+            SkillsTab.class,
+            () -> new SkillsTab(tabCoords, font));
+      x += VillagerTabButton.SIZE + TAB_GAP;
+      addTabButton(
+            x,
+            y,
+            new ItemStack(Items.IRON_CHESTPLATE),
+            "equipment",
+            EquipmentTab.class,
+            () -> new EquipmentTab(tabCoords, font));
+      x += VillagerTabButton.SIZE + TAB_GAP;
+      addTabButton(x, y, new ItemStack(Items.RED_BED), "family", FamilyTab.class, () -> new FamilyTab(tabCoords, font));
+   }
+
+   private void addTabButton(
+         int x,
+         int y,
+         ItemStack icon,
+         String key,
+         Class<? extends ATab> tabType,
+         Supplier<ATab> createTab) {
       Component name = Component.translatable("menu.villager.tab." + key);
-      VillagerTabButton tab = new VillagerTabButton(x, y, icon, name, selected, () -> {
-      });
-      tab.active = available;
-      if (!available)
-         tab.setTooltip(Tooltip.create(name.copy().append(Component.translatable("menu.villager.tab.coming_soon"))));
-      addRenderableWidget(tab);
-   }
-
-   private void onResponseOptionPressed(ResponseOptionContext optionContext) {
-      ResponseOption.SelectedAction result =
-            optionContext.getSelectedOption().getOnPress().onOptionSelected(optionContext);
-
-      if (dialogue == null)
-         return;
-
-      if (result == ResponseOption.SelectedAction.DO_NOTHING)
-         return;
-
-      dialogue.getOnEnded().accept(context);
-      if (result == ResponseOption.SelectedAction.CLOSE_DIALOGUE) {
-         Minecraft.getInstance().setScreen(null);
-         PacketDistributor.sendToServer(new VillagerDialogueScreenToggled(villager.getUUID(), false));
-      } else if (result == ResponseOption.SelectedAction.GO_NEXT) {
-         @Nullable
-         Dialogue next = null;
-         // response option's dialogue takes precedence over pages
-         if (optionContext.getSelectedOption().getNextDialogue() != null)
-            next = optionContext.getSelectedOption().getNextDialogue();
-         else if (dialogue.hasNextPage())
-            next = dialogue.getNextPage();
-
-         // check availability and fallbacks
-         while (next != null && !next.isAvailableToPlayer(context)) {
-            next = next.getFallback();
-         }
-
-         // finally, if there is still dialogue to display, close the screen
-         if (next == null) {
-            Minecraft.getInstance().setScreen(null);
-            return;
-         }
-
-         dialogue = next;
-         rebuildWidgets();
-      }
+      // todo: this looks funky. I don't remember the reason we needed an `isOpen` method, but there might be a less sus
+      // and confusing way to do whatever it's doing here
+      BooleanSupplier isOpen = () -> tabType.isInstance(tabController.getCurrentTab());
+      addRenderableWidget(new VillagerTabButton(x, y, icon, name, isOpen, () -> {
+         if (!isOpen.getAsBoolean())
+            changeTab(createTab.get());
+      }));
    }
 
    @Override
-   public void tick() {
+   public ATab changeTab(ATab newTab) {
+      tabController.changeTab(newTab);
+      menu.setPlayerInventoryVisible(newTab.showsPlayerInventory());
+      return newTab;
+   }
 
-      if (dialogueBox != null)
-         dialogueBox.tick();
+   public @Nullable ATab getCurrentTab() {
+      return tabController.getCurrentTab();
+   }
+
+   @Override
+   public int getFirstTabButtonX() {
+      return infoCard.getX();
+   }
+
+   @Override
+   public int getFirstTabButtonY() {
+      return infoCard.getY() - VillagerTabButton.SIZE;
+   }
+
+   @Override
+   protected void containerTick() {
+      ATab currentTab = getCurrentTab();
+      if (currentTab != null)
+         currentTab.tick();
    }
 
    @Override
    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+      renderBg(graphics, partialTick, mouseX, mouseY);
    }
 
    @Override
-   public void onClose() {
-      super.onClose();
-      clientNotifyServerScreenClosed(villager);
+   protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
+      // the dialogue box draws its own panel, which is only as tall as the speech
+      if (!(getCurrentTab() instanceof DialogueTab))
+         // todo: backgrounds should move to the tabs themselves
+         graphics.fill(leftPos, topPos, leftPos + imageWidth, topPos + imageHeight, PANEL_COLOUR);
+
+      for (Slot slot : menu.slots) {
+         if (slot.isActive()) // conditional inventory slot rendering
+            SlotFrameRenderer.render(graphics, leftPos + slot.x, topPos + slot.y);
+      }
    }
 
-   private void clientNotifyServerScreenOpen(CivilizedVillager villager) {
-      PacketDistributor.sendToServer(new VillagerDialogueScreenToggled(villager.getUUID(), true));
+   @Override
+   protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
+
+      if (menu.isPlayerInventoryVisible())
+         graphics.drawString(
+               font,
+               playerInventoryTitle,
+               inventoryLabelX,
+               inventoryLabelY,
+               Colors.MENU_TEXT_VILLAGER_DIALOGUE,
+               false);
    }
 
-   private void clientNotifyServerScreenClosed(CivilizedVillager villager) {
-      PacketDistributor.sendToServer(new VillagerDialogueScreenToggled(villager.getUUID(), false));
+   @Override
+   public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+      super.render(graphics, mouseX, mouseY, partialTick);
+
+      if (tabController != null)
+         tabController.renderCurrentTabContents(graphics, mouseX, mouseY, partialTick);
+
+      renderTooltip(graphics, mouseX, mouseY);
+   }
+
+   /**
+    * Disallows clicks that occur over info card/tab buttons. It is in place primarily to prevent mouse carried items
+    * getting dropped on the ground if you click them over the info card.
+    */
+   @Override
+   protected boolean hasClickedOutside(double mouseX, double mouseY, int guiLeft, int guiTop, int mouseButton) {
+      boolean isOverCardOrTabs =
+            mouseX >= infoCard.getX() && mouseX < infoCard.getRight() && mouseY >= getFirstTabButtonY()
+                  && mouseY < infoCard.getBottom();
+      return !isOverCardOrTabs && super.hasClickedOutside(mouseX, mouseY, guiLeft, guiTop, mouseButton);
+   }
+
+   /**
+    * This method is overridden for a funny reason. See {@code ABuildingMenuScreen.getChildAt} for more details.
+    */
+   @Override
+   public Optional<GuiEventListener> getChildAt(double mouseX, double mouseY) {
+      if (isOverActiveSlot(mouseX, mouseY))
+         return Optional.empty();
+
+      return super.getChildAt(mouseX, mouseY);
+   }
+
+   private boolean isOverActiveSlot(double mouseX, double mouseY) {
+      for (Slot slot : menu.slots) {
+         if (slot.isActive() && isHovering(slot.x, slot.y, 16, 16, mouseX, mouseY))
+            return true;
+      }
+
+      return false;
    }
 }

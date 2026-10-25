@@ -8,6 +8,7 @@ import com.uncreated.civilized.core.settlement.permission.ClientSettlementPermis
 import com.uncreated.civilized.core.settlement.permission.SettlementPermissions;
 import com.uncreated.civilized.neoforge.registration.gui.GuiRegistry;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
+import com.uncreated.civilized.ui.menu.container.TogglableSlot;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -16,7 +17,6 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
 // it was decided to make building screens a menu because some tabs (specifically editing recipes) require access to the player's inventory so they can drag items.
@@ -100,24 +100,19 @@ public class BuildingMenu extends AbstractContainerMenu {
                         playerInventory,
                         column + (row + 1) * 9,
                         INVENTORY_X + column * 18,
-                        INVENTORY_Y + row * 18));
+                        INVENTORY_Y + row * 18,
+                        this::isPlayerInventoryVisible));
          }
       }
 
       for (int hotbarSlot = 0; hotbarSlot < 9; hotbarSlot++)
-         addSlot(new TogglableSlot(playerInventory, hotbarSlot, INVENTORY_X + hotbarSlot * 18, INVENTORY_Y + 58));
-   }
-
-   private class TogglableSlot extends Slot {
-
-      public TogglableSlot(Inventory playerInventory, int slotIndex, int x, int y) {
-         super(playerInventory, slotIndex, x, y);
-      }
-
-      @Override
-      public boolean isActive() {
-         return playerInventoryVisible;
-      }
+         addSlot(
+               new TogglableSlot(
+                     playerInventory,
+                     hotbarSlot,
+                     INVENTORY_X + hotbarSlot * 18,
+                     INVENTORY_Y + 58,
+                     this::isPlayerInventoryVisible));
    }
 
    @Override

@@ -1,5 +1,7 @@
 package com.uncreated.civilized.ui.menu.villager;
 
+import java.util.function.BooleanSupplier;
+
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.components.Tooltip;
@@ -13,13 +15,13 @@ public class VillagerTabButton extends AbstractButton {
    public static final int SIZE = 22;
 
    private final ItemStack icon;
-   private final boolean selected;
+   private final BooleanSupplier isSelected;
    private final Runnable onPress;
 
-   public VillagerTabButton(int x, int y, ItemStack icon, Component name, boolean selected, Runnable onPress) {
+   public VillagerTabButton(int x, int y, ItemStack icon, Component name, BooleanSupplier isSelected, Runnable onPress) {
       super(x, y, SIZE, SIZE, name);
       this.icon = icon;
-      this.selected = selected;
+      this.isSelected = isSelected;
       this.onPress = onPress;
       setTooltip(Tooltip.create(name));
    }
@@ -31,6 +33,7 @@ public class VillagerTabButton extends AbstractButton {
 
    @Override
    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+      boolean selected = isSelected.getAsBoolean();
       int colour;
       if (selected)
          colour = VillagerScreen.PANEL_COLOUR;

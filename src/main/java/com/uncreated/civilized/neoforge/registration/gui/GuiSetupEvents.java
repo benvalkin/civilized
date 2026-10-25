@@ -6,6 +6,8 @@ import com.uncreated.civilized.ui.menu.building.BuildingScreens;
 
 import com.uncreated.civilized.ui.menu.trading.TradingMenu;
 import com.uncreated.civilized.ui.menu.trading.TradingMenuScreen;
+import com.uncreated.civilized.ui.menu.villager.VillagerMenu;
+import com.uncreated.civilized.ui.menu.villager.VillagerScreen;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
@@ -23,5 +25,9 @@ public class GuiSetupEvents {
       event.register(
               GuiRegistry.TRADING_MENU.get(),
               (MenuScreens.ScreenConstructor<TradingMenu, TradingMenuScreen>) TradingMenuScreen::new);
+
+      event.register(
+            GuiRegistry.VILLAGER_MENU.get(),
+            (MenuScreens.ScreenConstructor<VillagerMenu, VillagerScreen>) VillagerScreen::new);
    }
 }

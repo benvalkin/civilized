@@ -19,10 +19,10 @@ import com.google.common.collect.ImmutableSet;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Dynamic;
-import com.uncreated.civilized.client.VillagerDialogueClientHandler;
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.dialogue.IVillageDialogue;
+import com.uncreated.civilized.core.dialogue.OpeningDialogue;
 import com.uncreated.civilized.core.dialogue.context.DialogueContext;
 import com.uncreated.civilized.core.dialogue.controller.DialogueController;
 import com.uncreated.civilized.core.dialogue.controller.DialogueFlow;
@@ -61,6 +61,7 @@ import com.uncreated.civilized.entity.stats.EyeTextureRegistry;
 import com.uncreated.civilized.entity.stats.HairTextureRegistry;
 import com.uncreated.civilized.entity.stats.SkinTextureRegistry;
 import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
+import com.uncreated.civilized.ui.menu.villager.VillagerScreenOpener;
 
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
@@ -422,8 +423,6 @@ public class CivilizedVillager extends AgeableMob
       if (isSpeakingToPlayer())
          return InteractionResult.FAIL;
 
-      boolean isClientSide = player.level().isClientSide;
-
       if (roleBehaviour instanceof IMerchantBehaviour merchantBehaviour) {
          if (player instanceof ServerPlayer serverPlayer) {
             List<TradeItem> tradeItems = merchantBehaviour.getTradeItems();
@@ -436,42 +435,44 @@ public class CivilizedVillager extends AgeableMob
          return InteractionResult.SUCCESS;
       }
 
-      DialogueController dialogueController = DialogueController.selectDialogueController(this);
-      DialogueFlow dialogueFlow = dialogueController.getDialogueFlow(this, player, hand);
-
       @Nullable
-      IVillageDialogue dialogue = null;
-      @Nullable
-      DialogueContext context = null;
-      if (dialogueFlow != null) {
+      OpeningDialogue openingDialogue = findOpeningDialogue(player, hand);
+      if (openingDialogue != null && openingDialogue.dialogue() instanceof ItemDepotDialogue itemDepotDialogue) {
 
-         long gameTime = player.level().getGameTime();
-         long dayTime = player.level().getDayTime();
-         context = dialogueFlow.buildDialogueContext(this, player, hand, gameTime, dayTime);
-
-         dialogue = dialogueFlow.getOpeningDialogue(context);
-
-         while (dialogue != null && !dialogue.isAvailableToPlayer(context)) {
-            dialogue = dialogue.getFallback();
-         }
-
-         if (dialogue instanceof ItemDepotDialogue itemDepotDialogue) {
-
-            ItemStack itemInHand = player.getItemInHand(hand);
-            if (itemInHand.isEmpty())
-               dialogue = null;
-            else if (!itemDepotDialogue.getCanConsumeItemCheck().canConsumeItem(context, itemInHand, hand))
+         // for item depot dialogues, the villager consumes whatever is in the player's hand instead of opening the
+         // villager screen
+         ItemStack itemInHand = player.getItemInHand(hand);
+         if (!itemInHand.isEmpty()) {
+            DialogueContext context = openingDialogue.context();
+            if (!itemDepotDialogue.getCanConsumeItemCheck().canConsumeItem(context, itemInHand, hand))
                return InteractionResult.PASS;
-            else {
-               ItemStack consumed = itemDepotDialogue.getConsumeItemAction().consumeItem(context, itemInHand, hand);
-               return InteractionResult.CONSUME.heldItemTransformedTo(consumed);
-            }
+
+            ItemStack consumed = itemDepotDialogue.getConsumeItemAction().consumeItem(context, itemInHand, hand);
+            return InteractionResult.CONSUME.heldItemTransformedTo(consumed);
          }
       }
 
-      if (isClientSide)
-         VillagerDialogueClientHandler.openDialogue(this, dialogue, context);
+      if (player instanceof ServerPlayer serverPlayer)
+         VillagerScreenOpener.open(serverPlayer, this, hand);
       return InteractionResult.SUCCESS;
+   }
+
+   public @Nullable OpeningDialogue findOpeningDialogue(Player player, InteractionHand hand) {
+      DialogueController dialogueController = DialogueController.selectDialogueController(this);
+      DialogueFlow dialogueFlow = dialogueController.getDialogueFlow(this, player, hand);
+      if (dialogueFlow == null)
+         return null;
+
+      long gameTime = player.level().getGameTime();
+      long dayTime = player.level().getDayTime();
+      DialogueContext context = dialogueFlow.buildDialogueContext(this, player, hand, gameTime, dayTime);
+
+      IVillageDialogue dialogue = dialogueFlow.getOpeningDialogue(context);
+      while (dialogue != null && !dialogue.isAvailableToPlayer(context)) {
+         dialogue = dialogue.getFallback();
+      }
+
+      return new OpeningDialogue(dialogue, context);
    }
 
    @Override
