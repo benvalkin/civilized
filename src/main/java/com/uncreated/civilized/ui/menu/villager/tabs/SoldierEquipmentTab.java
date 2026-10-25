@@ -22,7 +22,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
 
 public class SoldierEquipmentTab extends AVillagerPanelTab implements ILoadoutListener {
 
-   private static final int LOADOUT_Y = 20;
+   private static final int LOADOUT_Y = 40;
    private static final int LABEL_GAP = 4;
 
    private final CivilizedVillager villager;
@@ -44,7 +44,6 @@ public class SoldierEquipmentTab extends AVillagerPanelTab implements ILoadoutLi
                   columnX + VillagerMenu.SLOT_COLUMN_WIDTH - selectorX,
                   font,
                   Colors.TEXT_LIGHT_MUTED,
-                  // the equipment slots right below already show what the soldier has
                   false,
                   this::assignLoadout);
 

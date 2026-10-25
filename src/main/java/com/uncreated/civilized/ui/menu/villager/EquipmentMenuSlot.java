@@ -37,9 +37,13 @@ public class EquipmentMenuSlot extends TogglableSlot {
 
    @Override
    public boolean mayPlace(ItemStack stack) {
-      // these checks will only run on the server (since the client's slot is a regular slot).
-      // todo: won't this it cause carried item desync if the check is not performed on the client? The client could
-      // allow placing an item in the wrong slot (e.g. sword in the armor slot), but the server wouldn't allow it
+      // note: permission and matching item checks are performed in this slot class and not in the parent container
+      // where they would typically be done.
+      // This is because the client and server both use EquipmentMenuSlot in the GUI, but they do not use the same
+      // container classes to represent the villager's equipment. The server uses a specialized container, whereas the
+      // client uses a simple vanilla one that cannot perform custom placement checks.
+      // Therefore, we do these checks in the slot, because this method runs on both the client and server. The
+      // typical approach would lead to a brief desync flicker when dragging disallowed items into an equipment slot.
       return canEdit.getAsBoolean() && villager.getEquipment().canInsertInto(equipmentSlot, stack);
    }
 

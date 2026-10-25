@@ -44,7 +44,7 @@ public class VillagerMenu extends AbstractContainerMenu {
    public static final int SLOT_COLUMN_WIDTH = 9 * 18;
 
    public static final List<CarriedEquipmentSlot> EQUIPMENT_SLOTS = Loadout.SUPPORTED_SLOTS;
-   public static final int EQUIPMENT_Y = 40;
+   public static final int EQUIPMENT_Y = 20;
 
    // the inventory sits at the bottom of the content panel
    private static final int INVENTORY_Y = CONTENT_HEIGHT - 8 - 76;
