@@ -154,7 +154,7 @@ public class WorkActivities {
                   1,
                   new WorkBehaviourControl(
                         ImmutableList.of(
-                              new Fish(10 * 20, 30 * 20),
+                              new Fish(),
                               new CheckLogisticsOpportunities(),
                               new TakeItemsToInventory(),
                               new DropOffItemsAtBuilding(),

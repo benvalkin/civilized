@@ -97,6 +97,11 @@ public class VillagerSkills {
       return currentLevel(newTotalXp) - currentLevel(totalXp);
    }
 
+   /** The villager's level in the skill. A skill they're incapable of counts as level 0. */
+   public int getLevel(VillagerSkill skill) {
+      return currentLevel(Math.max(0, getTotalXpIntl(skill)));
+   }
+
    public boolean isCapableOf(VillagerSkill skill) {
       return getTotalXpIntl(skill) >= 0;
    }

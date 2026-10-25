@@ -16,6 +16,8 @@ import com.uncreated.civilized.core.building.logistics.orders.task.TaskConsumabl
 import com.uncreated.civilized.core.building.logistics.orders.task.TaskItemRequirement;
 import com.uncreated.civilized.core.building.state.CropFarmState;
 import com.uncreated.civilized.core.notifications.Notification;
+import com.uncreated.civilized.core.villagerinfo.skills.SkillEffects;
+import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkill;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
@@ -40,6 +42,7 @@ import net.minecraft.world.level.block.state.BlockState;
 public class PlantCrops extends WorkTaskBehaviour {
    public static final Logger LOGGER = LogUtils.getLogger();
    private long lastWorkTime;
+   private int plantIntervalTicks;
    private final List<BlockPos> emptyFarmland = Lists.newArrayList();
    private MediumDistanceTravelTask travelHelper;
 
@@ -102,6 +105,8 @@ public class PlantCrops extends WorkTaskBehaviour {
    @Override
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.start(level, villager, gameTime);
+      int farmingLevel = villager.getInfo().getSkills().getLevel(VillagerSkill.FARMING);
+      plantIntervalTicks = SkillEffects.convertToTicks(SkillEffects.getCropsPlantedPerDay(farmingLevel));
       travelHelper = new MediumDistanceTravelTask(villager, getWorksite().getBuilding().getBlockPos(), 5);
    }
 
@@ -131,7 +136,7 @@ public class PlantCrops extends WorkTaskBehaviour {
          return;
       }
 
-      if (tickTime - lastWorkTime > 25) {
+      if (tickTime - lastWorkTime >= plantIntervalTicks) {
 
          lastWorkTime = tickTime;
 

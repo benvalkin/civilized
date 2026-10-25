@@ -13,6 +13,8 @@ import com.uncreated.civilized.core.building.logistics.hauling.instruction.TakeT
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.ToolRequirement;
 import com.uncreated.civilized.core.notifications.Notification;
+import com.uncreated.civilized.core.villagerinfo.skills.SkillEffects;
+import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkill;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
@@ -42,7 +44,9 @@ public class CutDownTrees extends WorkTaskBehaviour {
    private final List<BlockPos> leavesToHarvest = Lists.newArrayList();
    private MediumDistanceTravelTask travelHelper;
 
-   int workSpeedMultiplier = 2;
+   private static final int HITS_PER_LOG = 7;
+   private static final int HITS_PER_LEAF = 2;
+   private int hitIntervalTicks;
    private ItemStack handHeld;
 
    private static final ToolRequirement AXE_REQUIREMENT =
@@ -91,6 +95,9 @@ public class CutDownTrees extends WorkTaskBehaviour {
    @Override
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.start(level, villager, gameTime);
+      int farmingLevel = villager.getInfo().getSkills().getLevel(VillagerSkill.FARMING);
+      int logsPerDay = SkillEffects.getLogsHarvestedPerDay(farmingLevel);
+      hitIntervalTicks = SkillEffects.convertToTicks(logsPerDay) / HITS_PER_LOG;
       travelHelper = new MediumDistanceTravelTask(villager, getWorksite().getBuilding().getBlockPos(), 8);
       villager.setItemSlot(EquipmentSlot.MAINHAND, handHeld);
       hasWood = false;
@@ -124,10 +131,6 @@ public class CutDownTrees extends WorkTaskBehaviour {
    private int toolHits = 0;
    private boolean hasWood;
 
-   private int applyWorkSpeedMultiplier(int requiredToolHits) {
-      return requiredToolHits / workSpeedMultiplier;
-   }
-
    @Override
    protected void tick(ServerLevel level, CivilizedVillager villager, long tickTime) {
 
@@ -136,7 +139,7 @@ public class CutDownTrees extends WorkTaskBehaviour {
          return;
       }
 
-      if (tickTime - lastWorkTime > 6) {
+      if (tickTime - lastWorkTime >= hitIntervalTicks) {
 
          lastWorkTime = tickTime;
 
@@ -158,9 +161,10 @@ public class CutDownTrees extends WorkTaskBehaviour {
          villager.addWorkExhaustion(1);
 
          BlockState blockState = level.getBlockState(pos);
-         int requiredToolHits = blockState.getTags().anyMatch(t -> t.equals(BlockTags.LOGS)) ? 14 : 4;
+         boolean isLog = blockState.getTags().anyMatch(t -> t.equals(BlockTags.LOGS));
+         int requiredToolHits = isLog ? HITS_PER_LOG : HITS_PER_LEAF;
 
-         if (toolHits >= applyWorkSpeedMultiplier(requiredToolHits)) {
+         if (toolHits >= requiredToolHits) {
             List<ItemStack> drops = Block.getDrops(blockState, level, pos, null);
             drops.forEach(i -> villager.getInventory().addItem(i));
 

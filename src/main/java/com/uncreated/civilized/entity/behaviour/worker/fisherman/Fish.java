@@ -11,6 +11,8 @@ import com.uncreated.civilized.core.building.logistics.hauling.instruction.TakeT
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.ToolRequirement;
 import com.uncreated.civilized.core.notifications.Notification;
+import com.uncreated.civilized.core.villagerinfo.skills.SkillEffects;
+import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkill;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
@@ -43,8 +45,9 @@ public class Fish extends WorkTaskBehaviour {
    /** How far the villager will cast its line from wherever it is standing. */
    private static final int CAST_RANGE = 8;
 
-   private final int minCatchTicks;
-   private final int maxCatchTicks;
+   /** Shortest and longest wait between casting the line and catching something. Faster at higher skill. */
+   private int minCatchTicks;
+   private int maxCatchTicks;
 
    private MediumDistanceTravelTask travelHelper;
    private ItemStack fishingRod;
@@ -55,16 +58,8 @@ public class Fish extends WorkTaskBehaviour {
 
    private static final ToolRequirement fishingRodRequirement =
          new ToolRequirement("fishingRod", i -> i.is(Items.FISHING_ROD));
-   /**
-    * @param minCatchTicks
-    *           shortest wait between casting the line and catching something
-    * @param maxCatchTicks
-    *           longest wait between casting the line and catching something
-    */
-   public Fish(int minCatchTicks, int maxCatchTicks) {
+   public Fish() {
       super(WorkStates.FISHING, true, 120 * 20, 30 * 20);
-      this.minCatchTicks = minCatchTicks;
-      this.maxCatchTicks = maxCatchTicks;
    }
 
    @Override
@@ -108,6 +103,12 @@ public class Fish extends WorkTaskBehaviour {
    @Override
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.start(level, villager, gameTime);
+      int animalsLevel = villager.getInfo().getSkills().getLevel(VillagerSkill.ANIMALS);
+      int fishPerDay = SkillEffects.getFishCaughtPerDay(animalsLevel);
+      // catches take somewhere between half and one and a half times as long as the average
+      int averageCatchTicks = SkillEffects.convertToTicks(fishPerDay);
+      minCatchTicks = averageCatchTicks / 2;
+      maxCatchTicks = averageCatchTicks * 3 / 2;
       travelHelper = new MediumDistanceTravelTask(villager, fishingStand, 1);
       villager.setItemSlot(EquipmentSlot.MAINHAND, fishingRod);
       castTarget = null;

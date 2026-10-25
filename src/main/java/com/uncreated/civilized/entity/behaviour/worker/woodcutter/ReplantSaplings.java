@@ -14,6 +14,8 @@ import com.uncreated.civilized.core.building.logistics.hauling.instruction.TakeT
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
 import com.uncreated.civilized.core.building.state.GroveState;
 import com.uncreated.civilized.core.notifications.Notification;
+import com.uncreated.civilized.core.villagerinfo.skills.SkillEffects;
+import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkill;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
@@ -39,6 +41,7 @@ import net.minecraft.world.level.block.state.BlockState;
 public class ReplantSaplings extends WorkTaskBehaviour {
    public static final Logger LOGGER = LogUtils.getLogger();
    private long lastWorkTime;
+   private int plantIntervalTicks;
    private final List<BlockPos> validPlantingBlocks = Lists.newArrayList();
    private MediumDistanceTravelTask travelHelper;
    private Predicate<ItemStack> saplingFilter;
@@ -86,6 +89,8 @@ public class ReplantSaplings extends WorkTaskBehaviour {
    @Override
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.start(level, villager, gameTime);
+      int farmingLevel = villager.getInfo().getSkills().getLevel(VillagerSkill.FARMING);
+      plantIntervalTicks = SkillEffects.convertToTicks(SkillEffects.getSaplingsPlantedPerDay(farmingLevel));
       travelHelper = new MediumDistanceTravelTask(villager, getWorksite().getBuilding().getBlockPos(), 8);
    }
 
@@ -116,7 +121,7 @@ public class ReplantSaplings extends WorkTaskBehaviour {
          return;
       }
 
-      if (gameTime - lastWorkTime > 15) {
+      if (gameTime - lastWorkTime >= plantIntervalTicks) {
 
          lastWorkTime = gameTime;
 

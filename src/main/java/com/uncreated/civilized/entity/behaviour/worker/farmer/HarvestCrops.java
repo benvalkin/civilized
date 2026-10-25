@@ -13,6 +13,8 @@ import com.uncreated.civilized.core.building.logistics.hauling.instruction.TakeT
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.ToolRequirement;
 import com.uncreated.civilized.core.notifications.Notification;
+import com.uncreated.civilized.core.villagerinfo.skills.SkillEffects;
+import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkill;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
@@ -41,6 +43,8 @@ import net.minecraft.world.level.block.state.BlockState;
 public class HarvestCrops extends WorkTaskBehaviour {
    public static final Logger LOGGER = LogUtils.getLogger();
    private long lastWorkTime;
+   private static final int HITS_PER_CROP = 4;
+   private int hitIntervalTicks;
    private @Nullable BlockPos nextFarmland = null;
    private @Nullable BlockPos nextMaturesCropToHarvest = null;
    private MediumDistanceTravelTask travelHelper;
@@ -93,6 +97,9 @@ public class HarvestCrops extends WorkTaskBehaviour {
    @Override
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.start(level, villager, gameTime);
+      int farmingLevel = villager.getInfo().getSkills().getLevel(VillagerSkill.FARMING);
+      int cropsPerDay = SkillEffects.getCropsHarvestedPerDay(farmingLevel);
+      hitIntervalTicks = SkillEffects.convertToTicks(cropsPerDay) / HITS_PER_CROP;
       travelHelper = new MediumDistanceTravelTask(villager, getWorksite().getBuilding().getBlockPos(), 5);
       hasWorkOutputItems = false;
       villager.setItemSlot(EquipmentSlot.MAINHAND, handHeld);
@@ -131,7 +138,7 @@ public class HarvestCrops extends WorkTaskBehaviour {
          return;
       }
 
-      if (tickTime - lastWorkTime > 25) {
+      if (tickTime - lastWorkTime >= hitIntervalTicks) {
 
          lastWorkTime = tickTime;
 
@@ -154,7 +161,7 @@ public class HarvestCrops extends WorkTaskBehaviour {
          villager.swing(InteractionHand.MAIN_HAND, true);
          villager.addWorkExhaustion(1);
 
-         if (toolHits == 4) {
+         if (toolHits >= HITS_PER_CROP) {
             List<ItemStack> drops =
                   getDrops(level.getBlockState(nextMaturesCropToHarvest), level, nextMaturesCropToHarvest);
             drops.forEach(i -> villager.getInventory().addItem(i));

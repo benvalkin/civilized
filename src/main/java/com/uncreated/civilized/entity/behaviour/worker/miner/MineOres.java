@@ -15,6 +15,8 @@ import com.uncreated.civilized.core.building.logistics.hauling.instruction.TakeT
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.InventoryStockRequirement;
 import com.uncreated.civilized.core.building.logistics.hauling.requirement.ToolRequirement;
 import com.uncreated.civilized.core.notifications.Notification;
+import com.uncreated.civilized.core.villagerinfo.skills.SkillEffects;
+import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkill;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
@@ -44,6 +46,8 @@ import net.minecraft.world.level.chunk.LevelChunk;
 public class MineOres extends WorkTaskBehaviour {
    public static final Logger LOGGER = LogUtils.getLogger();
    private long lastWorkTime;
+   private static final int HITS_PER_BLOCK = 3;
+   private int hitIntervalTicks;
    private MediumDistanceTravelTask travelHelper;
 
    private int minerMaxYield = 2; // max ore item yield per ore block mined
@@ -101,12 +105,15 @@ public class MineOres extends WorkTaskBehaviour {
       resolveMissingItemNotification();
       this.handHeld = carrying.stock().getItemStacks().getFirst();
 
-      return true; // todo: setting worksite can move to start method in all work tasks
+      return true;
    }
 
    @Override
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.start(level, villager, gameTime);
+      int miningLevel = villager.getInfo().getSkills().getLevel(VillagerSkill.MINING);
+      int blocksPerDay = SkillEffects.getAttemptedBlocksMinedPerDay(miningLevel);
+      hitIntervalTicks = SkillEffects.convertToTicks(blocksPerDay) / HITS_PER_BLOCK;
       foundOres = false;
       travelHelper = new MediumDistanceTravelTask(villager, getWorksite().getBuilding().getBlockPos(), 2);
       villager.setItemSlot(EquipmentSlot.MAINHAND, handHeld);
@@ -127,11 +134,6 @@ public class MineOres extends WorkTaskBehaviour {
       return villager.getBrain().checkMemory(MemoryModuleType.JOB_SITE, MemoryStatus.VALUE_PRESENT);
    }
 
-   private int getRequiredToolHits() {
-      int sampleAttemptsPerDay = 128;
-      return CivilizedVillager.WORK_DAY_DURATION_SECONDS / sampleAttemptsPerDay;
-   }
-
    private int toolHits = 0;
 
    @Override
@@ -142,11 +144,11 @@ public class MineOres extends WorkTaskBehaviour {
          return;
       }
 
-      if (gameTime - lastWorkTime > 20) {
+      if (gameTime - lastWorkTime >= hitIntervalTicks) {
          lastWorkTime = gameTime;
          toolHits++;
 
-         if (toolHits >= getRequiredToolHits()) {
+         if (toolHits >= HITS_PER_BLOCK) {
             toolHits = 0;
 
             mineNextOre(level, villager, gameTime);
