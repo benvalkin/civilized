@@ -3,6 +3,7 @@ package com.uncreated.civilized.commands.events;
 import com.uncreated.civilized.CivilizedMod;
 import com.uncreated.civilized.commands.DetectRooms;
 import com.uncreated.civilized.commands.OpenTradingMenu;
+import com.uncreated.civilized.commands.SetItemQuality;
 import com.uncreated.civilized.commands.SetSettlementAccess;
 import com.uncreated.civilized.commands.SetVillagerAge;
 import com.uncreated.civilized.commands.SummonChild;
@@ -25,5 +26,6 @@ public class CommandRegistry {
         DetectRooms.register(event.getDispatcher());
         SummonChild.register(event.getDispatcher());
         SetVillagerAge.register(event.getDispatcher());
+        SetItemQuality.register(event.getDispatcher());
     }
 }

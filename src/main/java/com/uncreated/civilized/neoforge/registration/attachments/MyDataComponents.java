@@ -2,6 +2,8 @@ package com.uncreated.civilized.neoforge.registration.attachments;
 
 import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
+import com.uncreated.civilized.item.quality.ItemQuality;
+
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -23,4 +25,9 @@ public class MyDataComponents {
                      .persistent(CurrencyValue.CODEC)
                      // The codec to read/write the data across the network
                      .networkSynchronized(CurrencyValue.STREAM_CODEC));
+
+   public static final DeferredHolder<DataComponentType<?>, DataComponentType<ItemQuality>> ITEM_QUALITY =
+         COMPONENTS.registerComponentType(
+               "item_quality",
+               builder -> builder.persistent(ItemQuality.CODEC).networkSynchronized(ItemQuality.STREAM_CODEC));
 }

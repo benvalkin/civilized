@@ -16,6 +16,14 @@ public class Colors {
    public static final int SKILL_MASTER = 0xffe78a;
    public static final int SKILL_LEVEL_UP = SKILL_HIGHLY_SKILLED;
 
+   public static final int QUALITY_AWFUL = 0xbd8577;
+   public static final int QUALITY_POOR = 0xa38e89;
+   public static final int QUALITY_NORMAL = 0xdddddd;
+   public static final int QUALITY_GOOD = 0xadc5e0;
+   public static final int QUALITY_EXCELLENT = 0x809dff;
+   public static final int QUALITY_MASTERWORK = 0x9580ff;
+   public static final int QUALITY_LEGENDARY = 0xffd473;
+
    public final static int VALIDATION_ERROR = 0xebb2b2;
    public final static int VALIDATION_SUCCESS = 0xc5edcc;
    public final static int VALIDATION_PARTIAL_SUCCESS = 0xa5d4e8;
