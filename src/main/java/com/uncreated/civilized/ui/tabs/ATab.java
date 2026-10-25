@@ -3,6 +3,7 @@ package com.uncreated.civilized.ui.tabs;
 import com.uncreated.civilized.ui.components.IRefreshableUI;
 
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractContainerWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
@@ -11,7 +12,12 @@ public abstract class ATab extends AbstractContainerWidget implements IRefreshab
    protected final Font font;
 
    public ATab(TabCoords tabCoords, Font font) {
-      super(tabCoords.contentLeftPos(), tabCoords.contentTopPos(), tabCoords.tabWidth(), tabCoords.tabHeight(), Component.literal("Tab placeholder"));
+      super(
+            tabCoords.contentLeftPos(),
+            tabCoords.contentTopPos(),
+            tabCoords.tabWidth(),
+            tabCoords.tabHeight(),
+            Component.literal("Tab placeholder"));
       this.font = font;
    }
 
@@ -21,6 +27,10 @@ public abstract class ATab extends AbstractContainerWidget implements IRefreshab
 
    public boolean showsPlayerInventory() {
       return false;
+   }
+
+   public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+
    }
 
    protected void onClose() {

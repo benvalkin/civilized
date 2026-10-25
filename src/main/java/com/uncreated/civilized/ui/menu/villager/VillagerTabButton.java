@@ -1,6 +1,8 @@
 package com.uncreated.civilized.ui.menu.villager;
 
-import java.util.function.BooleanSupplier;
+import org.jetbrains.annotations.Nullable;
+
+import com.uncreated.civilized.ui.tabs.ATab;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
@@ -9,31 +11,45 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
-
 public class VillagerTabButton extends AbstractButton {
 
    public static final int SIZE = 22;
 
    private final ItemStack icon;
-   private final BooleanSupplier isSelected;
+   private final Class<? extends ATab> tabType;
    private final Runnable onPress;
 
-   public VillagerTabButton(int x, int y, ItemStack icon, Component name, BooleanSupplier isSelected, Runnable onPress) {
+   private boolean selected;
+
+   public VillagerTabButton(
+         int x,
+         int y,
+         ItemStack icon,
+         Component name,
+         Class<? extends ATab> tabType,
+         Runnable onPress) {
       super(x, y, SIZE, SIZE, name);
       this.icon = icon;
-      this.isSelected = isSelected;
+      this.tabType = tabType;
       this.onPress = onPress;
       setTooltip(Tooltip.create(name));
    }
 
+   public void refreshSelected(@Nullable ATab openTab) {
+      selected = tabType.isInstance(openTab);
+   }
+
    @Override
    public void onPress() {
-      onPress.run();
+      // only run this tab button's onPress if it's not already selected (could unintentionally restart the villager's
+      // dialogue if the dialogue tab is already selected).
+      // usually, keeping track of which button is selected is not as necessary for other tab menus.
+      if (!selected)
+         onPress.run();
    }
 
    @Override
    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-      boolean selected = isSelected.getAsBoolean();
       int colour;
       if (selected)
          colour = VillagerScreen.PANEL_COLOUR;

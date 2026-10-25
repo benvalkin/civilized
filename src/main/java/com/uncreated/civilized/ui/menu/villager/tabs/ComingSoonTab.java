@@ -2,6 +2,7 @@ package com.uncreated.civilized.ui.menu.villager.tabs;
 
 import java.util.List;
 
+import com.uncreated.civilized.ui.menu.villager.VillagerScreen;
 import com.uncreated.civilized.ui.style.Colors;
 import com.uncreated.civilized.ui.tabs.ATab;
 import com.uncreated.civilized.ui.tabs.TabCoords;
@@ -20,6 +21,11 @@ public abstract class ComingSoonTab extends ATab {
    public ComingSoonTab(TabCoords tabCoords, Font font, Component name) {
       super(tabCoords, font);
       this.name = name;
+   }
+
+   @Override
+   public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+      graphics.fill(getX(), getY(), getRight(), getBottom(), VillagerScreen.PANEL_COLOUR);
    }
 
    @Override

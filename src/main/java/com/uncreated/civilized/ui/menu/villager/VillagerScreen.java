@@ -1,11 +1,13 @@
 package com.uncreated.civilized.ui.menu.villager;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
-import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 import org.jetbrains.annotations.Nullable;
 
+import com.uncreated.civilized.core.dialogue.VillagerConversation;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.ui.components.SlotFrameRenderer;
 import com.uncreated.civilized.ui.menu.villager.tabs.DialogueTab;
@@ -45,6 +47,7 @@ public class VillagerScreen extends AbstractContainerScreen<VillagerMenu> implem
    private final VillagerConversation conversation;
 
    private TabController tabController;
+   private final List<VillagerTabButton> tabButtons = new ArrayList<>();
    private VillagerInfoCardWidget infoCard;
 
    @Getter
@@ -53,7 +56,8 @@ public class VillagerScreen extends AbstractContainerScreen<VillagerMenu> implem
    public VillagerScreen(VillagerMenu menu, Inventory playerInventory, Component title) {
       super(menu, playerInventory, title);
       this.villager = menu.getVillager();
-      this.conversation = VillagerConversation.start(villager, playerInventory.player, menu.getHand());
+      // recompute the opening dialogue on the client
+      this.conversation = VillagerConversation.openingDialogue(villager, playerInventory.player, menu.getHand());
       this.imageHeight = VillagerMenu.CONTENT_HEIGHT;
       // standard inventory label height
       this.inventoryLabelY = this.imageHeight - 94;
@@ -81,8 +85,7 @@ public class VillagerScreen extends AbstractContainerScreen<VillagerMenu> implem
       tabController = new TabController(this::createDialogueTab, this::addWidget, this::removeWidget);
       createTabButtons(infoCard.getX(), infoCard.getY() - VillagerTabButton.SIZE);
 
-      ATab openTab = tabController.changeToDefaultTabIfNotSet(this);
-      menu.setPlayerInventoryVisible(openTab.showsPlayerInventory());
+      onTabOpened(tabController.changeToDefaultTabIfNotSet(this));
    }
 
    private ATab createDialogueTab(ITabHost tabHost) {
@@ -90,6 +93,8 @@ public class VillagerScreen extends AbstractContainerScreen<VillagerMenu> implem
    }
 
    private void createTabButtons(int x, int y) {
+      // the old buttons were removed from the screen when it was resized
+      tabButtons.clear();
       addTabButton(x, y, new ItemStack(Items.WRITABLE_BOOK), "talk", DialogueTab.class, () -> createDialogueTab(this));
       x += VillagerTabButton.SIZE + TAB_GAP;
       addTabButton(
@@ -119,20 +124,22 @@ public class VillagerScreen extends AbstractContainerScreen<VillagerMenu> implem
          Class<? extends ATab> tabType,
          Supplier<ATab> createTab) {
       Component name = Component.translatable("menu.villager.tab." + key);
-      // todo: this looks funky. I don't remember the reason we needed an `isOpen` method, but there might be a less sus
-      // and confusing way to do whatever it's doing here
-      BooleanSupplier isOpen = () -> tabType.isInstance(tabController.getCurrentTab());
-      addRenderableWidget(new VillagerTabButton(x, y, icon, name, isOpen, () -> {
-         if (!isOpen.getAsBoolean())
-            changeTab(createTab.get());
-      }));
+      VillagerTabButton button = new VillagerTabButton(x, y, icon, name, tabType, () -> changeTab(createTab.get()));
+      tabButtons.add(button);
+      addRenderableWidget(button);
    }
 
    @Override
    public ATab changeTab(ATab newTab) {
       tabController.changeTab(newTab);
-      menu.setPlayerInventoryVisible(newTab.showsPlayerInventory());
+      onTabOpened(newTab);
       return newTab;
+   }
+
+   private void onTabOpened(ATab openTab) {
+      menu.setPlayerInventoryVisible(openTab.showsPlayerInventory());
+      for (VillagerTabButton button : tabButtons)
+         button.refreshSelected(openTab);
    }
 
    public @Nullable ATab getCurrentTab() {
@@ -163,10 +170,9 @@ public class VillagerScreen extends AbstractContainerScreen<VillagerMenu> implem
 
    @Override
    protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
-      // the dialogue box draws its own panel, which is only as tall as the speech
-      if (!(getCurrentTab() instanceof DialogueTab))
-         // todo: backgrounds should move to the tabs themselves
-         graphics.fill(leftPos, topPos, leftPos + imageWidth, topPos + imageHeight, PANEL_COLOUR);
+      ATab currentTab = getCurrentTab();
+      if (currentTab != null) // this screen supports tabs can have their own background
+         currentTab.renderBackground(graphics, mouseX, mouseY, partialTick);
 
       for (Slot slot : menu.slots) {
          if (slot.isActive()) // conditional inventory slot rendering

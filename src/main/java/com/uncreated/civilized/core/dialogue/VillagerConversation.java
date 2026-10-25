@@ -1,13 +1,11 @@
-package com.uncreated.civilized.ui.menu.villager;
+package com.uncreated.civilized.core.dialogue;
 
 import org.jetbrains.annotations.Nullable;
 
-import com.uncreated.civilized.core.dialogue.Dialogue;
-import com.uncreated.civilized.core.dialogue.IVillageDialogue;
-import com.uncreated.civilized.core.dialogue.OpeningDialogue;
-import com.uncreated.civilized.core.dialogue.ResponseOption;
 import com.uncreated.civilized.core.dialogue.context.DialogueContext;
 import com.uncreated.civilized.core.dialogue.context.ResponseOptionContext;
+import com.uncreated.civilized.core.dialogue.controller.DialogueController;
+import com.uncreated.civilized.core.dialogue.controller.DialogueFlow;
 import com.uncreated.civilized.core.dialogue.specialized.ItemDepotDialogue;
 import com.uncreated.civilized.entity.CivilizedVillager;
 
@@ -28,24 +26,28 @@ public class VillagerConversation {
       this.context = context;
    }
 
-   public static VillagerConversation start(CivilizedVillager villager, Player player, InteractionHand hand) {
+   public static VillagerConversation openingDialogue(CivilizedVillager villager, Player player, InteractionHand hand) {
+      DialogueController dialogueController = DialogueController.selectDialogueController(villager);
       @Nullable
-      OpeningDialogue openingDialogue = villager.findOpeningDialogue(player, hand);
-      if (openingDialogue == null)
+      DialogueFlow dialogueFlow = dialogueController.getDialogueFlow(villager, player, hand);
+      if (dialogueFlow == null)
          return new VillagerConversation(null, null);
 
-      // an item depot dialogue only takes items. The screen only opens for one when the player's hand was empty, so
-      // there's nothing to say
-      @Nullable
-      IVillageDialogue dialogue = openingDialogue.dialogue();
-      if (dialogue instanceof ItemDepotDialogue)
-         dialogue = null;
+      long gameTime = player.level().getGameTime();
+      long dayTime = player.level().getDayTime();
+      DialogueContext context = dialogueFlow.buildDialogueContext(villager, player, hand, gameTime, dayTime);
 
-      return new VillagerConversation(dialogue, openingDialogue.context());
+      @Nullable
+      IVillageDialogue dialogue = dialogueFlow.getOpeningDialogue(context);
+      while (dialogue != null && !dialogue.isAvailableToPlayer(context)) {
+         dialogue = dialogue.getFallback();
+      }
+
+      return new VillagerConversation(dialogue, context);
    }
 
-   public boolean hasDialogue() {
-      return dialogue != null && context != null;
+   public boolean hasAnySpeech() {
+      return dialogue != null && context != null && !(dialogue instanceof ItemDepotDialogue);
    }
 
    /**

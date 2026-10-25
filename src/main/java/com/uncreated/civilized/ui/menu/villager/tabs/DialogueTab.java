@@ -5,9 +5,9 @@ import java.util.List;
 import org.jetbrains.annotations.Nullable;
 
 import com.uncreated.civilized.core.dialogue.ResponseOption;
+import com.uncreated.civilized.core.dialogue.VillagerConversation;
 import com.uncreated.civilized.core.dialogue.context.ResponseOptionContext;
 import com.uncreated.civilized.ui.menu.villager.DialogueBoxWidget;
-import com.uncreated.civilized.ui.menu.villager.VillagerConversation;
 import com.uncreated.civilized.ui.tabs.ATab;
 import com.uncreated.civilized.ui.tabs.TabCoords;
 
@@ -23,6 +23,7 @@ public class DialogueTab extends ATab {
 
    @Nullable
    private DialogueBoxWidget dialogueBox;
+   private boolean showNextDialogue;
 
    public DialogueTab(TabCoords tabCoords, Font font, VillagerConversation conversation, Runnable closeScreen) {
       super(tabCoords, font);
@@ -38,7 +39,7 @@ public class DialogueTab extends ATab {
 
    private void createDialogueBox() {
       dialogueBox = null;
-      if (!conversation.hasDialogue())
+      if (!conversation.hasAnySpeech())
          return;
 
       dialogueBox =
@@ -53,15 +54,28 @@ public class DialogueTab extends ATab {
    }
 
    private void onResponseOptionPressed(ResponseOptionContext optionContext) {
+      // the old box is still showing until the next tick, and its responses no longer apply
+      if (showNextDialogue)
+         return;
+
       ResponseOption.SelectedAction result = conversation.respond(optionContext);
       if (result == ResponseOption.SelectedAction.CLOSE_DIALOGUE)
          closeScreen.run();
       else if (result == ResponseOption.SelectedAction.GO_NEXT)
-         createDialogueBox();
+         // showing the next dialogue is done in the next tick to avoid replacing the box while a button's onClick
+         // method is busy running
+         showNextDialogue = true;
    }
 
    @Override
    public void tick() {
+      if (showNextDialogue) {
+         showNextDialogue = false;
+         // remove focus that keyboard presses don't reach the old box's buttons
+         setFocused(null);
+         createDialogueBox();
+      }
+
       if (dialogueBox != null)
          dialogueBox.tick();
    }
@@ -70,21 +84,6 @@ public class DialogueTab extends ATab {
    @Override
    public boolean isMouseOver(double mouseX, double mouseY) {
       return dialogueBox != null && dialogueBox.isMouseOver(mouseX, mouseY);
-   }
-
-   /**
-    * A Moving on to the next dialogue replaces the dialogue box while one of its buttons is being clicked. Minecraft
-    * then focuses the old box once the click is done, which would let keyboard presses reach its buttons, so it is
-    * ignored.
-    */
-   @Override
-   public void setFocused(@Nullable GuiEventListener listener) {
-      if (listener != null && listener != dialogueBox)
-         listener = null; // todo: not mad about this. is there not another way this can be done? Could we perhaps delay
-                          // the replacement by a click? Maybe we don't instantiate a brand new Dialogue box and just
-                          // clear it? Might not be possible
-
-      super.setFocused(listener);
    }
 
    @Override
