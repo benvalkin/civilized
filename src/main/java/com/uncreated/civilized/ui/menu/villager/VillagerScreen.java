@@ -93,7 +93,7 @@ public class VillagerScreen extends AbstractContainerScreen<VillagerMenu> implem
    }
 
    private void createTabButtons(int x, int y) {
-      // the old buttons were removed from the screen when it was resized
+      // remove old buttons from the screen (old tab buttons can occur if the screen was resized)
       tabButtons.clear();
       addTabButton(x, y, new ItemStack(Items.WRITABLE_BOOK), "talk", DialogueTab.class, () -> createDialogueTab(this));
       x += VillagerTabButton.SIZE + TAB_GAP;
@@ -113,7 +113,7 @@ public class VillagerScreen extends AbstractContainerScreen<VillagerMenu> implem
             EquipmentTab.class,
             () -> new EquipmentTab(tabCoords, font));
       x += VillagerTabButton.SIZE + TAB_GAP;
-      addTabButton(x, y, new ItemStack(Items.RED_BED), "family", FamilyTab.class, () -> new FamilyTab(tabCoords, font));
+      addTabButton(x, y, new ItemStack(Items.RED_BED), "family", FamilyTab.class, () -> new FamilyTab(tabCoords, font, villager));
    }
 
    private void addTabButton(
