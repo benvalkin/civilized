@@ -255,10 +255,14 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
 
    private long timeLastGainedXp;
 
-   protected void gainWorkXp(CivilizedVillager villager) {
+   protected void gainAccumulatedWorkXp(CivilizedVillager villager) {
       long gameTime = villager.level().getGameTime();
       int workTicks = (int) (gameTime - timeLastGainedXp);
       timeLastGainedXp = gameTime;
+      gainOnceOffWorkXp(villager, workTicks);
+   }
+   
+   protected void gainOnceOffWorkXp(CivilizedVillager villager, int workTicks) {
       if (workBuilding != null)
          villager.getSkillTraining().gainWorkXp(workTicks, workBuilding.getBuilding());
    }

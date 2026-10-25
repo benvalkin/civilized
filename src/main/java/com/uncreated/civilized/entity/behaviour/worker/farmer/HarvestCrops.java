@@ -162,7 +162,7 @@ public class HarvestCrops extends WorkTaskBehaviour {
             level.setBlockAndUpdate(nextMaturesCropToHarvest, getCropReplantState(cropState, cropBlock));
             villager.playSound(SoundEvents.CROP_BREAK, 1.0f, 1.0f);
             toolHits = 0;
-            gainWorkXp(villager);
+            gainAccumulatedWorkXp(villager);
 
             hasWorkOutputItems = true;
          }

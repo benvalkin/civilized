@@ -21,6 +21,11 @@ public class SmokeItems extends CookItemsWithFuel {
    }
 
    @Override
+   protected int cookingTimePerItem() {
+      return FAST_COOKING_TIME;
+   }
+
+   @Override
    protected RecipeType<? extends AbstractCookingRecipe> getRecipeType() {
       return RecipeType.SMOKING;
    }

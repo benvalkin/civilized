@@ -76,9 +76,10 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
     */
    private static final int FUEL_SLOT_CAPACITY = 64;
    /**
-    * How long a furnace takes per item, used if the ingredient's recipe can't be found.
+    * Assumed cooking time per item. This value is only used if the ingredient's recipe can't be found.
     */
    private static final int DEFAULT_COOKING_TIME = 200;
+   protected static final int FAST_COOKING_TIME = DEFAULT_COOKING_TIME / 2;
 
    @Override
    protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
@@ -269,6 +270,10 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
    protected abstract CookingMachine getProductionMachine(RecipeProductionSystem recipeProductionSystem);
 
    protected abstract RecipeType<? extends AbstractCookingRecipe> getRecipeType();
+
+   protected int cookingTimePerItem() {
+      return DEFAULT_COOKING_TIME;
+   }
 
    protected abstract boolean isCorrectFurnaceBlock(AbstractFurnaceBlockEntity furnaceBlockEntity);
 
@@ -480,9 +485,8 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
       if (furnaceSlot == 2) {
          villager.addWorkExhaustion(taken);
          cookingMachine.consumeTokens(taken);
-         // paid for the whole time spent loading and tending the furnace, once the cooked items come out
-         if (taken > 0)
-            gainWorkXp(villager);
+         // the villager is elsewhere while the furnace cooks, so they're paid for its cooking time instead, per item
+         gainOnceOffWorkXp(villager, taken * cookingTimePerItem());
       } else if (taken > 0)
          villager.addWorkExhaustion(1);
 

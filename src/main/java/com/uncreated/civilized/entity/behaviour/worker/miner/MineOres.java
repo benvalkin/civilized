@@ -226,6 +226,6 @@ public class MineOres extends WorkTaskBehaviour {
          villager.getInventory().addItem(drop);
          foundOres = true;
       }
-      gainWorkXp(villager);
+      gainAccumulatedWorkXp(villager);
    }
 }

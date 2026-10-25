@@ -166,7 +166,7 @@ public class CutDownTrees extends WorkTaskBehaviour {
 
             level.destroyBlock(pos, false);
             toolHits = 0;
-            gainWorkXp(villager);
+            gainAccumulatedWorkXp(villager);
 
             hasWood = true;
          }

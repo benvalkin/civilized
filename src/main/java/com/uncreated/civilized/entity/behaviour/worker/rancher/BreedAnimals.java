@@ -169,7 +169,7 @@ public class BreedAnimals<T extends Animal> extends WorkTaskBehaviour {
 
          animal.get().setInLove(null);
          villager.getWorkInputInventory().removeItemType(animalFoodItemsInventory.get().getItem(), 1);
-         gainWorkXp(villager);
+         gainAccumulatedWorkXp(villager);
       }
    }
 

@@ -160,7 +160,7 @@ public class HarvestHoneyAndHoneyComb extends WorkTaskBehaviour {
 
       emptyBeehive(level, nextFullBeehive);
       hasWorkOutputItems = true;
-      gainWorkXp(villager);
+      gainAccumulatedWorkXp(villager);
    }
 
    private void fillBottleWithHoney(ServerLevel level, CivilizedVillager villager, ContainerItemReference bottle) {
