@@ -170,8 +170,8 @@ public class CivilizedVillagerRenderer extends
       return Component.translatable("villager.renderer.icon_with_value", icon, value);
    }
 
-   /** The player model villagers are drawn with is 32 pixels long, i.e. 2 blocks, the same as a bed. */
    private static final float SLEEPING_MODEL_LENGTH = 2.0F;
+   private static final float STANDING_MODEL_HEIGHT = SLEEPING_MODEL_LENGTH;
 
    /**
     * How far a villager sleeping without a bed is drawn above the floor, in blocks. This was added because floor
@@ -324,7 +324,7 @@ public class CivilizedVillagerRenderer extends
     * </ol>
     *
     * @param height
-    *           how far above the villager's feet, in blocks, before vanilla's usual half block
+    *           how far above an adult villager's feet, in blocks, before vanilla's usual half block
     */
    private void renderTag(
          Component text,
@@ -342,8 +342,10 @@ public class CivilizedVillagerRenderer extends
 
       boolean seeThrough = !renderState.isDiscrete;
 
+      double offset = renderState.isBaby ? STANDING_MODEL_HEIGHT * (1 - renderState.ageScale) : 0;
+
       poseStack.pushPose();
-      poseStack.translate(0, height + 0.5, 0);
+      poseStack.translate(0, height + 0.5 - offset, 0);
       poseStack.mulPose(this.entityRenderDispatcher.cameraOrientation());
       poseStack.scale(scale, -scale, scale);
       Matrix4f matrix = poseStack.last().pose();
