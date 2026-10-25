@@ -31,7 +31,6 @@ import com.uncreated.civilized.core.settlement.entity.LoadedSettlement;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
 import com.uncreated.civilized.core.settlement.entity.LoadedVillagers;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
-import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.BehaviourState;
 import com.uncreated.civilized.entity.behaviour.BehaviourStateMachine;
@@ -79,11 +78,20 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
    }
 
    /**
+    * Whether the villager has a work building that is loaded. Regular employed villagers don't need to call this
+    * method; it's only necessary when unemployed villagers need to run a WorkTaskBehaviour (unemployed villagers will
+    * never have any associated building).
+    */
+   protected boolean hasWorkBuilding() {
+      return workBuilding != null;
+   }
+
+   /**
     * The main worker building where this worker is assigned. Their occupation originate from this building. All workers
     * must have a Work Building
     */
    public LoadedBuilding getWorkBuilding() {
-      if (workBuilding == null)
+      if (workBuilding == null && requiresWorksite)
          throw new IllegalStateException(
                "Cannot get villager's work building, either because they don't have one or it's not loaded. All workers must have a work building that is loaded in.");
 
@@ -146,13 +154,15 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
 
       UUID worksiteId = info.getWorkBuildingId();
       workBuilding = LoadedBuildings.checkLoaded(worksiteId).orElse(null);
-      // if the villager has no work building (they would be unemployed), or their work building is not loaded, they cannot
-      // start this activity
-      if (workBuilding == null)
-         return false;
 
+      // behaviours that don't need a worksite (e.g. fetching food) can be used by unemployed villagers
       if (!requiresWorksite)
          return true;
+
+      // if the villager has no work building (they would be unemployed), or their work building is not loaded, they
+      // cannot start this activity
+      if (workBuilding == null)
+         return false;
 
       if (info.getOccupation().workAreaTypes().isEmpty()) {
          // worksite is the work building
@@ -220,9 +230,7 @@ public abstract class WorkTaskBehaviour extends StatefulBehaviour {
          return Optional.empty();
 
       return LoadedVillagers.find(partnerId)
-            .filter(
-                  spouse -> spouse.isAlive() && spouse.level() == villager.level()
-                        && spouse.getInfo().isHomemaker());
+            .filter(spouse -> spouse.isAlive() && spouse.level() == villager.level() && spouse.getInfo().isHomemaker());
    }
 
    private static boolean isFreeToHaul(CivilizedVillager villager) {

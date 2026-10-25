@@ -17,9 +17,8 @@ import net.minecraft.world.Container;
 
 public class CheckOffloadInventories extends WorkTaskBehaviour {
 
-
    public CheckOffloadInventories() {
-      super(WorkStates.OFFLOAD_INVENTORIES_AFTER_WORK, false,  0, 120 * 20);
+      super(WorkStates.OFFLOAD_INVENTORIES_AFTER_WORK, false, 0, 120 * 20);
    }
 
    @Override
@@ -36,6 +35,13 @@ public class CheckOffloadInventories extends WorkTaskBehaviour {
    @Override
    protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
       if (!super.checkExtraStartConditions(level, villager))
+         return false;
+
+      // Inventories are offloaded at the work building, but this behaviour may still be attempted run by unemployed
+      // villagers.
+      // Without this check, the behaviour would otherwise run for unemployed villagers (because `requiresWorksite` is
+      // set to false)
+      if (!hasWorkBuilding())
          return false;
 
       if (getBehaviourCooldowns().hasCooldown(Cooldowns.CHECK_START, level.getGameTime()))
