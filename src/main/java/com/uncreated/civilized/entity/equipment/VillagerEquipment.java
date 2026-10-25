@@ -260,6 +260,7 @@ public class VillagerEquipment {
       }
 
       carriedSlots[carriedEquipmentSlot.ordinal()] = itemStack;
+      equip(carriedEquipmentSlot);
    }
 
    public boolean canInsertInto(CarriedEquipmentSlot carriedEquipmentSlot, ItemStack itemStack) {
