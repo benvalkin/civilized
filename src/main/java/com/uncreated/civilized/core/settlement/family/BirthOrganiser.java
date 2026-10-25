@@ -22,6 +22,7 @@ import com.uncreated.civilized.core.villagerinfo.LifeStage;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
+import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkills;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.InvalidateImportantLocations;
 import com.uncreated.civilized.neoforge.registration.entity.EntityRegistry;
@@ -188,6 +189,8 @@ public class BirthOrganiser {
       }
       info.setBirthDay(birthDay);
       info.setLifeStage(LifeStage.CHILD);
+      // newly spawned villagers start with some skills, but newborns haven't learnt anything yet
+      info.setSkills(VillagerSkills.allSkillsZeroXp());
       info.setHomeBuildingId(home.getBuildingId());
       ServerVillagerStore.INSTANCE.setDirty();
       ServerVillagerStore.INSTANCE.replicateChange(info, StoreOperation.ADD_OR_OVERWRITE);

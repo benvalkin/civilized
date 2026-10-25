@@ -480,6 +480,9 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
       if (furnaceSlot == 2) {
          villager.addWorkExhaustion(taken);
          cookingMachine.consumeTokens(taken);
+         // paid for the whole time spent loading and tending the furnace, once the cooked items come out
+         if (taken > 0)
+            gainWorkXp(villager);
       } else if (taken > 0)
          villager.addWorkExhaustion(1);
 

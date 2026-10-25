@@ -9,6 +9,7 @@ import javax.annotation.Nullable;
 import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Pair;
 import com.uncreated.civilized.core.building.BuildingType;
+import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkill;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.stats.ClothingTextureRegistry;
 import com.uncreated.civilized.ui.style.Colors;
@@ -37,6 +38,8 @@ public class VillagerOccupation {
    private final Supplier<ImmutableList<Pair<Integer, ? extends BehaviorControl<CivilizedVillager>>>> workBehaviourPackage;
    @Builder.Default
    private final List<String> clothingSets = List.of(ClothingTextureRegistry.DEFAULT_CLOTHING_SET);
+   @Nullable
+   private final VillagerSkill relevantSkill;
 
    public boolean isValidWorksite(BuildingType buildingType) {
       return worksiteTypes.stream().anyMatch(buildingType::is);

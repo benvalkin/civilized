@@ -146,6 +146,7 @@ public class ReplantSaplings extends WorkTaskBehaviour {
          villager.playSound(SoundEvents.CROP_BREAK, 1.0f, 1.0f);
 
          villager.getInventory().removeItemType(saplingStack.get().getItem(), 1);
+         gainWorkXp(villager);
       }
    }
 

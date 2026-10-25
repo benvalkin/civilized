@@ -14,6 +14,7 @@ public class Colors {
    public static final int SKILL_COMPETENT = MENU_TEXT_VILLAGER_DIALOGUE;
    public static final int SKILL_HIGHLY_SKILLED = 0xfff3c2;
    public static final int SKILL_MASTER = 0xffe78a;
+   public static final int SKILL_LEVEL_UP = SKILL_HIGHLY_SKILLED;
 
    public final static int VALIDATION_ERROR = 0xebb2b2;
    public final static int VALIDATION_SUCCESS = 0xc5edcc;

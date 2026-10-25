@@ -193,6 +193,7 @@ public class Fish extends WorkTaskBehaviour {
 
       caughtItems.forEach(i -> villager.getWorkOutputInventory().addItem(i));
       fishCaught++;
+      gainWorkXp(villager);
       level.playSound(null, castTarget, SoundEvents.FISHING_BOBBER_RETRIEVE, villager.getSoundSource(), 1.0F, 1.0F);
    }
 

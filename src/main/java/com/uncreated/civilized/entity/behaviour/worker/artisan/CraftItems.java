@@ -233,6 +233,7 @@ public class CraftItems extends WorkTaskBehaviour {
 
          villager.getWorkOutputInventory().addItem(resultItem);
          pendingOutput.consumeIngredients(pendingOutput.getConsumableIngredients());
+         gainWorkXp(villager);
 
          craftingMachine.consumeToken();
 

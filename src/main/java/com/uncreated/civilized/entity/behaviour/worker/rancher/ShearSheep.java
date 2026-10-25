@@ -167,6 +167,7 @@ public class ShearSheep extends WorkTaskBehaviour {
       }
 
       shear(level, villager, sheep.get());
+      gainWorkXp(villager);
    }
 
    /** How far a position inside the pen is from the pen's nearest side. */

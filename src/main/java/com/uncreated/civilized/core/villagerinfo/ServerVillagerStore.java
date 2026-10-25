@@ -205,6 +205,7 @@ public class ServerVillagerStore extends VillagerStore {
       newVillager.gender(gender);
       Pair<String, String> names = VillagerInfo.generateRandomName(gender);
       newVillager.firstName(names.getFirst()).lastName(names.getSecond());
+      newVillager.skills(VillagerSkills.randomSpread(villager.getRandom()));
 
       VillagerInfo info = newVillager.build();
       villagers.add(info);

@@ -117,6 +117,9 @@ public class Flirt extends Socialize {
 
       Optional<Conversation> conversation = villager.getBrain().getMemory(AIRegistry.MM_CONVERSATION.get());
       if (conversation.isPresent()) {
+         if (isMet())
+            villager.getSkillTraining().gainFlirtXp();
+
          boolean isInstigator = villager.is(conversation.get().getHost());
          if (isInstigator && !villager.getInfo().isTaken() && isMet() && conversation.get().getPastMembers().size() == 2
                && rollSuccess(villager)) {

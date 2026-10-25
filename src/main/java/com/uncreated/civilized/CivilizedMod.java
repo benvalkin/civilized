@@ -15,6 +15,7 @@ import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermis
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
 import com.uncreated.civilized.core.villagerinfo.events.VillagerStoreEvents;
+import com.uncreated.civilized.core.villagerinfo.skills.events.SkillTrainingEvents;
 import com.uncreated.civilized.neoforge.registration.BlockRegistry;
 import com.uncreated.civilized.neoforge.registration.DataMapRegistry;
 import com.uncreated.civilized.neoforge.registration.DatapackRegistries;
@@ -90,6 +91,7 @@ public class CivilizedMod {
       NeoForge.EVENT_BUS.register(SettlementStoreEvents.class);
       NeoForge.EVENT_BUS.register(SettlementLoadingEvents.class);
       NeoForge.EVENT_BUS.register(VillagerStoreEvents.class);
+      NeoForge.EVENT_BUS.register(SkillTrainingEvents.class);
 
       // Register the item to a creative tab
       modEventBus.addListener(this::addCreative);

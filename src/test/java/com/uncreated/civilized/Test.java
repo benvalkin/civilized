@@ -26,17 +26,15 @@ public class Test {
          int totalDaysToReachL2 = Math.round(myTotalXp / (xpPerDay * 1.5f));
          int totalDaysToReachL3 = Math.round(myTotalXp / (xpPerDay * 2f));
 
-
          System.out.printf(
                "Level: %-2s %s/%-5s %14s    days to reach: %-2s %-2s %-2s %n",
                myCurrentLevel,
                myCurrentLevelXp,
                myNextLevelRequiredXp,
-               String.format("(%s/%s)", myTotalXp,
-                       myNextLevelRequiredTotalXp),
-               daysToReachL1,
-               daysToReachL2,
-               daysToReachL3);
+               String.format("(%s/%s)", myTotalXp, myNextLevelRequiredTotalXp),
+               totalDaysToReachL1,
+               totalDaysToReachL2,
+               totalDaysToReachL3);
       }
    }
 }

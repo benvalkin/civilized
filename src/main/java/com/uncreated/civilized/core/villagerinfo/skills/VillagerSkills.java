@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.util.RandomSource;
 
 public class VillagerSkills {
 
@@ -47,6 +48,28 @@ public class VillagerSkills {
       return new VillagerSkills(new int[VillagerSkill.values().length]);
    }
 
+   private static final int SPREAD_MAX_LEVEL = 2;
+   private static final int TALENT_MIN_LEVEL = 3;
+   private static final int TALENT_MAX_LEVEL = 4;
+
+   public static VillagerSkills randomSpread(RandomSource random) {
+      VillagerSkill[] skills = VillagerSkill.values();
+      int[] skillXp = new int[skills.length];
+      for (VillagerSkill skill : skills)
+         skillXp[skill.ordinal()] = randomXpWithinLevel(random, random.nextInt(SPREAD_MAX_LEVEL + 1));
+
+      VillagerSkill talent = skills[random.nextInt(skills.length)];
+      int talentLevel = TALENT_MIN_LEVEL + random.nextInt(TALENT_MAX_LEVEL - TALENT_MIN_LEVEL + 1);
+      skillXp[talent.ordinal()] = randomXpWithinLevel(random, talentLevel);
+      return new VillagerSkills(skillXp);
+   }
+
+   private static int randomXpWithinLevel(RandomSource random, int level) {
+      int levelStart = requiredTotalXpForLevel(level);
+      int levelXp = requiredTotalXpForLevel(level + 1) - levelStart;
+      return levelStart + random.nextInt(levelXp);
+   }
+
    public static final int MAX_LEVEL = 10;
    public static final int MAX_TOTAL_XP = requiredTotalXpForLevel(10);
    public static final int BASE_LEVEL_XP = 1000;
@@ -62,6 +85,16 @@ public class VillagerSkills {
          return Optional.empty();
 
       return Optional.of(totalXp);
+   }
+
+   public int addXp(VillagerSkill skill, int xp) {
+      int totalXp = getTotalXpIntl(skill);
+      if (totalXp < 0 || xp <= 0)
+         return 0;
+
+      int newTotalXp = Math.min(MAX_TOTAL_XP, totalXp + xp);
+      skillXp[skill.ordinal()] = newTotalXp;
+      return currentLevel(newTotalXp) - currentLevel(totalXp);
    }
 
    public boolean isCapableOf(VillagerSkill skill) {

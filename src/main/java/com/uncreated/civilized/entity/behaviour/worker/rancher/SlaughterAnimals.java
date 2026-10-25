@@ -97,6 +97,7 @@ public class SlaughterAnimals<T extends Animal> extends WorkTaskBehaviour {
          Animal toKill = killableAnimals.getFirst();
 
          toKill.kill(level);
+         gainWorkXp(villager);
 
          List<ItemEntity> droppedItems =
                level.getEntitiesOfClass(

@@ -152,6 +152,7 @@ public class PlantCrops extends WorkTaskBehaviour {
 
             level.setBlockAndUpdate(cropPos, getCropReplantState(level.getBlockState(cropPos), nextSeedToPlant.get()));
             villager.playSound(SoundEvents.CROP_BREAK, 1.0f, 1.0f);
+            gainWorkXp(villager);
          }
       }
    }

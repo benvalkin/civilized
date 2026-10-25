@@ -50,6 +50,7 @@ import com.uncreated.civilized.entity.behaviour.social.Conversation;
 import com.uncreated.civilized.entity.behaviour.worker.soldier.ArrowLineOfFire;
 import com.uncreated.civilized.entity.control.CivilizedVillagerLookControl;
 import com.uncreated.civilized.entity.data.VillagerHunger;
+import com.uncreated.civilized.entity.data.VillagerXpCollector;
 import com.uncreated.civilized.entity.equipment.VillagerEquipment;
 import com.uncreated.civilized.entity.equipment.VillagerInventoryType;
 import com.uncreated.civilized.entity.pathfinding.VillagerGroundPathNavigation;
@@ -83,6 +84,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.AgeableMob;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
@@ -91,6 +93,7 @@ import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.MemoryStatus;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.ai.sensing.SensorType;
+import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.npc.InventoryCarrier;
 import net.minecraft.world.entity.player.Player;
@@ -127,6 +130,9 @@ public class CivilizedVillager extends AgeableMob
 
    @Getter
    private VillagerHunger hunger;
+
+   @Getter
+   private final VillagerXpCollector skillTraining;
 
    @Getter
    private VillagerRoleBehaviour roleBehaviour;
@@ -187,6 +193,7 @@ public class CivilizedVillager extends AgeableMob
       this.arbitraryRandom = RandomSource.create();
       this.setPersistenceRequired(); // prevent auto-despawning
       this.hunger = new VillagerHunger(this);
+      this.skillTraining = new VillagerXpCollector(this);
    }
 
    public void initBrandNewVillager() {
@@ -672,6 +679,7 @@ public class CivilizedVillager extends AgeableMob
       updateActivity(serverLevel.getDayTime(), serverLevel.getGameTime());
       regenerateHealth(serverLevel.getGameTime());
       hunger.serverTickHunger(serverLevel.getGameTime());
+      skillTraining.serverTick(serverLevel, serverLevel.getGameTime());
 
       reportNearbyHostiles();
       ProfilerFiller profilerFiller = Profiler.get();
@@ -846,6 +854,14 @@ public class CivilizedVillager extends AgeableMob
    private static final float CHILD_SCALE = 0.6F;
 
    private boolean sizedAsChild;
+
+   /** Called on whoever gets the kill credit, including the shooter of a killing arrow. */
+   @Override
+   public void awardKillScore(Entity killed, DamageSource damageSource) {
+      super.awardKillScore(killed, damageSource);
+      if (killed instanceof Enemy)
+         skillTraining.gainKillXp();
+   }
 
    @Override
    public boolean isBaby() {
