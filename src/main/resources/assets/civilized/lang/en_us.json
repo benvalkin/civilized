@@ -275,6 +275,8 @@
   "item.quality.excellent": "Excellent",
   "item.quality.masterwork": "Masterwork",
   "item.quality.legendary": "Legendary",
+  "item.quality.durability.slower": "+%s durability",
+  "item.quality.durability.faster": "-%s durability",
   "menu.building.occupants.job.child.male": "Boy",
   "menu.building.occupants.job.child.female": "Girl",
   "menu.building.occupants.assign.leaves_job": "%s will leave their job as %s.",

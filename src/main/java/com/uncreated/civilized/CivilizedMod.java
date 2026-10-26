@@ -45,6 +45,7 @@ import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.common.NeoForgeMod;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
@@ -60,6 +61,7 @@ public class CivilizedMod {
    // The constructor for the mod class is the first code that is run when your mod is loaded.
    // FML will recognize some parameter types like IEventBus or ModContainer and pass them in automatically.
    public CivilizedMod(IEventBus modEventBus, ModContainer modContainer) {
+
       // Register the commonSetup method for modloading
       modEventBus.addListener(this::commonSetup);
 
@@ -110,6 +112,9 @@ public class CivilizedMod {
 
       // Register our mod's ModConfigSpec so that FML can create and load the config file for us
       modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+
+      // enabled to make item's quality bonuses show up as part of its stats (e.g. modified attack damage) while holding shift
+      NeoForgeMod.enableMergedAttributeTooltips();
    }
 
    private void commonSetup(final FMLCommonSetupEvent event) {
