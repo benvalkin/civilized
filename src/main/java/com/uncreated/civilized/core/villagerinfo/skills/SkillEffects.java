@@ -82,6 +82,30 @@ public final class SkillEffects {
       return Math.max(1, Math.round(baselinePerDay * levelMultiplier(level, multiplierPower)));
    }
 
+   // Combat. Level 5 fights the way every soldier did before skills had any effect.
+
+   public static int getMeleeAttackIntervalTicks(int meleeLevel) {
+      return fixedDistribution(List.of(30, 28, 26, 24, 22, 20, 18, 17, 16, 15, 13), meleeLevel);
+   }
+
+   public static double getMeleeDamageMultiplier(int meleeLevel) {
+      return fixedDistribution(List.of(0.75, 0.8, 0.85, 0.9, 0.95, 1.0, 1.05, 1.1, 1.15, 1.25, 1.35), meleeLevel);
+   }
+
+   public static int getBowDrawTicks(int shootingLevel) {
+      return fixedDistribution(List.of(30, 28, 26, 24, 22, 20, 19, 18, 17, 16, 15), shootingLevel);
+   }
+
+   public static float getArrowInaccuracyMultiplier(int shootingLevel) {
+      return fixedDistribution(
+            List.of(2f, 1.8f, 1.6f, 1.4f, 1.2f, 1f, 0.85f, 0.7f, 0.55f, 0.45f, 0.35f),
+            shootingLevel);
+   }
+
+   public static double getArrowDamageMultiplier(int shootingLevel) {
+      return getMeleeDamageMultiplier(shootingLevel);
+   }
+
    public static int getMaxAllowedProductionBills(int craftingLevel) {
       return fixedDistribution(List.of(1, 1, 2, 2, 3, 4, 4, 5, 6, 7, 8), craftingLevel);
    }

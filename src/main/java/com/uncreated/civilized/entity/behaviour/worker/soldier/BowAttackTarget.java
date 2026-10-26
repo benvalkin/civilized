@@ -4,6 +4,8 @@ import java.util.Objects;
 
 import com.uncreated.civilized.core.settlement.defense.ICombatCommand;
 import com.uncreated.civilized.core.settlement.defense.TargetRequestResult;
+import com.uncreated.civilized.core.villagerinfo.skills.SkillEffects;
+import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkill;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.BehaviourState;
 import com.uncreated.civilized.entity.behaviour.StatefulBehaviour;
@@ -31,10 +33,12 @@ import net.minecraft.world.phys.Vec3;
  */
 public class BowAttackTarget extends StatefulBehaviour {
 
-   /** Ticks the bow needs to be drawn for a full-power shot (see {@link BowItem#getPowerForTime}). */
+   /** Ticks a vanilla bow needs to be drawn for a full-power shot (see {@link BowItem#getPowerForTime}). */
    private static final int FULL_DRAW_TICKS = 20;
+   /** How long this soldier takes to fully draw their bow, dependent on their shooting skill. */
+   private int drawTicksNeeded = FULL_DRAW_TICKS;
    /** Ticks of continuous line of sight needed before the villager stops moving to shoot. */
-   private static final int SEE_TIME_BEFORE_STOPPING = 20;
+   private static final int SEE_TIME_BEFORE_STOPPING = 10;
    /** Ticks without line of sight after which a drawn bow is lowered again. */
    private static final int LOST_SIGHT_TIMEOUT = 60;
    /** Ticks a fully drawn shot can be blocked before the villager moves to find a clear line of fire. */
@@ -112,6 +116,7 @@ public class BowAttackTarget extends StatefulBehaviour {
       villager.getBrain().setMemory(MemoryModuleType.WALK_TARGET, new WalkTarget(target, moveSpeed, 1));
       villager.getBrain().setMemory(MemoryModuleType.LOOK_TARGET, new EntityTracker(target, true));
       nextDraw = 0;
+      drawTicksNeeded = SkillEffects.getBowDrawTicks(villager.getInfo().getSkills().getLevel(VillagerSkill.SHOOTING));
       nextRerequestTarget = 0;
       seeTime = 0;
       retreating = false;
@@ -204,7 +209,7 @@ public class BowAttackTarget extends StatefulBehaviour {
 
          // keep the bow drawn until the shot is lined up
          int drawTicks = villager.getTicksUsingItem();
-         if (canSee && inRange && drawTicks >= FULL_DRAW_TICKS) {
+         if (canSee && inRange && drawTicks >= drawTicksNeeded) {
             if (isLineOfFireBlocked(villager, target)) {
                blockedTicks++;
                if (blockedTicks >= BLOCKED_TICKS_BEFORE_REPOSITIONING && !repositioning) {
@@ -216,7 +221,8 @@ public class BowAttackTarget extends StatefulBehaviour {
 
             blockedTicks = 0;
             villager.stopUsingItem();
-            villager.performRangedAttack(target, BowItem.getPowerForTime(drawTicks));
+            // a fully drawn bow fires at full power, however long the soldier's skill made drawing it take
+            villager.performRangedAttack(target, BowItem.getPowerForTime(FULL_DRAW_TICKS));
             nextDraw = currentTicks + attackCooldown;
          }
       } else if (currentTicks >= nextDraw && seeTime >= -LOST_SIGHT_TIMEOUT) {

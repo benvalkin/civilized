@@ -42,6 +42,8 @@ import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.core.villagerinfo.VillagerNpcRole;
 import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
 import com.uncreated.civilized.core.villagerinfo.VillagerOccupations;
+import com.uncreated.civilized.core.villagerinfo.skills.SkillEffects;
+import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkill;
 import com.uncreated.civilized.entity.behaviour.BehaviourState;
 import com.uncreated.civilized.entity.behaviour.BehaviourStates;
 import com.uncreated.civilized.entity.behaviour.IdleBehaviourControl;
@@ -1034,6 +1036,11 @@ public class CivilizedVillager extends AgeableMob
       if (weapon.getItem() instanceof ProjectileWeaponItem weaponItem)
          arrow = weaponItem.customArrow(arrow, projectile, weapon);
 
+      // a skilled archer's arrows hit harder and stray less
+      int shootingLevel = info.getSkills().getLevel(VillagerSkill.SHOOTING);
+      arrow.setBaseDamage(arrow.getBaseDamage() * SkillEffects.getArrowDamageMultiplier(shootingLevel));
+      float inaccuracy = ARROW_INACCURACY * SkillEffects.getArrowInaccuracyMultiplier(shootingLevel);
+
       Vec3 aim = ArrowLineOfFire.aimAt(arrow.position(), target);
       Projectile.spawnProjectileUsingShoot(
             arrow,
@@ -1043,7 +1050,7 @@ public class CivilizedVillager extends AgeableMob
             aim.y,
             aim.z,
             ARROW_VELOCITY,
-            ARROW_INACCURACY);
+            inaccuracy);
       playSound(SoundEvents.ARROW_SHOOT, 1.0F, 1.0F / (getRandom().nextFloat() * 0.4F + 0.8F));
 
       addWorkExhaustion(1);

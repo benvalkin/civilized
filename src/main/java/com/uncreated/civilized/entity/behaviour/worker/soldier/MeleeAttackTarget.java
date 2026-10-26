@@ -2,7 +2,10 @@ package com.uncreated.civilized.entity.behaviour.worker.soldier;
 
 import java.util.Objects;
 
+import com.uncreated.civilized.CivilizedMod;
 import com.uncreated.civilized.core.settlement.defense.TargetRequestResult;
+import com.uncreated.civilized.core.villagerinfo.skills.SkillEffects;
+import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkill;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.BehaviourState;
 import com.uncreated.civilized.entity.behaviour.StatefulBehaviour;
@@ -10,9 +13,13 @@ import com.uncreated.civilized.entity.equipment.CarriedEquipmentSlot;
 import com.uncreated.civilized.entity.equipment.VillagerEquipment;
 
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.behavior.EntityTracker;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.WalkTarget;
@@ -56,6 +63,23 @@ public class MeleeAttackTarget extends StatefulBehaviour {
       nextAttack = 0;
       nextRerequestTarget = 0;
       villager.getEquipment().equip(weaponSlot);
+      applyMeleeSkill(villager);
+   }
+
+   private static final ResourceLocation MELEE_SKILL_DAMAGE_ID =
+         ResourceLocation.fromNamespaceAndPath(CivilizedMod.CIVILIZED_MOD_ID, "melee_skill_damage");
+
+   private void applyMeleeSkill(CivilizedVillager villager) {
+      int meleeLevel = villager.getInfo().getSkills().getLevel(VillagerSkill.MELEE);
+      attackIntervalTicks = SkillEffects.getMeleeAttackIntervalTicks(meleeLevel);
+
+      AttributeInstance attackDamage = villager.getAttribute(Attributes.ATTACK_DAMAGE);
+      if (attackDamage != null)
+         attackDamage.addOrUpdateTransientModifier(
+               new AttributeModifier(
+                     MELEE_SKILL_DAMAGE_ID,
+                     SkillEffects.getMeleeDamageMultiplier(meleeLevel) - 1,
+                     AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
    }
 
    @Override
@@ -71,7 +95,7 @@ public class MeleeAttackTarget extends StatefulBehaviour {
 
    long nextAttack;
    long nextRerequestTarget;
-   int attackSpeed = 20;
+   int attackIntervalTicks;
 
    @Override
    protected void tick(ServerLevel level, CivilizedVillager villager, long currentTicks) {
@@ -96,7 +120,7 @@ public class MeleeAttackTarget extends StatefulBehaviour {
          return;
 
       if (currentTicks > nextAttack) {
-         nextAttack = currentTicks + attackSpeed;
+         nextAttack = currentTicks + attackIntervalTicks;
          villager.swing(InteractionHand.MAIN_HAND, true);
          villager.addWorkExhaustion(1);
          villager.doHurtTarget(level, target);
