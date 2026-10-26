@@ -31,10 +31,9 @@ public class ItemQualityTooltipEvents {
 
    private static Component durabilityLine(ItemStack itemStack, ItemQuality quality) {
       double multiplier = QualityEffects.getDurabilityLossMultiplier(itemStack, quality);
-      String percent = Math.round(Math.abs(1 - multiplier) * 100) + "%";
+      double value = multiplier <= 1 ? multiplier : multiplier - 1;
+      String percent = Math.round(Math.abs(value) * 100) + "%";
       String key = multiplier < 1 ? "item.quality.durability.slower" : "item.quality.durability.faster";
-      return Component.literal(" \u2507 ")
-            .append(Component.translatable(key, percent))
-            .withStyle(ChatFormatting.GRAY);
+      return Component.literal(" \u2507 ").append(Component.translatable(key, percent)).withStyle(ChatFormatting.GRAY);
    }
 }

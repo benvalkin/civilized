@@ -1,7 +1,9 @@
 package com.uncreated.civilized.ui.menu.building.residence.artisan;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -10,6 +12,9 @@ import com.uncreated.civilized.core.building.ClientBuildingStore;
 import com.uncreated.civilized.core.building.production.bills.ProductionBill;
 import com.uncreated.civilized.core.building.production.bills.ProductionType;
 import com.uncreated.civilized.core.building.state.artisan.ArtisanHouseState;
+import com.uncreated.civilized.core.building.util.BuildingUtil;
+import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
+import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.networking.packets.SaveProductionBill;
 import com.uncreated.civilized.ui.components.IListViewBuilder;
 import com.uncreated.civilized.ui.components.ScrollListView;
@@ -82,7 +87,8 @@ public class ManageProductionBillsTab extends ABuildingScreenTab {
                   productionType,
                   editBillLayout,
                   billIndex,
-                  () -> tabHost.changeTab(new ManageProductionBillsTab(tabHost, font, context, productionType, editBillLayout, screen))));
+                  () -> tabHost.changeTab(
+                        new ManageProductionBillsTab(tabHost, font, context, productionType, editBillLayout, screen))));
    }
 
    @Override
@@ -117,6 +123,13 @@ public class ManageProductionBillsTab extends ABuildingScreenTab {
          List<ProductionBill> productionBills) {
       final int elementHeight = 22;
 
+      ArtisanHouseState state = (ArtisanHouseState) context.building().getState();
+      List<VillagerInfo> workers = BuildingUtil.getWorkers(context.building(), ClientVillagerStore.INSTANCE);
+      int maxWorkedBills = state.getMaxWorkedBills(ClientVillagerStore.INSTANCE);
+      List<ProductionBill> enabledBills = productionBills.stream().filter(ProductionBill::isEnabled).toList();
+      int producibleBills = Math.min(maxWorkedBills, enabledBills.size());
+      Set<ProductionBill> producibleBillsSet = new HashSet<>(enabledBills.subList(0, producibleBills));
+
       return new ScrollListView<>(getX(), getY() + 20, width, height - 45, elementHeight, new IListViewBuilder<>() {
 
          @Override
@@ -133,6 +146,19 @@ public class ManageProductionBillsTab extends ABuildingScreenTab {
                int elementWidth,
                int elementHeight,
                int elementSpacing) {
+            @Nullable
+            Component waitingReason = null;
+
+            if (!productionBill.isEnabled()) {
+               waitingReason = Component.translatable("menu.building.residence.production_bills.disabled");
+            } else if (!workers.isEmpty() && !producibleBillsSet.contains(productionBill)) {
+               waitingReason =
+                     Component.translatable(
+                           "menu.building.residence.production_bills.waiting",
+                           workers.getFirst().getFirstName(),
+                           maxWorkedBills);
+            }
+
             return new ProductionBillListViewWidget(
                   elementX,
                   elementY,
@@ -142,6 +168,7 @@ public class ManageProductionBillsTab extends ABuildingScreenTab {
                   productionBill,
                   elementIndex,
                   context.building(),
+                  waitingReason,
                   () -> openEditBillTab(elementIndex));
          }
       });

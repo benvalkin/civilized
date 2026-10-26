@@ -29,13 +29,13 @@ public final class QualityEffects {
 
    public static double getToolDurabilityLossMultiplier(ItemQuality quality) {
       return switch (quality) {
-      case AWFUL -> 1.6;
-      case POOR -> 1.25;
+      case AWFUL -> 1.4;
+      case POOR -> 1.2;
       case NORMAL -> 1;
-      case GOOD -> 0.75;
-      case EXCELLENT -> 0.4;
-      case MASTERWORK -> 0.25;
-      case LEGENDARY -> 0.15;
+      case GOOD -> 0.85;
+      case EXCELLENT -> 0.7;
+      case MASTERWORK -> 0.5;
+      case LEGENDARY -> 0.3;
       };
    }
 
@@ -46,20 +46,20 @@ public final class QualityEffects {
       case NORMAL -> 1;
       case GOOD -> 0.9;
       case EXCELLENT -> 0.8;
-      case MASTERWORK -> 0.7;
+      case MASTERWORK -> 0.65;
       case LEGENDARY -> 0.5;
       };
    }
 
    private static double statBonus(ItemQuality quality) {
       return switch (quality) {
-      case AWFUL -> -0.4;
-      case POOR -> -0.2;
+      case AWFUL -> -0.3;
+      case POOR -> -0.1;
       case NORMAL -> 0;
-      case GOOD -> 0.15;
-      case EXCELLENT -> 0.3;
-      case MASTERWORK -> 0.5;
-      case LEGENDARY -> 0.8;
+      case GOOD -> 0.1;
+      case EXCELLENT -> 0.2;
+      case MASTERWORK -> 0.4;
+      case LEGENDARY -> 0.6;
       };
    }
 }

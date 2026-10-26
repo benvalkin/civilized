@@ -2,6 +2,8 @@ package com.uncreated.civilized.ui.menu.building.widgets;
 
 import java.util.List;
 
+import org.jetbrains.annotations.Nullable;
+
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.ClientBuildingStore;
@@ -33,6 +35,9 @@ public class ProductionBillListViewWidget extends AbstractContainerWidget {
    private final Checkbox enabledButton;
    private final TrashcanButton deleteButton;
    private final Runnable onEdit;
+   /** Why the craftsman isn't working on this enabled bill yet, or null when they are (or it's disabled). */
+   @Nullable
+   private final Component waitingReason;
 
    public ProductionBillListViewWidget(
          int x,
@@ -43,8 +48,10 @@ public class ProductionBillListViewWidget extends AbstractContainerWidget {
          ProductionBill productionBill,
          int productionBillIndex,
          Building building,
+         @Nullable Component waitingReason,
          Runnable onEdit) {
       super(x, y, width, height, Component.literal("ManageOccupantWidget"));
+      this.waitingReason = waitingReason;
       this.font = font;
       this.productionBillIndex = productionBillIndex;
       this.productionBill = productionBill;
@@ -104,13 +111,20 @@ public class ProductionBillListViewWidget extends AbstractContainerWidget {
    @Override
    protected void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
 
+      int textX = getX() + 28;
+      int textY = getY() + 6;
       guiGraphics.drawString(
             font,
             ProductionStrategyType.getComplexDescription(productionBill),
-            getX() + 28,
-            getY() + 6,
-            Colors.MENU_TEXT_DARK,
+            textX,
+            textY,
+            waitingReason == null ? Colors.MENU_TEXT_DARK : Colors.TEXT_DARK_MUTED,
             false);
+
+      boolean isOverText = mouseX >= textX && mouseX < deleteButton.getX() && mouseY >= getY()
+            && mouseY < getBottom();
+      if (waitingReason != null && isOverText)
+         guiGraphics.renderTooltip(font, font.split(waitingReason, 200), mouseX, mouseY);
 
       deleteButton.render(guiGraphics, mouseX, mouseY, partialTick);
       editButton.render(guiGraphics, mouseX, mouseY, partialTick);

@@ -282,6 +282,8 @@
   "menu.building.occupants.assign.leaves_job": "%s will leave their job as %s.",
   "menu.building.residence.production_bills.add_bill.description": "Add Bill",
   "menu.building.residence.production_bills.add_bill.tooltip": "Add new production bill",
+  "menu.building.residence.production_bills.disabled": "This bill is disabled.",
+  "menu.building.residence.production_bills.waiting": "%s's skill level only allows them to work on %s concurrent bills.",
   "menu.building.residence.production_bills.delete_bill.description": "Remove Bill",
   "menu.building.residence.production_bills.delete_bill.tooltip": "Remove this production bill. Workers will stop producing items.",
   "menu.building.residence.production_bills.edit_blasting_recipe.description": "Blasting Production",

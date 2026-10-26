@@ -19,6 +19,12 @@ import com.uncreated.civilized.core.building.production.bills.RecipeAllowed;
 import com.uncreated.civilized.core.building.production.bills.strategy.ProductionStrategyType;
 import com.uncreated.civilized.core.building.production.orders.ProductionOrder;
 import com.uncreated.civilized.core.building.state.BuildingState;
+import com.uncreated.civilized.core.building.util.BuildingUtil;
+import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
+import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
+import com.uncreated.civilized.core.villagerinfo.VillagerStore;
+import com.uncreated.civilized.core.villagerinfo.skills.SkillEffects;
+import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkill;
 
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -59,10 +65,26 @@ public abstract class ArtisanHouseState extends BuildingState {
       List<ProductionBill> productionBills =
             this.productionLines.getOrDefault(machine.getProductionType(), new ArrayList<>());
 
+      int maxWorkedBills = getMaxWorkedBills(ServerVillagerStore.INSTANCE);
+
+      if (maxWorkedBills == 0)
+         return;
+
+      int workedBills = 0;
+
       for (int i = 0; i < productionBills.size(); i++) {
+
          String key = "productionBill_" + i;
          try {
             ProductionBill bill = productionBills.get(i);
+
+            if (!bill.isEnabled())
+               continue;
+
+            workedBills++;
+
+            if (workedBills + 1 >= maxWorkedBills)
+               break; // worker does not have enough skill to work on any more bill
 
             Optional<RecipeHolder<?>> recipe = bill.resolveRecipe(recipeManager);
 
@@ -71,9 +93,14 @@ public abstract class ArtisanHouseState extends BuildingState {
 
             Order order = machine.createOrderFromBill(key, bill, serverLevel);
             machine.registerOrder(order);
+
          } catch (Exception e) {
-             LogUtils.getLogger()
-                     .error("Could not create production order for {} production bill: {}", this.building.getBuildingType(), key, e);
+            LogUtils.getLogger()
+                  .error(
+                        "Could not create production order for {} production bill: {}",
+                        this.building.getBuildingType(),
+                        key,
+                        e);
          }
       }
    }
@@ -176,6 +203,16 @@ public abstract class ArtisanHouseState extends BuildingState {
       return tryGetProductionBills(productionType).orElseThrow(
             () -> new UnsupportedOperationException(
                   "Artisan building does not support production type: " + productionType));
+   }
+
+   public int getMaxWorkedBills(VillagerStore store) {
+      int maxWorkedBills = 0;
+      for (VillagerInfo worker : BuildingUtil.getWorkers(building, store)) {
+         VillagerSkill skill = worker.getOccupation().relevantSkill();
+         int level = skill == null ? 0 : worker.getSkills().getLevel(skill);
+         maxWorkedBills = Math.max(maxWorkedBills, SkillEffects.getMaxAllowedProductionBills(level));
+      }
+      return maxWorkedBills;
    }
 
    public void addBill(ProductionBill productionBill) {

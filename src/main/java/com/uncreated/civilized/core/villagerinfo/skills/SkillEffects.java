@@ -70,6 +70,10 @@ public final class SkillEffects {
       return Math.max(1, Math.round(baselinePerDay * levelMultiplier(level, multiplierPower)));
    }
 
+   public static int getMaxAllowedProductionBills(int craftingLevel) {
+      return fixedDistribution(List.of(1, 1, 2, 2, 3, 4, 4, 5, 6, 7, 8), craftingLevel);
+   }
+
    private static int scaled(int baselinePerDay, int level) {
       return scaled(baselinePerDay, level, 2.5f);
    }
