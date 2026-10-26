@@ -112,7 +112,7 @@ public class MineOres extends WorkTaskBehaviour {
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.start(level, villager, gameTime);
       int miningLevel = villager.getInfo().getSkills().getLevel(VillagerSkill.MINING);
-      int blocksPerDay = SkillEffects.getAttemptedBlocksMinedPerDay(miningLevel);
+      int blocksPerDay = SkillEffects.getAttemptedBlocksMinedPerDay(miningLevel, handHeld);
       hitIntervalTicks = SkillEffects.convertToTicks(blocksPerDay) / HITS_PER_BLOCK;
       foundOres = false;
       travelHelper = new MediumDistanceTravelTask(villager, getWorksite().getBuilding().getBlockPos(), 2);

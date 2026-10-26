@@ -1,6 +1,7 @@
 package com.uncreated.civilized.item.quality;
 
 import com.mojang.serialization.Codec;
+import com.uncreated.civilized.neoforge.registration.attachments.MyDataComponents;
 import com.uncreated.civilized.ui.style.Colors;
 
 import lombok.Getter;
@@ -8,6 +9,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.codec.NeoForgeStreamCodecs;
 
 @Getter
@@ -30,6 +32,10 @@ public enum ItemQuality implements StringRepresentable {
    ItemQuality(String serializedName, int colour) {
       this.serializedName = serializedName;
       this.colour = colour;
+   }
+
+   public static ItemQuality of(ItemStack itemStack) {
+      return itemStack.getOrDefault(MyDataComponents.ITEM_QUALITY, NORMAL);
    }
 
    @Override

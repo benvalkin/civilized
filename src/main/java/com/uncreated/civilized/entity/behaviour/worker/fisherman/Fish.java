@@ -104,7 +104,7 @@ public class Fish extends WorkTaskBehaviour {
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.start(level, villager, gameTime);
       int animalsLevel = villager.getInfo().getSkills().getLevel(VillagerSkill.ANIMALS);
-      int fishPerDay = SkillEffects.getFishCaughtPerDay(animalsLevel);
+      int fishPerDay = SkillEffects.getFishCaughtPerDay(animalsLevel, fishingRod);
       // catches take somewhere between half and one and a half times as long as the average
       int averageCatchTicks = SkillEffects.convertToTicks(fishPerDay);
       minCatchTicks = averageCatchTicks / 2;

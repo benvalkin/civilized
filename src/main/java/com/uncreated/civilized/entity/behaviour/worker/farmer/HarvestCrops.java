@@ -101,7 +101,7 @@ public class HarvestCrops extends WorkTaskBehaviour {
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.start(level, villager, gameTime);
       int farmingLevel = villager.getInfo().getSkills().getLevel(VillagerSkill.FARMING);
-      int cropsPerDay = SkillEffects.getCropsHarvestedPerDay(farmingLevel);
+      int cropsPerDay = SkillEffects.getCropsHarvestedPerDay(farmingLevel, handHeld);
       hitIntervalTicks = SkillEffects.convertToTicks(cropsPerDay) / HITS_PER_CROP;
       maxPlots = SkillEffects.getMaxAllowedCrops(farmingLevel);
       travelHelper = new MediumDistanceTravelTask(villager, getWorksite().getBuilding().getBlockPos(), 5);

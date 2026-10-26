@@ -96,7 +96,7 @@ public class CutDownTrees extends WorkTaskBehaviour {
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.start(level, villager, gameTime);
       int farmingLevel = villager.getInfo().getSkills().getLevel(VillagerSkill.FARMING);
-      int logsPerDay = SkillEffects.getLogsHarvestedPerDay(farmingLevel);
+      int logsPerDay = SkillEffects.getLogsHarvestedPerDay(farmingLevel, handHeld);
       hitIntervalTicks = SkillEffects.convertToTicks(logsPerDay) / HITS_PER_LOG;
       travelHelper = new MediumDistanceTravelTask(villager, getWorksite().getBuilding().getBlockPos(), 8);
       villager.setItemSlot(EquipmentSlot.MAINHAND, handHeld);
