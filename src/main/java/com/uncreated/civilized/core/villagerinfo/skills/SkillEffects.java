@@ -62,6 +62,10 @@ public final class SkillEffects {
       return scaled(128, miningLevel);
    }
 
+   public static Double getAlterHoneyAccumulationChance(int animalsLevel) {
+      return fixedDistribution(List.of(0.5, 0.5, 0.4, 0.3, 0.2, 0.1, 0d, 0.15, 0.25, 0.35, 0.45, 0.6), animalsLevel);
+   }
+
    public static int getFishCaughtPerDay(int animalsLevel) {
       return scaled(5, animalsLevel);
    }
@@ -78,9 +82,9 @@ public final class SkillEffects {
       return scaled(baselinePerDay, level, 2.5f);
    }
 
-   private static int fixedDistribution(List<Integer> values, int level) {
+   private static <T> T fixedDistribution(List<T> values, int level) {
       if (values.isEmpty())
-         return 1;
+         throw new IllegalArgumentException("values list cannot be empty");
 
       if (level >= values.size())
          return values.getLast();

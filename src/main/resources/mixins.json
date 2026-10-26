@@ -1,6 +1,7 @@
 {
   "package": "com.uncreated.civilized.mixins",
   "mixins": [
+    "BeehiveBlockEntityMixin",
     "ItemStackQualityMixin",
     "SignBlockEntityMixin",
     "SignBlockMixin"
