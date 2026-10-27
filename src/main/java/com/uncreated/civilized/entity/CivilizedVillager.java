@@ -1013,7 +1013,7 @@ public class CivilizedVillager extends AgeableMob
    }
 
    public static final float ARROW_VELOCITY = 1.6F;
-   private static final float ARROW_INACCURACY = 6.0F;
+   private static final float ARROW_INACCURACY = 3.0F;
 
    @Override
    public ItemStack getProjectile(ItemStack weapon) {
@@ -1041,16 +1041,9 @@ public class CivilizedVillager extends AgeableMob
       arrow.setBaseDamage(arrow.getBaseDamage() * SkillEffects.getArrowDamageMultiplier(shootingLevel));
       float inaccuracy = ARROW_INACCURACY * SkillEffects.getArrowInaccuracyMultiplier(shootingLevel);
 
-      Vec3 aim = ArrowLineOfFire.aimAt(arrow.position(), target);
-      Projectile.spawnProjectileUsingShoot(
-            arrow,
-            serverLevel,
-            projectile,
-            aim.x,
-            aim.y,
-            aim.z,
-            ARROW_VELOCITY,
-            inaccuracy);
+      Vec3 aim = ArrowLineOfFire.aimAt(arrow.position(), target, ARROW_VELOCITY);
+      Projectile
+            .spawnProjectileUsingShoot(arrow, serverLevel, projectile, aim.x, aim.y, aim.z, ARROW_VELOCITY, inaccuracy);
       playSound(SoundEvents.ARROW_SHOOT, 1.0F, 1.0F / (getRandom().nextFloat() * 0.4F + 0.8F));
 
       addWorkExhaustion(1);

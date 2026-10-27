@@ -8,6 +8,7 @@ import com.uncreated.civilized.neoforge.registration.attachments.MyDataComponent
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ProjectileWeaponItem;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -25,8 +26,24 @@ public class ItemQualityTooltipEvents {
       event.getToolTip().add(1, quality.tooltipLine());
 
       // holding shift shows extra detailed tooltip stats
-      if (event.getFlags().hasShiftDown() && event.getItemStack().isDamageableItem())
-         event.getToolTip().add(2, durabilityLine(event.getItemStack(), quality));
+      if (!event.getFlags().hasShiftDown())
+         return;
+
+      ItemStack itemStack = event.getItemStack();
+      int line = 2;
+      if (itemStack.isDamageableItem())
+         event.getToolTip().add(line++, durabilityLine(itemStack, quality));
+
+      if (itemStack.getItem() instanceof ProjectileWeaponItem)
+         event.getToolTip().add(line, projectileDamageLine(quality));
+   }
+
+   private static Component projectileDamageLine(ItemQuality quality) {
+      long percent = Math.round(QualityEffects.getProjectileDamageBonus(quality) * 100);
+      String signedPercent = (percent > 0 ? "+" : "") + percent + "%";
+      return Component.literal(" \u2507 ")
+            .append(Component.translatable("item.quality.projectile_damage", signedPercent))
+            .withStyle(ChatFormatting.GRAY);
    }
 
    private static Component durabilityLine(ItemStack itemStack, ItemQuality quality) {

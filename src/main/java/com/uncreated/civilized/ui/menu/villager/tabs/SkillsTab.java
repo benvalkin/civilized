@@ -40,7 +40,7 @@ public class SkillsTab extends AVillagerPanelTab {
                      y,
                      rowWidth,
                      skill,
-                     SkillWidget.ProgressBarCalculation.TOWARDS_NEXT_LEVEL,
+                     SkillWidget.ProgressBarCalculation.LEVEL_OUT_OF_MAX,
                      SKILL_BAR);
          skillRows.add(row);
          y += SkillWidget.heightFor(font, SKILL_BAR);

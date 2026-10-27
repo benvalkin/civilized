@@ -97,8 +97,12 @@ public class VillagerSkills {
       return currentLevel(newTotalXp) - currentLevel(totalXp);
    }
 
-   /** The villager's level in the skill. A skill they're incapable of counts as level 0. */
+   public void setLevel(VillagerSkill skill, int level) {
+      skillXp[skill.ordinal()] = requiredTotalXpForLevel(level);
+   }
+
    public int getLevel(VillagerSkill skill) {
+      // BAD IMPLEMENTATION: pretty sure this is supposed to return an optional
       return currentLevel(Math.max(0, getTotalXpIntl(skill)));
    }
 

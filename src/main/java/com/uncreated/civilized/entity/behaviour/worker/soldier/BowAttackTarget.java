@@ -23,30 +23,16 @@ import net.minecraft.world.item.BowItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 
-/**
- * Ranged combat using a regular bow. Based on the timing of vanilla's {@code RangedBowAttackGoal}, but without the
- * strafing: the villager walks towards its target until it is within range and has had line of sight for a while, then
- * stands still, draws the bow and fires. Targets that get too close are backed away from, while still being shot at.
- * <p>
- * Shots are held back while something that shouldn't be hit (see {@link ICombatCommand#shouldAvoidHitting}) is in the
- * arrow's path. If the path stays blocked, the villager steps to the side to find a clear shot.
- */
 public class BowAttackTarget extends StatefulBehaviour {
 
-   /** Ticks a vanilla bow needs to be drawn for a full-power shot (see {@link BowItem#getPowerForTime}). */
+   /** See {@link BowItem#getPowerForTime}. */
    private static final int FULL_DRAW_TICKS = 20;
-   /** How long this soldier takes to fully draw their bow, dependent on their shooting skill. */
    private int drawTicksNeeded = FULL_DRAW_TICKS;
-   /** Ticks of continuous line of sight needed before the villager stops moving to shoot. */
    private static final int SEE_TIME_BEFORE_STOPPING = 10;
-   /** Ticks without line of sight after which a drawn bow is lowered again. */
    private static final int LOST_SIGHT_TIMEOUT = 60;
-   /** Ticks a fully drawn shot can be blocked before the villager moves to find a clear line of fire. */
    private static final int BLOCKED_TICKS_BEFORE_REPOSITIONING = 30;
    private static final int REPOSITION_DISTANCE = 3;
-   /** Maximum ticks spent walking to a new firing position before going back to normal movement. */
    private static final int REPOSITION_TIMEOUT = 60;
-   /** How far ahead of itself the villager aims while backing away, in blocks. */
    private static final double RETREAT_LEAD_DISTANCE = 8;
    private static final int RETREAT_Y_RANGE = 7;
 
@@ -56,16 +42,6 @@ public class BowAttackTarget extends StatefulBehaviour {
    private final float distanceToRetreatTo;
    private final int attackCooldown;
 
-   /**
-    * @param attackRange
-    *           maximum distance in blocks at which the villager will fire
-    * @param minimumDistanceToRetreat
-    *           distance in blocks within which the villager backs away from its target, to keep it out of melee range
-    * @param distanceToRetreatTo
-    *           distance in blocks to which the villager will run away to when a retreat is started
-    * @param attackCooldown
-    *           ticks to wait after firing before drawing the bow again
-    */
    public BowAttackTarget(
          BehaviourState state,
          float moveSpeed,
@@ -81,12 +57,14 @@ public class BowAttackTarget extends StatefulBehaviour {
       this.attackCooldown = attackCooldown;
    }
 
-   private CarriedEquipmentSlot weaponSlot = CarriedEquipmentSlot.PRIMARY_WEAPON;
+   private CarriedEquipmentSlot weaponSlot;
 
    @Override
    protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
 
       VillagerEquipment equipment = villager.getEquipment();
+
+      weaponSlot = CarriedEquipmentSlot.PRIMARY_WEAPON;
       ItemStack equippedOrCarried = equipment.getEquippedOrCarried(weaponSlot);
       if (!(equippedOrCarried.getItem() instanceof BowItem)) {
          weaponSlot = CarriedEquipmentSlot.SECONDARY_WEAPON;
@@ -141,7 +119,7 @@ public class BowAttackTarget extends StatefulBehaviour {
 
    long nextDraw;
    long nextRerequestTarget;
-   /** Positive while the target is visible, negative while it is not, counting ticks since that last changed. */
+   /** Ticks the target has been visible (positive) or out of sight (negative). */
    int seeTime;
    int blockedTicks;
    long repositionUntil;
@@ -170,8 +148,7 @@ public class BowAttackTarget extends StatefulBehaviour {
       LivingEntity target = villager.getTarget();
       Objects.requireNonNull(target);
 
-      // LookAtTargetSink erases the look target whenever it loses sight of the target, e.g. while backing away from it,
-      // so it has to be set again for the villager to keep facing the target
+      // LookAtTargetSink erases the look target whenever sight is lost
       if (!villager.getBrain().hasMemoryValue(MemoryModuleType.LOOK_TARGET))
          villager.getBrain().setMemory(MemoryModuleType.LOOK_TARGET, new EntityTracker(target, true));
 
@@ -185,14 +162,14 @@ public class BowAttackTarget extends StatefulBehaviour {
       boolean repositioning =
             currentTicks < repositionUntil && villager.getBrain().hasMemoryValue(MemoryModuleType.WALK_TARGET);
 
-      // a retreat continues until the villager is a good distance away, not just out of the distance that started it
+      // keep retreating until well clear, not just out of the distance that started it
       if (retreating)
          retreating = villager.closerThan(target, distanceToRetreatTo);
       else
          retreating = villager.closerThan(target, minimumDistanceToRetreat);
 
       if (repositioning) {
-         // let the villager finish walking to its new firing position
+         // finish walking to the new firing position
       } else if (retreating) {
          retreatFrom(villager, target);
       } else if (inRange && seeTime >= SEE_TIME_BEFORE_STOPPING) {
@@ -207,7 +184,6 @@ public class BowAttackTarget extends StatefulBehaviour {
             return;
          }
 
-         // keep the bow drawn until the shot is lined up
          int drawTicks = villager.getTicksUsingItem();
          if (canSee && inRange && drawTicks >= drawTicksNeeded) {
             if (isLineOfFireBlocked(villager, target)) {
@@ -221,7 +197,7 @@ public class BowAttackTarget extends StatefulBehaviour {
 
             blockedTicks = 0;
             villager.stopUsingItem();
-            // a fully drawn bow fires at full power, however long the soldier's skill made drawing it take
+            // skill only changes the draw time, so every shot is at full power
             villager.performRangedAttack(target, BowItem.getPowerForTime(FULL_DRAW_TICKS));
             nextDraw = currentTicks + attackCooldown;
          }
@@ -230,15 +206,11 @@ public class BowAttackTarget extends StatefulBehaviour {
       }
    }
 
-   /**
-    * Backs away from a target that has come too close, while staying able to shoot at it. The walk target is kept a
-    * fixed distance ahead of the villager and moved every tick, so that it keeps running instead of stopping at every
-    * spot it picks.
-    */
+   /** The walk target is moved ahead every tick, so the villager keeps running instead of stopping at each spot. */
    private void retreatFrom(CivilizedVillager villager, LivingEntity target) {
 
       if (villager.getBrain().hasMemoryValue(MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE)) {
-         // backing straight away is blocked, e.g. by a wall, so take any nearby position away from the target instead
+         // backing straight away is blocked, e.g. by a wall
          Vec3 randomPos =
                LandRandomPos.getPosAway(villager, (int) RETREAT_LEAD_DISTANCE, RETREAT_Y_RANGE, target.position());
          if (randomPos == null)
@@ -271,7 +243,6 @@ public class BowAttackTarget extends StatefulBehaviour {
             .isPresent();
    }
 
-   /** Walks a few blocks to the left or right of the target, to get a different angle on it. */
    private void moveToSide(CivilizedVillager villager, LivingEntity target, long currentTicks) {
       Vec3 toTarget = target.position().subtract(villager.position());
       Vec3 sideways = new Vec3(-toTarget.z, 0, toTarget.x).normalize();

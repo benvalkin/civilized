@@ -20,6 +20,10 @@ public final class QualityEffects {
       return statBonus(quality);
    }
 
+   public static double getProjectileDamageBonus(ItemQuality quality) {
+      return statBonus(quality);
+   }
+
    public static double getDurabilityLossMultiplier(ItemStack itemStack, ItemQuality quality) {
       if (itemStack.is(ItemTags.ARMOR_ENCHANTABLE))
          return getArmorDurabilityLossMultiplier(quality);

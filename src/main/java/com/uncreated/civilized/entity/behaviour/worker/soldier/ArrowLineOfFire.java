@@ -9,60 +9,114 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * Predicts the flight path of an arrow fired by a mob, to check whether anything is standing in the way before the
- * shot is taken. The simulation mirrors the physics in {@code AbstractArrow#tick} (move, then drag, then gravity) and
- * the aiming used by {@code CivilizedVillager#performRangedAttack}.
+ * Predicts the flight of an arrow fired by a mob, mirroring {@code AbstractArrow#tick} (move, then drag, then gravity).
  */
 public final class ArrowLineOfFire {
 
    private static final double ARROW_GRAVITY = 0.05;
    private static final double ARROW_DRAG = 0.99;
-   /** Arrows hit entities whose bounding box, inflated by this amount, intersects the arrow's path. */
+   /** Vanilla inflates entity hitboxes by this much when checking for arrow hits. */
    private static final double ARROW_HIT_INFLATION = 0.3;
-   /**
-    * How far an arrow may stray sideways per block travelled, due to inaccuracy. Roughly one standard deviation of the
-    * spread at the villager's inaccuracy, so most (but not all) stray arrows are accounted for.
-    */
+   /** Roughly one standard deviation of a villager's arrow spread. */
    private static final double SPREAD_PER_BLOCK = 0.05;
    private static final int MAX_SIMULATED_TICKS = 60;
 
    private ArrowLineOfFire() {
    }
 
+   private static final double MIN_PITCH = -Math.PI / 3;
+   /** Roughly the furthest-reaching angle, which targets out of range end up with. */
+   private static final double MAX_PITCH = Math.PI / 4;
+   private static final int SOLVER_ITERATIONS = 20;
+   private static final int LEAD_ITERATIONS = 3;
+
    /**
-    * The direction a mob aims in to hit {@code target} with an arrow fired from {@code arrowOrigin}. Like skeletons,
-    * this aims a little above the target to compensate for gravity.
+    * @return the direction to fire in to hit {@code target}, taking into account projectile drop (low arc is preferred)
+    *         as well as the target's movement.
     */
-   public static Vec3 aimAt(Vec3 arrowOrigin, LivingEntity target) {
-      double dx = target.getX() - arrowOrigin.x;
-      double dy = target.getY(1.0 / 3.0) - arrowOrigin.y;
-      double dz = target.getZ() - arrowOrigin.z;
-      double horizontalDistance = Math.sqrt(dx * dx + dz * dz);
-      return new Vec3(dx, dy + horizontalDistance * 0.2F, dz);
+   public static Vec3 aimAt(Vec3 arrowOrigin, LivingEntity target, float velocity) {
+      Vec3 aimPoint = new Vec3(target.getX(), target.getY(0.5), target.getZ());
+      // vertical movement is mostly jumping and falling, so only horizontal movement is led
+      Vec3 targetMotion = target.getDeltaMovement().multiply(1, 0, 1);
+
+      ArcSolution arc = solveArc(arrowOrigin, aimPoint, velocity);
+      // leading changes the distance and so the flight time, which settles over a few rounds
+      for (int i = 0; i < LEAD_ITERATIONS; i++)
+         arc = solveArc(arrowOrigin, aimPoint.add(targetMotion.scale(arc.flightTicks())), velocity);
+
+      return arc.direction();
    }
 
-   /** Where an arrow fired by {@code shooter} is spawned, matching {@code AbstractArrow}'s constructor. */
-   public static Vec3 arrowOrigin(LivingEntity shooter) {
+   private record ArcSolution(Vec3 direction, double flightTicks) {
+   }
+
+   private static ArcSolution solveArc(Vec3 arrowOrigin, Vec3 aimPoint, float velocity) {
+      Vec3 offset = aimPoint.subtract(arrowOrigin);
+      double horizontalDistance = offset.horizontalDistance();
+      if (horizontalDistance < 0.01)
+         return new ArcSolution(offset, offset.length() / velocity);
+
+      // a higher pitch always arrives higher up, so we bisect for the pitch that arrives at the aim point's height
+      double lowestPitch = MIN_PITCH;
+      double highestPitch = MAX_PITCH;
+      for (int i = 0; i < SOLVER_ITERATIONS; i++) {
+         double pitch = (lowestPitch + highestPitch) / 2;
+         if (arrivalAt(pitch, horizontalDistance, velocity).height() < offset.y)
+            lowestPitch = pitch;
+         else
+            highestPitch = pitch;
+      }
+
+      double pitch = (lowestPitch + highestPitch) / 2;
+      double horizontalScale = Math.cos(pitch) / horizontalDistance;
+      Vec3 direction = new Vec3(offset.x * horizontalScale, Math.sin(pitch), offset.z * horizontalScale);
+      return new ArcSolution(direction, arrivalAt(pitch, horizontalDistance, velocity).ticks());
+   }
+
+   private record ArrivalPoint(double height, double ticks) {
+   }
+
+   /** Simulates an arrow's flight until it has travelled {@code horizontalDistance} along the ground. */
+   private static ArrivalPoint arrivalAt(double pitch, double horizontalDistance, float velocity) {
+      double distance = 0;
+      double height = 0;
+      double horizontalSpeed = velocity * Math.cos(pitch);
+      double verticalSpeed = velocity * Math.sin(pitch);
+
+      for (int tick = 0; tick < MAX_SIMULATED_TICKS; tick++) {
+         if (distance + horizontalSpeed >= horizontalDistance) {
+            double fraction = (horizontalDistance - distance) / horizontalSpeed;
+            return new ArrivalPoint(height + verticalSpeed * fraction, tick + fraction);
+         }
+
+         distance += horizontalSpeed;
+         height += verticalSpeed;
+         horizontalSpeed *= ARROW_DRAG;
+         verticalSpeed = verticalSpeed * ARROW_DRAG - ARROW_GRAVITY;
+      }
+
+      // out of range
+      return new ArrivalPoint(Double.NEGATIVE_INFINITY, MAX_SIMULATED_TICKS);
+   }
+
+   public static Vec3 getArrowOrigin(LivingEntity shooter) {
       return new Vec3(shooter.getX(), shooter.getEyeY() - 0.1F, shooter.getZ());
    }
 
-   /**
-    * Finds the first entity along the arrow's predicted path (before it reaches {@code target}) that matches
-    * {@code shouldAvoidHitting}.
-    */
+   /** @return the first entity matching {@code shouldAvoidHitting} on the arrow's predicted path to {@code target}. */
    public static Optional<LivingEntity> findBlockingEntity(
          LivingEntity shooter,
          LivingEntity target,
          float velocity,
          Predicate<LivingEntity> shouldAvoidHitting) {
 
-      Vec3 origin = arrowOrigin(shooter);
-      Vec3 motion = aimAt(origin, target).normalize().scale(velocity);
+      Vec3 origin = getArrowOrigin(shooter);
+      Vec3 motion = aimAt(origin, target, velocity).normalize().scale(velocity);
       double targetDistance = origin.distanceTo(target.getBoundingBox().getCenter());
 
-      // gather candidates once, from a box covering the whole straight-line path plus the widest spread margin
       double maxMargin = ARROW_HIT_INFLATION + SPREAD_PER_BLOCK * targetDistance + 1;
-      AABB searchArea = new AABB(origin, target.getBoundingBox().getCenter()).inflate(maxMargin, maxMargin + 2, maxMargin);
+      AABB searchArea =
+            new AABB(origin, target.getBoundingBox().getCenter()).inflate(maxMargin, maxMargin + 2, maxMargin);
       List<LivingEntity> candidates =
             shooter.level()
                   .getEntitiesOfClass(
@@ -79,7 +133,7 @@ public final class ArrowLineOfFire {
       LivingEntity closestHit = null;
 
       for (int tick = 0; tick < MAX_SIMULATED_TICKS && travelled < targetDistance; tick++) {
-         // stop the last segment at the target, so that entities just behind it don't count as blocking
+         // end the last segment at the target, so entities just behind it don't count
          double stepLength = Math.min(motion.length(), targetDistance - travelled);
          Vec3 next = position.add(motion.normalize().scale(stepLength));
          travelled += stepLength;
@@ -88,7 +142,7 @@ public final class ArrowLineOfFire {
          double closestHitDistance = Double.MAX_VALUE;
          for (LivingEntity candidate : candidates) {
             Optional<Vec3> hit = candidate.getBoundingBox().inflate(margin).clip(position, next);
-            // the segment may start inside the box, in which case clip finds nothing
+            // clip finds nothing when the segment starts inside the box
             if (hit.isEmpty() && candidate.getBoundingBox().inflate(margin).contains(position))
                hit = Optional.of(position);
 
