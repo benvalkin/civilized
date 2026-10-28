@@ -179,6 +179,72 @@ sourceSets.main.resources.srcDir generateModMetadata
 // To avoid having to run "generateModMetadata" manually, make it run on every project reload
 neoForge.ideSyncTask generateModMetadata
 
+// Builds one translation file per language from src/main/lang. "<lang>.json" is copied over as it is, and every file
+// under the "<lang>/" folder gets keys made from its path: "en_us/dialogue/vagrant/1/grunt.json" holding a list
+// becomes civilized.dialogue.vagrant.1.grunt.1, .2, ..., and one holding an object becomes
+// civilized.dialogue.vagrant.1.grunt.<name>.
+var mergeLangFiles = tasks.register("mergeLangFiles") {
+    var langDir = file("src/main/lang")
+    var outputDir = layout.buildDirectory.dir("generated/sources/lang")
+    var namespace = mod_id
+    inputs.dir(langDir)
+    outputs.dir(outputDir)
+
+    doLast {
+        var slurper = new groovy.json.JsonSlurper()
+        var writer = new groovy.json.JsonGenerator.Options().disableUnicodeEscaping().build()
+        var langOutputDir = outputDir.get().dir("assets/${namespace}/lang").asFile
+        langOutputDir.deleteDir()
+        langOutputDir.mkdirs()
+
+        var languages = (langDir.listFiles().findAll { it.isDirectory() }*.name
+                + langDir.listFiles().findAll { it.name.endsWith(".json") }*.name.collect { it - ".json" }).unique()
+
+        for (String language : languages) {
+            var translations = new LinkedHashMap<String, String>()
+            var add = { String key, Object value, File source ->
+                if (!(value instanceof String))
+                    throw new GradleException("${source}: \"${key}\" must be text")
+                if (translations.containsKey(key))
+                    throw new GradleException("${source}: \"${key}\" is already defined")
+                translations.put(key, value)
+            }
+            var addObject
+            addObject = { String prefix, Map entries, File source ->
+                entries.each { name, value ->
+                    if (value instanceof Map)
+                        addObject("${prefix}.${name}", value, source)
+                    else
+                        add("${prefix}.${name}", value, source)
+                }
+            }
+
+            var flatFile = new File(langDir, "${language}.json")
+            if (flatFile.exists())
+                (slurper.parse(flatFile) as Map).each { key, value -> add(key as String, value, flatFile) }
+
+            var languageDir = new File(langDir, language)
+            if (languageDir.isDirectory()) {
+                languageDir.eachFileRecurse(groovy.io.FileType.FILES) { File source ->
+                    if (!source.name.endsWith(".json"))
+                        return
+                    var path = languageDir.toPath().relativize(source.toPath()).toString().replace(File.separator, "/")
+                    var prefix = "${namespace}." + (path - ".json").replace("/", ".")
+                    var content = slurper.parse(source)
+                    if (content instanceof List)
+                        content.eachWithIndex { value, i -> add("${prefix}.${i + 1}", value, source) }
+                    else
+                        addObject(prefix, content as Map, source)
+                }
+            }
+
+            new File(langOutputDir, "${language}.json").setText(writer.toJson(translations), "UTF-8")
+        }
+    }
+}
+sourceSets.main.resources.srcDir mergeLangFiles
+neoForge.ideSyncTask mergeLangFiles
+
 // Example configuration to allow publishing using the maven-publish plugin
 publishing {
     publications {

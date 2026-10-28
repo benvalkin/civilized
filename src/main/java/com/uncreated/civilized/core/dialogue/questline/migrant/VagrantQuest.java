@@ -2,13 +2,11 @@ package com.uncreated.civilized.core.dialogue.questline.migrant;
 
 import static com.uncreated.civilized.core.dialogue.Dialogue.dialogue;
 import static com.uncreated.civilized.core.dialogue.Dialogue.finalPage;
+import static com.uncreated.civilized.core.dialogue.DialogueLines.*;
 import static com.uncreated.civilized.core.dialogue.DialogueWithPages.dialogueWithpages;
-import static com.uncreated.civilized.core.dialogue.RandomSpeech.randomOneOf;
-import static com.uncreated.civilized.core.dialogue.RandomSpeech.randomPerVillager;
 import static com.uncreated.civilized.core.dialogue.ResponseOption.closeDialogue;
 import static com.uncreated.civilized.core.dialogue.ResponseOption.option;
 import static com.uncreated.civilized.core.dialogue.actions.server.ServerDialogueActions.runOnServer;
-import static net.minecraft.network.chat.Component.translatable;
 
 import com.uncreated.civilized.core.dialogue.IVillageDialogue;
 import com.uncreated.civilized.core.dialogue.actions.server.ServerDialogueActions;
@@ -42,44 +40,16 @@ public class VagrantQuest extends DialogueFlow {
          Player player,
          PlayerQuests playerQuests,
          PlayerDialogueCooldowns cooldowns) {
+      String set = chooseSetPerVillager(villager, "dialogue/vagrant", "grunt");
       return dialogueWithpages()
             .page(
-                  dialogue(
-                        randomPerVillager(
-                              villager,
-                              translatable("villager.dialogue.quest.vagrant_1"),
-                              translatable("villager.dialogue.quest.vagrant_2"),
-                              translatable("villager.dialogue.quest.vagrant_3"),
-                              translatable("villager.dialogue.quest.vagrant_4"),
-                              translatable("villager.dialogue.quest.vagrant_5"),
-                              translatable("villager.dialogue.quest.vagrant_6"),
-                              translatable("villager.dialogue.quest.vagrant_7"),
-                              translatable("villager.dialogue.quest.vagrant_8"),
-                              translatable("villager.dialogue.quest.vagrant_9"),
-                              translatable("villager.dialogue.quest.vagrant_10"),
-                              translatable("villager.dialogue.quest.vagrant_11"),
-                              translatable("villager.dialogue.quest.vagrant_12"),
-                              translatable("villager.dialogue.quest.vagrant_13"),
-                              translatable("villager.dialogue.quest.vagrant_14"),
-                              translatable("villager.dialogue.quest.vagrant_15")))
+                  dialogue(randomLinePerVillager(villager, set + "/grunt"))
                         .response(
-                              option(translatable("villager.dialogue.quest.misc.response.offer_food"))
+                              option(text("dialogue/vagrant/response_options", "offer_food"))
                                     .shouldBeEnabled(new GiveFoodCheck(4))
                                     .onSelectGoTo(
                                           runOnServer(ServerDialogueActions.GIVE_FOOD),
-                                          dialogueWithpages()
-                                                .page(
-                                                      finalPage(
-                                                            randomOneOf(
-                                                                  translatable("villager.dialogue.quest.vagrant.fed.1"),
-                                                                  translatable("villager.dialogue.quest.vagrant.fed.2"),
-                                                                  translatable("villager.dialogue.quest.vagrant.fed.3"),
-                                                                  translatable("villager.dialogue.quest.vagrant.fed.4"),
-                                                                  translatable("villager.dialogue.quest.vagrant.fed.5"),
-                                                                  translatable("villager.dialogue.quest.vagrant.fed.6"),
-                                                                  translatable("villager.dialogue.misc.thanks.2"),
-                                                                  translatable("villager.dialogue.misc.thanks.6"))))
-                                                .create()))
+                                          dialogueWithpages().page(finalPage(randomLine(set + "/fed"))).create()))
                         .response(closeDialogue()))
             .create();
    }
