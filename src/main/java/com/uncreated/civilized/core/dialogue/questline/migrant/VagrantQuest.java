@@ -11,8 +11,8 @@ import static com.uncreated.civilized.core.dialogue.actions.server.ServerDialogu
 import static net.minecraft.network.chat.Component.translatable;
 
 import com.uncreated.civilized.core.dialogue.IVillageDialogue;
-import com.uncreated.civilized.core.dialogue.context.DialogueContext;
 import com.uncreated.civilized.core.dialogue.actions.server.ServerDialogueActions;
+import com.uncreated.civilized.core.dialogue.context.DialogueContext;
 import com.uncreated.civilized.core.dialogue.controller.DialogueFlow;
 import com.uncreated.civilized.core.dialogue.questline.migrant.context.GiveFoodCheck;
 import com.uncreated.civilized.core.dialogue.questline.migrant.context.ItemDepotContext;
@@ -48,7 +48,20 @@ public class VagrantQuest extends DialogueFlow {
                         randomPerVillager(
                               villager,
                               translatable("villager.dialogue.quest.vagrant_1"),
-                              translatable("villager.dialogue.quest.vagrant_2")))
+                              translatable("villager.dialogue.quest.vagrant_2"),
+                              translatable("villager.dialogue.quest.vagrant_3"),
+                              translatable("villager.dialogue.quest.vagrant_4"),
+                              translatable("villager.dialogue.quest.vagrant_5"),
+                              translatable("villager.dialogue.quest.vagrant_6"),
+                              translatable("villager.dialogue.quest.vagrant_7"),
+                              translatable("villager.dialogue.quest.vagrant_8"),
+                              translatable("villager.dialogue.quest.vagrant_9"),
+                              translatable("villager.dialogue.quest.vagrant_10"),
+                              translatable("villager.dialogue.quest.vagrant_11"),
+                              translatable("villager.dialogue.quest.vagrant_12"),
+                              translatable("villager.dialogue.quest.vagrant_13"),
+                              translatable("villager.dialogue.quest.vagrant_14"),
+                              translatable("villager.dialogue.quest.vagrant_15")))
                         .response(
                               option(translatable("villager.dialogue.quest.misc.response.offer_food"))
                                     .shouldBeEnabled(new GiveFoodCheck(4))
@@ -58,15 +71,13 @@ public class VagrantQuest extends DialogueFlow {
                                                 .page(
                                                       finalPage(
                                                             randomOneOf(
-                                                                  translatable("villager.dialogue.misc.thanks.1"),
-
+                                                                  translatable("villager.dialogue.quest.vagrant.fed.1"),
+                                                                  translatable("villager.dialogue.quest.vagrant.fed.2"),
+                                                                  translatable("villager.dialogue.quest.vagrant.fed.3"),
+                                                                  translatable("villager.dialogue.quest.vagrant.fed.4"),
+                                                                  translatable("villager.dialogue.quest.vagrant.fed.5"),
+                                                                  translatable("villager.dialogue.quest.vagrant.fed.6"),
                                                                   translatable("villager.dialogue.misc.thanks.2"),
-
-                                                                  translatable("villager.dialogue.misc.thanks.3"),
-
-                                                                  translatable("villager.dialogue.misc.thanks.4"),
-
-                                                                  translatable("villager.dialogue.misc.thanks.5"),
                                                                   translatable("villager.dialogue.misc.thanks.6"))))
                                                 .create()))
                         .response(closeDialogue()))

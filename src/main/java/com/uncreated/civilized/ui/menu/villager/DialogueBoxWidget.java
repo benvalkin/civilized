@@ -35,7 +35,7 @@ public class DialogueBoxWidget extends AbstractContainerWidget {
    private final List<Button> responseButtons = new ArrayList<>();
 
    private int staggeredDialogueCurrentIndex = 0;
-   private int timeUntilNextStaggeredChar = 5;
+   private int timeUntilNextStaggeredChar = 4;
    private boolean staggerDone = false;
 
    /**
