@@ -1,10 +1,20 @@
 [
   "Don't mind me. Just resting my feet a while, if that's alright.",
-  "I used to have a little cottage, you know. Before the fire took it.",
-  "They chased me out of the last village. Hope you're a friendlier sort.",
+  [
+    "I used to have a little cottage, you know. Two rooms and a vegetable patch.",
+    "Then one night a coal jumped out of the hearth and onto the thatch. Lost everything but the clothes on my back."
+  ],
+  [
+    "They chased me out of the last village. Hope you're a friendlier sort.",
+    "Said I was bad luck after their well ran dry. As if I'd drunk the whole thing myself!"
+  ],
   "Lovely place you've got. Not that I'd know much about having a place.",
   "Some days the only thing I've got for company is my own stomach growling.",
   "Rain last night, frost the night before. A roof would be a fine thing.",
   "I'm no thief, I promise. Just down on my luck, is all.",
-  "Is it always this quiet here? Quiet's good. Quiet means nobody's shouting at me to move along."
+  "Is it always this quiet here? Quiet's good. Quiet means nobody's shouting at me to move along.",
+  [
+    "Back home I was a cooper. Made the finest barrels in the valley, if I say so myself.",
+    "Then the brewery shut its doors, and nobody needed barrels any more. Funny how quick a trade can vanish."
+  ]
 ]

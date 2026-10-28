@@ -182,7 +182,7 @@ neoForge.ideSyncTask generateModMetadata
 // Builds one translation file per language from src/main/lang. "<lang>.json" is copied over as it is, and every file
 // under the "<lang>/" folder gets keys made from its path: "en_us/dialogue/vagrant/1/grunt.json" holding a list
 // becomes civilized.dialogue.vagrant.1.grunt.1, .2, ..., and one holding an object becomes
-// civilized.dialogue.vagrant.1.grunt.<name>.
+// civilized.dialogue.vagrant.1.grunt.<name>. A list entry that is itself a list of pages becomes .<entry>.1, .2, ...
 var mergeLangFiles = tasks.register("mergeLangFiles") {
     var langDir = file("src/main/lang")
     var outputDir = layout.buildDirectory.dir("generated/sources/lang")
@@ -232,7 +232,15 @@ var mergeLangFiles = tasks.register("mergeLangFiles") {
                     var prefix = "${namespace}." + (path - ".json").replace("/", ".")
                     var content = slurper.parse(source)
                     if (content instanceof List)
-                        content.eachWithIndex { value, i -> add("${prefix}.${i + 1}", value, source) }
+                        content.eachWithIndex { value, i ->
+                            if (!(value instanceof List)) {
+                                add("${prefix}.${i + 1}", value, source)
+                                return
+                            }
+                            if (value.isEmpty())
+                                throw new GradleException("${source}: entry ${i + 1} has no pages")
+                            value.eachWithIndex { page, pageIndex -> add("${prefix}.${i + 1}.${pageIndex + 1}", page, source) }
+                        }
                     else
                         addObject(prefix, content as Map, source)
                 }

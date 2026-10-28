@@ -1,13 +1,12 @@
 package com.uncreated.civilized.core.dialogue.questline.migrant;
 
-import static com.uncreated.civilized.core.dialogue.Dialogue.dialogue;
-import static com.uncreated.civilized.core.dialogue.Dialogue.finalPage;
 import static com.uncreated.civilized.core.dialogue.DialogueLines.*;
 import static com.uncreated.civilized.core.dialogue.DialogueWithPages.dialogueWithpages;
 import static com.uncreated.civilized.core.dialogue.ResponseOption.closeDialogue;
 import static com.uncreated.civilized.core.dialogue.ResponseOption.option;
 import static com.uncreated.civilized.core.dialogue.actions.server.ServerDialogueActions.runOnServer;
 
+import com.uncreated.civilized.core.dialogue.Dialogue;
 import com.uncreated.civilized.core.dialogue.IVillageDialogue;
 import com.uncreated.civilized.core.dialogue.actions.server.ServerDialogueActions;
 import com.uncreated.civilized.core.dialogue.context.DialogueContext;
@@ -42,14 +41,15 @@ public class VagrantQuest extends DialogueFlow {
          PlayerDialogueCooldowns cooldowns) {
       String set = chooseSetPerVillager(villager, "dialogue/vagrant", "grunt");
       return dialogueWithpages()
-            .page(
-                  dialogue(randomLinePerVillager(villager, set + "/grunt"))
-                        .response(
-                              option(text("dialogue/vagrant/response_options", "offer_food"))
-                                    .shouldBeEnabled(new GiveFoodCheck(4))
-                                    .onSelectGoTo(
-                                          runOnServer(ServerDialogueActions.GIVE_FOOD),
-                                          dialogueWithpages().page(finalPage(randomLine(set + "/fed"))).create()))
+            .pages(
+                  randomPages(villager, set + "/grunt"),
+                  lastPage -> lastPage.response(
+                        option(text("dialogue/vagrant/response_options", "offer_food"))
+                              .shouldBeEnabled(new GiveFoodCheck(4))
+                              .onSelectGoTo(
+                                    runOnServer(ServerDialogueActions.GIVE_FOOD),
+                                    dialogueWithpages().pages(randomPages(set + "/fed"), Dialogue::withCloseButton)
+                                          .create()))
                         .response(closeDialogue()))
             .create();
    }
