@@ -39,6 +39,7 @@ import com.uncreated.civilized.networking.packets.StartFestival;
 import com.uncreated.civilized.networking.packets.RequirementsChecked;
 import com.uncreated.civilized.networking.packets.ProductionBillPreview;
 import com.uncreated.civilized.networking.packets.SaveProductionBill;
+import com.uncreated.civilized.networking.packets.RunDialogueAction;
 import com.uncreated.civilized.networking.packets.SellItem;
 import com.uncreated.civilized.networking.packets.SetEyeDropperSlotItem;
 import com.uncreated.civilized.networking.packets.NotificationToast;
@@ -191,6 +192,11 @@ public class PacketRegistry {
               SellItem.TYPE,
               SellItem.STREAM_CODEC,
               SellItem::serverReceiveSellItem);
+
+      registrar.playToServer(
+            RunDialogueAction.TYPE,
+            RunDialogueAction.STREAM_CODEC,
+            RunDialogueAction::serverReceiveRunDialogueAction);
 
       registrar.playToClient(
               TradeSlotUpdated.TYPE,

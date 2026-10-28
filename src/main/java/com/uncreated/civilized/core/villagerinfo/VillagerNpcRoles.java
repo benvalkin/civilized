@@ -10,7 +10,7 @@ import java.util.Objects;
 import com.uncreated.civilized.CivilizedMod;
 import com.uncreated.civilized.core.dialogue.questline.advisor.controller.AdvisorDialogueController;
 import com.uncreated.civilized.core.dialogue.questline.migrant.controller.MigrantDialogueController;
-import com.uncreated.civilized.core.dialogue.questline.worker.controller.WorkerDialogueController;
+import com.uncreated.civilized.core.dialogue.questline.migrant.controller.VagrantDialogueController;
 import com.uncreated.civilized.entity.MerchantVisitorBehaviour;
 import com.uncreated.civilized.entity.VisitorBehaviour;
 
@@ -74,7 +74,7 @@ public class VillagerNpcRoles {
    public static final VillagerNpcRole CITIZEN =
          declare(
                VillagerNpcRole.builder(createResourceKey("citizen"))
-                     .dialogueController(WorkerDialogueController::new)
+                     .dialogueController(VagrantDialogueController::new)
                      .build());
    public static final VillagerNpcRole ADVISOR =
          declare(

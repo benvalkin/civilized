@@ -66,6 +66,12 @@ public class ResponseOption {
       return this;
    }
 
+   public ResponseOption onSelectGoTo(IOnResponseSelectedAction onSelect, Dialogue anotherDialogue) {
+      this.nextDialogue = anotherDialogue;
+      this.onPress = onSelect;
+      return this;
+   }
+
    public static ResponseOption option(Component playerSpeech) {
       return new ResponseOption(playerSpeech).onSelectGoNextPage();
    }
