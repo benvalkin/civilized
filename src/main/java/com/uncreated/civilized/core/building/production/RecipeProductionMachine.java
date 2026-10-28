@@ -70,12 +70,19 @@ public abstract class RecipeProductionMachine<Order extends ProductionOrder> {
       return Optional.ofNullable(orders.get(currentOrderIndex));
    }
 
+   private boolean someActiveBillsAreMissingIngredients;
+   public boolean someActiveBillsAreMissingIngredients() {
+      return someActiveBillsAreMissingIngredients;
+   }
+
    public Optional<PendingProduction> tryAdvanceToProcessableOrder(
          List<Container> ingredientsChests,
          List<Container> outputChests) {
 
       if (orders.isEmpty())
          return Optional.empty();
+
+       this.someActiveBillsAreMissingIngredients = false;
 
       int attempts = 0;
       do {
@@ -87,11 +94,19 @@ public abstract class RecipeProductionMachine<Order extends ProductionOrder> {
          Order currentlyProcessing = orders.get(currentOrderIndex);
 
          if (productionTokens > 0) {
-            Optional<PendingProductionOutput> possibleOutput =
-                  checkProductionPossible(currentlyProcessing, ingredientsChests, outputChests);
 
-            if (possibleOutput.isPresent()) {
-               return Optional.of(new PendingProduction(currentlyProcessing, possibleOutput.get()));
+            PendingProductionOutput pendingOutput = currentlyProcessing.getNextOutput(ingredientsChests, outputChests);
+
+            boolean billEnabled = currentlyProcessing.getBill().isEnabled();
+
+            boolean billSatisfied = currentlyProcessing.getBill().getProductionStrategy().getType() != ProductionStrategyType.PRODUCE_INFINITE
+                    && pendingOutput.stockDeficit() <= 0;
+
+            if (billEnabled && !billSatisfied) {
+               if (pendingOutput.ingredientsSatisfied())
+                  return Optional.of(new PendingProduction(currentlyProcessing, pendingOutput));
+               else
+                  someActiveBillsAreMissingIngredients = true;
             }
          }
 
@@ -120,7 +135,7 @@ public abstract class RecipeProductionMachine<Order extends ProductionOrder> {
          return Optional.empty();
 
       PendingProductionOutput pendingOutput = order.getNextOutput(ingredientsChests, stockChests);
-      if (!pendingOutput.canProduce())
+      if (!pendingOutput.ingredientsSatisfied())
          return Optional.empty();
 
       if (!(order.getBill().getProductionStrategy().getType() == ProductionStrategyType.PRODUCE_INFINITE

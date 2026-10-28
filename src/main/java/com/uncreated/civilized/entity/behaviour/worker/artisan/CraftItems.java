@@ -132,7 +132,7 @@ public class CraftItems extends WorkTaskBehaviour {
                      .startCooldown(Cooldowns.AWAITING_DELIVERY, AWAITING_DELIVERY_DURATION, level.getGameTime());
             else
                getStateMachine().queueActionOnce(this.getState());
-         } else if (!allRecipeStockRequirements.isEmpty()) {
+         } else if (craftingMachine.someActiveBillsAreMissingIngredients() && !allRecipeStockRequirements.isEmpty()) {
             // there are requirements for bills that we aren't able to fetch from anywhere at the moment
             int randomIndex = villager.getRandom().nextInt(allRecipeStockRequirements.size());
             ItemStack icon = allRecipeStockRequirements.get(randomIndex).getDisplayItem();

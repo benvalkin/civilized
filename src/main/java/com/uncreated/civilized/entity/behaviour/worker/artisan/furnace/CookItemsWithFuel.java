@@ -27,6 +27,7 @@ import com.uncreated.civilized.core.building.production.lines.singleitem.SingleI
 import com.uncreated.civilized.core.building.production.lines.singleitem.cooking.CookingMachine;
 import com.uncreated.civilized.core.notifications.Notification;
 import com.uncreated.civilized.core.notifications.NotificationService;
+import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.BehaviourState;
 import com.uncreated.civilized.entity.behaviour.Cooldowns;
@@ -35,6 +36,7 @@ import com.uncreated.civilized.entity.behaviour.worker.WorkStates;
 import com.uncreated.civilized.entity.behaviour.worker.WorkTaskBehaviour;
 import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
@@ -43,7 +45,9 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.behavior.BlockPosTracker;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.MemoryStatus;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.AbstractCookingRecipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeType;
@@ -60,6 +64,7 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
 
    private CookingMachine cookingMachine;
    private Notification missingIngredientsNotification;
+   private Notification missingfuelNotification;
 
    public CookItemsWithFuel(BehaviourState state) {
       super(state, true, 60 * 20, 20);
@@ -190,12 +195,20 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
             getStateMachine().queueActionOnce(this.getState());
       } else if (!allRecipeStockRequirements.isEmpty()) {
          // there are requirements for bills that we aren't able to fetch from anywhere at the moment
-         int randomIndex = villager.getRandom().nextInt(allRecipeStockRequirements.size());
-         ItemStack icon = allRecipeStockRequirements.get(randomIndex).getDisplayItem();
-         missingIngredientsNotification =
-               Notification.missingIngredients("missing_cooking_ingredients", villager.getInfo(), icon.getItem())
-                     .build();
-         NotificationService.INSTANCE.sendNotification(missingIngredientsNotification);
+
+         if (cookingMachine.someActiveBillsAreMissingIngredients()) {
+            int randomIndex = villager.getRandom().nextInt(allRecipeStockRequirements.size());
+            ItemStack icon = allRecipeStockRequirements.get(randomIndex).getDisplayItem();
+            missingIngredientsNotification =
+                  Notification.missingIngredients("missing_cooking_ingredients", villager.getInfo(), icon.getItem())
+                        .build();
+            NotificationService.INSTANCE.sendNotification(missingIngredientsNotification);
+         } else {
+            // if we cannot produce but all our ingredients are satisfied, it's because we are missing fuel
+            ItemStack icon = new ItemStack(Items.CHARCOAL);
+            missingfuelNotification = missingFuel("missing_cooking_fuel", villager.getInfo(), icon.getItem()).build();
+            NotificationService.INSTANCE.sendNotification(missingfuelNotification);
+         }
       }
 
       return false;
@@ -285,6 +298,7 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
          throw new IllegalStateException("getRecipeType and CookingMachine's recipeType do not match.");
 
       NotificationService.INSTANCE.resolveNotification(missingIngredientsNotification);
+      NotificationService.INSTANCE.resolveNotification(missingfuelNotification);
       travelHelper = new MediumDistanceTravelTask(villager, furnaceBlockEntity.getBlockPos(), 2);
    }
 
@@ -491,5 +505,22 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
          villager.addWorkExhaustion(1);
 
       return true;
+   }
+
+   public static Notification.NotificationBuilder missingFuel(String type, VillagerInfo info, Item item) {
+
+      if (info.getSettlementId() == null)
+         throw new IllegalArgumentException("Villager's settlementId must not be null");
+
+      Component headline = Component.translatable("notification.worker.missing_fuel.cooking", item.getName());
+
+      Component detail =
+            Component.translatable(
+                  "notification.worker.missing_fuel.generic.cooking",
+                  info.getFirstName(),
+                  info.getOccupation().translation(),
+                  item.getName());
+
+      return Notification.workBlockedNotification(type, info, headline, detail, new ItemStack(item));
    }
 }

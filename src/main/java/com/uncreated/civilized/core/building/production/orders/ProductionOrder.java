@@ -115,10 +115,12 @@ public abstract class ProductionOrder {
             bill.getProductionStrategy()
                   .calculateStockDeficit(calculateStock(stockChests, assembledRecipe.resultItem()));
 
+      boolean ingredientsSatisfied = recipeSatisfied.satisfied();
+
       return new PendingProductionOutput(
             recipeAssembler.getRecipe(),
             assembledRecipe,
-            recipeSatisfied.satisfied(),
+            ingredientsSatisfied,
             stockDeficit,
             ingredientsChests);
    }

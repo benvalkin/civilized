@@ -18,7 +18,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeType;
 
-public record PendingProductionOutput(Recipe<?> recipe, AssembledRecipe<?> assembledRecipe, boolean canProduce,
+public record PendingProductionOutput(Recipe<?> recipe, AssembledRecipe<?> assembledRecipe, boolean ingredientsSatisfied,
       int stockDeficit, Collection<Container> sourceContainers) {
 
    public List<ConsumableIngredientStack> getConsumableIngredients() {
