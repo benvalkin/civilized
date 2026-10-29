@@ -21,9 +21,9 @@ import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Dynamic;
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
-import com.uncreated.civilized.core.dialogue.VillagerConversation;
+import com.uncreated.civilized.core.dialogue.DialogueScript;
+import com.uncreated.civilized.core.dialogue.DialogueSession;
 import com.uncreated.civilized.core.dialogue.context.DialogueContext;
-import com.uncreated.civilized.core.dialogue.specialized.ItemDepotDialogue;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.defense.CombatTarget;
 import com.uncreated.civilized.core.settlement.defense.ICombatCommand;
@@ -441,19 +441,15 @@ public class CivilizedVillager extends AgeableMob
          return InteractionResult.SUCCESS;
       }
 
-      VillagerConversation conversation = VillagerConversation.openingDialogue(this, player, hand);
-      if (conversation.getDialogue() instanceof ItemDepotDialogue itemDepotDialogue) {
-
-         // for item depot dialogues, the villager consumes whatever is in the player's hand instead of opening the
-         // villager screen
-         ItemStack itemInHand = player.getItemInHand(hand);
-         if (!itemInHand.isEmpty()) {
-            DialogueContext context = conversation.getContext();
-            if (!itemDepotDialogue.getCanConsumeItemCheck().canConsumeItem(context, itemInHand, hand))
-               return InteractionResult.PASS;
-
-            ItemStack consumed = itemDepotDialogue.getConsumeItemAction().consumeItem(context, itemInHand, hand);
-            return InteractionResult.CONSUME.heldItemTransformedTo(consumed);
+      // villagers who take items from the player do so when right clicked with one, instead of talking
+      ItemStack itemInHand = player.getItemInHand(hand);
+      DialogueScript script = DialogueSession.findScript(this, player);
+      if (script != null && script.getItemOffer() != null && !itemInHand.isEmpty()) {
+         DialogueContext context = new DialogueContext(this, player);
+         if (script.getItemOffer().accepts().accepts(context, itemInHand)) {
+            // runs on both sides, like the item depot dialogues did: quests are updated from the client
+            script.getItemOffer().take().take(context, itemInHand);
+            return InteractionResult.CONSUME;
          }
       }
 

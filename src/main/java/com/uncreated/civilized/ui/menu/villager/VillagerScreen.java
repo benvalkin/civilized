@@ -7,7 +7,7 @@ import java.util.function.Supplier;
 
 import org.jetbrains.annotations.Nullable;
 
-import com.uncreated.civilized.core.dialogue.VillagerConversation;
+import com.uncreated.civilized.core.dialogue.DialogueSession;
 import com.uncreated.civilized.core.settlement.permission.ClientSettlementPermissionStore;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.ui.components.IRefreshableUI;
@@ -47,7 +47,7 @@ public class VillagerScreen extends AbstractContainerScreen<VillagerMenu> implem
    private static final int PREFERRED_CONTENT_WIDTH = DialogueBoxWidget.PREFERRED_WIDTH;
 
    private final CivilizedVillager villager;
-   private final VillagerConversation conversation;
+   private final @Nullable DialogueSession dialogue;
 
    private TabController tabController;
    private final List<VillagerTabButton> tabButtons = new ArrayList<>();
@@ -60,8 +60,7 @@ public class VillagerScreen extends AbstractContainerScreen<VillagerMenu> implem
       super(menu, playerInventory, title);
       this.villager = menu.getVillager();
       // recompute the opening dialogue on the client
-      this.conversation =
-            VillagerConversation.openingDialogue(villager, playerInventory.player, menu.getInteractedHand());
+      this.dialogue = DialogueSession.start(villager, playerInventory.player);
       // the container area is the slot column, which is centred on the content panel in init()
       this.imageWidth = VillagerMenu.SLOT_COLUMN_WIDTH;
       this.imageHeight = VillagerMenu.CONTENT_HEIGHT;
@@ -100,7 +99,7 @@ public class VillagerScreen extends AbstractContainerScreen<VillagerMenu> implem
    }
 
    private ATab createDialogueTab(ITabHost tabHost) {
-      return new DialogueTab(tabCoords, font, conversation, this::onClose);
+      return new DialogueTab(tabCoords, font, dialogue, this::onClose);
    }
 
    private void createTabButtons(int x, int y) {

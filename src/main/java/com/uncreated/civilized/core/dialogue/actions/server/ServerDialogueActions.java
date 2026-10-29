@@ -7,7 +7,6 @@ import java.util.Map;
 
 import org.jetbrains.annotations.Nullable;
 
-import com.uncreated.civilized.core.dialogue.ResponseOption;
 import com.uncreated.civilized.networking.packets.RunDialogueAction;
 
 import net.minecraft.resources.ResourceLocation;
@@ -17,7 +16,9 @@ public final class ServerDialogueActions {
 
    private static final Map<ResourceLocation, IServerDialogueAction> ACTIONS = new HashMap<>();
 
-   public static final ResourceLocation GIVE_FOOD = register("give_food", new GiveFoodAction(4));
+   public static final int MINIMUM_FOOD_TO_GIVE = 4;
+
+   public static final ResourceLocation GIVE_FOOD = register("give_food", new GiveFoodAction(MINIMUM_FOOD_TO_GIVE));
 
    private ServerDialogueActions() {
    }
@@ -32,10 +33,7 @@ public final class ServerDialogueActions {
       return ACTIONS.get(id);
    }
 
-   public static ResponseOption.IOnResponseSelectedAction runOnServer(ResourceLocation actionId) {
-      return context -> {
-         PacketDistributor.sendToServer(new RunDialogueAction(actionId));
-         return ResponseOption.SelectedAction.GO_NEXT;
-      };
+   public static void runOnServer(ResourceLocation actionId) {
+      PacketDistributor.sendToServer(new RunDialogueAction(actionId));
    }
 }

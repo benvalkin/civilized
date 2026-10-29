@@ -1,6 +1,7 @@
 package com.uncreated.civilized.core.villagerinfo;
 
 import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
+import static com.uncreated.civilized.core.dialogue.controller.DialogueController.always;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -8,9 +9,9 @@ import java.util.List;
 import java.util.Objects;
 
 import com.uncreated.civilized.CivilizedMod;
-import com.uncreated.civilized.core.dialogue.questline.advisor.controller.AdvisorDialogueController;
-import com.uncreated.civilized.core.dialogue.questline.migrant.controller.MigrantDialogueController;
-import com.uncreated.civilized.core.dialogue.questline.migrant.controller.VagrantDialogueController;
+import com.uncreated.civilized.core.dialogue.questline.advisor.AdvisorDialogue;
+import com.uncreated.civilized.core.dialogue.questline.migrant.MigrantDialogue;
+import com.uncreated.civilized.core.dialogue.questline.migrant.VagrantDialogue;
 import com.uncreated.civilized.entity.MerchantVisitorBehaviour;
 import com.uncreated.civilized.entity.VisitorBehaviour;
 
@@ -73,14 +74,12 @@ public class VillagerNpcRoles {
    // settlement members
    public static final VillagerNpcRole CITIZEN =
          declare(
-               VillagerNpcRole.builder(createResourceKey("citizen"))
-                     .dialogueController(VagrantDialogueController::new)
-                     .build());
+               VillagerNpcRole.builder(createResourceKey("citizen")).dialogue(always(VagrantDialogue.SCRIPT)).build());
    public static final VillagerNpcRole ADVISOR =
          declare(
                VillagerNpcRole.builder(createResourceKey("advisor"))
                      .clothingSets(List.of("patrician"))
-                     .dialogueController(AdvisorDialogueController::new)
+                     .dialogue(always(AdvisorDialogue.SCRIPT))
                      .build());
    // visitors
    public static final VillagerNpcRole TRAVELLER =
@@ -92,7 +91,7 @@ public class VillagerNpcRoles {
          declare(
                VillagerNpcRole.builder(createResourceKey("migrant"))
                      .createRoleBehaviour(VisitorBehaviour::new)
-                     .dialogueController(MigrantDialogueController::new)
+                     .dialogue(always(MigrantDialogue.SCRIPT))
                      .build());
    public static final VillagerNpcRole SUITOR =
          declare(

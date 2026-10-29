@@ -3,11 +3,10 @@ package com.uncreated.civilized.ui.menu.villager;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
-import com.uncreated.civilized.core.dialogue.IVillageDialogue;
-import com.uncreated.civilized.core.dialogue.ResponseOption;
-import com.uncreated.civilized.core.dialogue.context.DialogueContext;
-import com.uncreated.civilized.core.dialogue.context.ResponseOptionContext;
+import com.uncreated.civilized.core.dialogue.DialogueChoice;
+import com.uncreated.civilized.core.dialogue.DialogueSession;
 import com.uncreated.civilized.ui.components.buttons.ModernButton;
 import com.uncreated.civilized.ui.style.Colors;
 
@@ -31,81 +30,75 @@ public class DialogueBoxWidget extends AbstractContainerWidget {
    private static final int RESPONSE_BUTTON_GAP = 2;
 
    private final Font font;
-   private final IVillageDialogue dialogue;
+   private final Component villagerSpeech;
+   private final Supplier<List<DialogueSession.DisplayedChoice>> choices;
+   private final Consumer<DialogueChoice> onChoice;
+   private final int bottom;
+   private final int speechHeight;
    private final List<Button> responseButtons = new ArrayList<>();
 
    private int staggeredDialogueCurrentIndex = 0;
    private int timeUntilNextStaggeredChar = 4;
    private boolean staggerDone = false;
+   private boolean responsesShown = false;
 
    /**
+    * @param choices
+    *           the choices to show once the speech is typed out, which are fetched again at that point in case
+    *           something has changed in the meantime
     * @param bottom
     *           the lowest Y coordinate of the card on the screen. The card is as tall as its contents.
-    * @param onResponse
-    *           called with the response the player picked
+    * @param onChoice
+    *           called with the choice the player picked
     */
    public DialogueBoxWidget(
          Font font,
-         IVillageDialogue dialogue,
-         DialogueContext context,
+         Component villagerSpeech,
+         Supplier<List<DialogueSession.DisplayedChoice>> choices,
          int x,
          int bottom,
          int width,
-         Consumer<ResponseOptionContext> onResponse) {
+         Consumer<DialogueChoice> onChoice) {
       super(x, 0, width, 0, Component.empty());
       this.font = font;
-      this.dialogue = dialogue;
-
-      List<ResponseOptionContext> visibleResponses = findVisibleResponses(dialogue, context);
+      this.villagerSpeech = villagerSpeech;
+      this.choices = choices;
+      this.onChoice = onChoice;
+      this.bottom = bottom;
 
       // the size of the widget is set according to the entire speech text up front so that the box doesn't resize while
       // the text is typed out.
       // including the quotes drawn around it, which can push a word onto another line
-      Component fullSpeech = Component.literal("\"" + dialogue.getVillagerSpeech().getString() + "\"");
-      int speechHeight = font.split(fullSpeech, width - PADDING * 2).size() * font.lineHeight;
-      int responsesHeight = visibleResponses.size() * (RESPONSE_BUTTON_HEIGHT + RESPONSE_BUTTON_GAP);
+      Component fullSpeech = Component.literal("\"" + villagerSpeech.getString() + "\"");
+      speechHeight = font.split(fullSpeech, width - PADDING * 2).size() * font.lineHeight;
+      displayChoices(false);
+   }
+
+   private void displayChoices(boolean visible) {
+      List<DialogueSession.DisplayedChoice> shown = choices.get();
+      int responsesHeight = shown.size() * (RESPONSE_BUTTON_HEIGHT + RESPONSE_BUTTON_GAP);
       setHeight(PADDING + speechHeight + SPEECH_GAP + responsesHeight + PADDING);
       setY(bottom - height);
 
+      responseButtons.clear();
       int buttonY = getY() + PADDING + speechHeight + SPEECH_GAP;
-      for (ResponseOptionContext response : visibleResponses) {
-         responseButtons.add(createResponseButton(response, buttonY, onResponse));
+      for (DialogueSession.DisplayedChoice choice : shown) {
+         Button button = createResponseButton(choice, buttonY);
+         button.visible = visible;
+         responseButtons.add(button);
          buttonY += RESPONSE_BUTTON_HEIGHT + RESPONSE_BUTTON_GAP;
       }
    }
 
-   private static List<ResponseOptionContext> findVisibleResponses(IVillageDialogue dialogue, DialogueContext context) {
-      List<ResponseOptionContext> visible = new ArrayList<>();
-      for (ResponseOption responseOption : dialogue.getResponseOptions()) {
-         ResponseOptionContext optionContext = new ResponseOptionContext(responseOption, context);
-         if (responseOption.getVisibleCheck().isOptionVisible(optionContext))
-            visible.add(optionContext);
-      }
-      return visible;
-   }
-
-   private Button createResponseButton(
-         ResponseOptionContext optionContext,
-         int y,
-         Consumer<ResponseOptionContext> onResponse) {
-      ResponseOption responseOption = optionContext.getSelectedOption();
+   private Button createResponseButton(DialogueSession.DisplayedChoice choice, int y) {
       Button button =
             new ModernButton(
-                  Button.builder(responseOption.getPlayerSpeech(), b -> onResponse.accept(optionContext))
+                  Button.builder(choice.text(), b -> onChoice.accept(choice.choice()))
                         .pos(getX() + PADDING, y)
                         .size(width - PADDING * 2, RESPONSE_BUTTON_HEIGHT));
-
-      ResponseOption.EnabledCheckResult enabledResult = responseOption.getEnabledCheck().isOptionEnabled(optionContext);
-      button.active = enabledResult.isEnabled();
-
-      // if there's a tooltip displayed by isOptionEnabled check, show it instead of the option's preset tooltip
-      if (enabledResult.getTooltip() != null)
-         button.setTooltip(Tooltip.create(enabledResult.getTooltip()));
-      else if (responseOption.getTooltip() != null)
-         button.setTooltip(Tooltip.create(responseOption.getTooltip()));
-
-      // shown once the villager has finished speaking
-      button.visible = false;
+      button.active = choice.state().isEnabled();
+      if (choice.state().tooltip() != null)
+         button.setTooltip(Tooltip.create(choice.state().tooltip()));
       return button;
    }
 
@@ -122,7 +115,7 @@ public class DialogueBoxWidget extends AbstractContainerWidget {
 
             staggeredDialogueCurrentIndex++;
 
-            currentStaggeredText = dialogue.getVillagerSpeech().getString(staggeredDialogueCurrentIndex);
+            currentStaggeredText = villagerSpeech.getString(staggeredDialogueCurrentIndex);
 
             nextCharToRender = currentStaggeredText.charAt(currentStaggeredText.length() - 1);
 
@@ -136,11 +129,13 @@ public class DialogueBoxWidget extends AbstractContainerWidget {
          default -> 0;
          };
 
-         if (staggerDone) {
-            responseButtons.forEach(b -> b.visible = true);
+         if (staggerDone && !responsesShown) {
+            responsesShown = true;
+            // fetched again, as a previous choice may have changed something on the server in the meantime
+            displayChoices(true);
          }
 
-         if (!staggerDone && currentStaggeredText.length() >= dialogue.getVillagerSpeech().getString().length()) {
+         if (!staggerDone && currentStaggeredText.length() >= villagerSpeech.getString().length()) {
             staggerDone = true;
             currentStaggeredText += "";
             timeUntilNextStaggeredChar = 15; // when stagger is done, wait a bit before showing response options
@@ -158,7 +153,7 @@ public class DialogueBoxWidget extends AbstractContainerWidget {
 
       Component speech =
             Component.literal(
-                  "\"" + dialogue.getVillagerSpeech().getString(staggeredDialogueCurrentIndex)
+                  "\"" + villagerSpeech.getString(staggeredDialogueCurrentIndex)
                         + (staggerDone ? "\"" : ""));
       int y = getY() + PADDING;
       for (FormattedCharSequence line : font.split(speech, width - PADDING * 2)) {

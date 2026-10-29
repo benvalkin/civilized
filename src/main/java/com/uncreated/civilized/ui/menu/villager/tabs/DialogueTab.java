@@ -4,9 +4,8 @@ import java.util.List;
 
 import org.jetbrains.annotations.Nullable;
 
-import com.uncreated.civilized.core.dialogue.ResponseOption;
-import com.uncreated.civilized.core.dialogue.VillagerConversation;
-import com.uncreated.civilized.core.dialogue.context.ResponseOptionContext;
+import com.uncreated.civilized.core.dialogue.DialogueChoice;
+import com.uncreated.civilized.core.dialogue.DialogueSession;
 import com.uncreated.civilized.ui.menu.villager.DialogueBoxWidget;
 import com.uncreated.civilized.ui.tabs.ATab;
 import com.uncreated.civilized.ui.tabs.TabCoords;
@@ -17,7 +16,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 
 public class DialogueTab extends ATab {
 
-   private final VillagerConversation conversation;
+   private final @Nullable DialogueSession session;
    private final Runnable closeScreen;
    private final int bottom;
 
@@ -25,9 +24,9 @@ public class DialogueTab extends ATab {
    private DialogueBoxWidget dialogueBox;
    private boolean showNextDialogue;
 
-   public DialogueTab(TabCoords tabCoords, Font font, VillagerConversation conversation, Runnable closeScreen) {
+   public DialogueTab(TabCoords tabCoords, Font font, @Nullable DialogueSession session, Runnable closeScreen) {
       super(tabCoords, font);
-      this.conversation = conversation;
+      this.session = session;
       this.closeScreen = closeScreen;
       this.bottom = tabCoords.contentTopPos() + tabCoords.tabHeight();
    }
@@ -39,29 +38,20 @@ public class DialogueTab extends ATab {
 
    private void createDialogueBox() {
       dialogueBox = null;
-      if (!conversation.hasAnySpeech())
+      if (session == null)
          return;
 
-      dialogueBox =
-            new DialogueBoxWidget(
-                  font,
-                  conversation.getDialogue(),
-                  conversation.getContext(),
-                  getX(),
-                  bottom,
-                  width,
-                  this::onResponseOptionPressed);
+      dialogueBox = new DialogueBoxWidget(font, session.speech(), session::choicesForCurrentPage, getX(), bottom, width, this::onChoice);
    }
 
-   private void onResponseOptionPressed(ResponseOptionContext optionContext) {
+   private void onChoice(DialogueChoice choice) {
       // the old box is still showing until the next tick, and its responses no longer apply
-      if (showNextDialogue)
+      if (showNextDialogue || session == null)
          return;
 
-      ResponseOption.SelectedAction result = conversation.respond(optionContext);
-      if (result == ResponseOption.SelectedAction.CLOSE_DIALOGUE)
+      if (!session.choose(choice))
          closeScreen.run();
-      else if (result == ResponseOption.SelectedAction.GO_NEXT)
+      else
          // showing the next dialogue is done in the next tick to avoid replacing the box while a button's onClick
          // method is busy running
          showNextDialogue = true;

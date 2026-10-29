@@ -1,38 +1,23 @@
 package com.uncreated.civilized.core.dialogue.controller;
 
-import java.util.List;
-
 import javax.annotation.Nullable;
 
+import com.uncreated.civilized.core.dialogue.DialogueScript;
 import com.uncreated.civilized.entity.CivilizedVillager;
 
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 
-public abstract class DialogueController {
+/** Picks which dialogue a villager has for a player. */
+public interface DialogueController {
 
-   public DialogueController() {
+   @Nullable
+   DialogueScript select(CivilizedVillager villager, Player player);
 
+   static DialogueController noDialogue() {
+      return (villager, player) -> null;
    }
 
-   public abstract @Nullable DialogueFlow getDialogueFlow(
-         CivilizedVillager villager,
-         Player player,
-         InteractionHand hand);
-
-   public static DialogueController noDialogue() {
-      return new DialogueController() {
-         @Override
-         public @Nullable DialogueFlow getDialogueFlow(
-               CivilizedVillager villager,
-               Player player,
-               InteractionHand hand) {
-            return null;
-         }
-      };
-   }
-
-   public static DialogueController selectDialogueController(CivilizedVillager villager) {
-      return villager.getInfo().getNpcRole().createDialogueController();
+   static DialogueController always(DialogueScript script) {
+      return (villager, player) -> script;
    }
 }

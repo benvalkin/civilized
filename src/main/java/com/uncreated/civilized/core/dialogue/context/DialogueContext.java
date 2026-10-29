@@ -1,44 +1,48 @@
 package com.uncreated.civilized.core.dialogue.context;
 
-import java.util.HashMap;
-
-import com.uncreated.civilized.core.dialogue.IVillageDialogue;
-import com.uncreated.civilized.entity.CivilizedVillager;
-
-import lombok.Getter;
-import net.minecraft.world.entity.player.Player;
-import org.jetbrains.annotations.NotNull;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import com.uncreated.civilized.core.quest.QuestType;
+import com.uncreated.civilized.core.quest.attachments.PlayerDialogueCooldowns;
+import com.uncreated.civilized.core.quest.attachments.PlayerQuests;
+import com.uncreated.civilized.entity.CivilizedVillager;
+import com.uncreated.civilized.neoforge.registration.attachments.DataAttachments;
+
+import lombok.Getter;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+
+/** Who is talking to whom. */
 @Getter
 public class DialogueContext {
-   protected final CivilizedVillager villager;
-   protected final Player player;
-    private final long gameTime;
-    private final long dayTime;
+   private final CivilizedVillager villager;
+   private final Player player;
+   private final long gameTime;
+   private final long dayTime;
 
-    public DialogueContext(CivilizedVillager villager, Player player, long gameTime, long dayTime) {
+   public DialogueContext(CivilizedVillager villager, Player player) {
       this.villager = villager;
       this.player = player;
-        this.gameTime = gameTime;
-        this.dayTime = dayTime;
-    }
-
-   public <T extends DialogueContext> T as() {
-      try {
-         return (T) this;
-      } catch (ClassCastException ex) {
-         throw new UnexpectedDialogueContextException(this.getClass());
-      }
+      this.gameTime = player.level().getGameTime();
+      this.dayTime = player.level().getDayTime();
    }
 
-   public static class UnexpectedDialogueContextException extends RuntimeException {
-      public UnexpectedDialogueContextException(Class<? extends DialogueContext> actual) {
-         super(
-               String.format(
-                     "Incorrect type of dialogue context was provided: %s. Make sure that the dialogue screen is passed the right type of dialogue context.",
-                     actual));
-      }
+   public ItemStack heldItem() {
+      return player.getMainHandItem();
+   }
+
+   public PlayerQuests quests() {
+      return player.getData(DataAttachments.QUESTS);
+   }
+
+   public PlayerDialogueCooldowns cooldowns() {
+      return player.getData(DataAttachments.DIALOGUE_COOLDOWNS);
+   }
+
+   /** This villager's id for quests given by a specific villager, otherwise null. */
+   public @Nullable UUID vendorIdFor(QuestType questType) {
+      return questType.isVendorSpecific() ? villager.getInfo().getVillagerId() : null;
    }
 }
