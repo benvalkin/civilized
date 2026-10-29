@@ -33,6 +33,8 @@ public class DialogueBoxWidget extends AbstractContainerWidget {
    private final Font font;
    private final IVillageDialogue dialogue;
    private final List<Button> responseButtons = new ArrayList<>();
+   private final List<ResponseOptionContext> responseContexts = new ArrayList<>();
+   private boolean responsesShown;
 
    private int staggeredDialogueCurrentIndex = 0;
    private int timeUntilNextStaggeredChar = 4;
@@ -70,6 +72,7 @@ public class DialogueBoxWidget extends AbstractContainerWidget {
       int buttonY = getY() + PADDING + speechHeight + SPEECH_GAP;
       for (ResponseOptionContext response : visibleResponses) {
          responseButtons.add(createResponseButton(response, buttonY, onResponse));
+         responseContexts.add(response);
          buttonY += RESPONSE_BUTTON_HEIGHT + RESPONSE_BUTTON_GAP;
       }
    }
@@ -95,6 +98,15 @@ public class DialogueBoxWidget extends AbstractContainerWidget {
                         .pos(getX() + PADDING, y)
                         .size(width - PADDING * 2, RESPONSE_BUTTON_HEIGHT));
 
+      applyEnabledCheck(button, optionContext);
+
+      // shown once the villager has finished speaking
+      button.visible = false;
+      return button;
+   }
+
+   private static void applyEnabledCheck(Button button, ResponseOptionContext optionContext) {
+      ResponseOption responseOption = optionContext.getSelectedOption();
       ResponseOption.EnabledCheckResult enabledResult = responseOption.getEnabledCheck().isOptionEnabled(optionContext);
       button.active = enabledResult.isEnabled();
 
@@ -103,10 +115,6 @@ public class DialogueBoxWidget extends AbstractContainerWidget {
          button.setTooltip(Tooltip.create(enabledResult.getTooltip()));
       else if (responseOption.getTooltip() != null)
          button.setTooltip(Tooltip.create(responseOption.getTooltip()));
-
-      // shown once the villager has finished speaking
-      button.visible = false;
-      return button;
    }
 
    /** Types out the speech, pausing for punctuation, and shows the responses once it's done. */
@@ -136,8 +144,14 @@ public class DialogueBoxWidget extends AbstractContainerWidget {
          default -> 0;
          };
 
-         if (staggerDone) {
-            responseButtons.forEach(b -> b.visible = true);
+         if (staggerDone && !responsesShown) {
+            responsesShown = true;
+            // todo: why did we change all this?
+            // checked again, as the previous response may have changed something on the server in the meantime
+            for (int i = 0; i < responseButtons.size(); i++) {
+               applyEnabledCheck(responseButtons.get(i), responseContexts.get(i));
+               responseButtons.get(i).visible = true;
+            }
          }
 
          if (!staggerDone && currentStaggeredText.length() >= dialogue.getVillagerSpeech().getString().length()) {

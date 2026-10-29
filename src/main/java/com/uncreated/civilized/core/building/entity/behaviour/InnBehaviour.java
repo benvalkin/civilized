@@ -10,11 +10,13 @@ import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.core.villagerinfo.VillagerNpcRole;
 import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
 import com.uncreated.civilized.entity.CivilizedVillager;
+import com.uncreated.civilized.entity.VisitorBehaviour;
 import com.uncreated.civilized.neoforge.registration.entity.EntityRegistry;
 import com.uncreated.civilized.util.random.DailyEventScheduler;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.util.random.SimpleWeightedRandomList;
 import net.minecraft.world.entity.EntitySpawnReason;
 
@@ -30,6 +32,16 @@ public class InnBehaviour extends BuildingBehaviour {
    @Override
    public void serverTick(ServerLevel level, long gameTime, long dayTime) {
       eventScheduler.tick(level, gameTime, () -> trySpawnVisitor(level));
+   }
+
+   private static final int MIN_STAY_DAYS = 2;
+   private static final int MAX_STAY_DAYS = 3;
+   private static final int DEPARTURE_TIME = 14000;
+
+   private static long chooseDepartureTime(long dayTime, RandomSource random) {
+      long startOfDay = dayTime - dayTime % 24000;
+      int days = MIN_STAY_DAYS + random.nextInt(MAX_STAY_DAYS - MIN_STAY_DAYS + 1);
+      return startOfDay + days * 24000L + DEPARTURE_TIME;
    }
 
    private static final SimpleWeightedRandomList<VillagerNpcRole> VISITOR_ROLES =
@@ -57,6 +69,8 @@ public class InnBehaviour extends BuildingBehaviour {
             VISITOR_ROLES.getRandomValue(villager.getRandom()).orElse(VillagerNpcRoles.TRAVELLER);
       villager.changeNpcRole(visitorRole);
       villager.getInfo().setHomeBuildingId(getBuilding().getBuildingId());
+      VisitorBehaviour.of(villager)
+            .ifPresent(visitor -> visitor.setDepartAt(chooseDepartureTime(level.getDayTime(), villager.getRandom())));
       ServerVillagerStore.INSTANCE.setDirty();
       ServerVillagerStore.INSTANCE.replicateChange(villager.getInfo(), StoreOperation.UPDATE);
 

@@ -106,6 +106,10 @@ public final class SkillEffects {
       return getMeleeDamageMultiplier(shootingLevel);
    }
 
+   public static float getHospitalityMultiplier(int socialLevel) {
+      return fixedDistribution(List.of(0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1f, 1.2f, 1.4f, 1.6f, 1.8f, 2f), socialLevel);
+   }
+
    public static int getMaxAllowedProductionBills(int craftingLevel) {
       return fixedDistribution(List.of(1, 1, 2, 2, 3, 4, 4, 5, 6, 7, 8), craftingLevel);
    }

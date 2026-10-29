@@ -169,6 +169,9 @@ public class Socialize extends StatefulBehaviour {
 
    @Override
    protected void stop(ServerLevel level, CivilizedVillager villager, long gameTime) {
+      if (met)
+         rewardVisitorForChatting(villager);
+
       super.stop(level, villager, gameTime);
 
       // if this villager leaves and there is only one other left in the conversation, the remaining will realize next
@@ -181,6 +184,24 @@ public class Socialize extends StatefulBehaviour {
       getBehaviourCooldowns().startCooldown(Cooldowns.START, getRestartCooldown(), gameTime);
 
       VisitorBehaviour.of(villager).ifPresent(visitor -> visitor.setDeparturePaused(false));
+   }
+
+   private static void rewardVisitorForChatting(CivilizedVillager villager) {
+      Optional<VisitorBehaviour> visitor = VisitorBehaviour.of(villager);
+      if (visitor.isEmpty())
+         return;
+
+      Optional<Conversation> conversation = villager.getBrain().getMemory(AIRegistry.MM_CONVERSATION.get());
+      if (conversation.isEmpty())
+         return;
+
+      for (CivilizedVillager other : conversation.get().getPastMembers()) {
+         // reward residents for hospitality
+         if (other != villager && other.getInfo().getSettlementId() != null) {
+            visitor.get().gainHospitalityFromChatting(other);
+            return;
+         }
+      }
    }
 
    public int getMaxParticipants() {

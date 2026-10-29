@@ -2,18 +2,17 @@ package com.uncreated.civilized.core.dialogue.questline.migrant;
 
 import static com.uncreated.civilized.core.dialogue.Dialogue.dialogue;
 import static com.uncreated.civilized.core.dialogue.Dialogue.finalPage;
+import static com.uncreated.civilized.core.dialogue.DialogueLines.randomLine;
 import static com.uncreated.civilized.core.dialogue.DialogueWithPages.dialogueWithpages;
 import static com.uncreated.civilized.core.dialogue.RandomSpeech.randomOneOf;
 import static com.uncreated.civilized.core.dialogue.RandomSpeech.randomPerVillager;
 import static com.uncreated.civilized.core.dialogue.ResponseOption.option;
 import static net.minecraft.network.chat.Component.translatable;
 
+import com.uncreated.civilized.core.dialogue.Dialogue;
 import com.uncreated.civilized.core.dialogue.IVillageDialogue;
 import com.uncreated.civilized.core.dialogue.context.DialogueContext;
 import com.uncreated.civilized.core.dialogue.controller.DialogueFlow;
-import com.uncreated.civilized.core.dialogue.questline.migrant.context.CanJoinSettlementCheck;
-import com.uncreated.civilized.core.dialogue.questline.migrant.context.JoinSettlementAction;
-import com.uncreated.civilized.core.dialogue.questline.migrant.context.JoinSettlementContext;
 import com.uncreated.civilized.core.quest.attachments.PlayerDialogueCooldowns;
 import com.uncreated.civilized.core.quest.attachments.PlayerQuests;
 import com.uncreated.civilized.entity.CivilizedVillager;
@@ -30,7 +29,7 @@ public class MigrantGenericQuest extends DialogueFlow {
          InteractionHand hand,
          long gameTime,
          long dayTime) {
-      return new JoinSettlementContext(villager, player, gameTime, dayTime);
+      return new DialogueContext(villager, player, gameTime, dayTime);
    }
 
    @Override
@@ -40,7 +39,7 @@ public class MigrantGenericQuest extends DialogueFlow {
          Player player,
          PlayerQuests playerQuests,
          PlayerDialogueCooldowns cooldowns) {
-      return dialogueWithpages().page(
+      Dialogue opening =
             dialogue(
                   randomPerVillager(
                         villager,
@@ -53,23 +52,27 @@ public class MigrantGenericQuest extends DialogueFlow {
                         translatable("villager.dialogue.quest.migrant_worker.generic_7"),
                         translatable("villager.dialogue.quest.migrant_worker.generic_8"),
                         translatable("villager.dialogue.quest.migrant_worker.generic_9"),
-                        translatable("villager.dialogue.quest.migrant_worker.generic_10")))
-                  .response(
-                        option(translatable("villager.dialogue.quest.migrant_worker.any.response.accept"))
-                              .shouldBeEnabled(new CanJoinSettlementCheck())
-                              .onSelectGoTo(
-                                    dialogueWithpages().page(
-                                          finalPage(
-                                                randomOneOf(
-                                                      translatable(
-                                                            "villager.dialogue.quest.migrant_worker.any.accepted.1"),
-                                                      translatable(
-                                                            "villager.dialogue.quest.migrant_worker.any.accepted.2"),
-                                                      translatable(
-                                                            "villager.dialogue.quest.migrant_worker.any.accepted.3")))
-                                                .onEnded(new JoinSettlementAction()))
-                                          .create()))
-                  .response(option(translatable("villager.dialogue.quest.migrant_worker.any.response.reject"))))
-            .create();
+                        translatable("villager.dialogue.quest.migrant_worker.generic_10")));
+
+      RecruitmentResponses.welcome(player, withJoinResponses(dialogue(randomLine("dialogue/migrant/welcomed"))))
+            .ifPresent(opening::response);
+      return dialogueWithpages().page(withJoinResponses(opening)).create();
+   }
+
+   private static Dialogue withJoinResponses(Dialogue page) {
+      Dialogue accepted =
+            dialogueWithpages().page(
+                  finalPage(
+                        randomOneOf(
+                              translatable("villager.dialogue.quest.migrant_worker.any.accepted.1"),
+                              translatable("villager.dialogue.quest.migrant_worker.any.accepted.2"),
+                              translatable("villager.dialogue.quest.migrant_worker.any.accepted.3"))))
+                  .create();
+
+      return page
+            .response(
+                  RecruitmentResponses
+                        .join(translatable("villager.dialogue.quest.migrant_worker.any.response.accept"), accepted))
+            .response(option(translatable("villager.dialogue.quest.migrant_worker.any.response.reject")));
    }
 }

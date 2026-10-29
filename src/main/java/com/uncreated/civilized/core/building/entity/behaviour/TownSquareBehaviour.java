@@ -2,6 +2,7 @@ package com.uncreated.civilized.core.building.entity.behaviour;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -13,6 +14,7 @@ import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
 import com.uncreated.civilized.core.building.util.BuildingUtil;
+import com.uncreated.civilized.core.recruitment.SettlementAttractiveness;
 import com.uncreated.civilized.core.trading.MerchantType;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
@@ -59,7 +61,7 @@ public class TownSquareBehaviour extends BuildingBehaviour {
    private static final SimpleWeightedRandomList<VillagerNpcRole> VISITOR_ROLES =
          new SimpleWeightedRandomList.Builder<VillagerNpcRole>().add(VillagerNpcRoles.TRAVELLER, 0)
                .add(VillagerNpcRoles.MIGRANT, 2)
-               .add(VillagerNpcRoles.SUITOR, 3)
+               .add(VillagerNpcRoles.SUITOR, 0)
                .add(VillagerNpcRoles.SKILLED_PROFESSIONAL, 0)
                .add(VillagerNpcRoles.MERCENARY, 0)
                .add(VillagerNpcRoles.BEGGAR, 0)
@@ -68,7 +70,11 @@ public class TownSquareBehaviour extends BuildingBehaviour {
                .add(VillagerNpcRoles.MERCHANT, 1)
                .build();
 
-   /** Every role that can visit a town square, including ones that currently never spawn by themselves. */
+   private static final int ATTRACTIVENESS_FOR_MIGRANTS = 15;
+   private static final int ATTRACTIVENESS_FOR_MORE_MIGRANTS = 30;
+   private static final int ATTRACTIVENESS_FOR_FEWER_BEGGARS = 20;
+
+   /** Every role that can visit a town square */
    public static List<VillagerNpcRole> visitorRoles() {
       return VISITOR_ROLES.unwrap().stream().map(WeightedEntry.Wrapper::data).toList();
    }
@@ -79,8 +85,33 @@ public class TownSquareBehaviour extends BuildingBehaviour {
       if (visitors.size() >= MAX_VISITORS)
          return;
 
-      VillagerNpcRole visitorRole = VISITOR_ROLES.getRandomValue(level.getRandom()).orElse(VillagerNpcRoles.TRAVELLER);
+      UUID settlementId = getBuilding().getSettlementId();
+      int attractiveness =
+            settlementId == null ? 0
+                  : SettlementAttractiveness.total(
+                        SettlementAttractiveness
+                              .compute(settlementId, ServerBuildingsStore.INSTANCE, ServerVillagerStore.INSTANCE));
+      VillagerNpcRole visitorRole =
+            visitorWeights(attractiveness).getRandomValue(level.getRandom()).orElse(VillagerNpcRoles.TRAVELLER);
       spawnVisitor(level, getBuilding(), visitorRole, null);
+   }
+
+   /** Beggars make up most of a small settlement's visitors, and migrants arrive once it's more attractive. */
+   private static SimpleWeightedRandomList<VillagerNpcRole> visitorWeights(int attractiveness) {
+      int beggars = attractiveness < ATTRACTIVENESS_FOR_FEWER_BEGGARS ? 3 : 1;
+      int migrants;
+      if (attractiveness < ATTRACTIVENESS_FOR_MIGRANTS)
+         migrants = 0;
+      else if (attractiveness < ATTRACTIVENESS_FOR_MORE_MIGRANTS)
+         migrants = 2;
+      else
+         migrants = 3;
+
+      return new SimpleWeightedRandomList.Builder<VillagerNpcRole>().add(VillagerNpcRoles.BEGGAR, beggars)
+            .add(VillagerNpcRoles.MIGRANT, migrants)
+            .add(VillagerNpcRoles.SUITOR, 3)
+            .add(VillagerNpcRoles.MERCHANT, 1)
+            .build();
    }
 
    /**

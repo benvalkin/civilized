@@ -1,0 +1,10 @@
+{
+  "impression": "Impression: %s / %s",
+  "source": "  %s: +%s",
+  "hospitality": "  Hospitality: +%s",
+  "willing": "Willing to join.",
+  "not_willing": "Needs %s more impression to join.",
+  "welcome": "+%s hospitality (once per visit)",
+  "already_welcomed": "You've already welcomed them.",
+  "already_fed": "They've already eaten."
+}

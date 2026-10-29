@@ -15,6 +15,8 @@ import com.uncreated.civilized.core.building.BuildingType;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
+import com.uncreated.civilized.core.villagerinfo.VillagerOccupation;
+import com.uncreated.civilized.core.villagerinfo.VillagerOccupations;
 import com.uncreated.civilized.core.villagerinfo.VillagerStore;
 import com.uncreated.civilized.entity.CivilizedVillager;
 
@@ -126,6 +128,16 @@ public class BuildingUtil {
       }
 
       return Optional.empty();
+   }
+
+   public static Optional<Building> findWorksiteFor(
+           VillagerOccupation occupation,
+           UUID settlementId,
+           BuildingStore buildingStore,
+           VillagerStore villagerStore) {
+      Predicate<BuildingType> suitableWorksite =
+              occupation.is(VillagerOccupations.UNEMPLOYED) ? BuildingType::isWorkBuilding : occupation::isValidWorksite;
+      return BuildingUtil.findUnoccupiedWorksite(settlementId, suitableWorksite, buildingStore, villagerStore);
    }
 
    public static void ensureBuildingDoorsAreClosed(CivilizedVillager doorCloser, Building building, ServerLevel level) {

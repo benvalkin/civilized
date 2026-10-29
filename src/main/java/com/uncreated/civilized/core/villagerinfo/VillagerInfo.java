@@ -13,6 +13,7 @@ import javax.annotation.Nullable;
 import com.mojang.datafixers.util.Pair;
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.Building;
+import com.uncreated.civilized.core.recruitment.VisitorHospitality;
 import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkills;
 
 import lombok.Builder;
@@ -55,7 +56,8 @@ public class VillagerInfo {
                   .fatherId(buffer.readNullable((b -> b.readUUID())))
                   .birthDay(buffer.readNullable((FriendlyByteBuf::readVarLong)))
                   .lifeStage(buffer.readEnum(LifeStage.class))
-                  .skills(VillagerSkills.decode(buffer));
+                  .skills(VillagerSkills.decode(buffer))
+                  .hospitality(VisitorHospitality.decode(buffer));
 
       return builder.build();
    }
@@ -81,6 +83,7 @@ public class VillagerInfo {
       buffer.writeNullable(birthDay, FriendlyByteBuf::writeVarLong);
       buffer.writeEnum(lifeStage);
       skills.encode(buffer);
+      hospitality.encode(buffer);
    }
 
    public static final String FIELD_VILLAGER_ID = "villager_id";
@@ -102,6 +105,7 @@ public class VillagerInfo {
    public static final String FIELD_FATHER_ID = "father_id";
    public static final String FIELD_BIRTH_DAY = "birth_day";
    public static final String FIELD_LIFE_STAGE = "life_stage";
+   public static final String FIELD_HOSPITALITY = "hospitality";
    public static final int GROW_UP_DAYS = 30;
 
    private UUID villagerId;
@@ -144,6 +148,9 @@ public class VillagerInfo {
    @Setter
    @Builder.Default
    private LifeStage lifeStage = LifeStage.ADULT;
+   @Setter
+   @Builder.Default
+   private VisitorHospitality hospitality = new VisitorHospitality();
 
    public boolean hasName() {
       return !firstName.isEmpty() && !lastName.isEmpty();
@@ -363,6 +370,7 @@ public class VillagerInfo {
       fatherId = other.fatherId;
       birthDay = other.birthDay;
       lifeStage = other.lifeStage;
+      hospitality = other.hospitality;
    }
 
    public String toStringLite() {
