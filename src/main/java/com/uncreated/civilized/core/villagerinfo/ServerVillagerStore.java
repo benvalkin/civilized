@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 import com.mojang.datafixers.util.Pair;
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
+import com.uncreated.civilized.core.recruitment.VisitorHospitality;
 import com.uncreated.civilized.core.villagerinfo.events.model.VillagerInfoUpdatedEvent;
 import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkills;
 import com.uncreated.civilized.entity.CivilizedVillager;
@@ -80,6 +81,7 @@ public class ServerVillagerStore extends VillagerStore {
          if (villagerInfo.getBirthDay() != null)
             item.putLong(VillagerInfo.FIELD_BIRTH_DAY, villagerInfo.getBirthDay());
          item.putString(VillagerInfo.FIELD_LIFE_STAGE, villagerInfo.getLifeStage().name());
+         item.put(VillagerInfo.FIELD_HOSPITALITY, villagerInfo.getHospitality().toNbt());
 
          tags.add(item);
       }
@@ -126,6 +128,8 @@ public class ServerVillagerStore extends VillagerStore {
             builder.birthDay(itemTag.getLong(VillagerInfo.FIELD_BIRTH_DAY));
          if (itemTag.contains(VillagerInfo.FIELD_LIFE_STAGE))
             builder.lifeStage(LifeStage.valueOf(itemTag.getString(VillagerInfo.FIELD_LIFE_STAGE)));
+         if (itemTag.contains(VillagerInfo.FIELD_HOSPITALITY))
+            builder.hospitality(VisitorHospitality.fromNbt(itemTag.getCompound(VillagerInfo.FIELD_HOSPITALITY)));
          if (itemTag.hasUUID(VillagerInfo.FIELD_WORK_AREA_ID))
             builder.workAreaId(itemTag.getUUID(VillagerInfo.FIELD_WORK_AREA_ID));
          if (itemTag.hasUUID(VillagerInfo.FIELD_PARTNER_ID))

@@ -21,6 +21,8 @@ public final class ServerDialogueActions {
 
    public static final ResourceLocation GIVE_FOOD = register("give_food", new GiveFoodAction(MINIMUM_FOOD_TO_GIVE));
    public static final ResourceLocation GIVE_MEAL = register("give_meal", new GiveFoodAction(MINIMUM_MEAL_TO_GIVE));
+   public static final ResourceLocation WELCOME = register("welcome", new WelcomeAction());
+   public static final ResourceLocation JOIN_SETTLEMENT = register("join_settlement", new JoinSettlementAction());
 
    private ServerDialogueActions() {
    }

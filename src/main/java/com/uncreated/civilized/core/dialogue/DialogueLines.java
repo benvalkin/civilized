@@ -9,6 +9,7 @@ import com.uncreated.civilized.entity.CivilizedVillager;
 
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.RandomSource;
 
 /**
@@ -25,7 +26,7 @@ public final class DialogueLines {
    }
 
    /** An entry of a file holding an object. */
-   public static Component text(String file, String name, Object... args) {
+   public static MutableComponent text(String file, String name, Object... args) {
       return Component.translatable(key(file) + "." + name, args);
    }
 

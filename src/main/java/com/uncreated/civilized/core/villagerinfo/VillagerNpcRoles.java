@@ -12,6 +12,8 @@ import com.uncreated.civilized.CivilizedMod;
 import com.uncreated.civilized.core.dialogue.questline.advisor.AdvisorDialogue;
 import com.uncreated.civilized.core.dialogue.questline.migrant.MigrantDialogue;
 import com.uncreated.civilized.core.dialogue.questline.migrant.VagrantDialogue;
+import com.uncreated.civilized.core.dialogue.questline.worker.WorkerDialogue;
+import com.uncreated.civilized.core.recruitment.ImpressionRequirement;
 import com.uncreated.civilized.entity.MerchantVisitorBehaviour;
 import com.uncreated.civilized.entity.VisitorBehaviour;
 
@@ -74,7 +76,7 @@ public class VillagerNpcRoles {
    // settlement members
    public static final VillagerNpcRole CITIZEN =
          declare(
-               VillagerNpcRole.builder(createResourceKey("citizen")).dialogue(always(VagrantDialogue.SCRIPT)).build());
+               VillagerNpcRole.builder(createResourceKey("citizen")).dialogue(always(WorkerDialogue.SCRIPT)).build());
    public static final VillagerNpcRole ADVISOR =
          declare(
                VillagerNpcRole.builder(createResourceKey("advisor"))
@@ -86,12 +88,14 @@ public class VillagerNpcRoles {
          declare(
                VillagerNpcRole.builder(createResourceKey("traveller"))
                      .createRoleBehaviour(VisitorBehaviour::new)
+                     .recruitTier(ImpressionRequirement.MID)
                      .build());
    public static final VillagerNpcRole MIGRANT =
          declare(
                VillagerNpcRole.builder(createResourceKey("migrant"))
                      .createRoleBehaviour(VisitorBehaviour::new)
                      .dialogue(always(MigrantDialogue.SCRIPT))
+                     .recruitTier(ImpressionRequirement.MID)
                      .build());
    public static final VillagerNpcRole SUITOR =
          declare(
@@ -103,6 +107,7 @@ public class VillagerNpcRoles {
          declare(
                VillagerNpcRole.builder(createResourceKey("skilled_professional"))
                      .createRoleBehaviour(VisitorBehaviour::new)
+                     .recruitTier(ImpressionRequirement.HIGH)
                      .build());
    public static final VillagerNpcRole MERCENARY =
          declare(
@@ -111,7 +116,11 @@ public class VillagerNpcRoles {
                      .build());
    public static final VillagerNpcRole BEGGAR =
          declare(
-               VillagerNpcRole.builder(createResourceKey("beggar")).createRoleBehaviour(VisitorBehaviour::new).build());
+               VillagerNpcRole.builder(createResourceKey("beggar"))
+                     .createRoleBehaviour(VisitorBehaviour::new)
+                     .dialogue(always(VagrantDialogue.SCRIPT))
+                     .recruitTier(ImpressionRequirement.LOW)
+                     .build());
    public static final VillagerNpcRole SCOUNDREL =
          declare(
                VillagerNpcRole.builder(createResourceKey("scoundrel"))

@@ -1,5 +1,6 @@
 package com.uncreated.civilized.core.dialogue.questline.migrant;
 
+import static com.uncreated.civilized.core.dialogue.DialogueLines.text;
 import static net.minecraft.network.chat.Component.translatable;
 
 import com.uncreated.civilized.core.dialogue.ChoiceCondition;
@@ -20,6 +21,9 @@ public class GiveFoodCheck implements ChoiceCondition {
 
    @Override
    public ChoiceState check(DialogueContext context) {
+      if (context.getVillager().getInfo().getHospitality().isFed())
+         return ChoiceState.disabled(text("recruitment/tooltips", "already_fed"));
+
       ItemStack held = context.heldItem();
       FoodProperties foodProperties = held.get(DataComponents.FOOD);
 

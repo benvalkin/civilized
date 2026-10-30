@@ -5,6 +5,7 @@ import java.util.Objects;
 import java.util.function.Function;
 
 import com.uncreated.civilized.core.dialogue.controller.DialogueController;
+import com.uncreated.civilized.core.recruitment.ImpressionRequirement;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.DefaultRoleBehaviour;
 import com.uncreated.civilized.entity.VillagerRoleBehaviour;
@@ -30,6 +31,8 @@ public class VillagerNpcRole {
    private final DialogueController dialogue = DialogueController.noDialogue();
    @Builder.Default
    private final List<String> clothingSets = List.of(ClothingTextureRegistry.DEFAULT_CLOTHING_SET);
+   @Builder.Default
+   private final ImpressionRequirement recruitTier = ImpressionRequirement.NOT_RECRUITABLE;
 
    public static VillagerNpcRoleBuilder builder(ResourceLocation key) {
       return internalBuilder().resourceLocation(key);

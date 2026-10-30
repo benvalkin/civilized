@@ -1,6 +1,10 @@
 package com.uncreated.civilized.core.dialogue.actions.server;
 
+import com.uncreated.civilized.core.StoreOperation;
+import com.uncreated.civilized.core.recruitment.VisitorHospitality;
+import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.entity.CivilizedVillager;
+import com.uncreated.civilized.entity.VisitorBehaviour;
 
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerPlayer;
@@ -24,6 +28,11 @@ public class GiveFoodAction implements IServerDialogueAction {
       if (food == null || food.nutrition() < minimumFood)
          return false;
 
+      // visitors only take one meal a visit, which counts towards their hospitality
+      boolean isVisitor = VisitorBehaviour.of(villager).isPresent();
+      if (isVisitor && !villager.getInfo().getHospitality().feed(VisitorHospitality.FED_BONUS))
+         return false;
+
       held.consume(1, player);
       villager.level()
             .playSound(
@@ -35,7 +44,8 @@ public class GiveFoodAction implements IServerDialogueAction {
                   SoundSource.NEUTRAL,
                   1,
                   1);
-      // todo: add hospitality once visitors have it
+      ServerVillagerStore.INSTANCE.setDirty();
+      ServerVillagerStore.INSTANCE.replicateChange(villager.getInfo(), StoreOperation.UPDATE);
       return true;
    }
 }
