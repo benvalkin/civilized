@@ -17,7 +17,6 @@ import com.uncreated.civilized.ui.style.Colors;
 import lombok.Getter;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
 
 /**
  * A villager dialogue script consists of named nodes. Each node says a dialogue line (a line can be split into pages)
@@ -49,16 +48,14 @@ public class DialogueScript {
 
    /** Where the script's lines files are, e.g. {@code "dialogue/vagrant"}. */
    private final @Nullable String linesFolder;
-   /** A file in every numbered set folder, when the script's lines are split into sets. */
-   private final @Nullable String fileInEverySet;
+   /** A file in the , when the script's lines are split into sets. */
+   private final @Nullable String linesFileName;
    private final Map<String, DialogueNode> nodes;
-   private final @Nullable ItemOffer itemOffer;
 
    private DialogueScript(Builder builder) {
       this.linesFolder = builder.linesFolder;
-      this.fileInEverySet = builder.commonFile;
+      this.linesFileName = builder.linesFileName;
       this.nodes = builder.nodes;
-      this.itemOffer = builder.itemOffer;
    }
 
    public static Builder script() {
@@ -92,38 +89,29 @@ public class DialogueScript {
       return nodes.values().iterator().next();
    }
 
-   /** The path of one of this script's lines files, from the villager's set if they have one. */
-   public String linesFile(DialogueContext context, String file) {
+   /**
+    * Specifies the file name which contains the dialogue lines of this script. A lines file can either be inside the
+    * root folder, or inside a numbered variation subfolder '/1', '/2', etc. to make each villager choose a particular
+    * random variation of the same lines.
+    */
+   public String linesFileName(DialogueContext context, String file) {
       if (linesFolder == null)
          throw new IllegalStateException("A dialogue without a lines folder can't look up \"" + file + "\"");
 
-      if (fileInEverySet != null) {
+      if (linesFileName != null) {
          String inSet =
-               DialogueLines.chooseSetPerVillager(context.getVillager(), linesFolder, fileInEverySet) + "/" + file;
+               DialogueLines.chooseSetPerVillager(context.getVillager(), linesFolder, linesFileName) + "/" + file;
          if (DialogueLines.entryCount(inSet) > 0)
             return inSet;
       }
       return linesFolder + "/" + file;
    }
 
-   /** Taking an item from a player who right clicks the villager with it, instead of talking. Runs on the server. */
-   public record ItemOffer(ItemOfferCheck accepts, ItemOfferAction take) {
-   }
-
-   public interface ItemOfferCheck {
-      boolean accepts(DialogueContext context, ItemStack offered);
-   }
-
-   public interface ItemOfferAction {
-      void take(DialogueContext context, ItemStack offered);
-   }
-
    public static class Builder {
 
       private final @Nullable String linesFolder;
-      private @Nullable String commonFile;
+      private @Nullable String linesFileName;
       private final Map<String, DialogueNode> nodes = new LinkedHashMap<>();
-      private @Nullable ItemOffer itemOffer;
 
       private @Nullable DialogueNode node;
       private @Nullable DialogueNode.Speech speech;
@@ -134,16 +122,12 @@ public class DialogueScript {
       }
 
       /**
-       * The lines are split into numbered set folders ({@code 1/}, {@code 2/}, ...) and each villager sticks to one of
-       * them. Files missing from a set are looked up in the main folder.
+       * Specifies the file name which contains the dialogue lines of this script. A lines file can either be inside the
+       * root folder, or inside a numbered variation subfolder '/1', '/2', etc. to make each villager choose a particular
+       * random variation of the same lines.
        */
-      public Builder commonFile(String commonFile) {
-         this.commonFile = commonFile;
-         return this;
-      }
-
-      public Builder acceptsItem(ItemOfferCheck accepts, ItemOfferAction take) {
-         this.itemOffer = new ItemOffer(accepts, take);
+      public Builder linesFileName(String linesFileName) {
+         this.linesFileName = linesFileName;
          return this;
       }
 
@@ -169,13 +153,14 @@ public class DialogueScript {
 
       public Builder say(String file) {
          return say(
-               (script, context) -> DialogueLines.randomPages(context.getVillager(), script.linesFile(context, file)));
+               (script, context) -> DialogueLines
+                     .randomPages(context.getVillager(), script.linesFileName(context, file)));
       }
 
       public Builder sayDeterministicPerVillager(String file) {
          return say(
                (script, context) -> DialogueLines
-                     .randomPagesPerVillager(context.getVillager(), script.linesFile(context, file)));
+                     .randomPagesPerVillager(context.getVillager(), script.linesFileName(context, file)));
       }
 
       public Builder say(Component text) {

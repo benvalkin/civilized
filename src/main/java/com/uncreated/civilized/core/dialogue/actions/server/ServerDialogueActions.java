@@ -17,8 +17,10 @@ public final class ServerDialogueActions {
    private static final Map<ResourceLocation, IServerDialogueAction> ACTIONS = new HashMap<>();
 
    public static final int MINIMUM_FOOD_TO_GIVE = 4;
+   public static final int MINIMUM_MEAL_TO_GIVE = 6;
 
    public static final ResourceLocation GIVE_FOOD = register("give_food", new GiveFoodAction(MINIMUM_FOOD_TO_GIVE));
+   public static final ResourceLocation GIVE_MEAL = register("give_meal", new GiveFoodAction(MINIMUM_MEAL_TO_GIVE));
 
    private ServerDialogueActions() {
    }
