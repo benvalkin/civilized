@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 
 import javax.annotation.Nullable;
 
@@ -16,6 +17,7 @@ import com.uncreated.civilized.ui.style.Colors;
 
 import lombok.Getter;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 
 /**
@@ -123,8 +125,8 @@ public class DialogueScript {
 
       /**
        * Specifies the file name which contains the dialogue lines of this script. A lines file can either be inside the
-       * root folder, or inside a numbered variation subfolder '/1', '/2', etc. to make each villager choose a particular
-       * random variation of the same lines.
+       * root folder, or inside a numbered variation subfolder '/1', '/2', etc. to make each villager choose a
+       * particular random variation of the same lines.
        */
       public Builder linesFileName(String linesFileName) {
          this.linesFileName = linesFileName;
@@ -190,9 +192,19 @@ public class DialogueScript {
          return this;
       }
 
-      /** A choice whose text is in the lines folder's {@code choices} file. */
-      public Builder choice(String name) {
-         return choice(context -> DialogueLines.text(choicesFile(), name));
+      /** A choice taken from the specified {@code choices} file that matches the specified {@code choiceName}. */
+      public Builder choice(String choiceName) {
+         return choice(context -> DialogueLines.text(choicesFile(), choiceName));
+      }
+
+      public Builder choice(String choiceName, UnaryOperator<MutableComponent> formatChosenLine) {
+         return choice(context -> formatChosenLine.apply(DialogueLines.text(choicesFile(), choiceName)));
+      }
+
+      public Builder choiceAction(String choiceName) {
+         return choice(
+               context -> DialogueLines.text(choicesFile(), choiceName)
+                     .withColor(Colors.MENU_TEXT_VILLAGER_DIALOGUE_ACTION));
       }
 
       public Builder choice(Component text) {

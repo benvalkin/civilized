@@ -10,7 +10,7 @@ public class VisitorHospitality {
 
    /** Hospitality a visitor can gain from chatting to citizens each day. */
    public static final float DAILY_CHATTING_CAP = 15;
-   public static final int WELCOME_BONUS = 5;
+   public static final int WELCOME_BONUS = 3;
    public static final int FED_BONUS = 5;
 
    private static final String FIELD_POINTS = "points";
