@@ -1,18 +1,17 @@
 package com.uncreated.civilized.core.settlement.entity;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.google.common.collect.ImmutableList;
-import com.uncreated.civilized.entity.CivilizedVillager;
 import org.slf4j.Logger;
 
+import com.google.common.collect.ImmutableList;
 import com.mojang.logging.LogUtils;
+import com.uncreated.civilized.entity.CivilizedVillager;
 
 public class LoadedVillagers {
 

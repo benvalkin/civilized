@@ -104,6 +104,7 @@ public class BuildingTypes {
                BuildingType.builder(createResourceKey("town_square"))
                      .detectionType(BuildingDetectionType.MANUAL_DRAG)
                      .createBehaviour(TownSquareBehaviour::new)
+                     .maxRecreationVisitors(10)
                      .build());
    public static BuildingType STOREHOUSE = declare(BuildingType.builder(createResourceKey("storehouse")).build());
    public static BuildingType CHURCH =
@@ -149,6 +150,7 @@ public class BuildingTypes {
                      .isWorkerResidence(true)
                      .isFamilyResidence(true)
                      .isFoodVendor(true)
+                     .maxRecreationVisitors(12)
                      .occupation(() -> VillagerOccupations.TAVERN_KEEPER)
                      .build());
    public static BuildingType FARMER_HOUSE =

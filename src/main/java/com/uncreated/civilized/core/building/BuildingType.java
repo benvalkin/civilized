@@ -36,6 +36,8 @@ public class BuildingType {
    private final boolean isMilitary;
    private final boolean isFoodVendor;
    @Nullable
+   private final Integer maxRecreationVisitors;
+   @Nullable
    private final Class<? extends Animal> animalFarmMobType;
    private final boolean shouldSlaughterAnimals;
    @Builder.Default
