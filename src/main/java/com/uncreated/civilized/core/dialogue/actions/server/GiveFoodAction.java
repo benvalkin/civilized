@@ -29,7 +29,7 @@ public class GiveFoodAction implements IServerDialogueAction {
          return false;
 
       // visitors only take one meal a visit, which counts towards their hospitality
-      boolean isVisitor = VisitorBehaviour.ofVillager(villager).isPresent();
+      boolean isVisitor = VisitorBehaviour.tryGet(villager).isPresent();
       if (isVisitor && !villager.getInfo().getHospitality().feed(VisitorHospitality.FED_BONUS))
          return false;
 

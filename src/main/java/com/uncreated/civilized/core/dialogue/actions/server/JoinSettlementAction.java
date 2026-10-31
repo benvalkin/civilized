@@ -28,7 +28,7 @@ public class JoinSettlementAction implements IServerDialogueAction {
 
    @Override
    public boolean run(ServerPlayer player, CivilizedVillager villager) {
-      if (VisitorBehaviour.ofVillager(villager).isEmpty())
+      if (VisitorBehaviour.tryGet(villager).isEmpty())
          return false;
 
       Optional<Settlement> settlement = ServerSettlementsStore.INSTANCE.findFromOwner(player.getUUID());

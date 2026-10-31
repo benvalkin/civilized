@@ -150,8 +150,10 @@ public class TownSquareBehaviour extends BuildingBehaviour {
             merchant.stockWithNewTrades(level);
       }
       villager.getInfo().setHomeBuildingId(townSquare.getBuildingId());
-      VisitorBehaviour.ofVillager(villager)
-            .ifPresent(visitor -> visitor.setDepartAt(chooseDepartureTime(level.getDayTime(), villager.getRandom())));
+      VisitorBehaviour.tryGet(villager).ifPresent(visitor -> {
+         visitor.setVisitingSettlementId(townSquare.getSettlementId());
+         visitor.setDepartAt(chooseDepartureTime(level.getDayTime(), villager.getRandom()));
+      });
       ServerVillagerStore.INSTANCE.setDirty();
       ServerVillagerStore.INSTANCE.replicateChange(villager.getInfo(), StoreOperation.UPDATE);
       ServerBuildingsStore.INSTANCE.replicateChange(townSquare, StoreOperation.UPDATE);

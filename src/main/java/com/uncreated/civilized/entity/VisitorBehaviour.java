@@ -1,6 +1,7 @@
 package com.uncreated.civilized.entity;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.entity.behaviour.InnBehaviour;
@@ -16,6 +17,7 @@ import net.minecraft.server.level.ServerLevel;
 
 public class VisitorBehaviour extends VillagerRoleBehaviour {
 
+   public static final String FIELD_VISITING_SETTLEMENT_ID = "vising_settleent_id";
    public static final String FIELD_DEPART_AT = "depart_at";
    private static final String FIELD_WILLING_TO_JOIN = "willing_to_join";
    public static final long NO_DEPARTURE = -1;
@@ -26,6 +28,8 @@ public class VisitorBehaviour extends VillagerRoleBehaviour {
    private static final int NOTIFICATION_CHECK_INTERVAL = 10 * 20;
 
    @Setter
+   private UUID visitingSettlementId;
+   @Setter
    private long departAt = NO_DEPARTURE;
    @Setter
    private boolean departurePaused;
@@ -35,7 +39,7 @@ public class VisitorBehaviour extends VillagerRoleBehaviour {
       super(villager);
    }
 
-   public static Optional<VisitorBehaviour> ofVillager(CivilizedVillager villager) {
+   public static Optional<VisitorBehaviour> tryGet(CivilizedVillager villager) {
       if (villager.getRoleBehaviour() instanceof VisitorBehaviour visitor)
          return Optional.of(visitor);
 
@@ -44,12 +48,14 @@ public class VisitorBehaviour extends VillagerRoleBehaviour {
 
    @Override
    public void addAdditionalSaveData(CompoundTag compound) {
+      compound.putUUID(FIELD_VISITING_SETTLEMENT_ID, visitingSettlementId);
       compound.putLong(FIELD_DEPART_AT, departAt);
       compound.putBoolean(FIELD_WILLING_TO_JOIN, willingToJoin);
    }
 
    @Override
    public void readAdditionalSaveData(CompoundTag compound) {
+      visitingSettlementId = compound.getUUID(FIELD_VISITING_SETTLEMENT_ID);
       if (compound.contains(FIELD_DEPART_AT))
          departAt = compound.getLong(FIELD_DEPART_AT);
       willingToJoin = compound.getBoolean(FIELD_WILLING_TO_JOIN);
@@ -61,7 +67,9 @@ public class VisitorBehaviour extends VillagerRoleBehaviour {
          // also withdrawn when they check into an inn, so that it can be sent again saying where to find them
          WillingToJoinNotification.withdrawNotification(villager.getInfo());
          willingToJoin = false;
-         if (!InnBehaviour.tryCheckIn(level, villager))
+
+         Optional<InnBehaviour> inn = InnBehaviour.findAvailableInn(visitingSettlementId);
+         if (inn.isEmpty() || !inn.get().tryCheckIn(level, villager))
             villager.depart();
          return;
       }

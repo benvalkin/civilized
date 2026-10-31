@@ -4,10 +4,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 import com.uncreated.civilized.core.StoreOperation;
-import com.uncreated.civilized.core.building.Building;
-import com.uncreated.civilized.core.building.BuildingTypes;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.entity.LoadedBuilding;
+import com.uncreated.civilized.core.building.entity.LoadedBuildings;
 import com.uncreated.civilized.core.building.util.BuildingUtil;
 import com.uncreated.civilized.core.recruitment.ImpressionRequirement;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
@@ -41,9 +40,8 @@ public class InnBehaviour extends BuildingBehaviour {
       eventScheduler.tick(level, gameTime, () -> trySpawnVisitor(level));
    }
 
-   public static final int MAX_GUESTS = 4;
    private static final int MIN_STAY_DAYS = 2;
-   private static final int MAX_STAY_DAYS = 3;
+   private static final int MAX_STAY_DAYS = 4;
    private static final int DEPARTURE_TIME = 14000;
 
    private static long chooseDepartureTime(long dayTime, RandomSource random) {
@@ -59,7 +57,7 @@ public class InnBehaviour extends BuildingBehaviour {
 
    private void trySpawnVisitor(ServerLevel level) {
 
-      if (!innHasRoom(getBuilding()))
+      if (isFull())
          return;
 
       BlockPos insidePos = getBuilding().getBounds().findRandomInsideFloorBlock(level);
@@ -76,7 +74,7 @@ public class InnBehaviour extends BuildingBehaviour {
             VISITOR_ROLES.getRandomValue(villager.getRandom()).orElse(VillagerNpcRoles.TRAVELLER);
       villager.changeNpcRole(visitorRole);
       villager.getInfo().setHomeBuildingId(getBuilding().getBuildingId());
-      VisitorBehaviour.ofVillager(villager)
+      VisitorBehaviour.tryGet(villager)
             .ifPresent(visitor -> visitor.setDepartAt(chooseDepartureTime(level.getDayTime(), villager.getRandom())));
       ServerVillagerStore.INSTANCE.setDirty();
       ServerVillagerStore.INSTANCE.replicateChange(villager.getInfo(), StoreOperation.UPDATE);
@@ -84,29 +82,16 @@ public class InnBehaviour extends BuildingBehaviour {
       LOGGER.debug("Villager spawned at Inn: {}", villager.getUUID());
    }
 
-   private static boolean innHasRoom(Building inn) {
-      return BuildingUtil.getVisitors(inn, ServerVillagerStore.INSTANCE).size() < MAX_GUESTS;
-   }
-
-   public static boolean tryCheckIn(ServerLevel level, CivilizedVillager visitor) {
+   public boolean tryCheckIn(ServerLevel level, CivilizedVillager visitor) {
       VillagerInfo info = visitor.getInfo();
       ImpressionRequirement tier = info.getNpcRole().recruitTier();
       if (tier != ImpressionRequirement.MID && tier != ImpressionRequirement.HIGH)
-         return false;
+         return false; // low tier visitors cannot stay in the in
 
-      Optional<Building> townSquare =
-            ServerBuildingsStore.INSTANCE.find(info.getHomeBuildingId())
-                  .filter(building -> building.getBuildingType().is(BuildingTypes.TOWN_SQUARE));
-      if (townSquare.isEmpty())
-         return false;
-
-      Optional<Building> inn = findAvailableInn(townSquare.get().getSettlementId());
-      if (inn.isEmpty())
-         return false;
-
-      info.setHomeBuildingId(inn.get().getBuildingId());
-      visitor.getBrain().setMemory(MemoryModuleType.HOME, new GlobalPos(level.dimension(), inn.get().getBlockPos()));
-      VisitorBehaviour.ofVillager(visitor)
+      info.setHomeBuildingId(getBuilding().getBuildingId());
+      visitor.getBrain()
+            .setMemory(MemoryModuleType.HOME, new GlobalPos(level.dimension(), getBuilding().getBlockPos()));
+      VisitorBehaviour.tryGet(visitor)
             .ifPresent(
                   behaviour -> behaviour.setDepartAt(chooseDepartureTime(level.getDayTime(), visitor.getRandom())));
       ServerVillagerStore.INSTANCE.setDirty();
@@ -114,11 +99,26 @@ public class InnBehaviour extends BuildingBehaviour {
       return true;
    }
 
-   private static Optional<Building> findAvailableInn(UUID settlementId) {
-      for (Building building : ServerBuildingsStore.INSTANCE.findForSettlement(settlementId)) {
-         if (building.getBuildingType().is(BuildingTypes.INN) && innHasRoom(building))
-            return Optional.of(building);
-      }
-      return Optional.empty();
+   public static Optional<InnBehaviour> findAvailableInn(UUID settlementId) {
+      return ServerBuildingsStore.INSTANCE.findForSettlement(settlementId)
+            .stream()
+            .map(LoadedBuildings::checkLoaded)
+            .flatMap(Optional::stream)
+            .filter(inn -> inn.getBehaviour() instanceof InnBehaviour innBehaviour && !innBehaviour.isFull())
+            .map(b -> (InnBehaviour) b.getBehaviour())
+            .findFirst();
+   }
+
+   public int getMaxVisitors() {
+      int upgradeLevel = getBuilding().getUpgradeLevel();
+      if (upgradeLevel <= 1)
+         return 3;
+      if (upgradeLevel == 2)
+         return 5;
+      return 7;
+   }
+
+   public boolean isFull() {
+      return BuildingUtil.getVisitors(getBuilding(), ServerVillagerStore.INSTANCE).size() >= getMaxVisitors();
    }
 }
