@@ -2,10 +2,10 @@
   "impression": "Impression: %s",
   "source": "  %s: +%s",
   "hospitality": "  Hospitality: +%s",
-  "willing": "%s likes your settlement and would like to stay",
-  "not_willing": "%s does not like your settlement enough",
+  "willing": "%s likes your settlement and would like to stay.",
+  "not_willing": "%s does not like your settlement enough.",
   "impression_needed": "Impression needed: %s",
   "welcome": "+%s hospitality",
-  "already_welcomed": "You've already welcomed them",
-  "already_fed": "They've already eaten"
+  "already_welcomed": "You've already welcomed them.",
+  "already_fed": "They've already eaten."
 }

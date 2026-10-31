@@ -13,8 +13,8 @@ public final class MigrantDialogue {
          script("dialogue/migrant")
                .node("opening").sayDeterministicPerVillager("grunt")
                .choice(WelcomeCheck::choiceText).when(new WelcomeCheck()).runOnServer(WELCOME).then("welcomed")
-               .choice("accept").when(new CanJoinSettlementCheck()).runOnServer(JOIN_SETTLEMENT).then("joined")
-               .choice("reject")
+               .choiceAction("join").when(new CanJoinSettlementCheck()).runOnServer(JOIN_SETTLEMENT).then("joined")
+               .leave()
                .node("welcomed").say("welcomed")
                .node("joined").say("joined")
                .build();

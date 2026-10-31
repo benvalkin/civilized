@@ -15,7 +15,7 @@ import net.minecraft.world.entity.player.Player;
 public class SpeakToPlayer extends Behavior<CivilizedVillager> {
 
    public SpeakToPlayer() {
-      super(Map.of(AIRegistry.MM_DIALOGUE_TARGET.get(), MemoryStatus.VALUE_PRESENT), 120);
+      super(Map.of(AIRegistry.MM_DIALOGUE_TARGET.get(), MemoryStatus.VALUE_PRESENT), 20 * 60 * 60);
    }
 
    @Override
@@ -27,8 +27,17 @@ public class SpeakToPlayer extends Behavior<CivilizedVillager> {
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
       Player player = villager.getBrain().getMemory(AIRegistry.MM_DIALOGUE_TARGET.get()).orElseThrow();
       villager.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
-      villager.getBrain().setMemory(MemoryModuleType.LOOK_TARGET, new EntityTracker(player, true));
       villager.getBrain().setMemory(MemoryModuleType.INTERACTION_TARGET, player);
+   }
+
+   @Override
+   protected void tick(ServerLevel level, CivilizedVillager villager, long gameTime) {
+      // set every tick in case other activities erase the look target when they stop
+      villager.getBrain()
+            .getMemory(AIRegistry.MM_DIALOGUE_TARGET.get())
+            .ifPresent(
+                  player -> villager.getBrain()
+                        .setMemory(MemoryModuleType.LOOK_TARGET, new EntityTracker(player, true)));
    }
 
    @Override
