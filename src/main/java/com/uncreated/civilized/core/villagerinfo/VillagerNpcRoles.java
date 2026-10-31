@@ -12,7 +12,7 @@ import com.uncreated.civilized.CivilizedMod;
 import com.uncreated.civilized.core.dialogue.questline.advisor.AdvisorDialogue;
 import com.uncreated.civilized.core.dialogue.questline.migrant.MigrantDialogue;
 import com.uncreated.civilized.core.dialogue.questline.migrant.VagrantDialogue;
-import com.uncreated.civilized.core.dialogue.questline.worker.WorkerDialogue;
+import com.uncreated.civilized.core.dialogue.questline.worker.CitizenDialogue;
 import com.uncreated.civilized.core.recruitment.ImpressionRequirement;
 import com.uncreated.civilized.entity.MerchantVisitorBehaviour;
 import com.uncreated.civilized.entity.VisitorBehaviour;
@@ -76,7 +76,7 @@ public class VillagerNpcRoles {
    // settlement members
    public static final VillagerNpcRole CITIZEN =
          declare(
-               VillagerNpcRole.builder(createResourceKey("citizen")).dialogue(always(WorkerDialogue.SCRIPT)).build());
+               VillagerNpcRole.builder(createResourceKey("citizen")).dialogue(always(CitizenDialogue.SCRIPT)).build());
    public static final VillagerNpcRole ADVISOR =
          declare(
                VillagerNpcRole.builder(createResourceKey("advisor"))
