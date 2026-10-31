@@ -114,7 +114,7 @@ public class Socialize extends StatefulBehaviour {
       super.start(level, villager, gameTime);
       startTime = gameTime;
       met = false;
-      VisitorBehaviour.of(villager).ifPresent(visitor -> visitor.setDeparturePaused(true));
+      VisitorBehaviour.ofVillager(villager).ifPresent(visitor -> visitor.setDeparturePaused(true));
    }
 
    @Override
@@ -181,11 +181,11 @@ public class Socialize extends StatefulBehaviour {
 
       getBehaviourCooldowns().startCooldown(Cooldowns.START, getRestartCooldown(), gameTime);
 
-      VisitorBehaviour.of(villager).ifPresent(visitor -> visitor.setDeparturePaused(false));
+      VisitorBehaviour.ofVillager(villager).ifPresent(visitor -> visitor.setDeparturePaused(false));
    }
 
    private static void rewardVisitorForChatting(CivilizedVillager villager) {
-      Optional<VisitorBehaviour> visitor = VisitorBehaviour.of(villager);
+      Optional<VisitorBehaviour> visitor = VisitorBehaviour.ofVillager(villager);
       if (visitor.isEmpty())
          return;
 

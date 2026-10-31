@@ -48,7 +48,7 @@ public class HostGuests extends Socialize {
                   CivilizedVillager.class,
                   villager.getBoundingBox().inflate(INVITE_RANGE),
                   other -> other != villager && other.isAlive() && !other.isDrafted()
-                        && VisitorBehaviour.of(other).isPresent())
+                        && VisitorBehaviour.ofVillager(other).isPresent())
             .stream()
             .sorted(Comparator.comparingDouble(villager::distanceToSqr))
             .toList();

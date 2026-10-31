@@ -34,7 +34,7 @@ public class VisitorBehaviour extends VillagerRoleBehaviour {
       super(villager);
    }
 
-   public static Optional<VisitorBehaviour> of(CivilizedVillager villager) {
+   public static Optional<VisitorBehaviour> ofVillager(CivilizedVillager villager) {
       if (villager.getRoleBehaviour() instanceof VisitorBehaviour visitor)
          return Optional.of(visitor);
 

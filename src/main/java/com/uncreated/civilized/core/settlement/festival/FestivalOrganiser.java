@@ -157,7 +157,7 @@ public class FestivalOrganiser {
       TownSquareBehaviour.spawnVisitor(level, townSquare.get(), VillagerNpcRoles.SUITOR, null)
             // suitors stay until the festival is over instead of their normal departure time (they will still finish
             // whatever conversation they're having)
-            .flatMap(VisitorBehaviour::of)
+            .flatMap(VisitorBehaviour::ofVillager)
             .ifPresent(visitor -> visitor.setDepartAt(Festival.endTime(state)));
    }
 
@@ -172,7 +172,7 @@ public class FestivalOrganiser {
                   .stream()
                   .map(visitor -> LoadedVillagers.find(visitor.getVillagerId()))
                   .flatMap(Optional::stream)
-                  .map(VisitorBehaviour::of)
+                  .map(VisitorBehaviour::ofVillager)
                   .flatMap(Optional::stream)
                   .forEach(visitor -> visitor.setDepartAt(dayTime)));
 

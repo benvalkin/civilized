@@ -69,7 +69,7 @@ public class InnBehaviour extends BuildingBehaviour {
             VISITOR_ROLES.getRandomValue(villager.getRandom()).orElse(VillagerNpcRoles.TRAVELLER);
       villager.changeNpcRole(visitorRole);
       villager.getInfo().setHomeBuildingId(getBuilding().getBuildingId());
-      VisitorBehaviour.of(villager)
+      VisitorBehaviour.ofVillager(villager)
             .ifPresent(visitor -> visitor.setDepartAt(chooseDepartureTime(level.getDayTime(), villager.getRandom())));
       ServerVillagerStore.INSTANCE.setDirty();
       ServerVillagerStore.INSTANCE.replicateChange(villager.getInfo(), StoreOperation.UPDATE);

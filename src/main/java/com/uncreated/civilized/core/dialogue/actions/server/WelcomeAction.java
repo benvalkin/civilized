@@ -12,7 +12,7 @@ public class WelcomeAction implements IServerDialogueAction {
 
    @Override
    public boolean run(ServerPlayer player, CivilizedVillager villager) {
-      if (VisitorBehaviour.of(villager).isEmpty())
+      if (VisitorBehaviour.ofVillager(villager).isEmpty())
          return false;
 
       if (!villager.getInfo().getHospitality().welcome(VisitorHospitality.WELCOME_BONUS))

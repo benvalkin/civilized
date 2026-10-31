@@ -147,8 +147,8 @@ public class Flirt extends Socialize {
       joinCitizensFamily(villager, instigator);
 
       // if either villager is a visitor, they must cancel their departure
-      VisitorBehaviour.of(instigator).ifPresent(visitor -> visitor.setDepartAt(VisitorBehaviour.NO_DEPARTURE));
-      VisitorBehaviour.of(villager).ifPresent(visitor -> visitor.setDepartAt(VisitorBehaviour.NO_DEPARTURE));
+      VisitorBehaviour.ofVillager(instigator).ifPresent(visitor -> visitor.setDepartAt(VisitorBehaviour.NO_DEPARTURE));
+      VisitorBehaviour.ofVillager(villager).ifPresent(visitor -> visitor.setDepartAt(VisitorBehaviour.NO_DEPARTURE));
 
       instigator.refreshBrain(level);
       villager.refreshBrain(level);

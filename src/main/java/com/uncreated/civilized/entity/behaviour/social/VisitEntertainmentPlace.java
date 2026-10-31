@@ -62,7 +62,7 @@ public class VisitEntertainmentPlace extends VisitBuilding {
       if (!building.getBuildingType().is(BuildingTypes.TAVERN))
          return;
 
-      Optional<VisitorBehaviour> visitor = VisitorBehaviour.of(villager);
+      Optional<VisitorBehaviour> visitor = VisitorBehaviour.ofVillager(villager);
       if (visitor.isEmpty())
          return;
 
