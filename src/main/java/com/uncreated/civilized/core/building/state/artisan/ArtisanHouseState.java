@@ -83,9 +83,6 @@ public abstract class ArtisanHouseState extends BuildingState {
 
             workedBills++;
 
-            if (workedBills - 1 >= maxWorkedBills)
-               break; // worker does not have enough skill to work on any more bill
-
             Optional<RecipeHolder<?>> recipe = bill.resolveRecipe(recipeManager);
 
             if (recipe.isEmpty())
@@ -93,6 +90,9 @@ public abstract class ArtisanHouseState extends BuildingState {
 
             Order order = machine.createOrderFromBill(key, bill, serverLevel);
             machine.registerOrder(order);
+
+            if (workedBills >= maxWorkedBills)
+               break; // worker does not have enough skill to work on any more bill
 
          } catch (Exception e) {
             LogUtils.getLogger()

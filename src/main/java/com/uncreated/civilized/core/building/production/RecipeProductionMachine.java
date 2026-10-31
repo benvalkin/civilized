@@ -102,6 +102,7 @@ public abstract class RecipeProductionMachine<Order extends ProductionOrder> {
 
             PendingProductionOutput pendingOutput = currentlyProcessing.getNextOutput(ingredientsChests, outputChests);
 
+            // enabled bills should not be added to the orders list so this is just a failsafe
             boolean billEnabled = currentlyProcessing.getBill().isEnabled();
 
             boolean billSatisfied =
