@@ -4,11 +4,9 @@ import lombok.Getter;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 
-/** How well a visitor has been treated during their visit. Lost when they leave. */
 @Getter
 public class VisitorHospitality {
 
-   /** Hospitality a visitor can gain from chatting to citizens each day. */
    public static final float DAILY_CHATTING_CAP = 15;
    public static final int WELCOME_BONUS = 3;
    public static final int FED_BONUS = 5;

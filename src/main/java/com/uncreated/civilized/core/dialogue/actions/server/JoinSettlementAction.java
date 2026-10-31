@@ -10,6 +10,7 @@ import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.util.BuildingUtil;
 import com.uncreated.civilized.core.recruitment.Impression;
+import com.uncreated.civilized.core.recruitment.WillingToJoinNotification;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
@@ -36,7 +37,7 @@ public class JoinSettlementAction implements IServerDialogueAction {
 
       UUID settlementId = settlement.get().getSettlementId();
       VillagerInfo info = villager.getInfo();
-      if (!Impression.of(info, settlementId, ServerBuildingsStore.INSTANCE, ServerVillagerStore.INSTANCE)
+      if (!Impression.compute(info, settlementId, ServerBuildingsStore.INSTANCE, ServerVillagerStore.INSTANCE)
             .isWillingToJoin())
          return false;
 
@@ -48,6 +49,8 @@ public class JoinSettlementAction implements IServerDialogueAction {
                   ServerVillagerStore.INSTANCE);
       if (worksite.isEmpty())
          return false;
+
+      WillingToJoinNotification.withdrawNotification(info);
 
       // the town square or inn they were staying at isn't a home, so the usual home search finds them one
       UUID previousHomeId = info.getHomeBuildingId();

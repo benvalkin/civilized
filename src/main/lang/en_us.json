@@ -622,6 +622,8 @@
   "notification.festival.started.detail": "The festival in %s has begun! Villagers are gathering at the town square to celebrate.",
   "notification.festival.ended": "Festival Over",
   "notification.festival.ended.detail": "The festival in %s has come to an end, and its visitors are heading home.",
+  "notification.visitor.willing_to_join": "Visitor willing to join",
+  "notification.visitor.willing_to_join.detail": "%s the %s has been impressed by %s' hospitality and would like to move here.\n\nTalk to them at the %s to welcome them.",
   "notification.tax.taxes_collected.detail": "Citizens of %s have paid %s in taxes",
   "notification.villager.hunger.strike": "Villagers on Strike",
   "notification.villager.strike.hunger.detail": "Some villagers are refusing to work due to prolonged hunger.",

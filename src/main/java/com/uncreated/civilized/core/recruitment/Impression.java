@@ -9,7 +9,7 @@ import com.uncreated.civilized.core.villagerinfo.VillagerStore;
 
 public record Impression(List<AttractivenessSource> attractiveness, int hospitality, int required) {
 
-   public static Impression of(
+   public static Impression compute(
          VillagerInfo visitor,
          UUID settlementId,
          BuildingStore buildingStore,

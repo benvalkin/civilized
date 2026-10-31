@@ -41,7 +41,7 @@ public class CanJoinSettlementCheck implements ChoiceCondition {
       UUID settlementId = settlement.get().getSettlementId();
       VillagerInfo visitor = context.getVillager().getInfo();
       Impression impression =
-            Impression.of(visitor, settlementId, ClientBuildingStore.INSTANCE, ClientVillagerStore.INSTANCE);
+            Impression.compute(visitor, settlementId, ClientBuildingStore.INSTANCE, ClientVillagerStore.INSTANCE);
       MutableComponent tooltip = breakdown(impression);
 
       if (!impression.isWillingToJoin()) {
