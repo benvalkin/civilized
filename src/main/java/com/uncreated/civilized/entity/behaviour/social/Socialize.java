@@ -5,6 +5,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -193,9 +194,12 @@ public class Socialize extends StatefulBehaviour {
       if (conversation.isEmpty())
          return;
 
+      UUID visitingSettlementId = villager.getInfo().getVisitingSettlementId();
       for (CivilizedVillager other : conversation.get().getPastMembers()) {
-         // reward residents for hospitality
-         if (other != villager && other.getInfo().getSettlementId() != null) {
+         // award hospitality to visitors
+         boolean isVisitor =
+               visitingSettlementId != null && visitingSettlementId.equals(other.getInfo().getSettlementId());
+         if (other != villager && isVisitor) {
             visitor.get().gainHospitalityFromChatting(other);
             return;
          }

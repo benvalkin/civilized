@@ -3,7 +3,6 @@ package com.uncreated.civilized.core.dialogue.questline.migrant;
 import static com.uncreated.civilized.core.dialogue.DialogueLines.text;
 import static net.minecraft.network.chat.Component.translatable;
 
-import java.util.Optional;
 import java.util.UUID;
 
 import org.jetbrains.annotations.NotNull;
@@ -15,7 +14,10 @@ import com.uncreated.civilized.core.dialogue.ChoiceState;
 import com.uncreated.civilized.core.dialogue.context.DialogueContext;
 import com.uncreated.civilized.core.recruitment.AttractivenessSource;
 import com.uncreated.civilized.core.recruitment.Impression;
+import com.uncreated.civilized.core.settlement.ClientSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
+import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermissionStore;
+import com.uncreated.civilized.core.settlement.permission.SettlementPermissions;
 import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.ui.style.Colors;
@@ -31,15 +33,24 @@ public class CanJoinSettlementCheck implements ChoiceCondition {
 
    @Override
    public ChoiceState check(DialogueContext context) {
-      Optional<Settlement> settlement = WelcomeCheck.findPlayersSettlement(context);
-      if (settlement.isEmpty()) {
+      VillagerInfo visitor = context.getVillager().getInfo();
+      if (ClientSettlementsStore.INSTANCE.findFromOwner(context.getPlayer().getUUID()).isEmpty()) {
          return ChoiceState.disabled(
                translatable("villager.dialogue.traveller.quest.validation.tooltip.player_no_settlement")
                      .withColor(Colors.VALIDATION_ERROR));
       }
 
-      UUID settlementId = settlement.get().getSettlementId();
-      VillagerInfo visitor = context.getVillager().getInfo();
+      SettlementPermissions permissions =
+            ServerSettlementPermissionStore.INSTANCE.getOrCreate(visitor.getVisitingSettlementId());
+      if (!permissions.hasRecruitNewVillagersPermission(context.getPlayer().getUUID())) {
+         return ChoiceState.disabled(
+               text(TOOLTIPS, "visiting_elsewhere", visitor.getFirstName()).withColor(Colors.VALIDATION_ERROR));
+      }
+
+      Settlement visited =
+            ClientSettlementsStore.INSTANCE.get(context.getVillager().getInfo().getVisitingSettlementId());
+
+      UUID settlementId = visited.getSettlementId();
       Impression impression =
             Impression.compute(visitor, settlementId, ClientBuildingStore.INSTANCE, ClientVillagerStore.INSTANCE);
       MutableComponent tooltip = breakdown(impression);

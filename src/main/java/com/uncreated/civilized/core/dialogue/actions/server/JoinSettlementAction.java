@@ -13,6 +13,8 @@ import com.uncreated.civilized.core.recruitment.Impression;
 import com.uncreated.civilized.core.recruitment.WillingToJoinNotification;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
+import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermissionStore;
+import com.uncreated.civilized.core.settlement.permission.SettlementPermissions;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
@@ -23,7 +25,6 @@ import com.uncreated.civilized.ui.style.Colors;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 
-/** The visitor joins the settlement of the player who asked them, if they're willing to and there's work for them. */
 public class JoinSettlementAction implements IServerDialogueAction {
 
    @Override
@@ -31,12 +32,17 @@ public class JoinSettlementAction implements IServerDialogueAction {
       if (VisitorBehaviour.tryGet(villager).isEmpty())
          return false;
 
-      Optional<Settlement> settlement = ServerSettlementsStore.INSTANCE.findFromOwner(player.getUUID());
+      VillagerInfo info = villager.getInfo();
+      Optional<Settlement> settlement = ServerSettlementsStore.INSTANCE.find(info.getVisitingSettlementId());
       if (settlement.isEmpty())
          return false;
 
+      SettlementPermissions permissions =
+            ServerSettlementPermissionStore.INSTANCE.getOrCreate(settlement.get().getSettlementId());
+      if (!permissions.hasRecruitNewVillagersPermission(player.getUUID()))
+         return false;
+
       UUID settlementId = settlement.get().getSettlementId();
-      VillagerInfo info = villager.getInfo();
       if (!Impression.compute(info, settlementId, ServerBuildingsStore.INSTANCE, ServerVillagerStore.INSTANCE)
             .isWillingToJoin())
          return false;

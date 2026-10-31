@@ -5,8 +5,6 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import com.uncreated.civilized.core.building.Building;
-import com.uncreated.civilized.core.building.BuildingStore;
 import com.uncreated.civilized.core.settlement.SettlementState;
 import com.uncreated.civilized.core.settlement.SettlementsStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
@@ -15,7 +13,7 @@ import com.uncreated.civilized.ui.style.Colors;
 
 import net.minecraft.network.chat.Component;
 
-public final class Festival {
+public final class Festival { // todo: clean up annoying static methods
 
    public static final int BASE_COST = 100;
    /** How much more each festival costs after the one before it. */
@@ -88,19 +86,15 @@ public final class Festival {
       return CurrencyItem.amountTranslation(cost(state)).withColor(Colors.COIN);
    }
 
-   public static @Nullable UUID findHostSettlementId(VillagerInfo villager, BuildingStore buildings) {
+   public static @Nullable UUID findHostSettlementId(VillagerInfo villager) {
       if (villager.getSettlementId() != null)
          return villager.getSettlementId();
 
-      return buildings.find(villager.getHomeBuildingId()).map(Building::getSettlementId).orElse(null);
+      return villager.getVisitingSettlementId();
    }
 
-   public static Phase currentPhaseFor(
-         VillagerInfo villager,
-         BuildingStore buildings,
-         SettlementsStore settlements,
-         long dayTime) {
-      UUID settlementId = findHostSettlementId(villager, buildings);
+   public static Phase currentPhaseFor(VillagerInfo villager, SettlementsStore settlements, long dayTime) {
+      UUID settlementId = findHostSettlementId(villager);
       if (settlementId == null)
          return Phase.NONE;
 

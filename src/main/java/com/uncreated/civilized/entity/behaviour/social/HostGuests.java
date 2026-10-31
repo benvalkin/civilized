@@ -4,11 +4,11 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 
 import org.jetbrains.annotations.NotNull;
 
 import com.uncreated.civilized.entity.CivilizedVillager;
-import com.uncreated.civilized.entity.VisitorBehaviour;
 import com.uncreated.civilized.entity.behaviour.BehaviourStates;
 import com.uncreated.civilized.entity.behaviour.Cooldowns;
 
@@ -47,11 +47,15 @@ public class HostGuests extends Socialize {
             .getEntitiesOfClass(
                   CivilizedVillager.class,
                   villager.getBoundingBox().inflate(INVITE_RANGE),
-                  other -> other != villager && other.isAlive() && !other.isDrafted()
-                        && VisitorBehaviour.tryGet(other).isPresent())
+                  other -> other != villager && other.isAlive() && !other.isDrafted() && isVisiting(other, villager))
             .stream()
             .sorted(Comparator.comparingDouble(villager::distanceToSqr))
             .toList();
+   }
+
+   private boolean isVisiting(CivilizedVillager visitor, CivilizedVillager homemaker) {
+      UUID settlementId = homemaker.getInfo().getSettlementId();
+      return settlementId != null && settlementId.equals(visitor.getInfo().getVisitingSettlementId());
    }
 
    @Override

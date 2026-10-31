@@ -3,7 +3,6 @@ package com.uncreated.civilized.ui.menu.building.townsquare.tabs;
 import java.util.List;
 import java.util.Optional;
 
-import com.uncreated.civilized.core.building.util.BuildingUtil;
 import com.uncreated.civilized.core.settlement.SettlementState;
 import com.uncreated.civilized.core.settlement.festival.Festival;
 import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
@@ -76,7 +75,7 @@ public class TownSquareInfoTab extends ABuildingScreenTab implements IBuildingIn
    }
 
    private int countVisitors() {
-      return BuildingUtil.getVisitors(context.building(), ClientVillagerStore.INSTANCE).size();
+      return ClientVillagerStore.INSTANCE.getVisitors(context.settlement().getSettlementId()).size();
    }
 
    @Override

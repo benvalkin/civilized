@@ -3,16 +3,10 @@ package com.uncreated.civilized.core.settlement.festival;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Optional;
 
 import javax.annotation.Nullable;
 
 import com.uncreated.civilized.core.StoreOperation;
-import com.uncreated.civilized.core.building.Building;
-import com.uncreated.civilized.core.building.ServerBuildingsStore;
-import com.uncreated.civilized.core.building.entity.LoadedBuildings;
-import com.uncreated.civilized.core.building.entity.behaviour.TownSquareBehaviour;
-import com.uncreated.civilized.core.building.util.BuildingUtil;
 import com.uncreated.civilized.core.notifications.Notification;
 import com.uncreated.civilized.core.notifications.NotificationService;
 import com.uncreated.civilized.core.notifications.Receiver;
@@ -108,17 +102,14 @@ public class FestivalOrganiser {
    }
 
    private void entertainVisitors() {
+      // copied, since replicating a change reindexes the villager
       List<VillagerInfo> visitors =
-            ServerVillagerStore.INSTANCE.getVisitors(settlement().getSettlementId(), ServerBuildingsStore.INSTANCE);
+            List.copyOf(ServerVillagerStore.INSTANCE.getVisitors(settlement().getSettlementId()));
       for (VillagerInfo visitor : visitors) {
          visitor.getHospitality().awardUncapped(VisitorHospitality.FESTIVAL_BONUS);
          ServerVillagerStore.INSTANCE.replicateChange(visitor, StoreOperation.UPDATE);
       }
       ServerVillagerStore.INSTANCE.setDirty();
-   }
-
-   private Optional<Building> findTownSquare() {
-      return ServerBuildingsStore.INSTANCE.findTownSquare(settlement().getSettlementId());
    }
 
    private DailyEventScheduler scheduleVisitorArrivals(SettlementState state) {
@@ -129,15 +120,12 @@ public class FestivalOrganiser {
                         villager -> villager.getNpcRole().is(VillagerNpcRoles.CITIZEN) && !villager.isChild()
                               && !villager.isTaken())
                   .count();
-      // there may already be visitors at the town square - take these into account to avoid spawning too may visitors
-      Optional<Building> townSquare = findTownSquare();
-      long existingVisitors = 0;
-      if (townSquare.isPresent())
-         existingVisitors =
-               BuildingUtil.getVisitors(townSquare.get(), ServerVillagerStore.INSTANCE)
-                     .stream()
-                     .filter(v -> v.getNpcRole().is(VillagerNpcRoles.SUITOR))
-                     .count();
+      // there may already be suitors visiting - take these into account to avoid spawning too many visitors
+      long existingVisitors =
+            ServerVillagerStore.INSTANCE.getVisitors(settlement().getSettlementId())
+                  .stream()
+                  .filter(v -> v.getNpcRole().is(VillagerNpcRoles.SUITOR))
+                  .count();
 
       int numberOfNewVisitors = Mth.ceil(numberOfSingleWorkers * SUITORS_PER_SINGLE_WORKER) - (int) existingVisitors;
       numberOfNewVisitors = Math.max(numberOfNewVisitors, MINIMUM_FESTIVAL_VISITORS);
@@ -149,12 +137,9 @@ public class FestivalOrganiser {
    }
 
    private void trySpawnVisitor(ServerLevel level, SettlementState state) {
-      Optional<Building> townSquare = findTownSquare();
-      // a spot to spawn at can only be found in loaded chunks
-      if (townSquare.isEmpty() || LoadedBuildings.checkLoaded(townSquare.get()).isEmpty())
-         return;
-
-      TownSquareBehaviour.spawnVisitor(level, townSquare.get(), VillagerNpcRoles.SUITOR, null)
+      loadedSettlement.getBehaviour()
+            .getVisitorManager()
+            .spawnVisitor(level, VillagerNpcRoles.SUITOR, null)
             // suitors stay until the festival is over instead of their normal departure time (they will still finish
             // whatever conversation they're having)
             .flatMap(VisitorBehaviour::tryGet)
@@ -166,15 +151,16 @@ public class FestivalOrganiser {
       ServerSettlementsStore.INSTANCE.setDirty();
       ServerSettlementsStore.INSTANCE.replicateChange(settlement(), StoreOperation.UPDATE);
 
-      // probably don't need to do this, but force all town square visitors to leave after the festival is done
-      findTownSquare().ifPresent(
-            townSquare -> BuildingUtil.getVisitors(townSquare, ServerVillagerStore.INSTANCE)
-                  .stream()
-                  .map(visitor -> LoadedVillagers.find(visitor.getVillagerId()))
-                  .flatMap(Optional::stream)
-                  .map(VisitorBehaviour::tryGet)
-                  .flatMap(Optional::stream)
-                  .forEach(visitor -> visitor.setDepartAt(dayTime)));
+      // probably don't need to do this, but force all day visitors to leave after the festival is done (inn guests
+      // can stay)
+      for (VillagerInfo visitor : ServerVillagerStore.INSTANCE.getVisitors(settlement().getSettlementId())) {
+         if (visitor.getHomeBuildingId() != null)
+            continue;
+
+         LoadedVillagers.find(visitor.getVillagerId())
+               .flatMap(VisitorBehaviour::tryGet)
+               .ifPresent(behaviour -> behaviour.setDepartAt(dayTime));
+      }
 
       NotificationService.INSTANCE.sendNotification(
             festivalNotification(

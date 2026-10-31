@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.logging.LogUtils;
+import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;

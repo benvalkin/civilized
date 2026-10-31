@@ -17,7 +17,6 @@ import net.minecraft.server.level.ServerLevel;
 
 public class VisitorBehaviour extends VillagerRoleBehaviour {
 
-   public static final String FIELD_VISITING_SETTLEMENT_ID = "vising_settleent_id";
    public static final String FIELD_DEPART_AT = "depart_at";
    private static final String FIELD_WILLING_TO_JOIN = "willing_to_join";
    public static final long NO_DEPARTURE = -1;
@@ -27,8 +26,6 @@ public class VisitorBehaviour extends VillagerRoleBehaviour {
    private static final float HOSPITALITY_PER_ENTERTAINMENT = 5;
    private static final int NOTIFICATION_CHECK_INTERVAL = 10 * 20;
 
-   @Setter
-   private UUID visitingSettlementId;
    @Setter
    private long departAt = NO_DEPARTURE;
    @Setter
@@ -48,14 +45,12 @@ public class VisitorBehaviour extends VillagerRoleBehaviour {
 
    @Override
    public void addAdditionalSaveData(CompoundTag compound) {
-      compound.putUUID(FIELD_VISITING_SETTLEMENT_ID, visitingSettlementId);
       compound.putLong(FIELD_DEPART_AT, departAt);
       compound.putBoolean(FIELD_WILLING_TO_JOIN, willingToJoin);
    }
 
    @Override
    public void readAdditionalSaveData(CompoundTag compound) {
-      visitingSettlementId = compound.getUUID(FIELD_VISITING_SETTLEMENT_ID);
       if (compound.contains(FIELD_DEPART_AT))
          departAt = compound.getLong(FIELD_DEPART_AT);
       willingToJoin = compound.getBoolean(FIELD_WILLING_TO_JOIN);
@@ -68,8 +63,7 @@ public class VisitorBehaviour extends VillagerRoleBehaviour {
          WillingToJoinNotification.withdrawNotification(villager.getInfo());
          willingToJoin = false;
 
-         Optional<InnBehaviour> inn = InnBehaviour.findAvailableInn(visitingSettlementId);
-         if (inn.isEmpty() || !inn.get().tryCheckIn(level, villager))
+         if (!tryCheckIntoInn(level))
             villager.depart();
          return;
       }
@@ -78,6 +72,16 @@ public class VisitorBehaviour extends VillagerRoleBehaviour {
       // notification)
       if ((gameTime + villager.getId()) % NOTIFICATION_CHECK_INTERVAL == 0)
          willingToJoin = WillingToJoinNotification.trySendNotification(villager.getInfo(), willingToJoin);
+   }
+
+   private boolean tryCheckIntoInn(ServerLevel level) {
+      boolean alreadyStaying = villager.getInfo().getHomeBuildingId() != null;
+      UUID visitingSettlementId = villager.getInfo().getVisitingSettlementId();
+      if (alreadyStaying || visitingSettlementId == null)
+         return false;
+
+      Optional<InnBehaviour> inn = InnBehaviour.findAvailableInn(visitingSettlementId);
+      return inn.isPresent() && inn.get().tryCheckIn(level, villager);
    }
 
    private boolean isTimeToDepart(long dayTime) {

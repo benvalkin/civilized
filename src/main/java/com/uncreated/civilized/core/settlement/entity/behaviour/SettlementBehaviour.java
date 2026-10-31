@@ -10,6 +10,7 @@ import com.uncreated.civilized.core.settlement.entity.LoadedSettlement;
 import com.uncreated.civilized.core.settlement.family.BirthOrganiser;
 import com.uncreated.civilized.core.settlement.festival.FestivalOrganiser;
 import com.uncreated.civilized.core.settlement.tax.TaxCollector;
+import com.uncreated.civilized.core.settlement.visitor.VisitorManager;
 
 import lombok.Getter;
 import net.minecraft.server.level.ServerLevel;
@@ -34,6 +35,9 @@ public class SettlementBehaviour {
    private final BirthOrganiser birthOrganiser;
 
    @Getter
+   private final VisitorManager visitorManager;
+
+   @Getter
    private final LoadedSettlement entity;
 
    public Settlement getSettlement() {
@@ -47,6 +51,7 @@ public class SettlementBehaviour {
       taxCollector = new TaxCollector(entity);
       festivalOrganiser = new FestivalOrganiser(entity);
       birthOrganiser = new BirthOrganiser(entity);
+      visitorManager = new VisitorManager(entity);
    }
 
    public void serverTick(ServerLevel level, long gameTime, long dayTime) {
@@ -54,5 +59,6 @@ public class SettlementBehaviour {
       taxCollector.serverTick(level, gameTime, dayTime);
       festivalOrganiser.serverTick(level, gameTime, dayTime);
       birthOrganiser.serverTick(level, gameTime, dayTime);
+      visitorManager.serverTick(level, gameTime, dayTime);
    }
 }

@@ -20,7 +20,6 @@ import com.mojang.datafixers.util.Pair;
 import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Dynamic;
 import com.uncreated.civilized.core.StoreOperation;
-import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.defense.CombatTarget;
 import com.uncreated.civilized.core.settlement.defense.ICombatCommand;
@@ -228,6 +227,9 @@ public class CivilizedVillager extends AgeableMob
 
    public void changeNpcRole(VillagerNpcRole role) {
       info.setNpcRole(role);
+      // a visitor that joins the settlement is no longer visiting it
+      if (role.is(VillagerNpcRoles.CITIZEN))
+         info.setVisitingSettlementId(null);
       ensureRoleBehaviourMatchesRole();
    }
 
@@ -759,7 +761,6 @@ public class CivilizedVillager extends AgeableMob
       boolean activeFestival =
             Festival.currentPhaseFor(
                   info,
-                  ServerBuildingsStore.INSTANCE,
                   ServerSettlementsStore.INSTANCE,
                   dayTime) == Festival.Phase.CELEBRATING;
       if (activeFestival) {

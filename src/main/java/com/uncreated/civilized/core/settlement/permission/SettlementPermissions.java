@@ -116,9 +116,19 @@ public class SettlementPermissions {
             .orElse(false);
    }
 
+   public boolean hasCitizenshipPermission(UUID playerId) {
+      return getPermissionForPlayer(playerId).map(p -> p.accessLevel().isAboveOrEqualTo(AccessLevel.CITIZEN))
+            .orElse(false);
+   }
+
    public boolean hasOpenAllChestsPermission(UUID playerId) {
       return getPermissionForPlayer(playerId).map(p -> p.accessLevel().isAboveOrEqualTo(AccessLevel.ADMINISTRATOR))
             .orElse(false);
+   }
+
+   public boolean hasRecruitNewVillagersPermission(UUID playerId) {
+      return getPermissionForPlayer(playerId).map(p -> p.accessLevel().isAboveOrEqualTo(AccessLevel.ADMINISTRATOR))
+              .orElse(false);
    }
 
    public boolean hasEditBuildingPermission(UUID playerId) {

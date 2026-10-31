@@ -32,7 +32,7 @@ public class GoToTownSquare extends VisitBuilding {
    }
 
    public static Optional<Building> findTownSquare(CivilizedVillager villager) {
-      UUID settlementId = Festival.findHostSettlementId(villager.getInfo(), ServerBuildingsStore.INSTANCE);
+      UUID settlementId = Festival.findHostSettlementId(villager.getInfo());
       if (settlementId == null)
          return Optional.empty();
 

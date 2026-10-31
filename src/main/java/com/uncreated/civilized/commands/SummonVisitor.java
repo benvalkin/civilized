@@ -9,11 +9,11 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
-import com.uncreated.civilized.core.building.Building;
-import com.uncreated.civilized.core.building.ServerBuildingsStore;
-import com.uncreated.civilized.core.building.entity.behaviour.TownSquareBehaviour;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
+import com.uncreated.civilized.core.settlement.entity.LoadedSettlement;
+import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
+import com.uncreated.civilized.core.settlement.visitor.VisitorManager;
 import com.uncreated.civilized.core.trading.MerchantType;
 import com.uncreated.civilized.core.trading.MerchantTypes;
 import com.uncreated.civilized.core.villagerinfo.VillagerNpcRole;
@@ -33,15 +33,15 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 
 /**
- * Dev command which spawns a visitor at the town square of the settlement the command is run in, the same way the town
- * square spawns them by itself. {@code /summonvisitor [role] [merchant_type]}
+ * Dev command which spawns a visitor in the settlement the command is run in, the same way the settlement's visitor
+ * manager spawns them by itself. {@code /summonvisitor [role] [merchant_type]}
  */
 public class SummonVisitor {
 
    private static final SimpleCommandExceptionType ERROR_NOT_IN_SETTLEMENT =
          new SimpleCommandExceptionType(Component.literal("You must be inside a settlement to use this command."));
-   private static final SimpleCommandExceptionType ERROR_NO_TOWN_SQUARE =
-         new SimpleCommandExceptionType(Component.literal("This settlement doesn't have a town square."));
+   private static final SimpleCommandExceptionType ERROR_NOT_LOADED =
+         new SimpleCommandExceptionType(Component.literal("This settlement isn't loaded."));
    private static final DynamicCommandExceptionType ERROR_NOT_A_VISITOR_ROLE =
          new DynamicCommandExceptionType(role -> Component.literal("Not a visitor role: " + role));
    private static final DynamicCommandExceptionType ERROR_NOT_A_MERCHANT =
@@ -51,7 +51,7 @@ public class SummonVisitor {
    private static final SimpleCommandExceptionType ERROR_ENTITY_SPAWN_ERROR =
          new SimpleCommandExceptionType(
                Component.literal(
-                     "Something went wrong while spawning the visitor. There may be nowhere to stand in the town square."));
+                     "Could not spawn visitor. Either the spawn position is obstructed, or the visitor is missing some spawn conditions."));
 
    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
       dispatcher.register(
@@ -62,9 +62,7 @@ public class SummonVisitor {
                         Commands.argument("role", ResourceLocationArgument.id())
                               .suggests(
                                     (context, builder) -> SharedSuggestionProvider.suggestResource(
-                                          TownSquareBehaviour.visitorRoles()
-                                                .stream()
-                                                .map(VillagerNpcRole::resourceLocation),
+                                          VisitorManager.visitorRoles().stream().map(VillagerNpcRole::resourceLocation),
                                           builder))
                               .executes(context -> summon(context.getSource(), getRole(context), null))
                               .then(
@@ -86,7 +84,7 @@ public class SummonVisitor {
 
    private static VillagerNpcRole getRole(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
       ResourceLocation roleId = ResourceLocationArgument.getId(context, "role");
-      return TownSquareBehaviour.visitorRoles()
+      return VisitorManager.visitorRoles()
             .stream()
             .filter(role -> role.resourceLocation().equals(roleId))
             .findFirst()
@@ -100,10 +98,10 @@ public class SummonVisitor {
          throws CommandSyntaxException {
 
       ServerLevel level = source.getLevel();
-      Building townSquare = findTownSquare(source);
+      LoadedSettlement settlement = findSettlement(source);
 
       if (role == null) {
-         List<VillagerNpcRole> roles = TownSquareBehaviour.visitorRoles();
+         List<VillagerNpcRole> roles = VisitorManager.visitorRoles();
          role = Util.getRandom(roles, level.getRandom());
       }
 
@@ -115,7 +113,9 @@ public class SummonVisitor {
       }
 
       CivilizedVillager villager =
-            TownSquareBehaviour.spawnVisitor(level, townSquare, role, merchantType)
+            settlement.getBehaviour()
+                  .getVisitorManager()
+                  .spawnVisitor(level, role, merchantType)
                   .orElseThrow(ERROR_ENTITY_SPAWN_ERROR::create);
 
       VillagerNpcRole spawnedRole = role;
@@ -125,13 +125,12 @@ public class SummonVisitor {
       return 1;
    }
 
-   private static Building findTownSquare(CommandSourceStack source) throws CommandSyntaxException {
+   private static LoadedSettlement findSettlement(CommandSourceStack source) throws CommandSyntaxException {
       Settlement settlement =
             ServerSettlementsStore.INSTANCE.findEnclosing(BlockPos.containing(source.getPosition()), source.getLevel())
                   .orElseThrow(ERROR_NOT_IN_SETTLEMENT::create);
 
-      return ServerBuildingsStore.INSTANCE.findTownSquare(settlement.getSettlementId())
-            .orElseThrow(ERROR_NO_TOWN_SQUARE::create);
+      return LoadedSettlements.checkLoaded(settlement).orElseThrow(ERROR_NOT_LOADED::create);
    }
 
    private static Holder.Reference<MerchantType> findMerchantType(CommandSourceStack source, ResourceLocation typeId)

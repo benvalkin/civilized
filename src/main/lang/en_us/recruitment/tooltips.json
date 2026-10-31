@@ -4,6 +4,7 @@
   "hospitality": "  Hospitality: +%s",
   "willing": "%s likes your settlement and would like to stay.",
   "not_willing": "%s does not like your settlement enough.",
+  "visiting_elsewhere": "%s is visiting another settlement.",
   "impression_needed": "Impression needed: %s",
   "welcome": "+%s hospitality",
   "already_welcomed": "You've already welcomed them.",

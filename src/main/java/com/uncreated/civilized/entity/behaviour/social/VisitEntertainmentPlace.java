@@ -88,7 +88,7 @@ public class VisitEntertainmentPlace extends VisitBuilding {
    @Override
    protected List<Building> chooseBuildings(ServerLevel level, CivilizedVillager villager) {
       // visitors don't belong to a settlement, but can still visit the one they're staying at
-      UUID settlementId = Festival.findHostSettlementId(villager.getInfo(), ServerBuildingsStore.INSTANCE);
+      UUID settlementId = Festival.findHostSettlementId(villager.getInfo());
       if (settlementId == null)
          return List.of();
 

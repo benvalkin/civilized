@@ -10,7 +10,6 @@ import java.util.Random;
 import org.jetbrains.annotations.NotNull;
 
 import com.uncreated.civilized.core.StoreOperation;
-import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.recruitment.WillingToJoinNotification;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
@@ -84,7 +83,6 @@ public class Flirt extends Socialize {
       Festival.Phase festival =
             Festival.currentPhaseFor(
                   villager.getInfo(),
-                  ServerBuildingsStore.INSTANCE,
                   ServerSettlementsStore.INSTANCE,
                   level.getDayTime());
       // if there's currently a festival gathering, rather wait until it actually starts

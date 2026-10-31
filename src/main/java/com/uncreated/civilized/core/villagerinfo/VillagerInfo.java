@@ -46,6 +46,7 @@ public class VillagerInfo {
                   .occupation(VillagerOccupations.getFromResourceLocation(buffer.readResourceLocation()))
                   .settlementId(buffer.readNullable((b -> b.readUUID())))
                   .homeBuildingId(buffer.readNullable((b -> b.readUUID())))
+                  .visitingSettlementId(buffer.readNullable((b -> b.readUUID())))
                   .workBuildingId(buffer.readNullable((b -> b.readUUID())))
                   .npcRole(VillagerNpcRoles.getFromResourceLocation(buffer.readResourceLocation()))
                   .gender(buffer.readEnum(Gender.class))
@@ -72,6 +73,7 @@ public class VillagerInfo {
       buffer.writeResourceLocation(occupation.resourceLocation());
       buffer.writeNullable(settlementId, (b, v) -> b.writeUUID(v));
       buffer.writeNullable(homeBuildingId, (b, v) -> b.writeUUID(v));
+      buffer.writeNullable(visitingSettlementId, (b, v) -> b.writeUUID(v));
       buffer.writeNullable(workBuildingId, (b, v) -> b.writeUUID(v));
       buffer.writeResourceLocation(npcRole.resourceLocation());
       buffer.writeEnum(gender);
@@ -91,6 +93,7 @@ public class VillagerInfo {
    public static final String FIELD_IS_DECEASED = "is_deceased";
    public static final String FIELD_SETTLEMENT_ID = "settlement_id";
    public static final String FIELD_HOME_BUILDING_ID = "home_building_id";
+   public static final String FIELD_VISITING_SETTLEMENT_ID = "visiting_settlement_id";
    public static final String FIELD_WORK_BUILDING_ID = "work_building_id";
    public static final String FIELD_FIRST_NAME = "first_name";
    public static final String FIELD_LAST_NAME = "last_name";
@@ -128,6 +131,8 @@ public class VillagerInfo {
    private @Nullable UUID settlementId;
    @Setter
    private @Nullable UUID homeBuildingId;
+   @Setter
+   private @Nullable UUID visitingSettlementId;
    @Setter
    private @Nullable UUID workBuildingId;
    private Gender gender;
@@ -373,6 +378,7 @@ public class VillagerInfo {
       occupation = other.occupation;
       settlementId = other.settlementId;
       homeBuildingId = other.homeBuildingId;
+      visitingSettlementId = other.visitingSettlementId;
       workBuildingId = other.workBuildingId;
       npcRole = other.npcRole;
       gender = other.gender;

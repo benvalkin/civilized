@@ -56,6 +56,8 @@ public class ServerVillagerStore extends VillagerStore {
             item.putUUID(VillagerInfo.FIELD_SETTLEMENT_ID, villagerInfo.getSettlementId());
          if (villagerInfo.getHomeBuildingId() != null)
             item.putUUID(VillagerInfo.FIELD_HOME_BUILDING_ID, villagerInfo.getHomeBuildingId());
+         if (villagerInfo.getVisitingSettlementId() != null)
+            item.putUUID(VillagerInfo.FIELD_VISITING_SETTLEMENT_ID, villagerInfo.getVisitingSettlementId());
          if (villagerInfo.getWorkBuildingId() != null)
             item.putUUID(VillagerInfo.FIELD_WORK_BUILDING_ID, villagerInfo.getWorkBuildingId());
          if (villagerInfo.getWorkAreaId() != null)
@@ -118,6 +120,8 @@ public class ServerVillagerStore extends VillagerStore {
             builder.settlementId(itemTag.getUUID(VillagerInfo.FIELD_SETTLEMENT_ID));
          if (itemTag.hasUUID(VillagerInfo.FIELD_HOME_BUILDING_ID))
             builder.homeBuildingId(itemTag.getUUID(VillagerInfo.FIELD_HOME_BUILDING_ID));
+         if (itemTag.hasUUID(VillagerInfo.FIELD_VISITING_SETTLEMENT_ID))
+            builder.visitingSettlementId(itemTag.getUUID(VillagerInfo.FIELD_VISITING_SETTLEMENT_ID));
          if (itemTag.hasUUID(VillagerInfo.FIELD_WORK_BUILDING_ID))
             builder.workBuildingId(itemTag.getUUID(VillagerInfo.FIELD_WORK_BUILDING_ID));
          if (itemTag.hasUUID(VillagerInfo.FIELD_MOTHER_ID))
