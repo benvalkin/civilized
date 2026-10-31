@@ -18,6 +18,11 @@ public class VillagerInfoDB extends InMemoryDB<UUID, VillagerInfo> {
    private final Map<VillagerInfo, UUID> indexedSettlementIds = new IdentityHashMap<>();
 
    @Getter
+   private final SetIndex<UUID, VillagerInfo> homesToVillagersIndex = new SetIndex<>();
+
+   private final Map<VillagerInfo, UUID> indexedHomeIds = new IdentityHashMap<>();
+
+   @Getter
    private final SetIndex<UUID, VillagerInfo> parentsToChildrenIndex = new SetIndex<>();
 
    private final Map<VillagerInfo, List<UUID>> indexedParentIds = new IdentityHashMap<>();
@@ -32,6 +37,11 @@ public class VillagerInfoDB extends InMemoryDB<UUID, VillagerInfo> {
       settlementsToVillagersIndex.add(obj.getSettlementId(), obj);
       indexedSettlementIds.put(obj, obj.getSettlementId());
 
+      if (obj.getHomeBuildingId() != null) {
+         homesToVillagersIndex.add(obj.getHomeBuildingId(), obj);
+         indexedHomeIds.put(obj, obj.getHomeBuildingId());
+      }
+
       List<UUID> parentIds = obj.getParentIds();
       for (UUID parentId : parentIds)
          parentsToChildrenIndex.add(parentId, obj);
@@ -45,6 +55,10 @@ public class VillagerInfoDB extends InMemoryDB<UUID, VillagerInfo> {
          for (UUID parentId : parentIds)
             parentsToChildrenIndex.remove(parentId, obj);
       }
+
+      UUID homeId = indexedHomeIds.remove(obj);
+      if (homeId != null)
+         homesToVillagersIndex.remove(homeId, obj);
 
       if (!indexedSettlementIds.containsKey(obj))
          return;

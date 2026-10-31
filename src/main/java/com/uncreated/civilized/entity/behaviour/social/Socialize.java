@@ -93,16 +93,14 @@ public class Socialize extends StatefulBehaviour {
    protected @NotNull List<CivilizedVillager> getCandidateConversationMembers(
          ServerLevel level,
          CivilizedVillager villager) {
-      List<CivilizedVillager> candidates =
-            level.getEntitiesOfClass(
-                  CivilizedVillager.class,
-                  villager.getBoundingBox().inflate(INVITE_RANGE),
-                  // TODO: eventually need to filter out hostile villagers
-                  other -> other != villager && other.isAlive() && !other.isDrafted() && villager.hasLineOfSight(other))
-                  .stream()
-                  .sorted(Comparator.comparingDouble(villager::distanceToSqr))
-                  .toList();
-      return candidates;
+      return level.getEntitiesOfClass(
+            CivilizedVillager.class,
+            villager.getBoundingBox().inflate(INVITE_RANGE),
+            // TODO: eventually need to filter out hostile villagers
+            other -> other != villager && other.isAlive() && !other.isDrafted() && villager.hasLineOfSight(other))
+            .stream()
+            .sorted(Comparator.comparingDouble(villager::distanceToSqr))
+            .toList();
    }
 
    protected static Optional<Conversation> currentConversation(CivilizedVillager villager) {

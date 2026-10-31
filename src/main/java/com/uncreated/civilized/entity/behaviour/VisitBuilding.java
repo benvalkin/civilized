@@ -26,6 +26,7 @@ public abstract class VisitBuilding extends StatefulBehaviour {
    private final Duration cooldownAfterFailedVisit;
 
    private BlockPos destination;
+   private Building destinationBuilding;
    private MediumDistanceTravelTask travelHelper;
 
    protected VisitBuilding(
@@ -56,6 +57,7 @@ public abstract class VisitBuilding extends StatefulBehaviour {
                building.getBounds().findRandomStandableSpot(level, villager.getRandom(), DESTINATION_ATTEMPTS);
          if (spot.isPresent()) {
             destination = spot.get();
+            destinationBuilding = building;
             return true;
          }
       }
@@ -80,11 +82,15 @@ public abstract class VisitBuilding extends StatefulBehaviour {
    @Override
    protected void tick(ServerLevel level, CivilizedVillager villager, long gameTime) {
       if (travelHelper.isJourneySuccessful()) {
+         onArrived(level, villager, destinationBuilding);
          doStop(level, villager, gameTime);
          return;
       }
 
       travelHelper.walkToPoi(gameTime);
+   }
+
+   protected void onArrived(ServerLevel level, CivilizedVillager villager, Building building) {
    }
 
    @Override

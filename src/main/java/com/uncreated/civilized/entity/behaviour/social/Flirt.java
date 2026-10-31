@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
+import com.uncreated.civilized.core.recruitment.WillingToJoinNotification;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
 import com.uncreated.civilized.core.settlement.festival.Festival;
@@ -62,8 +63,7 @@ public class Flirt extends Socialize {
                         && !other.isDrafted()
                         && other.getInfo().getGender() == villager.getInfo().getGender().opposite()
                         && !other.getInfo().isTaken() && other.getInfo().getNpcRole().is(VillagerNpcRoles.CITIZEN)
-                        && !other.getInfo().isChild()
-                        && other.getInfo().getSettlementId() != null /* && villager.hasLineOfSight(other) */)
+                        && !other.getInfo().isChild() && other.getInfo().getSettlementId() != null)
                   .stream()
                   .sorted(Comparator.comparingDouble(villager::distanceToSqr))
                   .toList();
@@ -136,6 +136,9 @@ public class Flirt extends Socialize {
    }
 
    protected void startDating(CivilizedVillager instigator, CivilizedVillager villager, ServerLevel level) {
+      withdrawWillingToJoinNotification(instigator);
+      withdrawWillingToJoinNotification(villager);
+
       instigator.getInfo().setPartnerId(villager.getInfo().getVillagerId());
       villager.getInfo().setPartnerId(instigator.getInfo().getVillagerId());
       alignSettlementIds(instigator, villager);
@@ -173,6 +176,13 @@ public class Flirt extends Socialize {
                         instigator.getInfo().getFirstName())
                   .withColor(Colors.LOVE),
             false);
+   }
+
+   private static void withdrawWillingToJoinNotification(CivilizedVillager villager) {
+      // make sure to call this method before changing the villager's settlementId, otherwise the notification may not
+      // be resolved properly
+      if (villager.getInfo().getSettlementId() == null)
+         WillingToJoinNotification.withdrawNotification(villager.getInfo());
    }
 
    private static void emitHearts(ServerLevel level, CivilizedVillager villager, int count) {

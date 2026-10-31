@@ -2,6 +2,7 @@ package com.uncreated.civilized.core.settlement.festival;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
@@ -16,12 +17,14 @@ import com.uncreated.civilized.core.notifications.Notification;
 import com.uncreated.civilized.core.notifications.NotificationService;
 import com.uncreated.civilized.core.notifications.Receiver;
 import com.uncreated.civilized.core.notifications.Severity;
+import com.uncreated.civilized.core.recruitment.VisitorHospitality;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
 import com.uncreated.civilized.core.settlement.SettlementState;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlement;
 import com.uncreated.civilized.core.settlement.entity.LoadedVillagers;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
+import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
 import com.uncreated.civilized.entity.VisitorBehaviour;
 import com.uncreated.civilized.util.random.DailyEventScheduler;
@@ -91,15 +94,27 @@ public class FestivalOrganiser {
          visitorArrivalScheduler.tick(level, gameTime, () -> trySpawnVisitor(level, state));
       }
       case CELEBRATING -> {
-         if (celebrationBegan)
+         if (celebrationBegan) {
+            entertainVisitors();
             NotificationService.INSTANCE.sendNotification(
                   festivalNotification(
                         settlement(),
                         "festival_started",
                         "notification.festival.started",
                         "notification.festival.started.detail"));
+         }
       }
       }
+   }
+
+   private void entertainVisitors() {
+      List<VillagerInfo> visitors =
+            ServerVillagerStore.INSTANCE.getVisitors(settlement().getSettlementId(), ServerBuildingsStore.INSTANCE);
+      for (VillagerInfo visitor : visitors) {
+         visitor.getHospitality().awardUncapped(VisitorHospitality.FESTIVAL_BONUS);
+         ServerVillagerStore.INSTANCE.replicateChange(visitor, StoreOperation.UPDATE);
+      }
+      ServerVillagerStore.INSTANCE.setDirty();
    }
 
    private Optional<Building> findTownSquare() {

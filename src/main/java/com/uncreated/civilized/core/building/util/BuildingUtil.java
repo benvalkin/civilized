@@ -58,8 +58,7 @@ public class BuildingUtil {
    }
 
    public static List<VillagerInfo> getVisitors(Building building, VillagerStore store) {
-      // visitors don't belong to any settlement, so they're all filed under the null settlement
-      return store.getCitizens(null).stream().filter(v -> v.isOccupantOf(building)).toList();
+      return store.getVisitors(building);
    }
 
    public static List<VillagerInfo> getAssignedWorkers(Building building, VillagerStore store) {

@@ -5,6 +5,7 @@ import java.util.Optional;
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.recruitment.WillingToJoinNotification;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
+import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.core.villagerinfo.skills.SkillEffects;
 import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkill;
 
@@ -18,7 +19,9 @@ public class VisitorBehaviour extends VillagerRoleBehaviour {
    private static final String FIELD_WILLING_TO_JOIN = "willing_to_join";
    public static final long NO_DEPARTURE = -1;
    public static final long MAX_STAY_TICKS = 4 * 24000;
-   private static final float HOSPITALITY_PER_CHAT = 3;
+   private static final float HOSPITALITY_PER_CHAT = 1;
+   private static final float HOSPITALITY_PER_HOSTED_CHAT = 3;
+   private static final float HOSPITALITY_PER_ENTERTAINMENT = 5;
    private static final int NOTIFICATION_CHECK_INTERVAL = 10 * 20;
 
    @Setter
@@ -74,11 +77,25 @@ public class VisitorBehaviour extends VillagerRoleBehaviour {
       return dayTime >= departAt || departAt - dayTime > MAX_STAY_TICKS;
    }
 
+   /** Homemakers make for better hosts than other citizens */
    public void gainHospitalityFromChatting(CivilizedVillager citizen) {
-      int socialLevel = citizen.getInfo().getSkills().getLevel(VillagerSkill.SOCIAL);
-      float amount =
-            HOSPITALITY_PER_CHAT * SkillEffects.getHospitalityMultiplier(socialLevel) * hospitalityTemperament();
-      villager.getInfo().getHospitality().gainFromChatting(amount, villager.level().getDayTime() / 24000);
+      float baseAmount;
+      if (citizen.getInfo().isHomemaker())
+         baseAmount = HOSPITALITY_PER_HOSTED_CHAT;
+      else
+         baseAmount = HOSPITALITY_PER_CHAT;
+
+      gainHospitality(baseAmount, citizen.getInfo());
+   }
+
+   public void gainHospitalityFromEntertainment(VillagerInfo tavernKeeper) {
+      gainHospitality(HOSPITALITY_PER_ENTERTAINMENT, tavernKeeper);
+   }
+
+   private void gainHospitality(float baseAmount, VillagerInfo host) {
+      int socialLevel = host.getSkills().getLevel(VillagerSkill.SOCIAL);
+      float amount = baseAmount * SkillEffects.getHospitalityMultiplier(socialLevel) * hospitalityTemperament();
+      villager.getInfo().getHospitality().award(amount, villager.level().getDayTime() / 24000);
       ServerVillagerStore.INSTANCE.setDirty();
       ServerVillagerStore.INSTANCE.replicateChange(villager.getInfo(), StoreOperation.UPDATE);
    }
