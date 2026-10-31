@@ -24,6 +24,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
 
 @Getter
 @Builder
@@ -151,6 +152,20 @@ public class VillagerInfo {
    @Setter
    @Builder.Default
    private VisitorHospitality hospitality = new VisitorHospitality();
+
+   public long lifetimeSeed() {
+      return villagerId.getMostSignificantBits();
+   }
+
+   public RandomSource perLifetimeRandom() {
+      return RandomSource.create(lifetimeSeed());
+   }
+
+   public RandomSource perLifetimeRandom(int consume) {
+      RandomSource random = perLifetimeRandom();
+      random.consumeCount(consume);
+      return random;
+   }
 
    public boolean hasName() {
       return !firstName.isEmpty() && !lastName.isEmpty();

@@ -125,7 +125,8 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
    private static Optional<Building> invalidateHome(VillagerInfo villagerInfo) {
 
       if (!villagerInfo.getNpcRole().is(VillagerNpcRoles.CITIZEN))
-         return Optional.empty();
+         // visitors keep staying in whatever building they're currently in
+         return ServerBuildingsStore.INSTANCE.find(villagerInfo.getHomeBuildingId());
 
       if (villagerInfo.isChild())
          return invalidateHomeForChild(villagerInfo);

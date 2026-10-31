@@ -3,6 +3,7 @@ package com.uncreated.civilized.entity;
 import java.util.Optional;
 
 import com.uncreated.civilized.core.StoreOperation;
+import com.uncreated.civilized.core.building.entity.behaviour.InnBehaviour;
 import com.uncreated.civilized.core.recruitment.WillingToJoinNotification;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
@@ -57,8 +58,11 @@ public class VisitorBehaviour extends VillagerRoleBehaviour {
    @Override
    public void serverTick(ServerLevel level, long gameTime) {
       if (isTimeToDepart(level.getDayTime())) {
+         // also withdrawn when they check into an inn, so that it can be sent again saying where to find them
          WillingToJoinNotification.withdrawNotification(villager.getInfo());
-         villager.depart();
+         willingToJoin = false;
+         if (!InnBehaviour.tryCheckIn(level, villager))
+            villager.depart();
          return;
       }
 
@@ -94,14 +98,9 @@ public class VisitorBehaviour extends VillagerRoleBehaviour {
 
    private void gainHospitality(float baseAmount, VillagerInfo host) {
       int socialLevel = host.getSkills().getLevel(VillagerSkill.SOCIAL);
-      float amount = baseAmount * SkillEffects.getHospitalityMultiplier(socialLevel) * hospitalityTemperament();
+      float amount = baseAmount * SkillEffects.getHospitalityMultiplier(socialLevel);
       villager.getInfo().getHospitality().award(amount, villager.level().getDayTime() / 24000);
       ServerVillagerStore.INSTANCE.setDirty();
       ServerVillagerStore.INSTANCE.replicateChange(villager.getInfo(), StoreOperation.UPDATE);
-   }
-
-   /** Some visitors gain hospitality quicker than others */
-   private float hospitalityTemperament() {
-      return 0.7f + villager.perLifetimeRandom(2).nextFloat() * 0.6f;
    }
 }

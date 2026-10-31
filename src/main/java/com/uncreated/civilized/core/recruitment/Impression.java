@@ -17,7 +17,20 @@ public record Impression(List<AttractivenessSource> attractiveness, int hospital
       return new Impression(
             SettlementAttractiveness.compute(settlementId, buildingStore, villagerStore),
             visitor.getHospitality().getWholePoints(),
-            visitor.getNpcRole().recruitTier().impressionRequired());
+            impressionRequired(visitor));
+   }
+
+   private static int impressionRequired(VillagerInfo visitor) {
+      ImpressionRequirement impressionRequirement = visitor.getNpcRole().recruitTier();
+      if (impressionRequirement == ImpressionRequirement.NOT_RECRUITABLE
+            || impressionRequirement == ImpressionRequirement.LOW)
+         // temperament multiplier doesn't work on not recruitable due to int overflow, and LOW is best left constant to
+         // avoid accidentally making it impossible to acquire starter villagers
+         return impressionRequirement.impressionRequired();
+
+      float temperamentMultiplier = visitor.perLifetimeRandom(5).nextInt(80, 120) / 100f;
+      // multiplied and rounded to nearest 5
+      return (int) Math.round(impressionRequirement.impressionRequired() * temperamentMultiplier / 5.0) * 5;
    }
 
    public int total() {

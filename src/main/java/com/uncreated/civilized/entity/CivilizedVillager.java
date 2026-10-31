@@ -117,7 +117,6 @@ public class CivilizedVillager extends AgeableMob
    private final Logger LOGGER = LogUtils.getLogger();
 
    public static final String FIELD_VILLAGER_ID = "villager_id";
-   public static final String FIELD_LIFETIME_SEED = "lifetime_seed";
    public static final String FIELD_ROUTED = "routed";
    private static final float DEFAULT_RALLY_HEALTH_FRACTION = 0.8F;
 
@@ -177,8 +176,6 @@ public class CivilizedVillager extends AgeableMob
    @Getter
    private final VillagerEquipment equipment = new VillagerEquipment(this);
 
-   private long lifetimeSeed;
-
    @Getter
    private final RandomSource arbitraryRandom;
 
@@ -200,7 +197,6 @@ public class CivilizedVillager extends AgeableMob
       ServerVillagerStore.INSTANCE.replicateChange(info, StoreOperation.ADD_OR_OVERWRITE);
       ServerVillagerStore.INSTANCE.setDirty();
       villagerId = info.getVillagerId();
-      setArbitraryRandom(getRandom().nextLong());
    }
 
    /**
@@ -262,19 +258,12 @@ public class CivilizedVillager extends AgeableMob
       }
    }
 
-   private void setArbitraryRandom(long seed) {
-      lifetimeSeed = seed;
-      arbitraryRandom.setSeed(seed);
-   }
-
    public RandomSource perLifetimeRandom() {
-      return RandomSource.create(lifetimeSeed);
+      return info.perLifetimeRandom();
    }
 
    public RandomSource perLifetimeRandom(int consumeCount) {
-      RandomSource random = RandomSource.create(lifetimeSeed);
-      random.consumeCount(consumeCount);
-      return random;
+      return info.perLifetimeRandom(consumeCount);
    }
 
    @Override
@@ -282,7 +271,6 @@ public class CivilizedVillager extends AgeableMob
       super.addAdditionalSaveData(compound);
 
       compound.putUUID(FIELD_VILLAGER_ID, villagerId);
-      compound.putLong(FIELD_LIFETIME_SEED, lifetimeSeed);
       compound.putBoolean(FIELD_ROUTED, isRouted());
       CompoundTag roleBehaviourTag = new CompoundTag();
       roleBehaviour.addAdditionalSaveData(roleBehaviourTag);
@@ -297,9 +285,10 @@ public class CivilizedVillager extends AgeableMob
       super.readAdditionalSaveData(compound);
       // when spawning a new villager, readAdditionalSaveData will still run, but the NBT data won't have our fields
       // yet, so we need to check
-      if (compound.hasUUID(FIELD_VILLAGER_ID))
+      if (compound.hasUUID(FIELD_VILLAGER_ID)) {
          villagerId = compound.getUUID(FIELD_VILLAGER_ID);
-      setArbitraryRandom(compound.getLong(FIELD_LIFETIME_SEED));
+      }
+
       // the brain's activities aren't set up yet, so routing is restored once it is (see serverFinalizeSpawn)
       routedOnLoad = compound.getBoolean(FIELD_ROUTED);
       if (compound.contains(VillagerRoleBehaviour.FIELD_ROLE_BEHAVIOUR_STATE))
@@ -314,7 +303,6 @@ public class CivilizedVillager extends AgeableMob
    @Override
    public void writeSpawnData(RegistryFriendlyByteBuf buf) {
       info.encode(buf);
-      buf.writeLong(lifetimeSeed);
       CompoundTag roleBehaviourTag = new CompoundTag();
       roleBehaviour.addAdditionalSaveData(roleBehaviourTag);
       buf.writeNbt(roleBehaviourTag);
@@ -351,7 +339,6 @@ public class CivilizedVillager extends AgeableMob
    @Override
    public void readSpawnData(RegistryFriendlyByteBuf buf) {
       info = ClientVillagerStore.INSTANCE.addFromServer(VillagerInfo.decode(buf));
-      lifetimeSeed = buf.readLong();
       ensureRoleBehaviourMatchesRole();
       CompoundTag roleBehaviourTag = buf.readNbt();
       if (roleBehaviourTag != null)

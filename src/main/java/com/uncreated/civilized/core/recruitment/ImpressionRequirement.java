@@ -6,7 +6,7 @@ import lombok.experimental.Accessors;
 @Getter
 @Accessors(fluent = true)
 public enum ImpressionRequirement {
-   NOT_RECRUITABLE(Integer.MAX_VALUE), LOW(10), MID(40), HIGH(100);
+   NOT_RECRUITABLE(Integer.MAX_VALUE), LOW(10), MID(50), HIGH(100);
 
    private final int impressionRequired;
 
