@@ -1,5 +1,6 @@
 package com.uncreated.civilized.core.building.production;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -13,6 +14,7 @@ import com.uncreated.civilized.core.building.production.orders.ProductionOrder;
 import lombok.Getter;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
 
 public abstract class RecipeProductionMachine<Order extends ProductionOrder> {
 
@@ -22,6 +24,7 @@ public abstract class RecipeProductionMachine<Order extends ProductionOrder> {
       orders = new LinkedList<>();
       currentOrderIndex = 0;
       productionTokens = 0;
+      unableToStartRecipes = new ArrayList<>();
    }
 
    public void registerOrder(Order productionOrder) {
@@ -70,9 +73,11 @@ public abstract class RecipeProductionMachine<Order extends ProductionOrder> {
       return Optional.ofNullable(orders.get(currentOrderIndex));
    }
 
-   private boolean someActiveBillsAreMissingIngredients;
+   @Getter
+   private final List<ItemStack> unableToStartRecipes;
+
    public boolean someActiveBillsAreMissingIngredients() {
-      return someActiveBillsAreMissingIngredients;
+      return !unableToStartRecipes.isEmpty();
    }
 
    public Optional<PendingProduction> tryAdvanceToProcessableOrder(
@@ -82,7 +87,7 @@ public abstract class RecipeProductionMachine<Order extends ProductionOrder> {
       if (orders.isEmpty())
          return Optional.empty();
 
-       this.someActiveBillsAreMissingIngredients = false;
+      this.unableToStartRecipes.clear();
 
       int attempts = 0;
       do {
@@ -99,14 +104,17 @@ public abstract class RecipeProductionMachine<Order extends ProductionOrder> {
 
             boolean billEnabled = currentlyProcessing.getBill().isEnabled();
 
-            boolean billSatisfied = currentlyProcessing.getBill().getProductionStrategy().getType() != ProductionStrategyType.PRODUCE_INFINITE
-                    && pendingOutput.stockDeficit() <= 0;
+            boolean billSatisfied =
+                  currentlyProcessing.getBill()
+                        .getProductionStrategy()
+                        .getType() != ProductionStrategyType.PRODUCE_INFINITE && pendingOutput.stockDeficit() <= 0;
 
             if (billEnabled && !billSatisfied) {
                if (pendingOutput.ingredientsSatisfied())
                   return Optional.of(new PendingProduction(currentlyProcessing, pendingOutput));
-               else
-                  someActiveBillsAreMissingIngredients = true;
+               else {
+                  unableToStartRecipes.add(currentlyProcessing.getBill().getDisplayItem());
+               }
             }
          }
 

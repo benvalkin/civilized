@@ -134,8 +134,8 @@ public class CraftItems extends WorkTaskBehaviour {
                getStateMachine().queueActionOnce(this.getState());
          } else if (craftingMachine.someActiveBillsAreMissingIngredients() && !allRecipeStockRequirements.isEmpty()) {
             // there are requirements for bills that we aren't able to fetch from anywhere at the moment
-            int randomIndex = villager.getRandom().nextInt(allRecipeStockRequirements.size());
-            ItemStack icon = allRecipeStockRequirements.get(randomIndex).getDisplayItem();
+            int randomIndex = villager.getRandom().nextInt(craftingMachine.getUnableToStartRecipes().size());
+            ItemStack icon = craftingMachine.getUnableToStartRecipes().get(randomIndex);
             missingIngredientsNotification =
                   Notification.missingIngredients("missing_crafting_ingredients", villager.getInfo(), icon.getItem())
                         .build();

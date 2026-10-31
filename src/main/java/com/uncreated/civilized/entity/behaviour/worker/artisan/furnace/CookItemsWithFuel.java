@@ -197,8 +197,8 @@ public abstract class CookItemsWithFuel extends WorkTaskBehaviour {
          // there are requirements for bills that we aren't able to fetch from anywhere at the moment
 
          if (cookingMachine.someActiveBillsAreMissingIngredients()) {
-            int randomIndex = villager.getRandom().nextInt(allRecipeStockRequirements.size());
-            ItemStack icon = allRecipeStockRequirements.get(randomIndex).getDisplayItem();
+            int randomIndex = villager.getRandom().nextInt(cookingMachine.getUnableToStartRecipes().size());
+            ItemStack icon = cookingMachine.getUnableToStartRecipes().get(randomIndex);
             missingIngredientsNotification =
                   Notification.missingIngredients("missing_cooking_ingredients", villager.getInfo(), icon.getItem())
                         .build();

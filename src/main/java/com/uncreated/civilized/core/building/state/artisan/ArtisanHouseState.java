@@ -83,7 +83,7 @@ public abstract class ArtisanHouseState extends BuildingState {
 
             workedBills++;
 
-            if (workedBills + 1 >= maxWorkedBills)
+            if (workedBills - 1 >= maxWorkedBills)
                break; // worker does not have enough skill to work on any more bill
 
             Optional<RecipeHolder<?>> recipe = bill.resolveRecipe(recipeManager);
