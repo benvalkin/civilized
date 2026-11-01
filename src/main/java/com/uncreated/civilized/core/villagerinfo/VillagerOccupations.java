@@ -278,7 +278,7 @@ public class VillagerOccupations {
                .relevantSkill(VillagerSkill.COOKING)
                .homeType(BuildingTypes.TAVERN)
                .worksiteTypes(List.of(BuildingTypes.TAVERN))
-               .workBehaviourPackage(WorkActivities::getArtisanWorkPackage)
+               .workBehaviourPackage(WorkActivities::getTavernKeeperPackage)
                .build();
    public static final VillagerOccupation PRIEST =
          VillagerOccupation.builder(createResourceKey("priest"))

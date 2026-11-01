@@ -13,6 +13,7 @@ import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.VisitorBehaviour;
+import com.uncreated.civilized.item.CurrencyItem;
 
 import net.minecraft.core.GlobalPos;
 import net.minecraft.server.level.ServerLevel;
@@ -20,6 +21,8 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 
 public class InnBehaviour extends BuildingBehaviour {
+
+   public static final int CURRENCY_RENT_PER_NIGHT = 5;
 
    public InnBehaviour(LoadedBuilding entity) {
       super(entity);
@@ -49,6 +52,9 @@ public class InnBehaviour extends BuildingBehaviour {
                   behaviour -> behaviour.setDepartAt(chooseDepartureTime(level.getDayTime(), visitor.getRandom())));
       ServerVillagerStore.INSTANCE.setDirty();
       ServerVillagerStore.INSTANCE.replicateChange(info, StoreOperation.UPDATE);
+
+      CurrencyItem.credit(getEntity().chests(), CURRENCY_RENT_PER_NIGHT);
+
       return true;
    }
 
