@@ -26,6 +26,7 @@ import com.uncreated.civilized.networking.packets.ListSettlementLoadouts;
 import com.uncreated.civilized.networking.packets.LoadoutSavedResult;
 import com.uncreated.civilized.networking.packets.RequestSettlementLoadouts;
 import com.uncreated.civilized.networking.packets.SaveLoadoutRequest;
+import com.uncreated.civilized.networking.packets.VisitorHospitalityUpdated;
 import com.uncreated.civilized.networking.packets.VisualizeBoundsInstruction;
 import com.uncreated.civilized.networking.packets.BuildingPlacementRejected;
 import com.uncreated.civilized.networking.packets.BuyItem;
@@ -197,6 +198,11 @@ public class PacketRegistry {
             RunDialogueAction.TYPE,
             RunDialogueAction.STREAM_CODEC,
             RunDialogueAction::serverReceiveRunDialogueAction);
+
+      registrar.playToClient(
+            VisitorHospitalityUpdated.TYPE,
+            VisitorHospitalityUpdated.STREAM_CODEC,
+            ClientPacketHandlers::receiveVisitorHospitalityUpdated);
 
       registrar.playToClient(
               TradeSlotUpdated.TYPE,

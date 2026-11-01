@@ -8,6 +8,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import com.uncreated.civilized.core.dialogue.context.DialogueContext;
+import com.uncreated.civilized.core.recruitment.VisitorHospitality;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.ui.style.Colors;
 
@@ -38,12 +39,15 @@ public class DialogueSession {
    }
 
    /** @return null if the villager has nothing to say to the player */
-   public static @Nullable DialogueSession start(CivilizedVillager villager, Player player) {
+   public static @Nullable DialogueSession start(
+         CivilizedVillager villager,
+         Player player,
+         @Nullable VisitorHospitality visitorHospitality) {
       DialogueScript script = findScript(villager, player);
       if (script == null)
          return null;
 
-      DialogueContext context = new DialogueContext(villager, player);
+      DialogueContext context = new DialogueContext(villager, player, visitorHospitality);
       DialogueNode start = script.findStart(context);
       return start == null ? null : new DialogueSession(script, context, start);
    }

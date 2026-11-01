@@ -60,7 +60,7 @@ public class VillagerScreen extends AbstractContainerScreen<VillagerMenu> implem
       super(menu, playerInventory, title);
       this.villager = menu.getVillager();
       // recompute the opening dialogue on the client
-      this.dialogue = DialogueSession.start(villager, playerInventory.player);
+      this.dialogue = DialogueSession.start(villager, playerInventory.player, menu.getVisitorHospitality());
       // the container area is the slot column, which is centred on the content panel in init()
       this.imageWidth = VillagerMenu.SLOT_COLUMN_WIDTH;
       this.imageHeight = VillagerMenu.CONTENT_HEIGHT;

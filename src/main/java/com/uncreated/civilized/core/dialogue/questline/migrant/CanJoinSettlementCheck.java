@@ -14,6 +14,7 @@ import com.uncreated.civilized.core.dialogue.ChoiceState;
 import com.uncreated.civilized.core.dialogue.context.DialogueContext;
 import com.uncreated.civilized.core.recruitment.AttractivenessSource;
 import com.uncreated.civilized.core.recruitment.Impression;
+import com.uncreated.civilized.core.recruitment.VisitorHospitality;
 import com.uncreated.civilized.core.settlement.ClientSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
 import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermissionStore;
@@ -34,6 +35,10 @@ public class CanJoinSettlementCheck implements ChoiceCondition {
    @Override
    public ChoiceState check(DialogueContext context) {
       VillagerInfo visitor = context.getVillager().getInfo();
+      VisitorHospitality hospitality = context.getVisitorHospitality();
+      if (hospitality == null)
+         return ChoiceState.hidden();
+
       if (ClientSettlementsStore.INSTANCE.findFromOwner(context.getPlayer().getUUID()).isEmpty()) {
          return ChoiceState.disabled(
                translatable("villager.dialogue.traveller.quest.validation.tooltip.player_no_settlement")
@@ -52,7 +57,12 @@ public class CanJoinSettlementCheck implements ChoiceCondition {
 
       UUID settlementId = visited.getSettlementId();
       Impression impression =
-            Impression.compute(visitor, settlementId, ClientBuildingStore.INSTANCE, ClientVillagerStore.INSTANCE);
+            Impression.compute(
+                  visitor,
+                  hospitality,
+                  settlementId,
+                  ClientBuildingStore.INSTANCE,
+                  ClientVillagerStore.INSTANCE);
       MutableComponent tooltip = breakdown(impression);
 
       if (!impression.isWillingToJoin()) {

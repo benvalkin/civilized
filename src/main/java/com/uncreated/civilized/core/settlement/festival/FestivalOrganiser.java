@@ -2,7 +2,6 @@ package com.uncreated.civilized.core.settlement.festival;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -11,13 +10,14 @@ import com.uncreated.civilized.core.notifications.Notification;
 import com.uncreated.civilized.core.notifications.NotificationService;
 import com.uncreated.civilized.core.notifications.Receiver;
 import com.uncreated.civilized.core.notifications.Severity;
-import com.uncreated.civilized.core.recruitment.VisitorHospitality;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
 import com.uncreated.civilized.core.settlement.SettlementState;
 import com.uncreated.civilized.core.settlement.entity.LoadedSettlement;
+import com.uncreated.civilized.core.settlement.entity.LoadedVillagers;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
+import com.uncreated.civilized.entity.VisitorBehaviour;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -70,14 +70,11 @@ public class FestivalOrganiser {
    }
 
    private void entertainVisitors() {
-      // copied, since replicating a change reindexes the villager
-      List<VillagerInfo> visitors =
-            List.copyOf(ServerVillagerStore.INSTANCE.getVisitors(settlement().getSettlementId()));
-      for (VillagerInfo visitor : visitors) {
-         visitor.getHospitality().awardUncapped(VisitorHospitality.FESTIVAL_BONUS);
-         ServerVillagerStore.INSTANCE.replicateChange(visitor, StoreOperation.UPDATE);
+      for (VillagerInfo visitor : ServerVillagerStore.INSTANCE.getVisitors(settlement().getSettlementId())) {
+         LoadedVillagers.find(visitor.getVillagerId())
+               .flatMap(VisitorBehaviour::tryGet)
+               .ifPresent(VisitorBehaviour::gainHospitalityFromFestival);
       }
-      ServerVillagerStore.INSTANCE.setDirty();
    }
 
    private void end() {

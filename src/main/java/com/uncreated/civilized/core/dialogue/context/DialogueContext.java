@@ -5,6 +5,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import com.uncreated.civilized.core.quest.QuestType;
+import com.uncreated.civilized.core.recruitment.VisitorHospitality;
 import com.uncreated.civilized.core.quest.attachments.PlayerDialogueCooldowns;
 import com.uncreated.civilized.core.quest.attachments.PlayerQuests;
 import com.uncreated.civilized.entity.CivilizedVillager;
@@ -21,10 +22,13 @@ public class DialogueContext {
    private final Player player;
    private final long gameTime;
    private final long dayTime;
+   /** The client's copy of the visitor's hospitality, or null if they aren't a visitor. */
+   private final @Nullable VisitorHospitality visitorHospitality;
 
-   public DialogueContext(CivilizedVillager villager, Player player) {
+   public DialogueContext(CivilizedVillager villager, Player player, @Nullable VisitorHospitality visitorHospitality) {
       this.villager = villager;
       this.player = player;
+      this.visitorHospitality = visitorHospitality;
       this.gameTime = player.level().getGameTime();
       this.dayTime = player.level().getDayTime();
    }

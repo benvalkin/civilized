@@ -29,7 +29,8 @@ public class JoinSettlementAction implements IServerDialogueAction {
 
    @Override
    public boolean run(ServerPlayer player, CivilizedVillager villager) {
-      if (VisitorBehaviour.tryGet(villager).isEmpty())
+      Optional<VisitorBehaviour> visitor = VisitorBehaviour.tryGet(villager);
+      if (visitor.isEmpty())
          return false;
 
       VillagerInfo info = villager.getInfo();
@@ -43,7 +44,13 @@ public class JoinSettlementAction implements IServerDialogueAction {
          return false;
 
       UUID settlementId = settlement.get().getSettlementId();
-      if (!Impression.compute(info, settlementId, ServerBuildingsStore.INSTANCE, ServerVillagerStore.INSTANCE)
+      if (!Impression
+            .compute(
+                  info,
+                  visitor.get().getHospitality(),
+                  settlementId,
+                  ServerBuildingsStore.INSTANCE,
+                  ServerVillagerStore.INSTANCE)
             .isWillingToJoin())
          return false;
 

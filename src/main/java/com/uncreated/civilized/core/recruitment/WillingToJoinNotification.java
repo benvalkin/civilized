@@ -30,7 +30,10 @@ public final class WillingToJoinNotification {
    /**
     * @return whether the notification was sent
     */
-   public static boolean trySendNotification(VillagerInfo visitor, boolean alreadySent) {
+   public static boolean trySendNotification(
+         VillagerInfo visitor,
+         VisitorHospitality hospitality,
+         boolean alreadySent) {
       Optional<Settlement> settlement = ServerSettlementsStore.INSTANCE.find(visitor.getVisitingSettlementId());
       if (settlement.isEmpty())
          return false;
@@ -40,7 +43,7 @@ public final class WillingToJoinNotification {
          return false;
 
       Component notificationPoiTranslation = notificationPoi.get().getBuildingType().translation();
-      boolean canJoin = canJoin(visitor, settlement.get());
+      boolean canJoin = canJoin(visitor, hospitality, settlement.get());
       if (canJoin && !alreadySent)
          NotificationService.INSTANCE.sendNotification(create(visitor, settlement.get(), notificationPoiTranslation));
       else if (!canJoin && alreadySent)
@@ -72,9 +75,14 @@ public final class WillingToJoinNotification {
       return ServerBuildingsStore.INSTANCE.findTownHall(visitor.getVisitingSettlementId());
    }
 
-   private static boolean canJoin(VillagerInfo visitor, Settlement settlement) {
+   private static boolean canJoin(VillagerInfo visitor, VisitorHospitality hospitality, Settlement settlement) {
       return Impression
-            .compute(visitor, settlement.getSettlementId(), ServerBuildingsStore.INSTANCE, ServerVillagerStore.INSTANCE)
+            .compute(
+                  visitor,
+                  hospitality,
+                  settlement.getSettlementId(),
+                  ServerBuildingsStore.INSTANCE,
+                  ServerVillagerStore.INSTANCE)
             .isWillingToJoin();
    }
 

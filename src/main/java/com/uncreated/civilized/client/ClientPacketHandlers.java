@@ -15,6 +15,7 @@ import com.uncreated.civilized.networking.packets.ProductionBillPreview;
 import com.uncreated.civilized.networking.packets.RequirementsChecked;
 import com.uncreated.civilized.networking.packets.SettlementAccessLevelDenied;
 import com.uncreated.civilized.networking.packets.TradeSlotUpdated;
+import com.uncreated.civilized.networking.packets.VisitorHospitalityUpdated;
 import com.uncreated.civilized.networking.packets.VisualizeBoundsInstruction;
 import com.uncreated.civilized.ui.menu.building.ABuildingMenuScreen;
 import com.uncreated.civilized.ui.menu.building.EstablishBuildingScreen;
@@ -24,6 +25,7 @@ import com.uncreated.civilized.ui.menu.building.military.tabs.ManageSoldierTab;
 import com.uncreated.civilized.ui.menu.building.residence.artisan.EditProductionBillTab;
 import com.uncreated.civilized.ui.menu.building.townhall.tabs.ManagePermissionsTab;
 import com.uncreated.civilized.ui.menu.trading.TradingMenuScreen;
+import com.uncreated.civilized.ui.menu.villager.VillagerMenu;
 import com.uncreated.civilized.ui.tabs.ITabHost;
 
 import net.minecraft.client.Minecraft;
@@ -125,6 +127,13 @@ public final class ClientPacketHandlers {
       if (Minecraft.getInstance().screen instanceof ABuildingMenuScreen screen
             && screen.getCurrentTab() instanceof ManageSoldierTab soldierTab)
          soldierTab.receiveEquipment(packet.requestId(), packet.items().orElse(null));
+   }
+
+   public static void receiveVisitorHospitalityUpdated(VisitorHospitalityUpdated packet, IPayloadContext context) {
+      if (context.player().containerMenu instanceof VillagerMenu menu
+            && menu.getVillager().getId() == packet.villagerEntityId()
+            && menu.getVisitorHospitality() != null)
+         menu.getVisitorHospitality().copyFrom(packet.hospitality());
    }
 
    public static void receiveLoadoutSavedResult(LoadoutSavedResult packet, IPayloadContext context) {

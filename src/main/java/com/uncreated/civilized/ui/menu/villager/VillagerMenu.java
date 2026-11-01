@@ -3,6 +3,9 @@ package com.uncreated.civilized.ui.menu.villager;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 
+import javax.annotation.Nullable;
+
+import com.uncreated.civilized.core.recruitment.VisitorHospitality;
 import com.uncreated.civilized.core.settlement.loadouts.Loadout;
 import com.uncreated.civilized.core.settlement.permission.ClientSettlementPermissionStore;
 import com.uncreated.civilized.core.settlement.permission.SettlementPermissionStore;
@@ -57,6 +60,8 @@ public class VillagerMenu extends AbstractContainerMenu {
 
    private final CivilizedVillager villager;
    private final InteractionHand interactedHand;
+   /** Null unless the villager is a visitor. Kept up to date on the client by {@code VisitorHospitalityUpdated}. */
+   private final @Nullable VisitorHospitality visitorHospitality;
 
    // client constructor
    public VillagerMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf extraDataFromServer) {
@@ -65,6 +70,7 @@ public class VillagerMenu extends AbstractContainerMenu {
             playerInventory,
             (CivilizedVillager) playerInventory.player.level().getEntity(extraDataFromServer.readVarInt()),
             extraDataFromServer.readEnum(InteractionHand.class),
+            extraDataFromServer.readNullable(VisitorHospitality::decode),
             // client slots are filled via the serverside menu syncing them
             new SimpleContainer(EQUIPMENT_SLOTS.size()),
             ClientSettlementPermissionStore.INSTANCE);
@@ -75,11 +81,13 @@ public class VillagerMenu extends AbstractContainerMenu {
          Inventory playerInventory,
          CivilizedVillager villager,
          InteractionHand interactedHand,
+         @Nullable VisitorHospitality visitorHospitality,
          Container villagerEquipment,
          SettlementPermissionStore permissionStore) {
       super(GuiRegistry.VILLAGER_MENU.get(), containerId);
       this.villager = villager;
       this.interactedHand = interactedHand;
+      this.visitorHospitality = visitorHospitality;
 
       addPlayerInventorySlots(playerInventory);
       Player player = playerInventory.player;

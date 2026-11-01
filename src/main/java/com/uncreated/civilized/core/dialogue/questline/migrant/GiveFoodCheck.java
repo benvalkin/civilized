@@ -6,6 +6,7 @@ import static net.minecraft.network.chat.Component.translatable;
 import com.uncreated.civilized.core.dialogue.ChoiceCondition;
 import com.uncreated.civilized.core.dialogue.ChoiceState;
 import com.uncreated.civilized.core.dialogue.context.DialogueContext;
+import com.uncreated.civilized.core.recruitment.VisitorHospitality;
 
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.food.FoodProperties;
@@ -21,7 +22,9 @@ public class GiveFoodCheck implements ChoiceCondition {
 
    @Override
    public ChoiceState check(DialogueContext context) {
-      if (context.getVillager().getInfo().getHospitality().isFed())
+      // only visitors are limited to one meal
+      VisitorHospitality hospitality = context.getVisitorHospitality();
+      if (hospitality != null && hospitality.isFed())
          return ChoiceState.disabled(text("recruitment/tooltips", "already_fed"));
 
       ItemStack held = context.heldItem();

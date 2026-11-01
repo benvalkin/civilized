@@ -15,7 +15,6 @@ import org.jetbrains.annotations.NotNull;
 import com.mojang.datafixers.util.Pair;
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.Building;
-import com.uncreated.civilized.core.recruitment.VisitorHospitality;
 import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkills;
 
 import lombok.Builder;
@@ -62,8 +61,7 @@ public class VillagerInfo {
                   .fatherId(buffer.readNullable((b -> b.readUUID())))
                   .birthDay(buffer.readNullable((FriendlyByteBuf::readVarLong)))
                   .lifeStage(buffer.readEnum(LifeStage.class))
-                  .skills(VillagerSkills.decode(buffer))
-                  .hospitality(VisitorHospitality.decode(buffer));
+                  .skills(VillagerSkills.decode(buffer));
 
       return builder.build();
    }
@@ -90,7 +88,6 @@ public class VillagerInfo {
       buffer.writeNullable(birthDay, FriendlyByteBuf::writeVarLong);
       buffer.writeEnum(lifeStage);
       skills.encode(buffer);
-      hospitality.encode(buffer);
    }
 
    public static @NotNull VillagerInfo fromNbt(CompoundTag itemTag, HolderLookup.Provider registryAccess) {
@@ -125,8 +122,6 @@ public class VillagerInfo {
          builder.birthDay(itemTag.getLong(VillagerInfo.FIELD_BIRTH_DAY));
       if (itemTag.contains(VillagerInfo.FIELD_LIFE_STAGE))
          builder.lifeStage(LifeStage.valueOf(itemTag.getString(VillagerInfo.FIELD_LIFE_STAGE)));
-      if (itemTag.contains(VillagerInfo.FIELD_HOSPITALITY))
-         builder.hospitality(VisitorHospitality.fromNbt(itemTag.getCompound(VillagerInfo.FIELD_HOSPITALITY)));
       if (itemTag.hasUUID(VillagerInfo.FIELD_WORK_AREA_ID))
          builder.workAreaId(itemTag.getUUID(VillagerInfo.FIELD_WORK_AREA_ID));
       if (itemTag.hasUUID(VillagerInfo.FIELD_PARTNER_ID))
@@ -172,7 +167,6 @@ public class VillagerInfo {
       if (getBirthDay() != null)
          item.putLong(FIELD_BIRTH_DAY, getBirthDay());
       item.putString(FIELD_LIFE_STAGE, getLifeStage().name());
-      item.put(FIELD_HOSPITALITY, getHospitality().toNbt());
       return item;
    }
 
@@ -196,7 +190,6 @@ public class VillagerInfo {
    public static final String FIELD_FATHER_ID = "father_id";
    public static final String FIELD_BIRTH_DAY = "birth_day";
    public static final String FIELD_LIFE_STAGE = "life_stage";
-   public static final String FIELD_HOSPITALITY = "hospitality";
    public static final int GROW_UP_DAYS = 30;
 
    private UUID villagerId;
@@ -241,9 +234,6 @@ public class VillagerInfo {
    @Setter
    @Builder.Default
    private LifeStage lifeStage = LifeStage.ADULT;
-   @Setter
-   @Builder.Default
-   private VisitorHospitality hospitality = new VisitorHospitality();
 
    public long lifetimeSeed() {
       return villagerId.getMostSignificantBits();
@@ -478,7 +468,6 @@ public class VillagerInfo {
       fatherId = other.fatherId;
       birthDay = other.birthDay;
       lifeStage = other.lifeStage;
-      hospitality = other.hospitality;
    }
 
    public String toStringLite() {

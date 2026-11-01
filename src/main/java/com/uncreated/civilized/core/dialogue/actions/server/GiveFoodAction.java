@@ -1,8 +1,7 @@
 package com.uncreated.civilized.core.dialogue.actions.server;
 
-import com.uncreated.civilized.core.StoreOperation;
-import com.uncreated.civilized.core.recruitment.VisitorHospitality;
-import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
+import java.util.Optional;
+
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.VisitorBehaviour;
 
@@ -29,8 +28,8 @@ public class GiveFoodAction implements IServerDialogueAction {
          return false;
 
       // visitors only take one meal a visit, which counts towards their hospitality
-      boolean isVisitor = VisitorBehaviour.tryGet(villager).isPresent();
-      if (isVisitor && !villager.getInfo().getHospitality().feed(VisitorHospitality.FED_BONUS))
+      Optional<VisitorBehaviour> visitor = VisitorBehaviour.tryGet(villager);
+      if (visitor.isPresent() && !visitor.get().feed())
          return false;
 
       held.consume(1, player);
@@ -44,8 +43,6 @@ public class GiveFoodAction implements IServerDialogueAction {
                   SoundSource.NEUTRAL,
                   1,
                   1);
-      ServerVillagerStore.INSTANCE.setDirty();
-      ServerVillagerStore.INSTANCE.replicateChange(villager.getInfo(), StoreOperation.UPDATE);
       return true;
    }
 }

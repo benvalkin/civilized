@@ -3,9 +3,13 @@ package com.uncreated.civilized.core.recruitment;
 import lombok.Getter;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 
 @Getter
 public class VisitorHospitality {
+
+   public static final StreamCodec<FriendlyByteBuf, VisitorHospitality> STREAM_CODEC =
+         StreamCodec.ofMember(VisitorHospitality::encode, VisitorHospitality::decode);
 
    public static final float DAILY_CAP = 12;
    public static final int WELCOME_BONUS = 3;
@@ -78,8 +82,16 @@ public class VisitorHospitality {
       hospitality.day = buffer.readVarLong();
       hospitality.welcomed = buffer.readBoolean();
       hospitality.fed = buffer.readBoolean();
-      // todo: We are storing hospitality on the villager info, which adds extra memory and network bandwidth to every villager, even for those who aren't visitors. We should move this to entity state
       return hospitality;
+   }
+
+   /** Updates the client's copy in place, since the dialogue already holds a reference to it. */
+   public void copyFrom(VisitorHospitality other) {
+      points = other.points;
+      gainedToday = other.gainedToday;
+      day = other.day;
+      welcomed = other.welcomed;
+      fed = other.fed;
    }
 
    public void encode(FriendlyByteBuf buffer) {

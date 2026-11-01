@@ -11,12 +11,13 @@ public record Impression(List<AttractivenessSource> attractiveness, int hospital
 
    public static Impression compute(
          VillagerInfo visitor,
+         VisitorHospitality hospitality,
          UUID settlementId,
          BuildingStore buildingStore,
          VillagerStore villagerStore) {
       return new Impression(
             SettlementAttractiveness.compute(settlementId, buildingStore, villagerStore),
-            visitor.getHospitality().getWholePoints(),
+            hospitality.getWholePoints(),
             impressionRequired(visitor));
    }
 

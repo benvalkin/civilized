@@ -1,7 +1,11 @@
 package com.uncreated.civilized.ui.menu.villager;
 
+import javax.annotation.Nullable;
+
+import com.uncreated.civilized.core.recruitment.VisitorHospitality;
 import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermissionStore;
 import com.uncreated.civilized.entity.CivilizedVillager;
+import com.uncreated.civilized.entity.VisitorBehaviour;
 import com.uncreated.civilized.entity.equipment.CarriedEquipmentContainer;
 
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -38,6 +42,7 @@ public class VillagerScreenOpener {
                   inventory,
                   villager,
                   hand,
+                  findHospitality(villager),
                   new CarriedEquipmentContainer(villager.getEquipment(), VillagerMenu.EQUIPMENT_SLOTS),
                   ServerSettlementPermissionStore.INSTANCE);
          }
@@ -47,5 +52,10 @@ public class VillagerScreenOpener {
    private static void writeMenuData(RegistryFriendlyByteBuf buffer, CivilizedVillager villager, InteractionHand hand) {
       buffer.writeVarInt(villager.getId());
       buffer.writeEnum(hand);
+      buffer.writeNullable(findHospitality(villager), (b, hospitality) -> hospitality.encode(b));
+   }
+
+   private static @Nullable VisitorHospitality findHospitality(CivilizedVillager villager) {
+      return VisitorBehaviour.tryGet(villager).map(VisitorBehaviour::getHospitality).orElse(null);
    }
 }

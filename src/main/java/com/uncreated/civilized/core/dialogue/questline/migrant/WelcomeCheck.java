@@ -20,7 +20,8 @@ public class WelcomeCheck implements ChoiceCondition {
 
    @Override
    public ChoiceState check(DialogueContext context) {
-      if (findVisitedSettlement(context).isEmpty() || context.getVillager().getInfo().getHospitality().isWelcomed())
+      VisitorHospitality hospitality = context.getVisitorHospitality();
+      if (hospitality == null || hospitality.isWelcomed() || findVisitedSettlement(context).isEmpty())
          return ChoiceState.hidden();
 
       return ChoiceState.enabled(
