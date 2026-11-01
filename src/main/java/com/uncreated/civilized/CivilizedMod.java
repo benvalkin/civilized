@@ -15,6 +15,7 @@ import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermis
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
 import com.uncreated.civilized.core.villagerinfo.events.VillagerStoreEvents;
+import com.uncreated.civilized.core.villagerinfo.inactive.visitor.ServerRecurringVisitorStore;
 import com.uncreated.civilized.core.villagerinfo.skills.events.SkillTrainingEvents;
 import com.uncreated.civilized.neoforge.registration.BlockRegistry;
 import com.uncreated.civilized.neoforge.registration.DataMapRegistry;
@@ -113,7 +114,8 @@ public class CivilizedMod {
       // Register our mod's ModConfigSpec so that FML can create and load the config file for us
       modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
 
-      // enabled to make item's quality bonuses show up as part of its stats (e.g. modified attack damage) while holding shift
+      // enabled to make item's quality bonuses show up as part of its stats (e.g. modified attack damage) while holding
+      // shift
       NeoForgeMod.enableMergedAttributeTooltips();
    }
 
@@ -154,6 +156,7 @@ public class CivilizedMod {
       ServerSettlementPermissionStore.loadServer(event.getLevel().getServer());
       NotificationService.loadServer(event.getLevel().getServer());
       ServerLoadoutsStore.loadServer(event.getLevel().getServer());
+      ServerRecurringVisitorStore.loadServer(event.getLevel().getServer());
       LOGGER.info("Loaded settlements");
    }
 

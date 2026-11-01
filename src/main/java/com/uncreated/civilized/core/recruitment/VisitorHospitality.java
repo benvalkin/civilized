@@ -78,6 +78,7 @@ public class VisitorHospitality {
       hospitality.day = buffer.readVarLong();
       hospitality.welcomed = buffer.readBoolean();
       hospitality.fed = buffer.readBoolean();
+      // todo: We are storing hospitality on the villager info, which adds extra memory and network bandwidth to every villager, even for those who aren't visitors. We should move this to entity state
       return hospitality;
    }
 

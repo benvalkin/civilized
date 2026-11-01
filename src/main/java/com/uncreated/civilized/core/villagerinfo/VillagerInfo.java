@@ -10,6 +10,8 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.jetbrains.annotations.NotNull;
+
 import com.mojang.datafixers.util.Pair;
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.Building;
@@ -19,6 +21,8 @@ import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkills;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
@@ -87,6 +91,89 @@ public class VillagerInfo {
       buffer.writeEnum(lifeStage);
       skills.encode(buffer);
       hospitality.encode(buffer);
+   }
+
+   public static @NotNull VillagerInfo fromNbt(CompoundTag itemTag, HolderLookup.Provider registryAccess) {
+      VillagerInfo.VillagerInfoBuilder builder =
+            VillagerInfo.builder()
+                  .villagerId(itemTag.getUUID(VillagerInfo.FIELD_VILLAGER_ID))
+                  .isDeceased(itemTag.getBoolean(VillagerInfo.FIELD_IS_DECEASED))
+                  .firstName(itemTag.getString(VillagerInfo.FIELD_FIRST_NAME))
+                  .lastName(itemTag.getString(VillagerInfo.FIELD_LAST_NAME))
+                  .occupation(
+                        VillagerOccupations.getFromResourceLocation(
+                              ResourceLocation.parse(itemTag.getString(VillagerInfo.FIELD_VILLAGER_OCCUPATION))))
+                  .npcRole(
+                        VillagerNpcRoles.getFromResourceLocation(
+                              ResourceLocation.parse(itemTag.getString(VillagerInfo.FIELD_VILLAGER_NPC_ROLE))))
+                  .gender(Gender.valueOf(itemTag.getString(VillagerInfo.FIELD_VILLAGER_GENDER)))
+                  .skills(VillagerSkills.fromNbt(itemTag.getCompound(VillagerInfo.FIELD_SKILLS)));
+
+      if (itemTag.hasUUID(VillagerInfo.FIELD_SETTLEMENT_ID))
+         builder.settlementId(itemTag.getUUID(VillagerInfo.FIELD_SETTLEMENT_ID));
+      if (itemTag.hasUUID(VillagerInfo.FIELD_HOME_BUILDING_ID))
+         builder.homeBuildingId(itemTag.getUUID(VillagerInfo.FIELD_HOME_BUILDING_ID));
+      if (itemTag.hasUUID(VillagerInfo.FIELD_VISITING_SETTLEMENT_ID))
+         builder.visitingSettlementId(itemTag.getUUID(VillagerInfo.FIELD_VISITING_SETTLEMENT_ID));
+      if (itemTag.hasUUID(VillagerInfo.FIELD_WORK_BUILDING_ID))
+         builder.workBuildingId(itemTag.getUUID(VillagerInfo.FIELD_WORK_BUILDING_ID));
+      if (itemTag.hasUUID(VillagerInfo.FIELD_MOTHER_ID))
+         builder.motherId(itemTag.getUUID(VillagerInfo.FIELD_MOTHER_ID));
+      if (itemTag.hasUUID(VillagerInfo.FIELD_FATHER_ID))
+         builder.fatherId(itemTag.getUUID(VillagerInfo.FIELD_FATHER_ID));
+      if (itemTag.contains(VillagerInfo.FIELD_BIRTH_DAY))
+         builder.birthDay(itemTag.getLong(VillagerInfo.FIELD_BIRTH_DAY));
+      if (itemTag.contains(VillagerInfo.FIELD_LIFE_STAGE))
+         builder.lifeStage(LifeStage.valueOf(itemTag.getString(VillagerInfo.FIELD_LIFE_STAGE)));
+      if (itemTag.contains(VillagerInfo.FIELD_HOSPITALITY))
+         builder.hospitality(VisitorHospitality.fromNbt(itemTag.getCompound(VillagerInfo.FIELD_HOSPITALITY)));
+      if (itemTag.hasUUID(VillagerInfo.FIELD_WORK_AREA_ID))
+         builder.workAreaId(itemTag.getUUID(VillagerInfo.FIELD_WORK_AREA_ID));
+      if (itemTag.hasUUID(VillagerInfo.FIELD_PARTNER_ID))
+         builder.partnerId(itemTag.getUUID(VillagerInfo.FIELD_PARTNER_ID));
+      if (itemTag.contains(VillagerInfo.FIELD_SOCIAL_CLASS))
+         builder.socialClass(itemTag.getInt(VillagerInfo.FIELD_SOCIAL_CLASS));
+      if (itemTag.hasUUID(VillagerInfo.FIELD_LOADOUT_ID))
+         builder.loadoutId(itemTag.getUUID(VillagerInfo.FIELD_LOADOUT_ID));
+
+      return builder.build();
+   }
+
+   public @NotNull CompoundTag toNbt(HolderLookup.Provider registryAccess) {
+      CompoundTag item = new CompoundTag();
+      item.putUUID(VillagerInfo.FIELD_VILLAGER_ID, getVillagerId());
+      item.putBoolean(FIELD_IS_DECEASED, isDeceased());
+      if (getSettlementId() != null)
+         item.putUUID(FIELD_SETTLEMENT_ID, getSettlementId());
+      if (getHomeBuildingId() != null)
+         item.putUUID(FIELD_HOME_BUILDING_ID, getHomeBuildingId());
+      if (getVisitingSettlementId() != null)
+         item.putUUID(FIELD_VISITING_SETTLEMENT_ID, getVisitingSettlementId());
+      if (getWorkBuildingId() != null)
+         item.putUUID(FIELD_WORK_BUILDING_ID, getWorkBuildingId());
+      if (getWorkAreaId() != null)
+         item.putUUID(FIELD_WORK_AREA_ID, getWorkAreaId());
+      item.putString(FIELD_FIRST_NAME, getFirstName());
+      item.putString(FIELD_LAST_NAME, getLastName());
+      item.putString(FIELD_VILLAGER_OCCUPATION, getOccupation().resourceLocation().toString());
+      item.putString(FIELD_VILLAGER_GENDER, getGender().name());
+      if (getPartnerId() != null)
+         item.putUUID(FIELD_PARTNER_ID, getPartnerId());
+
+      item.putString(FIELD_VILLAGER_NPC_ROLE, getNpcRole().resourceLocation().toString());
+      item.putInt(FIELD_SOCIAL_CLASS, getSocialClass());
+      if (getLoadoutId() != null)
+         item.putUUID(FIELD_LOADOUT_ID, getLoadoutId());
+      item.put(FIELD_SKILLS, getSkills().toNbt());
+      if (getMotherId() != null)
+         item.putUUID(FIELD_MOTHER_ID, getMotherId());
+      if (getFatherId() != null)
+         item.putUUID(FIELD_FATHER_ID, getFatherId());
+      if (getBirthDay() != null)
+         item.putLong(FIELD_BIRTH_DAY, getBirthDay());
+      item.putString(FIELD_LIFE_STAGE, getLifeStage().name());
+      item.put(FIELD_HOSPITALITY, getHospitality().toNbt());
+      return item;
    }
 
    public static final String FIELD_VILLAGER_ID = "villager_id";

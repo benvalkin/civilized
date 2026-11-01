@@ -8,7 +8,6 @@ import java.util.stream.Stream;
 import com.mojang.datafixers.util.Pair;
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
-import com.uncreated.civilized.core.recruitment.VisitorHospitality;
 import com.uncreated.civilized.core.villagerinfo.events.model.VillagerInfoUpdatedEvent;
 import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkills;
 import com.uncreated.civilized.entity.CivilizedVillager;
@@ -17,7 +16,6 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.saveddata.SavedData;
@@ -49,42 +47,7 @@ public class ServerVillagerStore extends VillagerStore {
 
       ListTag tags = new ListTag();
       for (VillagerInfo villagerInfo : villagers.all()) {
-         CompoundTag item = new CompoundTag();
-         item.putUUID(VillagerInfo.FIELD_VILLAGER_ID, villagerInfo.getVillagerId());
-         item.putBoolean(VillagerInfo.FIELD_IS_DECEASED, villagerInfo.isDeceased());
-         if (villagerInfo.getSettlementId() != null)
-            item.putUUID(VillagerInfo.FIELD_SETTLEMENT_ID, villagerInfo.getSettlementId());
-         if (villagerInfo.getHomeBuildingId() != null)
-            item.putUUID(VillagerInfo.FIELD_HOME_BUILDING_ID, villagerInfo.getHomeBuildingId());
-         if (villagerInfo.getVisitingSettlementId() != null)
-            item.putUUID(VillagerInfo.FIELD_VISITING_SETTLEMENT_ID, villagerInfo.getVisitingSettlementId());
-         if (villagerInfo.getWorkBuildingId() != null)
-            item.putUUID(VillagerInfo.FIELD_WORK_BUILDING_ID, villagerInfo.getWorkBuildingId());
-         if (villagerInfo.getWorkAreaId() != null)
-            item.putUUID(VillagerInfo.FIELD_WORK_AREA_ID, villagerInfo.getWorkAreaId());
-         item.putString(VillagerInfo.FIELD_FIRST_NAME, villagerInfo.getFirstName());
-         item.putString(VillagerInfo.FIELD_LAST_NAME, villagerInfo.getLastName());
-         item.putString(
-               VillagerInfo.FIELD_VILLAGER_OCCUPATION,
-               villagerInfo.getOccupation().resourceLocation().toString());
-         item.putString(VillagerInfo.FIELD_VILLAGER_GENDER, villagerInfo.getGender().name());
-         if (villagerInfo.getPartnerId() != null)
-            item.putUUID(VillagerInfo.FIELD_PARTNER_ID, villagerInfo.getPartnerId());
-
-         item.putString(VillagerInfo.FIELD_VILLAGER_NPC_ROLE, villagerInfo.getNpcRole().resourceLocation().toString());
-         item.putInt(VillagerInfo.FIELD_SOCIAL_CLASS, villagerInfo.getSocialClass());
-         if (villagerInfo.getLoadoutId() != null)
-            item.putUUID(VillagerInfo.FIELD_LOADOUT_ID, villagerInfo.getLoadoutId());
-         item.put(VillagerInfo.FIELD_SKILLS, villagerInfo.getSkills().toNbt());
-         if (villagerInfo.getMotherId() != null)
-            item.putUUID(VillagerInfo.FIELD_MOTHER_ID, villagerInfo.getMotherId());
-         if (villagerInfo.getFatherId() != null)
-            item.putUUID(VillagerInfo.FIELD_FATHER_ID, villagerInfo.getFatherId());
-         if (villagerInfo.getBirthDay() != null)
-            item.putLong(VillagerInfo.FIELD_BIRTH_DAY, villagerInfo.getBirthDay());
-         item.putString(VillagerInfo.FIELD_LIFE_STAGE, villagerInfo.getLifeStage().name());
-         item.put(VillagerInfo.FIELD_HOSPITALITY, villagerInfo.getHospitality().toNbt());
-
+         CompoundTag item = villagerInfo.toNbt(registries);
          tags.add(item);
       }
 
@@ -101,49 +64,8 @@ public class ServerVillagerStore extends VillagerStore {
          if (!(i instanceof CompoundTag itemTag)) {
             continue;
          }
-         VillagerInfo.VillagerInfoBuilder builder =
-               VillagerInfo.builder()
-                     .villagerId(itemTag.getUUID(VillagerInfo.FIELD_VILLAGER_ID))
-                     .isDeceased(itemTag.getBoolean(VillagerInfo.FIELD_IS_DECEASED))
-                     .firstName(itemTag.getString(VillagerInfo.FIELD_FIRST_NAME))
-                     .lastName(itemTag.getString(VillagerInfo.FIELD_LAST_NAME))
-                     .occupation(
-                           VillagerOccupations.getFromResourceLocation(
-                                 ResourceLocation.parse(itemTag.getString(VillagerInfo.FIELD_VILLAGER_OCCUPATION))))
-                     .npcRole(
-                           VillagerNpcRoles.getFromResourceLocation(
-                                 ResourceLocation.parse(itemTag.getString(VillagerInfo.FIELD_VILLAGER_NPC_ROLE))))
-                     .gender(Gender.valueOf(itemTag.getString(VillagerInfo.FIELD_VILLAGER_GENDER)))
-                     .skills(VillagerSkills.fromNbt(itemTag.getCompound(VillagerInfo.FIELD_SKILLS)));
 
-         if (itemTag.hasUUID(VillagerInfo.FIELD_SETTLEMENT_ID))
-            builder.settlementId(itemTag.getUUID(VillagerInfo.FIELD_SETTLEMENT_ID));
-         if (itemTag.hasUUID(VillagerInfo.FIELD_HOME_BUILDING_ID))
-            builder.homeBuildingId(itemTag.getUUID(VillagerInfo.FIELD_HOME_BUILDING_ID));
-         if (itemTag.hasUUID(VillagerInfo.FIELD_VISITING_SETTLEMENT_ID))
-            builder.visitingSettlementId(itemTag.getUUID(VillagerInfo.FIELD_VISITING_SETTLEMENT_ID));
-         if (itemTag.hasUUID(VillagerInfo.FIELD_WORK_BUILDING_ID))
-            builder.workBuildingId(itemTag.getUUID(VillagerInfo.FIELD_WORK_BUILDING_ID));
-         if (itemTag.hasUUID(VillagerInfo.FIELD_MOTHER_ID))
-            builder.motherId(itemTag.getUUID(VillagerInfo.FIELD_MOTHER_ID));
-         if (itemTag.hasUUID(VillagerInfo.FIELD_FATHER_ID))
-            builder.fatherId(itemTag.getUUID(VillagerInfo.FIELD_FATHER_ID));
-         if (itemTag.contains(VillagerInfo.FIELD_BIRTH_DAY))
-            builder.birthDay(itemTag.getLong(VillagerInfo.FIELD_BIRTH_DAY));
-         if (itemTag.contains(VillagerInfo.FIELD_LIFE_STAGE))
-            builder.lifeStage(LifeStage.valueOf(itemTag.getString(VillagerInfo.FIELD_LIFE_STAGE)));
-         if (itemTag.contains(VillagerInfo.FIELD_HOSPITALITY))
-            builder.hospitality(VisitorHospitality.fromNbt(itemTag.getCompound(VillagerInfo.FIELD_HOSPITALITY)));
-         if (itemTag.hasUUID(VillagerInfo.FIELD_WORK_AREA_ID))
-            builder.workAreaId(itemTag.getUUID(VillagerInfo.FIELD_WORK_AREA_ID));
-         if (itemTag.hasUUID(VillagerInfo.FIELD_PARTNER_ID))
-            builder.partnerId(itemTag.getUUID(VillagerInfo.FIELD_PARTNER_ID));
-         if (itemTag.contains(VillagerInfo.FIELD_SOCIAL_CLASS))
-            builder.socialClass(itemTag.getInt(VillagerInfo.FIELD_SOCIAL_CLASS));
-         if (itemTag.hasUUID(VillagerInfo.FIELD_LOADOUT_ID))
-            builder.loadoutId(itemTag.getUUID(VillagerInfo.FIELD_LOADOUT_ID));
-
-         VillagerInfo villagerInfo = builder.build();
+         VillagerInfo villagerInfo = VillagerInfo.fromNbt(itemTag, lookupProvider);
          store.villagers.add(villagerInfo);
       }
 
