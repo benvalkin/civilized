@@ -7,7 +7,7 @@ import net.minecraft.network.FriendlyByteBuf;
 @Getter
 public class VisitorHospitality {
 
-   public static final float DAILY_CAP = 15;
+   public static final float DAILY_CAP = 12;
    public static final int WELCOME_BONUS = 3;
    public static final int FED_BONUS = 5;
    public static final int FESTIVAL_BONUS = 10;

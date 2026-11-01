@@ -70,9 +70,9 @@ public class BuildingRequirements {
          registerRequirements(
                registry,
                BuildingRequirementList.forBuilding(BuildingTypes.INN, 1)
-                     .add(new SpaceRequirement(50))
+                     .add(new SpaceRequirement(22))
                      .add(new EnclosedRoomRequirement())
-                     .add(new BlockTypeRequirement(BuildingBlockTypes.WOOD, 200, 200))
+                     .add(new BlockTypeRequirement(BuildingBlockTypes.WOOD, 200))
                      .add(new ChestsPresentRequirement(1, false))
                      .add(new BedsPresentRequirement(4, 4, false))
                      .add(new SignsPresentRequirement(1, false))

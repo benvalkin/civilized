@@ -65,10 +65,10 @@ public class InnBehaviour extends BuildingBehaviour {
    public int getMaxVisitors() {
       int upgradeLevel = getBuilding().getUpgradeLevel();
       if (upgradeLevel <= 1)
-         return 3;
+         return 4;
       if (upgradeLevel == 2)
-         return 5;
-      return 7;
+         return 6;
+      return 8;
    }
 
    public boolean isFull() {

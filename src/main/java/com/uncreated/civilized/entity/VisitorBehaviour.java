@@ -22,7 +22,7 @@ public class VisitorBehaviour extends VillagerRoleBehaviour {
    public static final long NO_DEPARTURE = -1;
    public static final long MAX_STAY_TICKS = 4 * 24000;
    private static final float HOSPITALITY_PER_CHAT = 1;
-   private static final float HOSPITALITY_PER_HOSTED_CHAT = 3;
+   private static final float HOSPITALITY_PER_HOSTED_CHAT = 2.5f;
    private static final float HOSPITALITY_PER_ENTERTAINMENT = 5;
    private static final int NOTIFICATION_CHECK_INTERVAL = 10 * 20;
 
