@@ -6,12 +6,17 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.BuildingTypes;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
 import com.uncreated.civilized.core.building.requirement.ServerRequirementContexts;
+import com.uncreated.civilized.core.notifications.NotificationService;
 import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.settlement.Settlement;
+import com.uncreated.civilized.core.settlement.SettlementState;
+import com.uncreated.civilized.core.settlement.entity.LoadedSettlement;
+import com.uncreated.civilized.core.settlement.entity.LoadedSettlements;
 import com.uncreated.civilized.core.settlement.festival.Festival;
 import com.uncreated.civilized.core.settlement.festival.FestivalOrganiser;
 import com.uncreated.civilized.core.settlement.permission.ServerSettlementPermissionStore;
@@ -56,17 +61,17 @@ public record StartFestival(UUID townSquareId) implements CustomPacketPayload {
       if (townSquare.isEmpty() || !townSquare.get().getBuildingType().is(BuildingTypes.TOWN_SQUARE))
          return;
 
-      Optional<Settlement> settlement = ServerSettlementsStore.INSTANCE.find(townSquare.get().getSettlementId());
-      if (settlement.isEmpty())
+      Optional<LoadedSettlement> loaded = LoadedSettlements.checkLoaded(townSquare.get().getSettlementId());
+      if (loaded.isEmpty())
          return;
 
-      if (!ServerSettlementPermissionStore.INSTANCE.getOrCreate(settlement.get().getSettlementId())
+      Settlement settlement = loaded.get().getSettlement();
+
+      if (!ServerSettlementPermissionStore.INSTANCE.getOrCreate(settlement.getSettlementId())
             .hasCreateBuildingsPermission(player.getUUID())) {
          fail(
                player,
-               Component.translatable(
-                     "message.festival.failed.no_permission",
-                     settlement.get().displayNameTranslation()));
+               Component.translatable("message.festival.failed.no_permission", settlement.displayNameTranslation()));
          return;
       }
 
@@ -75,16 +80,16 @@ public record StartFestival(UUID townSquareId) implements CustomPacketPayload {
          return;
 
       long dayTime = level.getDayTime();
-      List<Container> coinStorage = ServerRequirementContexts.coinStorage(settlement.get(), player);
+      List<Container> coinStorage = ServerRequirementContexts.coinStorage(settlement, player);
       Optional<Component> whyNot =
-            Festival.whyCannotStart(settlement.get().getState(), dayTime, CurrencyItem.countCurrency(coinStorage));
+            Festival.whyCannotStart(settlement.getState(), dayTime, CurrencyItem.countCurrency(coinStorage));
       if (whyNot.isPresent()) {
          fail(player, whyNot.get());
          return;
       }
 
-      CurrencyItem.debit(coinStorage, Festival.cost(settlement.get().getState()));
-      FestivalOrganiser.start(settlement.get(), dayTime);
+      CurrencyItem.debit(coinStorage, Festival.cost(settlement.getState()));
+      startFestival(settlement, dayTime);
 
       player.displayClientMessage(
             Component.translatable("message.festival.started").withColor(Colors.VALIDATION_SUCCESS),
@@ -93,5 +98,21 @@ public record StartFestival(UUID townSquareId) implements CustomPacketPayload {
 
    private static void fail(ServerPlayer player, Component reason) {
       player.displayClientMessage(reason.copy().withColor(Colors.VALIDATION_ERROR), true);
+   }
+
+   private static void startFestival(Settlement settlement, long dayTime) {
+      SettlementState state = settlement.getState();
+      state.setFestivalStartTime(dayTime);
+      state.setLastFestivalDay(dayTime / 24000);
+      state.setFestivalsHeldCount(state.getFestivalsHeldCount() + 1);
+      ServerSettlementsStore.INSTANCE.setDirty();
+      ServerSettlementsStore.INSTANCE.replicateChange(settlement, StoreOperation.UPDATE);
+
+      NotificationService.INSTANCE.sendNotification(
+            FestivalOrganiser.festivalNotification(
+                  settlement,
+                  "festival_announced",
+                  "notification.festival.announced",
+                  "notification.festival.announced.detail"));
    }
 }

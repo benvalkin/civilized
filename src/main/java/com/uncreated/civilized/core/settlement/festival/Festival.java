@@ -21,14 +21,14 @@ public final class Festival { // todo: clean up annoying static methods
    public static final int COOLDOWN_DAYS = 10;
    public static final int EARLIEST_START_TIME = 8000; // 2pm
    public static final int LATEST_START_TIME = 14000; // 8pm
-   /** How long visitors spend arriving before the celebration begins. */
+   /** How long villagers spend gathering before the celebration begins. */
    public static final int GATHERING_DURATION = 2000; // 2 hours
    public static final int CELEBRATION_DURATION = 4000; // 4 hours
    public static final int FESTIVAL_RELATIONSHIP_SUCCESS_ODDS = 3;
 
    public enum Phase {
       NONE,
-      /** Visitors are arriving in the town square. */
+      /** Villagers are gathering in the town square. */
       GATHERING,
       /** Festival is going on. */
       CELEBRATING
