@@ -131,9 +131,8 @@ public final class ClientPacketHandlers {
 
    public static void receiveVisitorHospitalityUpdated(VisitorHospitalityUpdated packet, IPayloadContext context) {
       if (context.player().containerMenu instanceof VillagerMenu menu
-            && menu.getVillager().getId() == packet.villagerEntityId()
-            && menu.getVisitorHospitality() != null)
-         menu.getVisitorHospitality().copyFrom(packet.hospitality());
+            && menu.getVillager().getId() == packet.villagerEntityId() && menu.getContext().hospitality() != null)
+         menu.getContext().hospitality().copyFrom(packet.hospitality());
    }
 
    public static void receiveLoadoutSavedResult(LoadoutSavedResult packet, IPayloadContext context) {

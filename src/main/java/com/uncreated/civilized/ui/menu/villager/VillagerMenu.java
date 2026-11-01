@@ -3,9 +3,6 @@ package com.uncreated.civilized.ui.menu.villager;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 
-import javax.annotation.Nullable;
-
-import com.uncreated.civilized.core.recruitment.VisitorHospitality;
 import com.uncreated.civilized.core.settlement.loadouts.Loadout;
 import com.uncreated.civilized.core.settlement.permission.ClientSettlementPermissionStore;
 import com.uncreated.civilized.core.settlement.permission.SettlementPermissionStore;
@@ -20,7 +17,6 @@ import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.Container;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -59,9 +55,7 @@ public class VillagerMenu extends AbstractContainerMenu {
    private boolean equipmentVisible;
 
    private final CivilizedVillager villager;
-   private final InteractionHand interactedHand;
-   /** Null unless the villager is a visitor. Kept up to date on the client by {@code VisitorHospitalityUpdated}. */
-   private final @Nullable VisitorHospitality visitorHospitality;
+   private final VillagerScreenContext context;
 
    // client constructor
    public VillagerMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf extraDataFromServer) {
@@ -69,8 +63,7 @@ public class VillagerMenu extends AbstractContainerMenu {
             containerId,
             playerInventory,
             (CivilizedVillager) playerInventory.player.level().getEntity(extraDataFromServer.readVarInt()),
-            extraDataFromServer.readEnum(InteractionHand.class),
-            extraDataFromServer.readNullable(VisitorHospitality::decode),
+            VillagerScreenContext.STREAM_CODEC.decode(extraDataFromServer),
             // client slots are filled via the serverside menu syncing them
             new SimpleContainer(EQUIPMENT_SLOTS.size()),
             ClientSettlementPermissionStore.INSTANCE);
@@ -80,14 +73,12 @@ public class VillagerMenu extends AbstractContainerMenu {
          int containerId,
          Inventory playerInventory,
          CivilizedVillager villager,
-         InteractionHand interactedHand,
-         @Nullable VisitorHospitality visitorHospitality,
+         VillagerScreenContext context,
          Container villagerEquipment,
          SettlementPermissionStore permissionStore) {
       super(GuiRegistry.VILLAGER_MENU.get(), containerId);
       this.villager = villager;
-      this.interactedHand = interactedHand;
-      this.visitorHospitality = visitorHospitality;
+      this.context = context;
 
       addPlayerInventorySlots(playerInventory);
       Player player = playerInventory.player;
