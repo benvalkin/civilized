@@ -31,8 +31,9 @@ public class VillagerXpCollector {
    public static final int WORK_XP_PER_DAY = 300;
    public static final int GUARD_DUTY_XP_PER_DAY = 60;
    public static final int XP_PER_HIT = 20;
-   public static final int XP_PER_KILL = 150;
-   public static final int XP_PER_FLIRT = 150;
+   public static final int XP_PER_KILL = 100;
+   public static final int XP_PER_FLIRT = 100;
+   public static final int XP_PER_HOSTED_CONVERSATION = 100;
 
    private static final float WORK_XP_PER_TICK = WORK_XP_PER_DAY / (float) CivilizedVillager.WORK_DAY_DURATION_TICKS;
    private static final float GUARD_DUTY_XP_PER_TICK =
@@ -70,6 +71,10 @@ public class VillagerXpCollector {
 
    public void gainFlirtXp() {
       gainXp(VillagerSkill.SOCIAL, XP_PER_FLIRT);
+   }
+
+   public void gainHostingXp() {
+      gainXp(VillagerSkill.SOCIAL, XP_PER_HOSTED_CONVERSATION);
    }
 
    private static float upgradeMultiplier(Building building) {

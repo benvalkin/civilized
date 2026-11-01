@@ -6,6 +6,7 @@ import com.mojang.datafixers.util.Pair;
 import com.uncreated.civilized.core.settlement.festival.Festival;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.social.Flirt;
+import com.uncreated.civilized.entity.behaviour.social.EntertainGuests;
 import com.uncreated.civilized.entity.behaviour.social.HostGuests;
 import com.uncreated.civilized.entity.behaviour.social.Socialize;
 import com.uncreated.civilized.entity.behaviour.social.VisitEntertainmentPlace;
@@ -74,6 +75,7 @@ public class CivilizedVillagerActivities {
                   new Socialize(speedModifier),
                   new Flirt(speedModifier, Flirt.BASE_RELATIONSHIP_SUCCESS_ODDS, false),
                   new HostGuests(speedModifier),
+                  new EntertainGuests(speedModifier),
                   new VisitEntertainmentPlace(0.4F)),
             ImmutableList.of(
                   WorkStates.OFFLOAD_INVENTORIES_AFTER_WORK,
@@ -82,6 +84,7 @@ public class CivilizedVillagerActivities {
             new ShufflingList<BehaviourState>().add(BehaviourStates.SOCIALISING, 10)
                   .add(BehaviourStates.FLIRTING, 1)
                   .add(BehaviourStates.HOSTING_GUESTS, 4)
+                  .add(BehaviourStates.ENTERTAINING_GUESTS, 4)
                   .add(BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT, 5)
                   .add(BehaviourStates.VISITING_ENTERTAINMENT, 1));
    }

@@ -79,7 +79,7 @@ public class SignHelper {
                Component.translatable("menu.building.info.town_hall.population.count", citizens.size()),
                Component.empty() };
       } else if (building.getBuildingType().is(BuildingTypes.INN)) {
-         List<VillagerInfo> visitors = BuildingUtil.getOccupants(building, villagerStore);
+         List<VillagerInfo> visitors = BuildingUtil.getVisitors(building, villagerStore);
          return new Component[] { building.getBuildingType().shortName(),
                Component.translatable("menu.building.inn.visitors.count", visitors.size()), Component.empty(),
                Component.empty() };

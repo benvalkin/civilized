@@ -65,7 +65,7 @@ public class Socialize extends StatefulBehaviour {
    protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
 
       // invited by another villager
-      if (currentConversation(villager).isPresent())
+      if (conversationFromMemory(villager).isPresent())
          return true;
 
       if (getBehaviourCooldowns().hasCooldown(Cooldowns.START, level.getGameTime()))
@@ -104,7 +104,7 @@ public class Socialize extends StatefulBehaviour {
             .toList();
    }
 
-   protected static Optional<Conversation> currentConversation(CivilizedVillager villager) {
+   protected static Optional<Conversation> conversationFromMemory(CivilizedVillager villager) {
       return villager.getBrain()
             .getMemory(AIRegistry.MM_CONVERSATION.get())
             .filter(conversation -> conversation.isMember(villager));
@@ -121,7 +121,7 @@ public class Socialize extends StatefulBehaviour {
    @Override
    protected void tick(ServerLevel level, CivilizedVillager villager, long gameTime) {
 
-      Optional<CivilizedVillager> partner = currentConversation(villager).flatMap(c -> findPartner(villager, c));
+      Optional<CivilizedVillager> partner = conversationFromMemory(villager).flatMap(c -> findPartner(villager, c));
       if (partner.isEmpty()) {
          doStop(level, villager, gameTime);
          return;
@@ -138,9 +138,9 @@ public class Socialize extends StatefulBehaviour {
       // It's okay to do this - vanilla villager's Socialize behaviour
       villager.getBrain().setMemory(MemoryModuleType.LOOK_TARGET, new EntityTracker(partner.get(), true));
 
-      boolean isHost = currentConversation(villager).map(c -> c.getHost() == villager).orElse(false);
+      boolean isHost = conversationFromMemory(villager).map(c -> c.getHost() == villager).orElse(false);
       if (distance > TALKING_DISTANCE) {
-         // the host walks over, while the villager it invited waits for it
+         // the host walks over, while the villager it invited waits for them
          if (isHost)
             villager.getBrain()
                   .setMemory(
@@ -162,14 +162,16 @@ public class Socialize extends StatefulBehaviour {
    private static Optional<CivilizedVillager> findPartner(CivilizedVillager villager, Conversation conversation) {
       return conversation.othersThan(villager)
             .stream()
-            .filter(other -> other.isAlive() && currentConversation(other).filter(c -> c == conversation).isPresent())
+            .filter(
+                  other -> other.isAlive() && conversationFromMemory(other).filter(c -> c == conversation).isPresent())
             .findFirst();
    }
 
    @Override
    protected void stop(ServerLevel level, CivilizedVillager villager, long gameTime) {
-      if (met)
-         rewardVisitorForChatting(villager);
+      if (met) {
+         tryGiveSocializationRewards(villager);
+      }
 
       super.stop(level, villager, gameTime);
 
@@ -185,25 +187,44 @@ public class Socialize extends StatefulBehaviour {
       VisitorBehaviour.tryGet(villager).ifPresent(visitor -> visitor.setDeparturePaused(false));
    }
 
-   private static void rewardVisitorForChatting(CivilizedVillager villager) {
-      Optional<VisitorBehaviour> visitor = VisitorBehaviour.tryGet(villager);
-      if (visitor.isEmpty())
-         return;
-
+   private void tryGiveSocializationRewards(CivilizedVillager villager) {
       Optional<Conversation> conversation = villager.getBrain().getMemory(AIRegistry.MM_CONVERSATION.get());
       if (conversation.isEmpty())
          return;
 
-      UUID visitingSettlementId = villager.getInfo().getVisitingSettlementId();
-      for (CivilizedVillager other : conversation.get().getPastMembers()) {
-         // award hospitality to visitors
-         boolean isVisitor =
-               visitingSettlementId != null && visitingSettlementId.equals(other.getInfo().getSettlementId());
-         if (other != villager && isVisitor) {
-            visitor.get().gainHospitalityFromChatting(other);
-            return;
+      CivilizedVillager host = conversation.get().getHost();
+      if (villager != host)
+         return; // only host can hand out rewards
+
+      for (CivilizedVillager chatted : conversation.get().getPastMembers()) {
+         if (chatted == host)
+            continue;
+
+         if (isVisiting(chatted, host)) {
+            VisitorBehaviour.tryGet(chatted).ifPresent(visitor -> giveSocializationRewardsToVisitor(visitor, host));
+         } else if (isVisiting(host, chatted)) {
+            // visitors can be the actual "host" of the conversation too
+            VisitorBehaviour.tryGet(host).ifPresent(visitor -> giveSocializationRewardsToVisitor(visitor, chatted));
+         } else if (host.getInfo().getSettlementId() != null
+               && host.getInfo().getSettlementId().equals(chatted.getInfo().getSettlementId())) {
+            giveSocializationRewardsToCitizen(chatted, host);
          }
       }
+   }
+
+   private boolean isVisiting(CivilizedVillager visitor, CivilizedVillager citizen) {
+      UUID settlementId = citizen.getInfo().getSettlementId();
+      return settlementId != null && settlementId.equals(visitor.getInfo().getVisitingSettlementId());
+   }
+
+   protected void giveSocializationRewardsToVisitor(
+         VisitorBehaviour visitorBehaviour,
+         CivilizedVillager hospitalityHost) {
+      visitorBehaviour.gainHospitalityFromChatting(hospitalityHost);
+   }
+
+   protected void giveSocializationRewardsToCitizen(CivilizedVillager chatted, CivilizedVillager hospitalityHost) {
+
    }
 
    public int getMaxParticipants() {

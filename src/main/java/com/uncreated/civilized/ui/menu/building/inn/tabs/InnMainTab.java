@@ -64,7 +64,7 @@ public class InnMainTab extends ABuildingScreenTab implements IBuildingInfoTab {
    }
 
    private List<VillagerInfo> createVisitorsList() {
-      return BuildingUtil.getOccupants(context.building(), ClientVillagerStore.INSTANCE);
+      return BuildingUtil.getVisitors(context.building(), ClientVillagerStore.INSTANCE);
    }
 
    @Override

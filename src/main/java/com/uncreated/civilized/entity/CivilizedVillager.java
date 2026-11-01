@@ -759,10 +759,7 @@ public class CivilizedVillager extends AgeableMob
 
       // festivals can run late, so they keep villagers up past their bedtime
       boolean activeFestival =
-            Festival.currentPhaseFor(
-                  info,
-                  ServerSettlementsStore.INSTANCE,
-                  dayTime) == Festival.Phase.CELEBRATING;
+            Festival.currentPhaseFor(info, ServerSettlementsStore.INSTANCE, dayTime) == Festival.Phase.CELEBRATING;
       if (activeFestival) {
          getBrain().setActiveActivityIfPossible(AIRegistry.A_ATTENDING_FESTIVAL.get());
          return;

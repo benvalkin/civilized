@@ -4,21 +4,17 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.BuildingType;
 import com.uncreated.civilized.core.building.BuildingTypes;
 import com.uncreated.civilized.core.building.ServerBuildingsStore;
-import com.uncreated.civilized.core.building.util.BuildingUtil;
 import com.uncreated.civilized.core.settlement.entity.LoadedVillagers;
 import com.uncreated.civilized.core.settlement.festival.Festival;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
-import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkill;
 import com.uncreated.civilized.entity.CivilizedVillager;
-import com.uncreated.civilized.entity.VisitorBehaviour;
 import com.uncreated.civilized.entity.behaviour.BehaviourStates;
 import com.uncreated.civilized.entity.behaviour.VisitBuilding;
 import com.uncreated.civilized.entity.equipment.VillagerEquipment;
@@ -55,34 +51,6 @@ public class VisitEntertainmentPlace extends VisitBuilding {
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.start(level, villager, gameTime);
       villager.getEquipment().unequip(VillagerEquipment.COMBAT_SLOTS);
-   }
-
-   @Override
-   protected void onArrived(ServerLevel level, CivilizedVillager villager, Building building) {
-      if (!building.getBuildingType().is(BuildingTypes.TAVERN))
-         return;
-
-      Optional<VisitorBehaviour> visitor = VisitorBehaviour.tryGet(villager);
-      if (visitor.isEmpty())
-         return;
-
-      findBestTavernKeeper(building).ifPresent(visitor.get()::gainHospitalityFromEntertainment);
-   }
-
-   private static Optional<VillagerInfo> findBestTavernKeeper(Building tavern) {
-      VillagerInfo best = null;
-      for (VillagerInfo keeper : BuildingUtil.getAssignedWorkers(tavern, ServerVillagerStore.INSTANCE)) {
-         if (keeper.isDeceased())
-            continue;
-
-         if (best == null || socialLevel(keeper) > socialLevel(best))
-            best = keeper;
-      }
-      return Optional.ofNullable(best);
-   }
-
-   private static int socialLevel(VillagerInfo villager) {
-      return villager.getSkills().getLevel(VillagerSkill.SOCIAL);
    }
 
    @Override

@@ -75,7 +75,7 @@ public class Flirt extends Socialize {
          return false;
 
       if (!active) {
-         boolean isInstigator = currentConversation(villager).isEmpty();
+         boolean isInstigator = conversationFromMemory(villager).isEmpty();
          if (isInstigator && !isPassiveFlirtingDay(level, villager))
             return false;
       }

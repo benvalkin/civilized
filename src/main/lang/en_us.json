@@ -558,6 +558,7 @@
   "villager.behaviour.melee_attack_target.description": "Engaging enemies",
   "villager.behaviour.mining_ores.description": "Mining",
   "villager.behaviour.hosting_guests.description": "Hosting guests",
+  "villager.behaviour.entertaining_guests.description": "Entertaining guests",
   "villager.behaviour.monitor_worksite.description": "Keeping an eye on things",
   "villager.behaviour.none.description": "",
   "villager.behaviour.planting_crops.description": "Planting crops",

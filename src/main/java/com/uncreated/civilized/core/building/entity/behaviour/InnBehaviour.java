@@ -28,14 +28,17 @@ public class InnBehaviour extends BuildingBehaviour {
       super(entity);
    }
 
-   private static final int MIN_STAY_DAYS = 2;
+   private static final int MIN_STAY_DAYS = 1;
    private static final int MAX_STAY_DAYS = 4;
    private static final int DEPARTURE_TIME = 14000;
 
-   private long chooseDepartureTime(long dayTime, RandomSource random) {
+   private long chooseDepartureTime(long dayTime, int days) {
       long startOfDay = dayTime - dayTime % 24000;
-      int days = MIN_STAY_DAYS + random.nextInt(MAX_STAY_DAYS - MIN_STAY_DAYS + 1);
       return startOfDay + days * 24000L + DEPARTURE_TIME;
+   }
+
+   private int randomStayDurationDays(RandomSource random) {
+      return MIN_STAY_DAYS + random.nextInt(MAX_STAY_DAYS - MIN_STAY_DAYS + 1);
    }
 
    public boolean tryCheckIn(ServerLevel level, CivilizedVillager visitor) {
@@ -47,13 +50,13 @@ public class InnBehaviour extends BuildingBehaviour {
       info.setHomeBuildingId(getBuilding().getBuildingId());
       visitor.getBrain()
             .setMemory(MemoryModuleType.HOME, new GlobalPos(level.dimension(), getBuilding().getBlockPos()));
+      int stayDurationDays = randomStayDurationDays(visitor.getRandom());
       VisitorBehaviour.tryGet(visitor)
-            .ifPresent(
-                  behaviour -> behaviour.setDepartAt(chooseDepartureTime(level.getDayTime(), visitor.getRandom())));
+            .ifPresent(behaviour -> behaviour.setDepartAt(chooseDepartureTime(level.getDayTime(), stayDurationDays)));
       ServerVillagerStore.INSTANCE.setDirty();
       ServerVillagerStore.INSTANCE.replicateChange(info, StoreOperation.UPDATE);
 
-      CurrencyItem.credit(getEntity().chests(), CURRENCY_RENT_PER_NIGHT);
+      CurrencyItem.credit(getEntity().chests(), CURRENCY_RENT_PER_NIGHT * stayDurationDays);
 
       return true;
    }

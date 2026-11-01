@@ -93,19 +93,16 @@ public class VisitorBehaviour extends VillagerRoleBehaviour {
       return dayTime >= departAt || departAt - dayTime > MAX_STAY_TICKS;
    }
 
-   /** Homemakers make for better hosts than other citizens */
    public void gainHospitalityFromChatting(CivilizedVillager citizen) {
-      float baseAmount;
-      if (citizen.getInfo().isHomemaker())
-         baseAmount = HOSPITALITY_PER_HOSTED_CHAT;
-      else
-         baseAmount = HOSPITALITY_PER_CHAT;
-
-      gainHospitality(baseAmount, citizen.getInfo());
+      gainHospitality(HOSPITALITY_PER_CHAT, citizen.getInfo());
    }
 
-   public void gainHospitalityFromEntertainment(VillagerInfo tavernKeeper) {
-      gainHospitality(HOSPITALITY_PER_ENTERTAINMENT, tavernKeeper);
+   public void gainHospitalityFromHosting(CivilizedVillager citizen) {
+      gainHospitality(HOSPITALITY_PER_HOSTED_CHAT, citizen.getInfo());
+   }
+
+   public void gainHospitalityFromEntertainment(CivilizedVillager tavernKeeper) {
+      gainHospitality(HOSPITALITY_PER_ENTERTAINMENT, tavernKeeper.getInfo());
    }
 
    private void gainHospitality(float baseAmount, VillagerInfo host) {

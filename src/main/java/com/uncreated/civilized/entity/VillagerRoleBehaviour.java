@@ -1,10 +1,12 @@
 package com.uncreated.civilized.entity;
 
+import lombok.Getter;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 
 public abstract class VillagerRoleBehaviour {
 
+   @Getter
    protected final CivilizedVillager villager;
 
    public VillagerRoleBehaviour(CivilizedVillager villager) {

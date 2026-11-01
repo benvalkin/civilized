@@ -12,4 +12,5 @@ public class BehaviourStates {
    public static final BehaviourState STRIKING = new BehaviourState("striking");
    public static final BehaviourState CELEBRATING = new BehaviourState("celebrating");
    public static final BehaviourState HOSTING_GUESTS = new BehaviourState("hosting_guests");
+   public static final BehaviourState ENTERTAINING_GUESTS = new BehaviourState("entertaining_guests");
 }

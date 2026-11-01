@@ -8,7 +8,7 @@ import com.uncreated.civilized.core.villagerinfo.VillagerOccupation;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.behaviour.BehaviourStates;
 import com.uncreated.civilized.entity.behaviour.IdleStrollAroundSettlement;
-import com.uncreated.civilized.entity.behaviour.social.HostGuests;
+import com.uncreated.civilized.entity.behaviour.social.EntertainGuests;
 import com.uncreated.civilized.entity.behaviour.worker.artisan.CraftItems;
 import com.uncreated.civilized.entity.behaviour.worker.artisan.furnace.BlastItems;
 import com.uncreated.civilized.entity.behaviour.worker.artisan.furnace.SmeltItems;
@@ -201,9 +201,9 @@ public class WorkActivities {
                               new TakeItemsToInventory(),
                               new DropOffItemsAtBuilding(),
                               new MonitorWorksite(4, 3, 0.25f),
-                              new HostGuests(0.25f),
+                              new EntertainGuests(0.25f),
                               new IdleStrollAroundSettlement(5, 3, 0.25f)),
-                        ImmutableList.of(WorkStates.CHECK_LOGISTICS_OPPORTUNITIES, BehaviourStates.HOSTING_GUESTS),
+                        ImmutableList.of(WorkStates.CHECK_LOGISTICS_OPPORTUNITIES, BehaviourStates.ENTERTAINING_GUESTS),
                         ImmutableList.of(WorkStates.MONITOR_WORKSITE, BehaviourStates.IDLE_STROLL_AROUND_SETTLEMENT))));
    }
 

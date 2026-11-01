@@ -9,6 +9,7 @@ import java.util.UUID;
 import org.jetbrains.annotations.NotNull;
 
 import com.uncreated.civilized.entity.CivilizedVillager;
+import com.uncreated.civilized.entity.VisitorBehaviour;
 import com.uncreated.civilized.entity.behaviour.BehaviourStates;
 import com.uncreated.civilized.entity.behaviour.Cooldowns;
 
@@ -30,7 +31,7 @@ public class HostGuests extends Socialize {
       if (!villager.getInfo().isHomemaker())
          return false;
 
-      if (currentConversation(villager).isPresent())
+      if (conversationFromMemory(villager).isPresent())
          return false;
 
       if (getBehaviourCooldowns().hasCooldown(Cooldowns.START, level.getGameTime()))
@@ -56,6 +57,12 @@ public class HostGuests extends Socialize {
    private boolean isVisiting(CivilizedVillager visitor, CivilizedVillager homemaker) {
       UUID settlementId = homemaker.getInfo().getSettlementId();
       return settlementId != null && settlementId.equals(visitor.getInfo().getVisitingSettlementId());
+   }
+
+   @Override
+   protected void giveSocializationRewardsToVisitor(VisitorBehaviour visitorBehaviour, CivilizedVillager hospitalityHost) {
+      visitorBehaviour.gainHospitalityFromHosting(hospitalityHost);
+      hospitalityHost.getSkillTraining().gainHostingXp();
    }
 
    @Override
