@@ -10,19 +10,25 @@ public class SettlementState {
 
    public static final long NOT_SCHEDULED = -1;
 
+   private static final String FIELD_NEXT_TAX_ACCRUAL_DAY = "next_tax_accrual_day";
    private static final String FIELD_NEXT_TAX_COLLECTION_DAY = "next_tax_collection_day";
+   private static final String FIELD_TOTAL_ACCRUED_TAX = "total_accrued_tax";
    private static final String FIELD_LAST_FESTIVAL_TIME = "last_festival_time";
    private static final String FIELD_FESTIVALS_HELD_COUNT = "festivals_held_count";
    private static final String FIELD_FESTIVAL_START_TIME = "festival_start_time";
 
+   private long nextTaxAccrualDay = NOT_SCHEDULED;
    private long nextTaxCollectionDay = NOT_SCHEDULED;
+   private int totalAccruedTax = 0;
    private long lastFestivalDay = NOT_SCHEDULED;
    private int festivalsHeldCount = 0;
    private long festivalStartTime = NOT_SCHEDULED;
 
    public CompoundTag toNbt() {
       CompoundTag tag = new CompoundTag();
+      tag.putLong(FIELD_NEXT_TAX_ACCRUAL_DAY, nextTaxAccrualDay);
       tag.putLong(FIELD_NEXT_TAX_COLLECTION_DAY, nextTaxCollectionDay);
+      tag.putInt(FIELD_TOTAL_ACCRUED_TAX, totalAccruedTax);
       tag.putLong(FIELD_LAST_FESTIVAL_TIME, lastFestivalDay);
       tag.putInt(FIELD_FESTIVALS_HELD_COUNT, festivalsHeldCount);
       tag.putLong(FIELD_FESTIVAL_START_TIME, festivalStartTime);
@@ -31,8 +37,12 @@ public class SettlementState {
 
    public static SettlementState fromNbt(CompoundTag tag) {
       SettlementState data = new SettlementState();
+      if (tag.contains(FIELD_NEXT_TAX_ACCRUAL_DAY))
+         data.nextTaxAccrualDay = tag.getLong(FIELD_NEXT_TAX_ACCRUAL_DAY);
       if (tag.contains(FIELD_NEXT_TAX_COLLECTION_DAY))
          data.nextTaxCollectionDay = tag.getLong(FIELD_NEXT_TAX_COLLECTION_DAY);
+      if (tag.contains(FIELD_TOTAL_ACCRUED_TAX))
+         data.totalAccruedTax = tag.getInt(FIELD_TOTAL_ACCRUED_TAX);
       if (tag.contains(FIELD_LAST_FESTIVAL_TIME))
          data.lastFestivalDay = tag.getLong(FIELD_LAST_FESTIVAL_TIME);
       if (tag.contains(FIELD_FESTIVALS_HELD_COUNT))
