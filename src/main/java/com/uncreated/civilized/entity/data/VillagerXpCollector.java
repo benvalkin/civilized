@@ -14,6 +14,7 @@ import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.core.villagerinfo.VillagerOccupations;
 import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkill;
 import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkills;
+import com.uncreated.civilized.core.villagerinfo.workshift.WorkShift;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.entity.equipment.CarriedEquipmentSlot;
 import com.uncreated.civilized.ui.style.Colors;
@@ -35,9 +36,9 @@ public class VillagerXpCollector {
    public static final int XP_PER_FLIRT = 100;
    public static final int XP_PER_HOSTED_CONVERSATION = 100;
 
-   private static final float WORK_XP_PER_TICK = WORK_XP_PER_DAY / (float) CivilizedVillager.WORK_DAY_DURATION_TICKS;
+   private static final float WORK_XP_PER_TICK = WORK_XP_PER_DAY / (float) WorkShift.STANDARD_WORKSHIFT_DURATION_TICKS;
    private static final float GUARD_DUTY_XP_PER_TICK =
-         GUARD_DUTY_XP_PER_DAY / (float) CivilizedVillager.WORK_DAY_DURATION_TICKS;
+         GUARD_DUTY_XP_PER_DAY / (float) WorkShift.STANDARD_WORKSHIFT_DURATION_TICKS;
    private static final float XP_MULTIPLIER_PER_UPGRADE_LEVEL = 0.5F;
 
    private static final long SYNC_INTERVAL_TICKS = 30 * 20;

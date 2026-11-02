@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.jetbrains.annotations.Nullable;
 
-import com.uncreated.civilized.entity.CivilizedVillager;
+import com.uncreated.civilized.core.villagerinfo.workshift.WorkShift;
 import com.uncreated.civilized.item.quality.ItemQuality;
 import com.uncreated.civilized.item.quality.QualityEffects;
 
@@ -43,7 +43,7 @@ public final class SkillEffects {
    }
 
    public static int convertToTicks(int unitsPerDay) {
-      return Math.max(1, Math.round(CivilizedVillager.WORK_DAY_DURATION_TICKS / (float) unitsPerDay));
+      return Math.max(1, Math.round(WorkShift.STANDARD_WORKSHIFT_DURATION_TICKS / (float) unitsPerDay));
    }
 
    public static int getCropsHarvestedPerDay(int farmingLevel, ItemStack hoe) {

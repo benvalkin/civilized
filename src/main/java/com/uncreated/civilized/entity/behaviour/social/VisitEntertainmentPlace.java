@@ -48,10 +48,6 @@ public class VisitEntertainmentPlace extends VisitBuilding {
 
    @Override
    protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
-      long todayTime = level.getDayTime() % 24000;
-      if (!(todayTime >= CivilizedVillager.WORK_FINISH_DAY_TIME && todayTime <= CivilizedVillager.REST_TIME))
-         return false; // can only go visit entertainment after work
-
       return super.checkExtraStartConditions(level, villager);
    }
 
@@ -87,10 +83,7 @@ public class VisitEntertainmentPlace extends VisitBuilding {
             AABB visitingBounds = building.getBounds().getEncapsulatingAABB().inflate(1);
 
             long numberOfVisitors =
-                  LoadedVillagers.matching(patrons)
-                        .stream()
-                        .filter(v -> visitingBounds.contains(v.position()))
-                        .count();
+                  LoadedVillagers.matching(patrons).stream().filter(v -> visitingBounds.contains(v.position())).count();
 
             if (numberOfVisitors >= maxRecreationVisitors)
                continue;
@@ -133,7 +126,8 @@ public class VisitEntertainmentPlace extends VisitBuilding {
       // checked first, since a tavern is also a food vendor
       if (buildingType.is(BuildingTypes.TAVERN)) {
 
-         if (todayTime >= 12000 && todayTime <= CivilizedVillager.REST_TIME)
+         boolean tavernOpen = buildingType.defaultWorkshift().isWorkTime(todayTime);
+         if (tavernOpen) // can only visit the tavern during tavern's work hours
             return TAVERN_WEIGHT;
 
          return 0;

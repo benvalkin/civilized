@@ -32,6 +32,7 @@ import com.uncreated.civilized.core.building.state.artisan.ToolsmithHouseState;
 import com.uncreated.civilized.core.building.state.artisan.WeaponsmithHouseState;
 import com.uncreated.civilized.core.building.state.artisan.WeaverHouseState;
 import com.uncreated.civilized.core.villagerinfo.VillagerOccupations;
+import com.uncreated.civilized.core.villagerinfo.workshift.WorkShift;
 
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
@@ -125,6 +126,7 @@ public class BuildingTypes {
                      .isWorkerResidence(true)
                      .isMilitary(true)
                      .occupation(() -> VillagerOccupations.SOLDIER)
+                     .defaultWorkshift(WorkShift.NIGHT)
                      .build());
    public static BuildingType BARRACKS =
          declare(
@@ -139,6 +141,7 @@ public class BuildingTypes {
                         return 10;
                      })
                      .occupation(() -> VillagerOccupations.SOLDIER)
+                     .defaultWorkshift(WorkShift.MORNING)
                      .build());
    public static BuildingType MILITARY_HOUSE =
          declare(
@@ -155,6 +158,7 @@ public class BuildingTypes {
                      .isFoodVendor(true)
                      .maxRecreationVisitors(12)
                      .occupation(() -> VillagerOccupations.TAVERN_KEEPER)
+                     .defaultWorkshift(WorkShift.AFTERNOON)
                      .build());
    public static BuildingType FARMER_HOUSE =
          declare(

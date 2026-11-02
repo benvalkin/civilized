@@ -16,6 +16,7 @@ import com.mojang.datafixers.util.Pair;
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkills;
+import com.uncreated.civilized.core.villagerinfo.workshift.WorkShift;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -41,8 +42,7 @@ public class VillagerInfo {
    // The stream decoder reference
    public static VillagerInfo decode(FriendlyByteBuf buffer) {
       VillagerInfoBuilder builder =
-            VillagerInfo.builder()
-                  .villagerId(buffer.readUUID())
+            builder().villagerId(buffer.readUUID())
                   .isDeceased(buffer.readBoolean())
                   .firstName(buffer.readUtf())
                   .lastName(buffer.readUtf())
@@ -61,7 +61,8 @@ public class VillagerInfo {
                   .fatherId(buffer.readNullable((b -> b.readUUID())))
                   .birthDay(buffer.readNullable((FriendlyByteBuf::readVarLong)))
                   .lifeStage(buffer.readEnum(LifeStage.class))
-                  .skills(VillagerSkills.decode(buffer));
+                  .skills(VillagerSkills.decode(buffer))
+                  .workshift(buffer.readNullable(WorkShift.STREAM_CODEC));
 
       return builder.build();
    }
@@ -88,55 +89,57 @@ public class VillagerInfo {
       buffer.writeNullable(birthDay, FriendlyByteBuf::writeVarLong);
       buffer.writeEnum(lifeStage);
       skills.encode(buffer);
+      buffer.writeNullable(workshift, WorkShift.STREAM_CODEC);
    }
 
    public static @NotNull VillagerInfo fromNbt(CompoundTag itemTag, HolderLookup.Provider registryAccess) {
-      VillagerInfo.VillagerInfoBuilder builder =
-            VillagerInfo.builder()
-                  .villagerId(itemTag.getUUID(VillagerInfo.FIELD_VILLAGER_ID))
-                  .isDeceased(itemTag.getBoolean(VillagerInfo.FIELD_IS_DECEASED))
-                  .firstName(itemTag.getString(VillagerInfo.FIELD_FIRST_NAME))
-                  .lastName(itemTag.getString(VillagerInfo.FIELD_LAST_NAME))
+      VillagerInfoBuilder builder =
+            builder().villagerId(itemTag.getUUID(FIELD_VILLAGER_ID))
+                  .isDeceased(itemTag.getBoolean(FIELD_IS_DECEASED))
+                  .firstName(itemTag.getString(FIELD_FIRST_NAME))
+                  .lastName(itemTag.getString(FIELD_LAST_NAME))
                   .occupation(
                         VillagerOccupations.getFromResourceLocation(
-                              ResourceLocation.parse(itemTag.getString(VillagerInfo.FIELD_VILLAGER_OCCUPATION))))
+                              ResourceLocation.parse(itemTag.getString(FIELD_VILLAGER_OCCUPATION))))
                   .npcRole(
                         VillagerNpcRoles.getFromResourceLocation(
-                              ResourceLocation.parse(itemTag.getString(VillagerInfo.FIELD_VILLAGER_NPC_ROLE))))
-                  .gender(Gender.valueOf(itemTag.getString(VillagerInfo.FIELD_VILLAGER_GENDER)))
-                  .skills(VillagerSkills.fromNbt(itemTag.getCompound(VillagerInfo.FIELD_SKILLS)));
+                              ResourceLocation.parse(itemTag.getString(FIELD_VILLAGER_NPC_ROLE))))
+                  .gender(Gender.valueOf(itemTag.getString(FIELD_VILLAGER_GENDER)))
+                  .skills(VillagerSkills.fromNbt(itemTag.getCompound(FIELD_SKILLS)));
 
-      if (itemTag.hasUUID(VillagerInfo.FIELD_SETTLEMENT_ID))
-         builder.settlementId(itemTag.getUUID(VillagerInfo.FIELD_SETTLEMENT_ID));
-      if (itemTag.hasUUID(VillagerInfo.FIELD_HOME_BUILDING_ID))
-         builder.homeBuildingId(itemTag.getUUID(VillagerInfo.FIELD_HOME_BUILDING_ID));
-      if (itemTag.hasUUID(VillagerInfo.FIELD_VISITING_SETTLEMENT_ID))
-         builder.visitingSettlementId(itemTag.getUUID(VillagerInfo.FIELD_VISITING_SETTLEMENT_ID));
-      if (itemTag.hasUUID(VillagerInfo.FIELD_WORK_BUILDING_ID))
-         builder.workBuildingId(itemTag.getUUID(VillagerInfo.FIELD_WORK_BUILDING_ID));
-      if (itemTag.hasUUID(VillagerInfo.FIELD_MOTHER_ID))
-         builder.motherId(itemTag.getUUID(VillagerInfo.FIELD_MOTHER_ID));
-      if (itemTag.hasUUID(VillagerInfo.FIELD_FATHER_ID))
-         builder.fatherId(itemTag.getUUID(VillagerInfo.FIELD_FATHER_ID));
-      if (itemTag.contains(VillagerInfo.FIELD_BIRTH_DAY))
-         builder.birthDay(itemTag.getLong(VillagerInfo.FIELD_BIRTH_DAY));
-      if (itemTag.contains(VillagerInfo.FIELD_LIFE_STAGE))
-         builder.lifeStage(LifeStage.valueOf(itemTag.getString(VillagerInfo.FIELD_LIFE_STAGE)));
-      if (itemTag.hasUUID(VillagerInfo.FIELD_WORK_AREA_ID))
-         builder.workAreaId(itemTag.getUUID(VillagerInfo.FIELD_WORK_AREA_ID));
-      if (itemTag.hasUUID(VillagerInfo.FIELD_PARTNER_ID))
-         builder.partnerId(itemTag.getUUID(VillagerInfo.FIELD_PARTNER_ID));
-      if (itemTag.contains(VillagerInfo.FIELD_SOCIAL_CLASS))
-         builder.socialClass(itemTag.getInt(VillagerInfo.FIELD_SOCIAL_CLASS));
-      if (itemTag.hasUUID(VillagerInfo.FIELD_LOADOUT_ID))
-         builder.loadoutId(itemTag.getUUID(VillagerInfo.FIELD_LOADOUT_ID));
+      if (itemTag.hasUUID(FIELD_SETTLEMENT_ID))
+         builder.settlementId(itemTag.getUUID(FIELD_SETTLEMENT_ID));
+      if (itemTag.hasUUID(FIELD_HOME_BUILDING_ID))
+         builder.homeBuildingId(itemTag.getUUID(FIELD_HOME_BUILDING_ID));
+      if (itemTag.hasUUID(FIELD_VISITING_SETTLEMENT_ID))
+         builder.visitingSettlementId(itemTag.getUUID(FIELD_VISITING_SETTLEMENT_ID));
+      if (itemTag.hasUUID(FIELD_WORK_BUILDING_ID))
+         builder.workBuildingId(itemTag.getUUID(FIELD_WORK_BUILDING_ID));
+      if (itemTag.hasUUID(FIELD_MOTHER_ID))
+         builder.motherId(itemTag.getUUID(FIELD_MOTHER_ID));
+      if (itemTag.hasUUID(FIELD_FATHER_ID))
+         builder.fatherId(itemTag.getUUID(FIELD_FATHER_ID));
+      if (itemTag.contains(FIELD_BIRTH_DAY))
+         builder.birthDay(itemTag.getLong(FIELD_BIRTH_DAY));
+      if (itemTag.contains(FIELD_LIFE_STAGE))
+         builder.lifeStage(LifeStage.valueOf(itemTag.getString(FIELD_LIFE_STAGE)));
+      if (itemTag.hasUUID(FIELD_WORK_AREA_ID))
+         builder.workAreaId(itemTag.getUUID(FIELD_WORK_AREA_ID));
+      if (itemTag.hasUUID(FIELD_PARTNER_ID))
+         builder.partnerId(itemTag.getUUID(FIELD_PARTNER_ID));
+      if (itemTag.contains(FIELD_SOCIAL_CLASS))
+         builder.socialClass(itemTag.getInt(FIELD_SOCIAL_CLASS));
+      if (itemTag.hasUUID(FIELD_LOADOUT_ID))
+         builder.loadoutId(itemTag.getUUID(FIELD_LOADOUT_ID));
+      if (itemTag.contains(FIELD_WORKSHIFT))
+         builder.workshift(WorkShift.fromNbt(itemTag.getCompound(FIELD_WORKSHIFT)));
 
       return builder.build();
    }
 
    public @NotNull CompoundTag toNbt(HolderLookup.Provider registryAccess) {
       CompoundTag item = new CompoundTag();
-      item.putUUID(VillagerInfo.FIELD_VILLAGER_ID, getVillagerId());
+      item.putUUID(FIELD_VILLAGER_ID, getVillagerId());
       item.putBoolean(FIELD_IS_DECEASED, isDeceased());
       if (getSettlementId() != null)
          item.putUUID(FIELD_SETTLEMENT_ID, getSettlementId());
@@ -167,6 +170,8 @@ public class VillagerInfo {
       if (getBirthDay() != null)
          item.putLong(FIELD_BIRTH_DAY, getBirthDay());
       item.putString(FIELD_LIFE_STAGE, getLifeStage().name());
+      if (getWorkshift() != null)
+         item.put(FIELD_WORKSHIFT, getWorkshift().toNbt());
       return item;
    }
 
@@ -190,6 +195,7 @@ public class VillagerInfo {
    public static final String FIELD_FATHER_ID = "father_id";
    public static final String FIELD_BIRTH_DAY = "birth_day";
    public static final String FIELD_LIFE_STAGE = "life_stage";
+   public static final String FIELD_WORKSHIFT = "workshift";
    public static final int GROW_UP_DAYS = 30;
 
    private UUID villagerId;
@@ -234,6 +240,8 @@ public class VillagerInfo {
    @Setter
    @Builder.Default
    private LifeStage lifeStage = LifeStage.ADULT;
+   @Setter
+   private @Nullable WorkShift workshift;
 
    public long lifetimeSeed() {
       return villagerId.getMostSignificantBits();
@@ -468,6 +476,7 @@ public class VillagerInfo {
       fatherId = other.fatherId;
       birthDay = other.birthDay;
       lifeStage = other.lifeStage;
+      workshift = other.workshift;
    }
 
    public String toStringLite() {

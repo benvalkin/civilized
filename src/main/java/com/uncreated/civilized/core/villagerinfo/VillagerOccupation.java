@@ -40,6 +40,8 @@ public class VillagerOccupation {
    private final List<String> clothingSets = List.of(ClothingTextureRegistry.DEFAULT_CLOTHING_SET);
    @Nullable
    private final VillagerSkill relevantSkill;
+   @Builder.Default
+   private final boolean supportsWorkshiftOverrides = false;
 
    public boolean isValidWorksite(BuildingType buildingType) {
       return worksiteTypes.stream().anyMatch(buildingType::is);

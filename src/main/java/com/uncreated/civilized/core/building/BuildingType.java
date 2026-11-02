@@ -14,6 +14,7 @@ import com.uncreated.civilized.core.building.production.bills.ProductionType;
 import com.uncreated.civilized.core.building.state.BuildingState;
 import com.uncreated.civilized.core.villagerinfo.VillagerOccupation;
 import com.uncreated.civilized.core.villagerinfo.VillagerOccupations;
+import com.uncreated.civilized.core.villagerinfo.workshift.WorkShift;
 import com.uncreated.civilized.ui.style.Colors;
 
 import lombok.AccessLevel;
@@ -53,6 +54,8 @@ public class BuildingType {
    @Getter(AccessLevel.NONE)
    @Builder.Default
    private final Supplier<VillagerOccupation> occupation = () -> VillagerOccupations.UNEMPLOYED;
+   @Builder.Default
+   private final WorkShift defaultWorkshift = WorkShift.MORNING;
 
    public static BuildingTypeBuilder builder(ResourceLocation key) {
       return internalBuilder().resourceLocation(key);

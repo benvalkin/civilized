@@ -20,6 +20,7 @@ import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
 import com.uncreated.civilized.core.villagerinfo.VillagerOccupation;
 import com.uncreated.civilized.core.villagerinfo.VillagerOccupations;
+import com.uncreated.civilized.core.villagerinfo.workshift.WorkShift;
 import com.uncreated.civilized.entity.CivilizedVillager;
 import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 
@@ -90,11 +91,14 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
          villager.getBrain().eraseMemory(MemoryModuleType.HOME);
       }
 
+      invalidateWorkshift(villager, villagerInfo, worksite.orElse(null));
+
       boolean jobChanged = !oldOccupation.is(villagerInfo.getOccupation());
       boolean socialClassChanged = oldSocialClass != villagerInfo.getSocialClass();
       boolean homeChanged = !Objects.equals(oldHomeId, villagerInfo.getHomeBuildingId());
       boolean worksiteChanged = !Objects.equals(oldWorksiteId, villagerInfo.getWorkBuildingId());
       boolean workAreaChanged = !Objects.equals(oldWorkAreaId, villagerInfo.getWorkAreaId());
+
       if (jobChanged || homeChanged || worksiteChanged || workAreaChanged) {
          ServerVillagerStore.INSTANCE.setDirty();
          ServerVillagerStore.INSTANCE.replicateChange(villagerInfo, StoreOperation.UPDATE);
@@ -364,5 +368,20 @@ public class InvalidateImportantLocations extends RecurringIntervalBehaviour<Civ
 
    private static boolean isSameHousehold(VillagerInfo villager, VillagerInfo other) {
       return villager.getVillagerId().equals(other.getVillagerId()) || villager.isCloseFamilyOf(other);
+   }
+
+   private static void invalidateWorkshift(CivilizedVillager villager, VillagerInfo info, @Nullable Building worksite) {
+
+      if (!info.getOccupation().supportsWorkshiftOverrides()) {
+         info.setWorkshift(null);
+      }
+
+      if (info.getWorkshift() != null) {
+         villager.setWorkShift(info.getWorkshift());
+      } else if (worksite != null) {
+         villager.setWorkShift(worksite.getBuildingType().defaultWorkshift());
+      } else {
+         villager.setWorkShift(WorkShift.UNEMPLOYED);
+      }
    }
 }

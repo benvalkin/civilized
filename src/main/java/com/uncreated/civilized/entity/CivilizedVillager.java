@@ -40,6 +40,7 @@ import com.uncreated.civilized.core.villagerinfo.VillagerNpcRoles;
 import com.uncreated.civilized.core.villagerinfo.VillagerOccupations;
 import com.uncreated.civilized.core.villagerinfo.skills.SkillEffects;
 import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkill;
+import com.uncreated.civilized.core.villagerinfo.workshift.WorkShift;
 import com.uncreated.civilized.entity.behaviour.BehaviourState;
 import com.uncreated.civilized.entity.behaviour.BehaviourStates;
 import com.uncreated.civilized.entity.behaviour.IdleBehaviourControl;
@@ -60,6 +61,7 @@ import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 import com.uncreated.civilized.ui.menu.villager.VillagerScreenOpener;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -132,6 +134,10 @@ public class CivilizedVillager extends AgeableMob
    private final VillagerXpCollector skillTraining;
 
    @Getter
+   @Setter
+   private WorkShift workShift;
+
+   @Getter
    private VillagerRoleBehaviour roleBehaviour;
    /** The role {@link #roleBehaviour} belongs to. */
    private VillagerNpcRole role;
@@ -189,6 +195,7 @@ public class CivilizedVillager extends AgeableMob
       this.setPersistenceRequired(); // prevent auto-despawning
       this.hunger = new VillagerHunger(this);
       this.skillTraining = new VillagerXpCollector(this);
+      this.workShift = WorkShift.UNEMPLOYED;
    }
 
    public void initBrandNewVillager() {
@@ -742,12 +749,6 @@ public class CivilizedVillager extends AgeableMob
 
    private long lastScheduleUpdate = 0;
 
-   public static final int WORK_START_DAY_TIME = 1000; // 7pm
-   public static final int WORK_FINISH_DAY_TIME = 9000; // 3pm
-   public static final int REST_TIME = 16000; // 10pm
-   public static final int WORK_DAY_DURATION_TICKS = WORK_FINISH_DAY_TIME - WORK_START_DAY_TIME; // 10pm
-   public static final int WORK_DAY_DURATION_SECONDS = WORK_DAY_DURATION_TICKS / 20; // 10pm
-
    public void updateActivity(long dayTime, long gameTime) {
       if (gameTime < this.lastScheduleUpdate)
          return;
@@ -759,7 +760,7 @@ public class CivilizedVillager extends AgeableMob
             || isRouted())
          return;
 
-      boolean isRestTime = todayTime >= 16000; // 10pm-6am
+      boolean isRestTime = workShift.isRestTime(todayTime);
       // striking villagers still go to bed at night, but will not do anything else
       if (!isRestTime && shouldStrike()) {
          getBrain().setActiveActivityIfPossible(AIRegistry.A_STRIKE.get());
@@ -774,11 +775,11 @@ public class CivilizedVillager extends AgeableMob
          return;
       }
 
-      if (todayTime >= WORK_START_DAY_TIME && todayTime < WORK_FINISH_DAY_TIME) { // 7am-3pm
+      if (workShift.isWorkTime(todayTime)) {
          getBrain().setActiveActivityIfPossible(Activity.WORK);
-      } else if (todayTime >= REST_TIME) { // 10pm-6am
+      } else if (isRestTime) {
          getBrain().setActiveActivityIfPossible(Activity.REST);
-      } else { // 6-7am, 3-10pm
+      } else {
          getBrain().setActiveActivityIfPossible(Activity.IDLE);
       }
    }
