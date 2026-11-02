@@ -71,7 +71,7 @@ public class ServerRecurringVisitorStore
    }
 
    public void remember(VillagerInfo visitor, VisitorHospitality hospitality, int visits, long today) {
-      this.add(new RecurringVisitorRecord(visitor, today, hospitality.getPoints(), visits));
+      this.add(new RecurringVisitorRecord(visitor, today, hospitality, visits));
 
       forgetLeastImpressedOverCap(visitor.getVisitingSettlementId());
    }
@@ -83,7 +83,7 @@ public class ServerRecurringVisitorStore
 
       RecurringVisitorRecord leastImpressed = remembered.getFirst();
       for (RecurringVisitorRecord record : remembered) {
-         if (record.getAccruedHospitality() < leastImpressed.getAccruedHospitality())
+         if (record.getHospitality().getPoints() < leastImpressed.getHospitality().getPoints())
             leastImpressed = record;
       }
       this.remove(leastImpressed.getInfo().getVillagerId());

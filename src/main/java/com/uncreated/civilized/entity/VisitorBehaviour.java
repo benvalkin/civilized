@@ -123,7 +123,7 @@ public class VisitorBehaviour extends VillagerRoleBehaviour {
          return false;
 
       if (villager.getInfo().getHomeBuildingId() == null
-            && villager.getRandom().nextFloat() < DAY_VISITOR_BASE_RETURN_CHANCE)
+            && villager.getRandom().nextFloat() >= DAY_VISITOR_BASE_RETURN_CHANCE)
          return false; // day visitors do not usually return
 
       float stayedForDays = getVisitDuration(gameTime) / 24000f;
@@ -140,9 +140,10 @@ public class VisitorBehaviour extends VillagerRoleBehaviour {
       visitStartTime = gameTime;
    }
 
-   public void restoreFromPreviousVisit(int previousVisits, float previousHospitality) {
+   public void restoreFromPreviousVisit(VisitorHospitality previousHospitality, int previousVisits) {
       numberOfVisits = previousVisits + 1;
-      hospitality.restorePoints(previousHospitality * HOSPITALITY_RETAINED_AFTER_RETURNING);
+      hospitality.copyFrom(previousHospitality);
+      hospitality.restorePoints(previousHospitality.getPoints() * HOSPITALITY_RETAINED_AFTER_RETURNING);
       hospitalityChanged();
    }
 

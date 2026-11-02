@@ -228,7 +228,7 @@ public class VisitorManager {
 
       VisitorBehaviour.tryGet(villager).ifPresent(visitor -> {
          visitor.setDepartAt(chooseDepartureTime(level.getDayTime(), villager.getRandom()));
-         visitor.restoreFromPreviousVisit(returning.get().getVisits(), returning.get().getAccruedHospitality());
+         visitor.restoreFromPreviousVisit(returning.get().getHospitality(), returning.get().getVisits());
          visitor.resetPerVisitStats(level.getGameTime());
          sendReturnedNotification(info, visitor.getNumberOfVisits());
       });
