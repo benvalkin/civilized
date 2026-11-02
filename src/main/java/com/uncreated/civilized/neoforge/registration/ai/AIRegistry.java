@@ -3,6 +3,7 @@ package com.uncreated.civilized.neoforge.registration.ai;
 import static com.uncreated.civilized.CivilizedMod.CIVILIZED_MOD_ID;
 
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 import com.uncreated.civilized.core.building.logistics.hauling.instruction.ConditionalHaulingInstruction;
@@ -71,6 +72,8 @@ public class AIRegistry {
          MEMORY_MODULES.register("drop_off_items_instruction", () -> new MemoryModuleType<>(Optional.empty()));
    public static final Supplier<MemoryModuleType<Conversation>> MM_CONVERSATION =
          MEMORY_MODULES.register("conversation", () -> new MemoryModuleType<>(Optional.empty()));
+   public static final Supplier<MemoryModuleType<UUID>> MM_LINGERING_AT_BUILDING =
+         MEMORY_MODULES.register("lingering_at_building", () -> new MemoryModuleType<>(Optional.empty()));
 
    public static DeferredRegister<SensorType<?>> SENSORS =
          DeferredRegister.create(BuiltInRegistries.SENSOR_TYPE, CIVILIZED_MOD_ID);

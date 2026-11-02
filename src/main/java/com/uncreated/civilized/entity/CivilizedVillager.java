@@ -460,6 +460,7 @@ public class CivilizedVillager extends AgeableMob
                   AIRegistry.MM_TAKE_ITEMS_INSTRUCTION.get(),
                   AIRegistry.MM_DROP_OFF_ITEMS_INSTRUCTION.get(),
                   AIRegistry.MM_CONVERSATION.get(),
+                  AIRegistry.MM_LINGERING_AT_BUILDING.get(),
                   MemoryModuleType.JOB_SITE,
                   MemoryModuleType.HOME,
                   MemoryModuleType.PATH,
@@ -533,12 +534,12 @@ public class CivilizedVillager extends AgeableMob
       else
          idleBehaviourControl = createIdleBehaviourControl(0.25f);
       // a villager whose idle time ends (e.g. it's time to work) drops out of any conversation it was invited to, which
-      // its partner notices
+      // its partner notices, and stops lingering at whichever building it was visiting
       brain.addActivityAndRemoveMemoriesWhenStopped(
             Activity.IDLE,
             registerStatefulControls(Activity.IDLE, getIdlePackage(idleBehaviourControl)),
             Set.of(),
-            Set.of(AIRegistry.MM_CONVERSATION.get()));
+            Set.of(AIRegistry.MM_CONVERSATION.get(), AIRegistry.MM_LINGERING_AT_BUILDING.get()));
 
       brain.setCoreActivities(ImmutableSet.of(Activity.CORE));
       brain.setDefaultActivity(Activity.IDLE);

@@ -5,6 +5,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.BuildingType;
@@ -29,6 +30,13 @@ public class VisitEntertainmentPlace extends VisitBuilding {
    private static final int TOWN_SQUARE_WEIGHT = 2;
    private static final int OTHER_FOOD_VENDOR_WEIGHT = 2;
    private static final int HOME_WEIGHT = 2;
+
+   private static final int MIN_TAVERN_LINGER_TICKS = 60 * 20;
+   private static final int MAX_TAVERN_LINGER_TICKS = 4 * 60 * 20;
+   private static final int MIN_TOWN_SQUARE_LINGER_TICKS = 30 * 20;
+   private static final int MAX_TOWN_SQUARE_LINGER_TICKS = 2 * 60 * 20;
+   private static final int MIN_FOOD_VENDOR_LINGER_TICKS = 30 * 20;
+   private static final int MAX_FOOD_VENDOR_LINGER_TICKS = 60 * 20;
 
    public VisitEntertainmentPlace(float speedModifier) {
       super(
@@ -60,9 +68,11 @@ public class VisitEntertainmentPlace extends VisitBuilding {
       if (settlementId == null)
          return List.of();
 
-      List<UUID> citizens =
-            ServerVillagerStore.INSTANCE.getCitizens(settlementId)
-                  .stream()
+      // visitors count too, since they also take up room at the building
+      List<UUID> patrons =
+            Stream.concat(
+                  ServerVillagerStore.INSTANCE.getCitizens(settlementId).stream(),
+                  ServerVillagerStore.INSTANCE.getVisitors(settlementId).stream())
                   .map(VillagerInfo::getVillagerId)
                   .toList();
 
@@ -77,7 +87,7 @@ public class VisitEntertainmentPlace extends VisitBuilding {
             AABB visitingBounds = building.getBounds().getEncapsulatingAABB().inflate(1);
 
             long numberOfVisitors =
-                  LoadedVillagers.matching(citizens)
+                  LoadedVillagers.matching(patrons)
                         .stream()
                         .filter(v -> visitingBounds.contains(v.position()))
                         .count();
@@ -93,6 +103,25 @@ public class VisitEntertainmentPlace extends VisitBuilding {
       List<Building> shuffled = new ArrayList<>();
       places.shuffle().forEach(shuffled::add);
       return shuffled;
+   }
+
+   @Override
+   protected int lingerTicks(CivilizedVillager villager, Building building) {
+      BuildingType buildingType = building.getBuildingType();
+
+      if (buildingType.is(BuildingTypes.TAVERN))
+         return villager.getRandom().nextIntBetweenInclusive(MIN_TAVERN_LINGER_TICKS, MAX_TAVERN_LINGER_TICKS);
+
+      if (buildingType.is(BuildingTypes.TOWN_SQUARE))
+         return villager.getRandom()
+               .nextIntBetweenInclusive(MIN_TOWN_SQUARE_LINGER_TICKS, MAX_TOWN_SQUARE_LINGER_TICKS);
+
+      if (buildingType.isFoodVendor())
+         return villager.getRandom()
+               .nextIntBetweenInclusive(MIN_FOOD_VENDOR_LINGER_TICKS, MAX_FOOD_VENDOR_LINGER_TICKS);
+
+      // e.g. their own home, where they'd rather go back to strolling around the settlement
+      return 0;
    }
 
    private static int entertainmentWeight(Building building, CivilizedVillager villager, long dayTime) {

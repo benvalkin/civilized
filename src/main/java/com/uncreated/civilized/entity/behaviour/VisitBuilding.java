@@ -7,6 +7,7 @@ import java.util.Optional;
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.building.entity.LoadedBuildings;
 import com.uncreated.civilized.entity.CivilizedVillager;
+import com.uncreated.civilized.neoforge.registration.ai.AIRegistry;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -44,9 +45,20 @@ public abstract class VisitBuilding extends StatefulBehaviour {
    /** The buildings the villager could visit, in the order they're tried. Buildings that aren't loaded are skipped. */
    protected abstract List<Building> chooseBuildings(ServerLevel level, CivilizedVillager villager);
 
+   /**
+    * How long the villager stays at the building after arriving in ticks. While lingering, the villager won't stroll
+    * outside the building or visit a different building.
+    */
+   protected int lingerTicks(CivilizedVillager villager, Building building) {
+      return 0;
+   }
+
    @Override
    protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
       if (getBehaviourCooldowns().hasCooldown(Cooldowns.START, level.getGameTime()))
+         return false;
+
+      if (villager.getBrain().hasMemoryValue(AIRegistry.MM_LINGERING_AT_BUILDING.get()))
          return false;
 
       for (Building building : chooseBuildings(level, villager)) {
@@ -83,6 +95,14 @@ public abstract class VisitBuilding extends StatefulBehaviour {
    protected void tick(ServerLevel level, CivilizedVillager villager, long gameTime) {
       if (travelHelper.isJourneySuccessful()) {
          onArrived(level, villager, destinationBuilding);
+         int lingerTicks = lingerTicks(villager, destinationBuilding);
+         if (lingerTicks > 0) {
+            villager.getBrain()
+                  .setMemoryWithExpiry(
+                        AIRegistry.MM_LINGERING_AT_BUILDING.get(),
+                        destinationBuilding.getBuildingId(),
+                        lingerTicks);
+         }
          doStop(level, villager, gameTime);
          return;
       }
