@@ -26,6 +26,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.Consumable;
@@ -56,8 +57,8 @@ public class EatFood extends StatefulBehaviour {
       return (i1, i2) -> -compareFood(i1, i2);
    }
 
-   /** The logistics inventory slot of the food being eaten, or -1 when the villager is between items. */
-   private int eatingSlot = -1;
+   /** The food item in the villager's hand. Empty when the villager is between items. */
+   private ItemStack eatingFood = ItemStack.EMPTY;
    private int eatingTicksRemaining;
 
    public EatFood(BehaviourState state) {
@@ -161,14 +162,18 @@ public class EatFood extends StatefulBehaviour {
    @Override
    protected void start(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.start(level, villager, gameTime);
-      eatingSlot = -1;
+      eatingFood = ItemStack.EMPTY;
    }
 
    @Override
    protected void stop(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.stop(level, villager, gameTime);
-      eatingSlot = -1;
-      villager.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+      // put back the food that was interrupted while being eaten
+      if (isHoldingEatingFood(villager)) {
+         villager.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+         putAway(level, villager, eatingFood);
+      }
+      eatingFood = ItemStack.EMPTY;
    }
 
    @Override
@@ -176,7 +181,7 @@ public class EatFood extends StatefulBehaviour {
 
       SimpleContainer inventory = villager.getLogisticsInventory();
 
-      if (eatingSlot == -1) {
+      if (eatingFood.isEmpty()) {
          // done with the last item: keep going only while still hungry and there is food left
          if (!villager.getHunger().isHungry() || !startEatingNextFood(villager, inventory)) {
             doStop(level, villager, gameTime);
@@ -184,21 +189,24 @@ public class EatFood extends StatefulBehaviour {
          }
       }
 
-      ItemStack food = inventory.getItem(eatingSlot);
-      Consumable consumable = food.get(DataComponents.CONSUMABLE);
-      if (!isViableFood(food) || consumable == null) {
-         // the food was taken out of the inventory while being eaten
-         eatingSlot = -1;
+      if (!isHoldingEatingFood(villager)) {
+         // the food was taken out of the villager's hand while being eaten, e.g. to equip a weapon
+         eatingFood = ItemStack.EMPTY;
          return;
       }
 
       eatingTicksRemaining--;
 
-      if (consumable.shouldEmitParticlesAndSounds(eatingTicksRemaining))
-         emitEatingEffects(level, villager, food, consumable);
+      Consumable consumable = eatingFood.get(DataComponents.CONSUMABLE);
+      if (consumable != null && consumable.shouldEmitParticlesAndSounds(eatingTicksRemaining))
+         emitEatingEffects(level, villager, eatingFood, consumable);
 
       if (eatingTicksRemaining <= 0)
-         finishEating(level, villager, inventory);
+         finishEating(level, villager);
+   }
+
+   private boolean isHoldingEatingFood(CivilizedVillager villager) {
+      return !eatingFood.isEmpty() && villager.getMainHandItem() == eatingFood;
    }
 
    private boolean startEatingNextFood(CivilizedVillager villager, SimpleContainer inventory) {
@@ -206,28 +214,40 @@ public class EatFood extends StatefulBehaviour {
       if (slot == -1)
          return false;
 
-      ItemStack foodItem = inventory.getItem(slot);
-      Consumable consumable = foodItem.get(DataComponents.CONSUMABLE);
-      eatingSlot = slot;
+      // main hand equipment must be put away first, otherwise equipment will be overwritten
+      villager.getEquipment().unequip(EquipmentSlot.MAINHAND);
+      if (!villager.getItemBySlot(EquipmentSlot.MAINHAND).isEmpty())
+         return false;
+
+      eatingFood = inventory.removeItem(slot, 1);
+      villager.setItemInHand(InteractionHand.MAIN_HAND, eatingFood);
+
+      Consumable consumable = eatingFood.get(DataComponents.CONSUMABLE);
       eatingTicksRemaining =
             consumable != null ? consumable.consumeTicks() : (int) (Consumable.DEFAULT_CONSUME_SECONDS * 20);
-      villager.setItemInHand(InteractionHand.MAIN_HAND, foodItem);
       return true;
    }
 
-   private void finishEating(ServerLevel level, CivilizedVillager villager, SimpleContainer inventory) {
-      ItemStack food = inventory.getItem(eatingSlot);
-      FoodProperties foodProperties = food.get(DataComponents.FOOD);
+   private void finishEating(ServerLevel level, CivilizedVillager villager) {
+      FoodProperties foodProperties = eatingFood.get(DataComponents.FOOD);
 
-      // this applies the food's own effects (e.g. golden apples), plays the final sound, and uses up one item. Whatever
-      // it leaves behind, such as a bowl from stew, takes the food's place in the inventory
-      ItemStack leftover = food.finishUsingItem(level, villager);
-      inventory.setItem(eatingSlot, leftover);
+      // this applies the food's own effects (e.g. golden apples), plays the final sound, and uses up the item. Whatever
+      // it leaves behind, such as a bowl from stew, goes into the inventory
+      ItemStack leftover = eatingFood.finishUsingItem(level, villager);
+      villager.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+      eatingFood = ItemStack.EMPTY;
+      putAway(level, villager, leftover);
 
       if (foodProperties != null)
          villager.getHunger().eat(foodProperties);
+   }
 
-      eatingSlot = -1;
+   private void putAway(ServerLevel level, CivilizedVillager villager, ItemStack item) {
+      ItemStack remainder = villager.getLogisticsInventory().addItem(item);
+      if (!remainder.isEmpty())
+         remainder = villager.getEquipment().getOverflowInventory().addItem(remainder);
+      if (!remainder.isEmpty())
+         villager.spawnAtLocation(level, remainder);
    }
 
    private static void emitEatingEffects(

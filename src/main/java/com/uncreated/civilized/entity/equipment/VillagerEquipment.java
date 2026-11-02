@@ -332,15 +332,17 @@ public class VillagerEquipment {
             villager.setItemSlot(equipmentSlot, carried);
             markEquipped(equipmentSlot, carriedEquipmentSlot);
             return true;
-         } else
-            // not sure where to put the already equipped item back - rather don't try to equip another one
+         }
+
+         // not sure where the already equipped item came from - put it in the overflow inventory so it isn't lost
+         if (!tryMoveToOverflowInventory(equipmentSlot))
             return false;
-      } else {
-         villager.setItemSlot(equipmentSlot, carried);
-         carriedSlots[carriedEquipmentSlot.ordinal()] = ItemStack.EMPTY;
-         markEquipped(equipmentSlot, carriedEquipmentSlot);
-         return true;
       }
+
+      villager.setItemSlot(equipmentSlot, carried);
+      carriedSlots[carriedEquipmentSlot.ordinal()] = ItemStack.EMPTY;
+      markEquipped(equipmentSlot, carriedEquipmentSlot);
+      return true;
    }
 
    public void equip(List<CarriedEquipmentSlot> equipmentSlots) {
@@ -380,7 +382,11 @@ public class VillagerEquipment {
 
       ItemStack remainder = overflowInventory.addItem(equipped);
       villager.setItemSlot(equipmentSlot, remainder);
-      return remainder.isEmpty();
+      if (!remainder.isEmpty())
+         return false;
+
+      markUnequipped(equipmentSlot);
+      return true;
    }
 
    @NotNull
