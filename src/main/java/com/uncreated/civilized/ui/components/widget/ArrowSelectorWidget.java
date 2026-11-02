@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.jetbrains.annotations.Nullable;
+
 import com.uncreated.civilized.ui.style.Colors;
 
 import lombok.Getter;
@@ -36,6 +38,9 @@ public class ArrowSelectorWidget<T> extends AbstractWidget {
    private final List<T> values;
    private final Function<T, Component> nameOf;
    private final Consumer<T> onChanged;
+   /** Describes the selected value in the tooltip, above the position in the list. */
+   @Nullable
+   private Function<T, Component> tooltipOf;
    private int selectedIndex;
 
    /**
@@ -63,6 +68,13 @@ public class ArrowSelectorWidget<T> extends AbstractWidget {
       forceSetSelectedIndex(selectedIndex);
    }
 
+   /** Shows a description of the selected value in the tooltip, as well as its position in the list. */
+   public ArrowSelectorWidget<T> withTooltip(Function<T, Component> tooltipOf) {
+      this.tooltipOf = tooltipOf;
+      forceSetSelectedIndex(selectedIndex);
+      return this;
+   }
+
    public T getSelected() {
       return values.get(selectedIndex);
    }
@@ -72,8 +84,17 @@ public class ArrowSelectorWidget<T> extends AbstractWidget {
       // this method does not update the listener
       this.selectedIndex = Math.floorMod(index, values.size());
       setMessage(nameOf.apply(getSelected()));
-      setTooltip(
-            Tooltip.create(Component.translatable("gui.misc.selector.position", selectedIndex + 1, values.size())));
+
+      Component position =
+            Component.translatable("gui.misc.selector.position", selectedIndex + 1, values.size())
+                  .withColor(Colors.TEXT_LIGHT_MUTED);
+      if (tooltipOf == null) {
+         setTooltip(Tooltip.create(position));
+         return;
+      }
+
+      Component description = tooltipOf.apply(getSelected());
+      setTooltip(Tooltip.create(Component.empty().append(description).append("\n").append(position)));
    }
 
    private void step(int direction) {

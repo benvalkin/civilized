@@ -6,13 +6,17 @@ import java.util.Optional;
 
 import javax.annotation.Nullable;
 
+import com.uncreated.civilized.core.building.ClientBuildingStore;
 import com.uncreated.civilized.core.settlement.loadouts.Loadout;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
+import com.uncreated.civilized.core.villagerinfo.workshift.WorkShift;
 import com.uncreated.civilized.entity.equipment.CarriedEquipmentSlot;
 import com.uncreated.civilized.networking.packets.AssignLoadoutRequest;
+import com.uncreated.civilized.networking.packets.AssignWorkShiftRequest;
 import com.uncreated.civilized.networking.packets.AssignWorkerRequest;
 import com.uncreated.civilized.networking.packets.RequestSettlementLoadouts;
 import com.uncreated.civilized.networking.packets.RequestSoldierEquipment;
+import com.uncreated.civilized.ui.components.widget.ArrowSelectorWidget;
 import com.uncreated.civilized.ui.components.widget.CarriedSlotIconWidget;
 import com.uncreated.civilized.ui.components.widget.ItemDisplayWidget;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
@@ -42,6 +46,9 @@ public class ManageSoldierTab extends ABuildingScreenTab implements ILoadoutList
    /** Where the settings start, to the right of the equipment grid. */
    private static final int SETTINGS_X = 160;
    private static final int SELECTOR_WIDTH = 126;
+   /** The work shift setting sits under the loadout selector and its preview. */
+   private static final int WORK_SHIFT_LABEL_Y = CONTENT_Y + LoadoutSelectorWidget.heightFor(true) + 8;
+   private static final int WORK_SHIFT_SELECTOR_Y = WORK_SHIFT_LABEL_Y + 12;
 
    private static final int BUTTON_WIDTH = 60;
    private static final int BUTTON_HEIGHT = 18;
@@ -60,6 +67,11 @@ public class ManageSoldierTab extends ABuildingScreenTab implements ILoadoutList
 
    private int loadoutsRequestId;
    private final LoadoutSelectorWidget loadoutSelector;
+
+   private final List<Optional<WorkShift>> workShiftChoices;
+   private final ArrowSelectorWidget<Optional<WorkShift>> workShiftSelector;
+   private static final List<WorkShift> SELECTABLE_PRESETS =
+         List.of(WorkShift.MORNING, WorkShift.AFTERNOON, WorkShift.NIGHT);
 
    public ManageSoldierTab(ITabHost tabHost, Font font, BuildingScreenContext context, VillagerInfo soldier) {
       super(
@@ -101,6 +113,31 @@ public class ManageSoldierTab extends ABuildingScreenTab implements ILoadoutList
       loadoutsRequestId = RequestSettlementLoadouts.nextRequestId();
       PacketDistributor
             .sendToServer(new RequestSettlementLoadouts(loadoutsRequestId, context.settlement().getSettlementId()));
+
+      workShiftChoices = createWorkShiftChoices(soldier);
+      WorkShift defaultWorkShift = findDefaultWorkShift(soldier);
+      workShiftSelector =
+            new ArrowSelectorWidget<>(
+                  getX() + SETTINGS_X,
+                  getY() + WORK_SHIFT_SELECTOR_Y,
+                  SELECTOR_WIDTH,
+                  LoadoutSelectorWidget.SELECTOR_HEIGHT,
+                  font,
+                  workShiftChoices,
+                  workShiftChoices.indexOf(Optional.ofNullable(soldier.getWorkshift())),
+                  choice -> choice.map(WorkShift::translation)
+                        .orElseGet(
+                              () -> Component.translatable(
+                                    "menu.building.military.soldier.work_shift.default",
+                                    defaultWorkShift.translation())),
+                  this::assignWorkShift).withTooltip(choice -> workShiftTooltip(choice.orElse(defaultWorkShift)));
+   }
+
+   private Component workShiftTooltip(WorkShift workShift) {
+      return Component.translatable(
+            "menu.building.military.soldier.work_shift.tooltip",
+            workShift.workHoursTranslation().withColor(Colors.TIME),
+            workShift.restHoursTranslation().withColor(Colors.TIME));
    }
 
    private void dismiss(ITabHost tabHost, VillagerInfo soldier) {
@@ -153,9 +190,38 @@ public class ManageSoldierTab extends ABuildingScreenTab implements ILoadoutList
             new AssignLoadoutRequest(soldier.getVillagerId(), loadoutChoice.getLoadout().map(Loadout::loadoutId)));
    }
 
+   private List<Optional<WorkShift>> createWorkShiftChoices(VillagerInfo soldier) {
+      // the post's default is always first, so going back to it is always one arrow click away
+      List<Optional<WorkShift>> choices = new ArrayList<>();
+      choices.add(Optional.empty());
+      for (WorkShift preset : SELECTABLE_PRESETS)
+         choices.add(Optional.of(preset));
+
+      // e.g. a custom shift, which can't be picked here but should still be shown
+      WorkShift assigned = soldier.getWorkshift();
+      if (assigned != null && !SELECTABLE_PRESETS.contains(assigned))
+         choices.add(Optional.of(assigned));
+
+      return choices;
+   }
+
+   private WorkShift findDefaultWorkShift(VillagerInfo soldier) {
+      return ClientBuildingStore.INSTANCE.find(soldier.getWorkBuildingId())
+            .map(post -> post.getBuildingType().defaultWorkshift())
+            .orElse(WorkShift.UNEMPLOYED);
+   }
+
+   private void assignWorkShift(Optional<WorkShift> workShift) {
+      PacketDistributor.sendToServer(new AssignWorkShiftRequest(soldier.getVillagerId(), workShift));
+   }
+
    @Override
    public void refresh() {
       loadoutSelector.showAssigned(soldier.getLoadoutId());
+
+      int assignedIndex = workShiftChoices.indexOf(Optional.ofNullable(soldier.getWorkshift()));
+      if (assignedIndex >= 0)
+         workShiftSelector.forceSetSelectedIndex(assignedIndex);
    }
 
    @Override
@@ -164,6 +230,7 @@ public class ManageSoldierTab extends ABuildingScreenTab implements ILoadoutList
 
       renderEquipment(graphics, mouseX, mouseY, partialTicks);
       renderLoadout(graphics, mouseX, mouseY, partialTicks);
+      renderWorkShift(graphics, mouseX, mouseY, partialTicks);
 
       backButton.render(graphics, mouseX, mouseY, partialTicks);
       dismissButton.render(graphics, mouseX, mouseY, partialTicks);
@@ -217,8 +284,20 @@ public class ManageSoldierTab extends ABuildingScreenTab implements ILoadoutList
       loadoutSelector.render(graphics, mouseX, mouseY, partialTicks);
    }
 
+   private void renderWorkShift(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+      graphics.drawString(
+            font,
+            Component.translatable("menu.building.military.soldier.work_shift"),
+            getX() + SETTINGS_X,
+            getY() + WORK_SHIFT_LABEL_Y,
+            Colors.MENU_TEXT_DARK,
+            false);
+
+      workShiftSelector.render(graphics, mouseX, mouseY, partialTicks);
+   }
+
    @Override
    public List<? extends GuiEventListener> children() {
-      return List.of(backButton, dismissButton, loadoutSelector);
+      return List.of(backButton, dismissButton, loadoutSelector, workShiftSelector);
    }
 }

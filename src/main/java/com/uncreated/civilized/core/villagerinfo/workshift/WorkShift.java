@@ -31,8 +31,7 @@ public record WorkShift(@Nullable String presetId, int workStart, int workEnd, i
    public static final int CLOCK_6AM_EOD = 24000;
 
    public static final WorkShift MORNING = preset("morning", CLOCK_7AM, CLOCK_3PM, CLOCK_10PM, CLOCK_6AM_EOD);
-   public static final WorkShift AFTERNOON =
-         preset("afternoon", CLOCK_2PM, CLOCK_10PM, CLOCK_10PM, CLOCK_6AM_EOD);
+   public static final WorkShift AFTERNOON = preset("afternoon", CLOCK_2PM, CLOCK_10PM, CLOCK_10PM, CLOCK_6AM_EOD);
    public static final WorkShift NIGHT = preset("night", CLOCK_10PM, CLOCK_6AM_EOD, CLOCK_7AM, CLOCK_3PM);
    public static final WorkShift UNEMPLOYED = preset("unemployed", -1, -1, CLOCK_10PM, CLOCK_6AM_EOD);
 
@@ -135,20 +134,43 @@ public record WorkShift(@Nullable String presetId, int workStart, int workEnd, i
    }
 
    public MutableComponent translation() {
-      if (workEnd < 0 || workStart < 0)
+      if (workStart < 0 || workEnd < 0)
          return Component.literal(" - ");
 
       if (presetId != null)
-         return Component.translatableWithFallback("workshift.preset." + presetId, translationFallback());
+         return Component.translatableWithFallback("workshift.preset." + presetId, hoursLiteral(workStart, workEnd));
 
-      return Component.literal(translationFallback());
+      return Component.literal(hoursLiteral(workStart, workEnd));
    }
 
-   private String translationFallback() {
-      return toClockTime(workStart) + " - " + toClockTime(workStart);
+   private String hoursLiteral(int start, int finish) {
+      return toClockTime(start) + " - " + toClockTime(finish);
+   }
+
+   public MutableComponent workHoursTranslation() {
+      if (workStart < 0 || workEnd < 0)
+         return Component.literal(" - ");
+
+      return Component.literal(hoursLiteral(workStart, workEnd));
+   }
+
+   public MutableComponent restHoursTranslation() {
+      if (restStart < 0 || restEnd < 0)
+         return Component.literal(" - ");
+
+      return Component.literal(hoursLiteral(restStart, restEnd));
    }
 
    public static String toClockTime(int dayTicks) {
+      int ticks = Math.floorMod(dayTicks, 24000);
+      int hour = (ticks / 1000 + 6) % 24;
+
+      String suffix = hour < 12 ? "am" : "pm";
+      int clockHour = hour % 12 == 0 ? 12 : hour % 12;
+      return String.format("%d%s", clockHour, suffix);
+   }
+
+   public static String toClockTimeWithMinutes(int dayTicks) {
       int ticks = Math.floorMod(dayTicks, 24000);
       int hour = (ticks / 1000 + 6) % 24;
       int minute = ticks % 1000 * 60 / 1000;

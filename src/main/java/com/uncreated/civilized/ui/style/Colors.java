@@ -9,6 +9,8 @@ public class Colors {
    public static final int TEXT_LIGHT_MUTED = 0xababab;
    public static final int TEXT_DARK_MUTED = 0x666666;
 
+   public static final int TIME = 0xc2f9ff;
+
    public static final int SKILL_INCAPABLE = TEXT_DARK_MUTED;
    public static final int SKILL_UNSKILLED = 0x919191;
    public static final int SKILL_COMPETENT = MENU_TEXT_VILLAGER_DIALOGUE;
