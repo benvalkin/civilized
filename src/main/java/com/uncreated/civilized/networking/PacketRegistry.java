@@ -17,6 +17,7 @@ import com.uncreated.civilized.core.villagerinfo.ClientVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.ServerVillagerStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.networking.packets.AssignLoadoutRequest;
+import com.uncreated.civilized.networking.packets.AssignWorkShiftRequest;
 import com.uncreated.civilized.networking.packets.AssignWorkAreaRequest;
 import com.uncreated.civilized.networking.packets.AssignWorkerRequest;
 import com.uncreated.civilized.networking.packets.BuildingDetected;
@@ -243,6 +244,11 @@ public class PacketRegistry {
               AssignLoadoutRequest.TYPE,
               AssignLoadoutRequest.STREAM_CODEC,
               AssignLoadoutRequest::serverReceiveRequest);
+
+      registrar.playToServer(
+              AssignWorkShiftRequest.TYPE,
+              AssignWorkShiftRequest.STREAM_CODEC,
+              AssignWorkShiftRequest::serverReceiveRequest);
 
       registrar.playToServer(
               RequestSoldierEquipment.TYPE,
