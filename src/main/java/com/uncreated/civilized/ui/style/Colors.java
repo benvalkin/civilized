@@ -8,6 +8,7 @@ public class Colors {
 
    public static final int TEXT_LIGHT_MUTED = 0xababab;
    public static final int TEXT_DARK_MUTED = 0x666666;
+   public static final int TEXT_DARK_EXTRA_MUTED = 0x88666666;
 
    public static final int TIME = 0xc2f9ff;
 
