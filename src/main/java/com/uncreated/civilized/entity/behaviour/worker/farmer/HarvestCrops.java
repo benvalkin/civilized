@@ -28,7 +28,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.behavior.BlockPosTracker;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.WalkTarget;
@@ -106,14 +105,14 @@ public class HarvestCrops extends WorkTaskBehaviour {
       maxPlots = SkillEffects.getMaxAllowedCrops(farmingLevel);
       travelHelper = new MediumDistanceTravelTask(villager, getWorksite().getBuilding().getBlockPos(), 5);
       hasWorkOutputItems = false;
-      villager.setItemSlot(EquipmentSlot.MAINHAND, handHeld);
+      villager.getEquipment().showInMainHand(handHeld);
    }
 
    @Override
    protected void stop(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.stop(level, villager, gameTime);
 
-      villager.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+      villager.getEquipment().stopShowingInMainHand();
 
       if (hasWorkOutputItems)
          goDropOffWorkOutputAtWorkBuilding(villager);

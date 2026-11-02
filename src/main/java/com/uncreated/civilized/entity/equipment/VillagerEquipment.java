@@ -28,10 +28,15 @@ public class VillagerEquipment {
    private ItemStack[] carriedSlots;
    private Map<CarriedEquipmentSlot, EquipmentSlot> equipment;
    private final Map<EquipmentSlot, CarriedEquipmentSlot> currentlyEquipped = new HashMap<>();
+   /**
+    * A main hand item that doesn't belong to any equipment
+    */
+   private ItemStack shownInMainHand = ItemStack.EMPTY;
 
    private static final Logger LOGGER = LogUtils.getLogger();
    private static final String FIELD_CARRIED = "carried_equipment";
    private static final String FIELD_EQUIPPED_FROM = "equipped_from";
+   private static final String FIELD_SHOWING_IN_MAIN_HAND = "showing_in_main_hand";
 
    public static final List<CarriedEquipmentSlot> COMBAT_SLOTS =
          List.of(
@@ -78,11 +83,16 @@ public class VillagerEquipment {
       currentlyEquipped
             .forEach((equipmentSlot, origin) -> equippedFromTag.putString(equipmentSlot.getName(), origin.name()));
       tag.put(FIELD_EQUIPPED_FROM, equippedFromTag);
+      tag.putBoolean(FIELD_SHOWING_IN_MAIN_HAND, isShowingInMainHand());
    }
 
    public void load(CompoundTag tag, HolderLookup.Provider registryAccess) {
       carriedSlots = emptyCarriedSlots();
       currentlyEquipped.clear();
+
+      // whatever was shown in the hand is still where it really is, so the saved copy in the hand has to go
+      if (tag.getBoolean(FIELD_SHOWING_IN_MAIN_HAND))
+         villager.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
 
       CompoundTag carriedTag = tag.getCompound(FIELD_CARRIED);
 
@@ -171,7 +181,7 @@ public class VillagerEquipment {
       Optional<CarriedEquipmentSlot> carriedSlotOfAlreadyEquipped = getOriginalCarriedSlot(equipmentSlot);
       if (carriedSlotOfAlreadyEquipped.isEmpty()) {
          // not sure where to put the already equipped item - try add it to the overflow inventory
-         if (!tryMoveToOverflowInventory(equipmentSlot))
+         if (!putAwayUnknownItem(equipmentSlot))
             return false;
       } else {
          ItemStack carried = carriedSlots[carriedSlotOfAlreadyEquipped.get().ordinal()];
@@ -335,7 +345,7 @@ public class VillagerEquipment {
          }
 
          // not sure where the already equipped item came from - put it in the overflow inventory so it isn't lost
-         if (!tryMoveToOverflowInventory(equipmentSlot))
+         if (!putAwayUnknownItem(equipmentSlot))
             return false;
       }
 
@@ -356,6 +366,53 @@ public class VillagerEquipment {
          if (success)
             alreadyEquipped.add(equipmentSlot);
       }
+   }
+
+   /**
+    * Holds a real item in the main hand slot if it's possible. This item will be dropped on death.
+    */
+   public boolean holdInMainHand(ItemStack item) {
+      if (!unequip(EquipmentSlot.MAINHAND))
+         return false;
+
+      villager.setItemSlot(EquipmentSlot.MAINHAND, item);
+      return true;
+   }
+
+   /**
+    * Shows a fake item in the main hand slot if it's possible. This item is just for display will not be dropped on
+    * death.
+    */
+   public boolean showInMainHand(ItemStack item) {
+      if (!holdInMainHand(item))
+         return false;
+
+      shownInMainHand = item;
+      return true;
+   }
+
+   /**
+    * Stops showing the fake item set by {@link #showInMainHand}.
+    */
+   public void stopShowingInMainHand() {
+      // the hand could be holding equipment by now, which must stay
+      if (isShowingInMainHand())
+         villager.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+
+      shownInMainHand = ItemStack.EMPTY;
+   }
+
+   private boolean isShowingInMainHand() {
+      return !shownInMainHand.isEmpty() && villager.getMainHandItem() == shownInMainHand;
+   }
+
+   private boolean putAwayUnknownItem(EquipmentSlot equipmentSlot) {
+      if (equipmentSlot == EquipmentSlot.MAINHAND && isShowingInMainHand()) {
+         stopShowingInMainHand();
+         return true;
+      }
+
+      return tryMoveToOverflowInventory(equipmentSlot);
    }
 
    public boolean moveOutCurrentEquipment(CarriedEquipmentSlot carriedEquipmentSlot) {

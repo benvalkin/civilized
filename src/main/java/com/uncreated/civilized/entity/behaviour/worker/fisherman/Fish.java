@@ -25,7 +25,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.behavior.BlockPosTracker;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.item.ItemStack;
@@ -110,7 +109,7 @@ public class Fish extends WorkTaskBehaviour {
       minCatchTicks = averageCatchTicks / 2;
       maxCatchTicks = averageCatchTicks * 3 / 2;
       travelHelper = new MediumDistanceTravelTask(villager, fishingStand, 1);
-      villager.setItemSlot(EquipmentSlot.MAINHAND, fishingRod);
+      villager.getEquipment().showInMainHand(fishingRod);
       castTarget = null;
       fishCaught = 0;
    }
@@ -119,7 +118,7 @@ public class Fish extends WorkTaskBehaviour {
    protected void stop(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.stop(level, villager, gameTime);
 
-      villager.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+      villager.getEquipment().stopShowingInMainHand();
 
       if (fishCaught > 0)
          goDropOffWorkOutputAtWorkBuilding(villager);

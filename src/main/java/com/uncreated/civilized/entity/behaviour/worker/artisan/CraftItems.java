@@ -36,7 +36,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.behavior.BlockPosTracker;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.MemoryStatus;
@@ -180,7 +179,7 @@ public class CraftItems extends WorkTaskBehaviour {
    @Override
    protected void stop(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.stop(level, villager, gameTime);
-      villager.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+      villager.getEquipment().stopShowingInMainHand();
 
       // finishing crafting items does not immediately tell the villager go drop off items in the storehouse
       dumpInventoryToChests(villager.getWorkOutputInventory(), getWorksite().chests());
@@ -239,7 +238,7 @@ public class CraftItems extends WorkTaskBehaviour {
 
          villager.swing(InteractionHand.MAIN_HAND, true);
          villager.addWorkExhaustion(1);
-         villager.setItemSlot(EquipmentSlot.MAINHAND, resultItem.copyWithCount(1));
+         villager.getEquipment().showInMainHand(resultItem.copyWithCount(1));
          villager.getBrain().setMemory(MemoryModuleType.LOOK_TARGET, new BlockPosTracker(workBlock));
 
          itemsCrafted = true;

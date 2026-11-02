@@ -20,7 +20,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.behavior.EntityTracker;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.MemoryStatus;
@@ -107,14 +106,14 @@ public class ShearSheep extends WorkTaskBehaviour {
                   (v, d, closeEnough) -> closeEnoughBounds.contains(v.position()),
                   Math.max((int) closeEnoughBounds.getXsize() / 2, (int) closeEnoughBounds.getZsize() / 2));
 
-      villager.setItemSlot(EquipmentSlot.MAINHAND, shears);
+      villager.getEquipment().showInMainHand(shears);
       hasShearedSheep = false;
    }
 
    @Override
    protected void stop(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.stop(level, villager, gameTime);
-      villager.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+      villager.getEquipment().stopShowingInMainHand();
 
       if (travelHelper.isJourneySuccessful())
          pickUpDroppedItemsAtWorksite(level, villager);

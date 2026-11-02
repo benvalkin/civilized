@@ -23,7 +23,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.behavior.BlockPosTracker;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.WalkTarget;
@@ -113,7 +112,7 @@ public class HarvestHoneyAndHoneyComb extends WorkTaskBehaviour {
    protected void stop(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.stop(level, villager, gameTime);
 
-      villager.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+      villager.getEquipment().stopShowingInMainHand();
 
       if (hasWorkOutputItems)
          goDropOffWorkOutputAtWorkBuilding(villager);
@@ -164,7 +163,7 @@ public class HarvestHoneyAndHoneyComb extends WorkTaskBehaviour {
    }
 
    private void fillBottleWithHoney(ServerLevel level, CivilizedVillager villager, ContainerItemReference bottle) {
-      villager.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.GLASS_BOTTLE));
+      villager.getEquipment().showInMainHand(new ItemStack(Items.GLASS_BOTTLE));
       villager.swing(InteractionHand.MAIN_HAND, true);
       villager.addWorkExhaustion(1);
 
@@ -174,7 +173,7 @@ public class HarvestHoneyAndHoneyComb extends WorkTaskBehaviour {
    }
 
    private void shearHoneycomb(ServerLevel level, CivilizedVillager villager, ItemStack shears) {
-      villager.setItemSlot(EquipmentSlot.MAINHAND, shears);
+      villager.getEquipment().showInMainHand(shears);
       villager.swing(InteractionHand.MAIN_HAND, true);
       villager.addWorkExhaustion(1);
 

@@ -26,7 +26,6 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleContainer;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.Consumable;
@@ -214,13 +213,12 @@ public class EatFood extends StatefulBehaviour {
       if (slot == -1)
          return false;
 
-      // main hand equipment must be put away first, otherwise equipment will be overwritten
-      villager.getEquipment().unequip(EquipmentSlot.MAINHAND);
-      if (!villager.getItemBySlot(EquipmentSlot.MAINHAND).isEmpty())
+      ItemStack food = inventory.getItem(slot).copyWithCount(1);
+      if (!villager.getEquipment().holdInMainHand(food))
          return false;
 
-      eatingFood = inventory.removeItem(slot, 1);
-      villager.setItemInHand(InteractionHand.MAIN_HAND, eatingFood);
+      inventory.removeItem(slot, 1);
+      eatingFood = food;
 
       Consumable consumable = eatingFood.get(DataComponents.CONSUMABLE);
       eatingTicksRemaining =

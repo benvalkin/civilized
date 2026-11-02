@@ -27,7 +27,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.behavior.BlockPosTracker;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.WalkTarget;
@@ -99,14 +98,14 @@ public class CutDownTrees extends WorkTaskBehaviour {
       int logsPerDay = SkillEffects.getLogsHarvestedPerDay(farmingLevel, handHeld);
       hitIntervalTicks = SkillEffects.convertToTicks(logsPerDay) / HITS_PER_LOG;
       travelHelper = new MediumDistanceTravelTask(villager, getWorksite().getBuilding().getBlockPos(), 8);
-      villager.setItemSlot(EquipmentSlot.MAINHAND, handHeld);
+      villager.getEquipment().showInMainHand(handHeld);
       hasWood = false;
    }
 
    @Override
    protected void stop(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.stop(level, villager, gameTime);
-      villager.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+      villager.getEquipment().stopShowingInMainHand();
 
       if (travelHelper.isJourneySuccessful())
          pickUpDroppedItemsAtWorksite(level, villager);

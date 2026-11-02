@@ -44,9 +44,9 @@ import com.uncreated.civilized.core.villagerinfo.workshift.WorkShift;
 import com.uncreated.civilized.entity.behaviour.BehaviourState;
 import com.uncreated.civilized.entity.behaviour.BehaviourStates;
 import com.uncreated.civilized.entity.behaviour.IdleBehaviourControl;
+import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.StatefulBehaviourControl;
 import com.uncreated.civilized.entity.behaviour.social.Conversation;
-import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.soldier.ArrowLineOfFire;
 import com.uncreated.civilized.entity.control.CivilizedVillagerLookControl;
 import com.uncreated.civilized.entity.data.VillagerHunger;
@@ -87,6 +87,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.Brain;
@@ -197,6 +198,9 @@ public class CivilizedVillager extends AgeableMob
       this.hunger = new VillagerHunger(this);
       this.skillTraining = new VillagerXpCollector(this);
       this.workShift = WorkShift.UNEMPLOYED;
+      // above 1 always drops equipment intact, not only when killed by a player
+      for (EquipmentSlot slot : EquipmentSlot.VALUES)
+         this.setDropChance(slot, 2.0F);
    }
 
    public void initBrandNewVillager() {
@@ -296,6 +300,15 @@ public class CivilizedVillager extends AgeableMob
       hunger.save(compound);
       this.writeInventoryToTag(compound, this.registryAccess());
       equipment.save(compound, this.registryAccess());
+   }
+
+   @Override
+   protected void dropCustomDeathLoot(ServerLevel level, DamageSource damageSource, boolean recentlyHit) {
+      // we clear the shownInMainHandItem (and thus the current main hand item) on death if it's equippedto prevent it
+      // from dropping.
+      // This is the defining characteristic that makes shownInMainHand actually behave like a fake display item
+      equipment.stopShowingInMainHand();
+      super.dropCustomDeathLoot(level, damageSource, recentlyHit);
    }
 
    @Override

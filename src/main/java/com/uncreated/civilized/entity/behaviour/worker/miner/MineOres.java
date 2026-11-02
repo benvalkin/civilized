@@ -32,7 +32,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.MemoryStatus;
 import net.minecraft.world.item.ItemStack;
@@ -116,14 +115,14 @@ public class MineOres extends WorkTaskBehaviour {
       hitIntervalTicks = SkillEffects.convertToTicks(blocksPerDay) / HITS_PER_BLOCK;
       foundOres = false;
       travelHelper = new MediumDistanceTravelTask(villager, getWorksite().getBuilding().getBlockPos(), 2);
-      villager.setItemSlot(EquipmentSlot.MAINHAND, handHeld);
+      villager.getEquipment().showInMainHand(handHeld);
    }
 
    @Override
    protected void stop(ServerLevel level, CivilizedVillager villager, long gameTime) {
       super.stop(level, villager, gameTime);
 
-      villager.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+      villager.getEquipment().stopShowingInMainHand();
 
       if (foundOres)
          goDropOffWorkOutputAtWorkBuilding(villager);
