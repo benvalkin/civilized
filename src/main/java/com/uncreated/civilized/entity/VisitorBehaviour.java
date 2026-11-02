@@ -4,9 +4,12 @@ import java.util.Optional;
 import java.util.UUID;
 
 import com.uncreated.civilized.core.building.entity.behaviour.InnBehaviour;
+import com.uncreated.civilized.core.recruitment.ImpressionRequirement;
 import com.uncreated.civilized.core.recruitment.VisitorHospitality;
 import com.uncreated.civilized.core.recruitment.WillingToJoinNotification;
+import com.uncreated.civilized.core.settlement.ServerSettlementsStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
+import com.uncreated.civilized.core.villagerinfo.inactive.visitor.ServerRecurringVisitorStore;
 import com.uncreated.civilized.core.villagerinfo.skills.SkillEffects;
 import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkill;
 import com.uncreated.civilized.networking.packets.VisitorHospitalityUpdated;
@@ -24,13 +27,20 @@ public class VisitorBehaviour extends VillagerRoleBehaviour {
    public static final String FIELD_DEPART_AT = "depart_at";
    private static final String FIELD_WILLING_TO_JOIN = "willing_to_join";
    private static final String FIELD_HOSPITALITY = "hospitality";
+   private static final String FIELD_NUMBER_OF_VISITS = "number_of_visits";
+   private static final String FIELD_VISIT_START_TIME = "visit_start_time";
    public static final long NO_DEPARTURE = -1;
    public static final long MAX_STAY_TICKS = 4 * 24000;
    private static final float HOSPITALITY_PER_CHAT = 1;
    private static final float HOSPITALITY_PER_HOSTED_CHAT = 2.5f;
    private static final float HOSPITALITY_PER_ENTERTAINMENT = 5;
    private static final int NOTIFICATION_CHECK_INTERVAL = 10 * 20;
+   private static final float AVG_DAILY_HOSPITALITY_TO_RETURN = 0.8f * VisitorHospitality.DAILY_CAP;
+   public static final float DAY_VISITOR_BASE_RETURN_CHANCE = 0.5f;
+   public static final float HOSPITALITY_RETAINED_AFTER_RETURNING = 0.6f;
 
+   @Getter
+   private long visitStartTime;
    @Setter
    private long departAt = NO_DEPARTURE;
    @Setter
@@ -38,6 +48,8 @@ public class VisitorBehaviour extends VillagerRoleBehaviour {
    private boolean willingToJoin;
    @Getter
    private final VisitorHospitality hospitality;
+   @Getter
+   private int numberOfVisits = 1;
 
    public VisitorBehaviour(CivilizedVillager villager) {
       super(villager);
@@ -53,18 +65,24 @@ public class VisitorBehaviour extends VillagerRoleBehaviour {
 
    @Override
    public void addAdditionalSaveData(CompoundTag compound) {
+      compound.putLong(FIELD_VISIT_START_TIME, visitStartTime);
       compound.putLong(FIELD_DEPART_AT, departAt);
       compound.putBoolean(FIELD_WILLING_TO_JOIN, willingToJoin);
       compound.put(FIELD_HOSPITALITY, hospitality.toNbt());
+      compound.putInt(FIELD_NUMBER_OF_VISITS, numberOfVisits);
    }
 
    @Override
    public void readAdditionalSaveData(CompoundTag compound) {
+      if (compound.contains(FIELD_VISIT_START_TIME))
+         visitStartTime = compound.getLong(FIELD_VISIT_START_TIME);
       if (compound.contains(FIELD_DEPART_AT))
          departAt = compound.getLong(FIELD_DEPART_AT);
       willingToJoin = compound.getBoolean(FIELD_WILLING_TO_JOIN);
       if (compound.contains(FIELD_HOSPITALITY))
          hospitality.copyFrom(VisitorHospitality.fromNbt(compound.getCompound(FIELD_HOSPITALITY)));
+      if (compound.contains(FIELD_NUMBER_OF_VISITS))
+         numberOfVisits = compound.getInt(FIELD_NUMBER_OF_VISITS);
    }
 
    @Override
@@ -75,7 +93,7 @@ public class VisitorBehaviour extends VillagerRoleBehaviour {
          willingToJoin = false;
 
          if (!tryCheckIntoInn(level))
-            villager.depart();
+            departSettlement(level);
          return;
       }
 
@@ -83,6 +101,49 @@ public class VisitorBehaviour extends VillagerRoleBehaviour {
       // notification)
       if ((gameTime + villager.getId()) % NOTIFICATION_CHECK_INTERVAL == 0)
          willingToJoin = WillingToJoinNotification.trySendNotification(villager.getInfo(), hospitality, willingToJoin);
+   }
+
+   private void departSettlement(ServerLevel level) {
+      VillagerInfo info = villager.getInfo();
+      villager.depart();
+      if (shouldReturn(info, level.getGameTime())) {
+         info.setHomeBuildingId(null);
+         info.setPartnerId(null);
+         ServerRecurringVisitorStore.INSTANCE.remember(info, hospitality, numberOfVisits, level.getDayTime() / 24000);
+      }
+   }
+
+   public boolean shouldReturn(VillagerInfo visitor, long gameTime) {
+      ImpressionRequirement tier = visitor.getNpcRole().recruitTier();
+      if (!(tier == ImpressionRequirement.MID || tier == ImpressionRequirement.HIGH))
+         return false;
+
+      UUID settlementId = visitor.getVisitingSettlementId();
+      if (settlementId == null || ServerSettlementsStore.INSTANCE.find(settlementId).isEmpty())
+         return false;
+
+      if (villager.getInfo().getHomeBuildingId() == null
+            && villager.getRandom().nextFloat() < DAY_VISITOR_BASE_RETURN_CHANCE)
+         return false; // day visitors do not usually return
+
+      float stayedForDays = getVisitDuration(gameTime) / 24000f;
+      float avgHospitalityPerDay = hospitality.getGainedDuringVisit() / Math.max(stayedForDays, 1);
+      return avgHospitalityPerDay >= AVG_DAILY_HOSPITALITY_TO_RETURN;
+   }
+
+   public long getVisitDuration(long gameTime) {
+      return gameTime - visitStartTime;
+   }
+
+   public void resetPerVisitStats(long gameTime) {
+      hospitality.resetPerVisitPoints();
+      visitStartTime = gameTime;
+   }
+
+   public void restoreFromPreviousVisit(int previousVisits, float previousHospitality) {
+      numberOfVisits = previousVisits + 1;
+      hospitality.restorePoints(previousHospitality * HOSPITALITY_RETAINED_AFTER_RETURNING);
+      hospitalityChanged();
    }
 
    private boolean tryCheckIntoInn(ServerLevel level) {

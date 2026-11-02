@@ -212,6 +212,14 @@ public class CivilizedVillager extends AgeableMob
       return LoadedVillagers.find(villagerId).filter(other -> other != this && !other.isRemoved()).isEmpty();
    }
 
+   /**
+    * Makes this entity carry on a villager whose info is already in the store, rather than becoming a brand new one.
+    * Must be called before the entity joins the level.
+    */
+   public void continueVillager(UUID villagerId) {
+      this.villagerId = villagerId;
+   }
+
    public void initVillagerFromSave() {
 
       Optional<VillagerInfo> fromSave = ServerVillagerStore.INSTANCE.find(villagerId);

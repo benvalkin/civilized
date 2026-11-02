@@ -142,6 +142,13 @@ public class ServerVillagerStore extends VillagerStore {
       return info;
    }
 
+   /** Brings back a villager that was moved out of this store while they were away, e.g. a returning visitor. */
+   public void restoreVillager(VillagerInfo info) {
+      villagers.add(info);
+      setDirty();
+      replicateChange(info, StoreOperation.ADD_OR_OVERWRITE);
+   }
+
    public void removeVillager(VillagerInfo info, boolean deceased) {
       villagers.remove(info.getVillagerId());
       info.setDeceased(deceased);

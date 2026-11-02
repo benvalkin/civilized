@@ -18,19 +18,21 @@ public class VisitorHospitality {
          VisitorHospitality.STREAM_CODEC.apply(ByteBufCodecs::optional)
                .map(optional -> optional.orElse(null), Optional::ofNullable);
 
-   public static final float DAILY_CAP = 12;
+   public static final float DAILY_CAP = 10;
    public static final int WELCOME_BONUS = 3;
    public static final int FED_BONUS = 5;
    public static final int FESTIVAL_BONUS = 10;
 
    private static final String FIELD_POINTS = "points";
    private static final String FIELD_GAINED_TODAY = "gained_today";
+   private static final String FIELD_GAINED_DURING_VISIT = "gained_during_visit";
    private static final String FIELD_DAY = "day";
    private static final String FIELD_WELCOMED = "welcomed";
    private static final String FIELD_FED = "fed";
 
    private float points;
    private float gainedToday;
+   private float gainedDuringVisit;
    private long day;
    private boolean welcomed;
    private boolean fed;
@@ -55,11 +57,22 @@ public class VisitorHospitality {
 
       points += gained;
       gainedToday += gained;
+      gainedDuringVisit += gained;
    }
 
    /** Overload for {@link #award} that disregards and does not count towards the daily hospitality limit. */
    public void awardUncapped(float amount) {
-      points += amount;
+      points += amount; // todo: I think we should increment gainedToday here but just not the daily limit
+      gainedDuringVisit += amount;
+   }
+
+   public void restorePoints(float points) {
+      this.points = points;
+   }
+
+   public void resetPerVisitPoints() {
+      this.gainedDuringVisit = 0;
+      this.gainedToday = 0;
    }
 
    /** @return false if they had already been welcomed this visit */
@@ -82,10 +95,20 @@ public class VisitorHospitality {
       return true;
    }
 
+   public void encode(FriendlyByteBuf buffer) {
+      buffer.writeFloat(points);
+      buffer.writeFloat(gainedToday);
+      buffer.writeFloat(gainedDuringVisit);
+      buffer.writeVarLong(day);
+      buffer.writeBoolean(welcomed);
+      buffer.writeBoolean(fed);
+   }
+
    public static VisitorHospitality decode(FriendlyByteBuf buffer) {
       VisitorHospitality hospitality = new VisitorHospitality();
       hospitality.points = buffer.readFloat();
       hospitality.gainedToday = buffer.readFloat();
+      hospitality.gainedDuringVisit = buffer.readFloat();
       hospitality.day = buffer.readVarLong();
       hospitality.welcomed = buffer.readBoolean();
       hospitality.fed = buffer.readBoolean();
@@ -96,23 +119,17 @@ public class VisitorHospitality {
    public void copyFrom(VisitorHospitality other) {
       points = other.points;
       gainedToday = other.gainedToday;
+      gainedDuringVisit = other.gainedDuringVisit;
       day = other.day;
       welcomed = other.welcomed;
       fed = other.fed;
-   }
-
-   public void encode(FriendlyByteBuf buffer) {
-      buffer.writeFloat(points);
-      buffer.writeFloat(gainedToday);
-      buffer.writeVarLong(day);
-      buffer.writeBoolean(welcomed);
-      buffer.writeBoolean(fed);
    }
 
    public CompoundTag toNbt() {
       CompoundTag tag = new CompoundTag();
       tag.putFloat(FIELD_POINTS, points);
       tag.putFloat(FIELD_GAINED_TODAY, gainedToday);
+      tag.putFloat(FIELD_GAINED_DURING_VISIT, gainedDuringVisit);
       tag.putLong(FIELD_DAY, day);
       tag.putBoolean(FIELD_WELCOMED, welcomed);
       tag.putBoolean(FIELD_FED, fed);
@@ -123,6 +140,7 @@ public class VisitorHospitality {
       VisitorHospitality hospitality = new VisitorHospitality();
       hospitality.points = tag.getFloat(FIELD_POINTS);
       hospitality.gainedToday = tag.getFloat(FIELD_GAINED_TODAY);
+      hospitality.gainedDuringVisit = tag.getFloat(FIELD_GAINED_DURING_VISIT);
       hospitality.day = tag.getLong(FIELD_DAY);
       hospitality.welcomed = tag.getBoolean(FIELD_WELCOMED);
       hospitality.fed = tag.getBoolean(FIELD_FED);
