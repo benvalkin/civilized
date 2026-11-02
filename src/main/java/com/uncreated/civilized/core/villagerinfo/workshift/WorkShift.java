@@ -13,6 +13,8 @@ import org.jetbrains.annotations.NotNull;
 import com.mojang.logging.LogUtils;
 
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 
@@ -28,11 +30,11 @@ public record WorkShift(@Nullable String presetId, int workStart, int workEnd, i
    public static final int CLOCK_10PM = 16000;
    public static final int CLOCK_6AM_EOD = 24000;
 
-   public static final WorkShift MORNING = preset("morning", CLOCK_7AM, CLOCK_3PM - 1, CLOCK_10PM, CLOCK_6AM_EOD - 1);
+   public static final WorkShift MORNING = preset("morning", CLOCK_7AM, CLOCK_3PM, CLOCK_10PM, CLOCK_6AM_EOD);
    public static final WorkShift AFTERNOON =
-         preset("afternoon", CLOCK_2PM, CLOCK_10PM - 1, CLOCK_10PM, CLOCK_6AM_EOD - 1);
-   public static final WorkShift NIGHT = preset("night", CLOCK_10PM, CLOCK_6AM_EOD - 1, CLOCK_7AM, CLOCK_3PM - 1);
-   public static final WorkShift UNEMPLOYED = preset("unemployed", -1, -1, CLOCK_10PM, CLOCK_6AM_EOD - 1);
+         preset("afternoon", CLOCK_2PM, CLOCK_10PM, CLOCK_10PM, CLOCK_6AM_EOD);
+   public static final WorkShift NIGHT = preset("night", CLOCK_10PM, CLOCK_6AM_EOD, CLOCK_7AM, CLOCK_3PM);
+   public static final WorkShift UNEMPLOYED = preset("unemployed", -1, -1, CLOCK_10PM, CLOCK_6AM_EOD);
 
    public static final StreamCodec<ByteBuf, WorkShift> STREAM_CODEC =
          StreamCodec.of(WorkShift::encode, WorkShift::decode);
@@ -117,11 +119,11 @@ public record WorkShift(@Nullable String presetId, int workStart, int workEnd, i
    }
 
    public boolean isRestTime(long todayTime) {
-      return todayTime >= restStart && todayTime <= restEnd;
+      return todayTime >= restStart && todayTime < restEnd;
    }
 
    public boolean isWorkTime(long todayTime) {
-      return todayTime >= workStart && todayTime <= workEnd;
+      return todayTime >= workStart && todayTime < workEnd;
    }
 
    public boolean isIdleTime(long todayTime) {
@@ -130,5 +132,29 @@ public record WorkShift(@Nullable String presetId, int workStart, int workEnd, i
 
    public int getWorkDurationTicks() {
       return workEnd - workStart;
+   }
+
+   public MutableComponent translation() {
+      if (workEnd < 0 || workStart < 0)
+         return Component.literal(" - ");
+
+      if (presetId != null)
+         return Component.translatableWithFallback("workshift.preset." + presetId, translationFallback());
+
+      return Component.literal(translationFallback());
+   }
+
+   private String translationFallback() {
+      return toClockTime(workStart) + " - " + toClockTime(workStart);
+   }
+
+   public static String toClockTime(int dayTicks) {
+      int ticks = Math.floorMod(dayTicks, 24000);
+      int hour = (ticks / 1000 + 6) % 24;
+      int minute = ticks % 1000 * 60 / 1000;
+
+      String suffix = hour < 12 ? "am" : "pm";
+      int clockHour = hour % 12 == 0 ? 12 : hour % 12;
+      return String.format("%d:%02d%s", clockHour, minute, suffix);
    }
 }
