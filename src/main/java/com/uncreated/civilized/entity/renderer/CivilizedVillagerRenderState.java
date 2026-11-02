@@ -23,6 +23,7 @@ public class CivilizedVillagerRenderState extends HumanoidRenderState {
    public boolean useSlimArmsPlayerModel;
    public float health;
    public float maxHealth;
+   public boolean tagsVisible;
 
     public CivilizedVillagerRenderState() {
 

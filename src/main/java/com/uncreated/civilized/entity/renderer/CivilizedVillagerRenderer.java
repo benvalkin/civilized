@@ -14,6 +14,7 @@ import com.uncreated.civilized.entity.renderer.layer.HairLayer;
 import com.uncreated.civilized.entity.renderer.layer.VillagerArmorLayer;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.model.HumanoidModel;
@@ -29,6 +30,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.item.BowItem;
+import net.minecraft.world.phys.Vec3;
 
 public class CivilizedVillagerRenderer extends
       HumanoidMobRenderer<CivilizedVillager, CivilizedVillagerRenderState, HumanoidModel<CivilizedVillagerRenderState>> {
@@ -100,6 +102,24 @@ public class CivilizedVillagerRenderer extends
          state.title = Component.translatable("villager.renderer.title", title, healthC, hungerC, hungerIcon(hunger));
       }
       state.currentActivity = villager.getEntityData().get(CivilizedVillager.ACTIVITY_DESCRIPTION);
+      state.tagsVisible = nameTagsVisible(state);
+   }
+
+   private static final double TAG_VISIBLE_DISTANCE = 16;
+   private static final double TAG_ALWAYS_VISIBLE_DISTANCE = 5;
+   private static final double TAG_VISIBLE_MIN_LOOK_DOT = Math.cos(Math.toRadians(25));
+
+   /** Villager's name tags are only visible is the player is nearby and roughly looking at the villager's direction. */
+   private boolean nameTagsVisible(CivilizedVillagerRenderState state) {
+      if (state.distanceToCameraSq > TAG_VISIBLE_DISTANCE * TAG_VISIBLE_DISTANCE)
+         return false;
+      if (state.distanceToCameraSq < TAG_ALWAYS_VISIBLE_DISTANCE * TAG_ALWAYS_VISIBLE_DISTANCE)
+         return true;
+
+      Camera camera = this.entityRenderDispatcher.camera;
+      Vec3 bodyCentre = new Vec3(state.x, state.y + state.boundingBoxHeight / 2, state.z);
+      Vec3 toVillager = bodyCentre.subtract(camera.getPosition()).normalize();
+      return toVillager.dot(new Vec3(camera.getLookVector())) >= TAG_VISIBLE_MIN_LOOK_DOT;
    }
 
    /**
@@ -237,6 +257,8 @@ public class CivilizedVillagerRenderer extends
          MultiBufferSource bufferSource,
          int packedLight) {
       super.render(renderState, pose, bufferSource, packedLight);
+      if (!renderState.tagsVisible)
+         return;
 
       renderNameTag(renderState, pose, bufferSource, packedLight);
       renderJobTag(renderState, pose, bufferSource, packedLight);
