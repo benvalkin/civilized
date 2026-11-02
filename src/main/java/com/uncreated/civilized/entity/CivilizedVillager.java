@@ -46,6 +46,7 @@ import com.uncreated.civilized.entity.behaviour.BehaviourStates;
 import com.uncreated.civilized.entity.behaviour.IdleBehaviourControl;
 import com.uncreated.civilized.entity.behaviour.StatefulBehaviourControl;
 import com.uncreated.civilized.entity.behaviour.social.Conversation;
+import com.uncreated.civilized.entity.behaviour.MediumDistanceTravelTask;
 import com.uncreated.civilized.entity.behaviour.worker.soldier.ArrowLineOfFire;
 import com.uncreated.civilized.entity.control.CivilizedVillagerLookControl;
 import com.uncreated.civilized.entity.data.VillagerHunger;
@@ -674,11 +675,42 @@ public class CivilizedVillager extends AgeableMob
       profilerFiller.push("civilizedVillagerBrain");
       this.getBrain().tick(serverLevel, this);
       profilerFiller.pop();
+      stopAbandonedTravel(serverLevel.getGameTime());
 
       if ((serverLevel.getGameTime() + getId()) % ACTIVITY_DESCRIPTION_UPDATE_INTERVAL == 0)
          updateActivityDescription();
 
       super.customServerAiStep(serverLevel);
+   }
+
+   /** The journey the villager is currently walking, which keeps the navigation to itself while it's being used. */
+   @Nullable
+   private MediumDistanceTravelTask activeTravel;
+
+   public void setActiveTravel(MediumDistanceTravelTask travel) {
+      if (activeTravel == travel)
+         return;
+
+      if (activeTravel != null)
+         activeTravel.abandon();
+      activeTravel = travel;
+   }
+
+   public void clearActiveTravel(MediumDistanceTravelTask travel) {
+      if (activeTravel == travel)
+         activeTravel = null;
+   }
+
+   /**
+    * Stops the villager walking a journey that the behaviour using it no longer drives, e.g. because the behaviour
+    * stopped. Otherwise the villager would carry on following its path.
+    */
+   private void stopAbandonedTravel(long gameTime) {
+      if (activeTravel == null || !activeTravel.isAbandoned(gameTime))
+         return;
+
+      activeTravel.abandon();
+      activeTravel = null;
    }
 
    public static final EntityDataAccessor<Integer> HUNGER =

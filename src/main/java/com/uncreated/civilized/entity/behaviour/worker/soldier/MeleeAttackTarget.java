@@ -34,12 +34,14 @@ public class MeleeAttackTarget extends StatefulBehaviour {
       this.moveSpeed = moveSpeed;
    }
 
-   private CarriedEquipmentSlot weaponSlot = CarriedEquipmentSlot.PRIMARY_WEAPON;
+   private CarriedEquipmentSlot weaponSlot;
 
    @Override
    protected boolean checkExtraStartConditions(ServerLevel level, CivilizedVillager villager) {
 
       VillagerEquipment equipment = villager.getEquipment();
+
+      weaponSlot = CarriedEquipmentSlot.PRIMARY_WEAPON;
       ItemStack equippedOrCarried = equipment.getEquippedOrCarried(weaponSlot);
       if (!equippedOrCarried.has(DataComponents.TOOL)) {
          weaponSlot = CarriedEquipmentSlot.SECONDARY_WEAPON;

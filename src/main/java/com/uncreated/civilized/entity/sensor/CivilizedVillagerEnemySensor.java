@@ -21,6 +21,8 @@ public class CivilizedVillagerEnemySensor extends NearestVisibleLivingEntitySens
                .put(EntityType.ZOGLIN, 32.0F)
                .put(EntityType.ZOMBIE, 32.0F)
                .put(EntityType.ZOMBIE_VILLAGER, 32.0F)
+               .put(EntityType.SKELETON, 32.0F)
+               .put(EntityType.SPIDER, 32.0F)
                .build();
 
    protected boolean isMatchingEntity(ServerLevel serverLevel, LivingEntity attacker, LivingEntity target) {

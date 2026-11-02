@@ -54,10 +54,10 @@ public class Routed extends Behavior<CivilizedVillager> {
     */
    private static final int HIDING_SPOT_SEARCH_INTERVAL = 2 * 20;
    /**
-    * How often the walk target towards a hiding spot is set again. Kept short so that a failed path doesn't leave the
-    * villager standing still.
+    * How long the villager can go without getting closer before trying a different way to their hiding spot. Kept
+    * short, since standing still while fleeing is dangerous.
     */
-   private static final int HIDE_TRAVEL_CHECK_INTERVAL = 10;
+   private static final int HIDE_TRAVEL_STALL_TICKS = 20;
 
    private final float moveSpeed;
 
@@ -144,7 +144,7 @@ public class Routed extends Behavior<CivilizedVillager> {
                      moveSpeed,
                      1,
                      HIDE_TRAVEL_HOP_DISTANCE,
-                     30 * 20).checkInterval(HIDE_TRAVEL_CHECK_INTERVAL);
+                     30 * 20).stallTicks(HIDE_TRAVEL_STALL_TICKS);
       }
 
       travelToHidingSpot.walkToPoi(currentTicks);
