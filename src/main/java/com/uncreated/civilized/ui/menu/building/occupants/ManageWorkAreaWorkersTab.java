@@ -47,7 +47,7 @@ public class ManageWorkAreaWorkersTab extends ManageOccupantsTab {
    @Override
    protected OccupantRowWidget buildElementWidgetFromModel(VillagerInfo villager, int x, int y, int width) {
       if (worksHere(villager))
-         return new OccupantRowWidget(x, y, width, font, villager, null);
+         return new OccupantRowWidget(x, y, width, font, villager, null, relevantSkill());
 
       Button assignButton =
             Button.builder(
@@ -65,7 +65,7 @@ public class ManageWorkAreaWorkersTab extends ManageOccupantsTab {
                            villager.getFullName(),
                            workers.getFirst().getFullName())));
 
-      return new OccupantRowWidget(x, y, width, font, villager, assignButton);
+      return new OccupantRowWidget(x, y, width, font, villager, assignButton, relevantSkill());
    }
 
    @Override

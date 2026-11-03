@@ -110,6 +110,10 @@ public class VillagerSkills {
       return getTotalXpIntl(skill) >= 0;
    }
 
+   public SkillValue getSkill(VillagerSkill skill) {
+      return new SkillValue(skill, getTotalXpIntl(skill));
+   }
+
    public List<SkillValue> allSkills() {
       List<SkillValue> capableSkills = new ArrayList<>();
       for (VillagerSkill skill : VillagerSkill.values())

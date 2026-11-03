@@ -1,5 +1,6 @@
 package com.uncreated.civilized.ui.menu.building.military.widgets;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -7,7 +8,9 @@ import javax.annotation.Nullable;
 
 import com.uncreated.civilized.core.building.ClientBuildingStore;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
+import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkill;
 import com.uncreated.civilized.core.villagerinfo.workshift.WorkShift;
+import com.uncreated.civilized.ui.components.widget.SkillIconWidget;
 import com.uncreated.civilized.ui.style.Colors;
 
 import net.minecraft.client.gui.Font;
@@ -24,8 +27,9 @@ public class SoldierRowWidget extends AbstractContainerWidget {
    private static final int BUTTON_HEIGHT = 14;
    private static final int TEXT_GAP = 4;
    private static final int LINE_SPACING = 1;
-   private static final String DETAIL_SEPARATOR = " · ";
    private static final String ELLIPSIS = "...";
+   private static final List<VillagerSkill> COMBAT_SKILLS = List.of(VillagerSkill.MELEE, VillagerSkill.SHOOTING);
+   private static final int SKILL_GAP = 4;
 
    private final Font font;
    private final VillagerInfo soldier;
@@ -33,6 +37,7 @@ public class SoldierRowWidget extends AbstractContainerWidget {
    private final String loadoutName;
    private final WorkShift defaultWorkShift;
    private final Button manageButton;
+   private final List<SkillIconWidget> skills = new ArrayList<>();
 
    public SoldierRowWidget(
          int x,
@@ -60,12 +65,24 @@ public class SoldierRowWidget extends AbstractContainerWidget {
             ClientBuildingStore.INSTANCE.find(soldier.getWorkBuildingId())
                   .map(post -> post.getBuildingType().defaultWorkshift())
                   .orElse(WorkShift.UNEMPLOYED);
+
+      createSkills();
+   }
+
+   private void createSkills() {
+      int skillWidth = SkillIconWidget.widthFor(font);
+      int skillY = detailRowY() + font.lineHeight + LINE_SPACING;
+      int skillX = manageButton.getX() - TEXT_GAP - 40 - COMBAT_SKILLS.size() * (skillWidth + SKILL_GAP) + SKILL_GAP;
+      for (VillagerSkill skill : COMBAT_SKILLS) {
+         skills.add(new SkillIconWidget(font, skillX, skillY, soldier.getSkills().getSkill(skill)));
+         skillX += skillWidth + SKILL_GAP;
+      }
    }
 
    @Override
    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-      int textRight = manageButton.getX() - TEXT_GAP;
-      int nameY = getY() + (height - font.lineHeight * 2 - LINE_SPACING) / 2 + 1;
+      int textRight = skills.getFirst().getX() - TEXT_GAP;
+      int nameY = detailRowY();
       graphics.drawString(
             font,
             fitToWidth(soldier.getFullName(), textRight - getX()),
@@ -75,7 +92,13 @@ public class SoldierRowWidget extends AbstractContainerWidget {
             false);
 
       renderDetails(graphics, nameY + font.lineHeight + LINE_SPACING, textRight);
+      for (SkillIconWidget skill : skills)
+         skill.render(graphics, mouseX, mouseY, partialTick);
       manageButton.render(graphics, mouseX, mouseY, partialTick);
+   }
+
+   private int detailRowY() {
+      return getY() + (height - font.lineHeight * 2 - LINE_SPACING) / 2 + 1;
    }
 
    private void renderDetails(GuiGraphics graphics, int y, int textRight) {

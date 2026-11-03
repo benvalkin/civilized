@@ -3,8 +3,11 @@ package com.uncreated.civilized.ui.menu.building.occupants;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import com.uncreated.civilized.core.building.Building;
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
+import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkill;
 import com.uncreated.civilized.ui.components.IListViewBuilder;
 import com.uncreated.civilized.ui.components.ScrollListView;
 import com.uncreated.civilized.ui.context.BuildingScreenContext;
@@ -41,6 +44,12 @@ public abstract class ManageOccupantsTab extends ABuildingScreenTab {
    protected abstract Component getSubHeading(List<VillagerInfo> occupants);
 
    protected abstract Component getEmptyOccupantsMessage();
+
+   /** The skill that matters for working at this building, if its occupation has one. */
+   @Nullable
+   protected VillagerSkill relevantSkill() {
+      return building.getBuildingType().occupation().relevantSkill();
+   }
 
 
    @Override

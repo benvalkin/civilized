@@ -52,7 +52,7 @@ public class ManageWorkBuildingWorkersTab extends ManageOccupantsTab {
          button = createUnassignButton(villager);
       else
          button = createAssignButton(villager);
-      return new OccupantRowWidget(x, y, width, font, villager, button);
+      return new OccupantRowWidget(x, y, width, font, villager, button, relevantSkill());
    }
 
    private Button createUnassignButton(VillagerInfo worker) {

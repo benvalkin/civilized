@@ -157,7 +157,7 @@ public class SkillWidget extends AbstractWidget {
       return Colors.SKILL_MASTER;
    }
 
-   private static List<Component> tooltipFor(int totalXp, int level, boolean capable) {
+   static List<Component> tooltipFor(int totalXp, int level, boolean capable) {
       if (!capable)
          return List.of(Component.translatable("villager.skill.level.explanation.incapable"));
 
