@@ -87,7 +87,7 @@ public class VillagerInfoCardWidget extends AbstractWidget {
       // every row's bar starts after the longest name, so they line up
       int longestNameRight = x;
       for (SkillWidget row : skillRows)
-         longestNameRight = Math.max(longestNameRight, row.getNameRight());
+         longestNameRight = Math.max(longestNameRight, row.getSkillNameRight());
       for (SkillWidget row : skillRows)
          row.alignBarAfter(longestNameRight);
    }

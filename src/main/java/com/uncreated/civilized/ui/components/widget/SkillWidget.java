@@ -28,15 +28,25 @@ public class SkillWidget extends AbstractWidget {
    private final Font font;
    private final SkillValue skill;
    private int barStartX;
+   private final boolean showSkillNameLabel;
 
-   public SkillWidget(Font font, int x, int y, int width, SkillValue skill) {
+   public SkillWidget(Font font, int x, int y, int width, SkillValue skill, boolean showSkillNameLabel) {
       super(x, y, width, heightFor(font), skillName(skill));
       this.font = font;
       this.skill = skill;
-      this.barStartX = getNameRight() + NAME_GAP;
+
+      this.showSkillNameLabel = showSkillNameLabel;
+      if (showSkillNameLabel)
+         this.barStartX = getSkillNameRight() + NAME_GAP;
+      else
+         this.barStartX = x;
    }
 
-   public int getNameRight() {
+   public SkillWidget(Font font, int x, int y, int width, SkillValue skill) {
+      this(font, x, y, width, skill, true);
+   }
+
+   public int getSkillNameRight() {
       return getX() + font.width(getMessage());
    }
 
@@ -64,7 +74,8 @@ public class SkillWidget extends AbstractWidget {
       renderBars(graphics, capable, totalXp, level);
 
       int textY = getY() + 1;
-      graphics.drawString(font, getMessage(), getX(), textY, Colors.TEXT_LIGHT_MUTED);
+      if (showSkillNameLabel)
+         graphics.drawString(font, getMessage(), getX(), textY, Colors.TEXT_LIGHT_MUTED);
       String levelText = capable ? String.valueOf(level) : INCAPABLE_LEVEL;
       int textColour = capable ? colourFor(level) : Colors.SKILL_UNSKILLED;
       graphics.drawString(font, levelText, barStartX + LEVEL_INSET, textY, textColour);

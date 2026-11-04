@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 
 import com.uncreated.civilized.core.villagerinfo.VillagerInfo;
 import com.uncreated.civilized.core.villagerinfo.skills.VillagerSkill;
-import com.uncreated.civilized.ui.components.widget.SkillIconWidget;
+import com.uncreated.civilized.ui.components.widget.CompactSkillWidget;
 import com.uncreated.civilized.ui.style.Colors;
 
 import net.minecraft.client.gui.Font;
@@ -25,13 +25,14 @@ public class OccupantRowWidget extends AbstractContainerWidget {
 
    private static final int DETAIL_X = 110;
    private static final int DETAIL_GAP = 4;
+   public static final int SKILL_WIDGET_WIDTH = 30;
 
    private final Font font;
    private final VillagerInfo villager;
    @Nullable
    private final Button button;
    @Nullable
-   private final SkillIconWidget skill;
+   private final CompactSkillWidget skill;
 
    public OccupantRowWidget(int x, int y, int width, Font font, VillagerInfo villager, @Nullable Button button) {
       this(x, y, width, font, villager, button, null);
@@ -55,15 +56,16 @@ public class OccupantRowWidget extends AbstractContainerWidget {
       }
 
       if (skill != null) {
-         int skillX = getButtonLeft() - DETAIL_GAP - SkillIconWidget.widthFor(font);
+         int skillX = getButtonLeft() - DETAIL_GAP - 50;
          int skillY = y + (HEIGHT - font.lineHeight) / 2 + 1;
-         this.skill = new SkillIconWidget(font, skillX, skillY, villager.getSkills().getSkill(skill));
+         this.skill =
+               new CompactSkillWidget(font, skillX, skillY, SKILL_WIDGET_WIDTH, villager.getSkills().getSkill(skill));
       } else
          this.skill = null;
    }
 
    private int getButtonLeft() {
-      return button != null ? button.getX() : getRight() + DETAIL_GAP;
+      return (button != null ? button.getX() : getRight()) + DETAIL_GAP;
    }
 
    @Override

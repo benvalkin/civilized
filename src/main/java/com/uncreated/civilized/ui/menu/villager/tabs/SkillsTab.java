@@ -46,7 +46,7 @@ public class SkillsTab extends AVillagerPanelTab {
       // every row's bar starts after the longest name so that they line up nicely
       int longestNameRight = x;
       for (SkillWidget row : skillRows)
-         longestNameRight = Math.max(longestNameRight, row.getNameRight());
+         longestNameRight = Math.max(longestNameRight, row.getSkillNameRight());
       for (SkillWidget row : skillRows)
          row.alignBarAfter(longestNameRight);
    }

@@ -270,6 +270,7 @@
   "villager.skill.level.explanation.9": "Renowned master",
   "villager.skill.level.explanation.10": "Legend",
   "villager.skill.level.explanation.incapable": "Incapable",
+  "villager.skill.level.explanation.incapable.of": "Incapable of %s",
   "villager.skill.progress": "%s / %s XP",
   "villager.skill.progress.max": "Max level",
   "item.quality.line": "%s quality",
