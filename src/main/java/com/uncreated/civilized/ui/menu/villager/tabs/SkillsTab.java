@@ -17,7 +17,6 @@ import net.minecraft.network.chat.Component;
 public class SkillsTab extends AVillagerPanelTab {
 
    private static final int HEADING_GAP = 6;
-   private static final SkillWidget.ProgressBarAppearance SKILL_BAR = SkillWidget.ProgressBarAppearance.BEHIND;
 
    private final CivilizedVillager villager;
    private final List<SkillWidget> skillRows = new ArrayList<>();
@@ -39,11 +38,9 @@ public class SkillsTab extends AVillagerPanelTab {
                      x,
                      y,
                      rowWidth,
-                     skill,
-                     SkillWidget.ProgressBarCalculation.LEVEL_OUT_OF_MAX,
-                     SKILL_BAR);
+                     skill);
          skillRows.add(row);
-         y += SkillWidget.heightFor(font, SKILL_BAR);
+         y += SkillWidget.heightFor(font);
       }
 
       // every row's bar starts after the longest name so that they line up nicely

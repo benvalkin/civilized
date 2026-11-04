@@ -157,6 +157,9 @@ public class VillagerXpCollector {
             0.3,
             0);
 
+      if (info.getSettlementId() == null)
+         return;
+
       SettlementPermissions permissions = ServerSettlementPermissionStore.INSTANCE.getOrCreate(info.getSettlementId());
       for (PlayerPermission entry : permissions.entries()) {
          ServerPlayer player = serverLevel.getServer().getPlayerList().getPlayer(entry.playerId());

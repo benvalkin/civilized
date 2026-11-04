@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.jetbrains.annotations.NotNull;
+
 import com.uncreated.civilized.core.StoreOperation;
 import com.uncreated.civilized.core.settlement.permission.events.SettlementPermissionsUpdatedEvent;
 
@@ -43,7 +45,10 @@ public class ServerSettlementPermissionStore extends SettlementPermissionStore {
    }
 
    @Override
-   public SettlementPermissions getOrCreate(UUID settlementId) {
+   public SettlementPermissions getOrCreate(@NotNull UUID settlementId) {
+      if (settlementId == null)
+         throw new NullPointerException("settlementId is not allowed to be null");
+
       Optional<SettlementPermissions> existing = permissions.find(settlementId);
       if (existing.isPresent())
          return existing.get();

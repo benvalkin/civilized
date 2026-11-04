@@ -13,7 +13,7 @@ public class Colors {
    public static final int TIME = 0xc2f9ff;
 
    public static final int SKILL_INCAPABLE = TEXT_DARK_MUTED;
-   public static final int SKILL_UNSKILLED = 0x919191;
+   public static final int SKILL_UNSKILLED = 0x999999;
    public static final int SKILL_COMPETENT = MENU_TEXT_VILLAGER_DIALOGUE;
    public static final int SKILL_HIGHLY_SKILLED = 0xfff3c2;
    public static final int SKILL_MASTER = 0xffe78a;
